@@ -1,32 +1,37 @@
 package com.sekwah.narutomod.client.gui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
+import com.sekwah.narutomod.config.NarutoConfig;
+import com.sekwah.narutomod.util.ColorUtil;
+import com.sekwah.narutomod.util.GuiUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
+import java.awt.Color;
+
 /**
- * A slim bar for nature energy (senin mana), sitting immediately above the chakra bar.
+ * The nature energy (senin mana) bar.
  *
- * <p>It is drawn by hand rather than from the chakra bar texture, because it is a different kind of
- * resource and should not be mistaken for a second chakra bar. It only shows up once the caster has
- * gathered something or has sage mode running - an empty bar a new ninja cannot fill yet would just
- * be clutter.</p>
+ * <p>It is drawn from the very same bar texture and geometry as the chakra bar, sitting directly
+ * above it, because a hand drawn rectangle looked nothing like the rest of the mod's bars. Only the
+ * colour sets it apart - sage green, the same family as the sage particles - and the value is written
+ * with the same outlined font the chakra and stamina bars use.</p>
+ *
+ * <p>It only appears once there is something to show: gathering has started or sage mode is running.
+ * An empty bar a new ninja cannot fill yet would just be clutter.</p>
  */
 public class SeninGUI implements PlayerGUI {
 
     private static final int WIDTH = 100;
-    private static final int HEIGHT = 6;
     private static final int OFFSET = 128;
 
-    /** Same colour family as the sage particles. */
-    private static final int COLOR_FILL = 0xFF43D16B;
-    private static final int COLOR_FRAME = 0xFF0E3A1B;
-    private static final int COLOR_BACK = 0xAA1B1B1B;
+    /** Sage nature energy reads as green, matching the sage particles. */
+    private static final Color SENIN_COLOR = new Color(67, 209, 107);
 
     private final Minecraft minecraft;
 
@@ -50,22 +55,49 @@ public class SeninGUI implements PlayerGUI {
 
         int screenWidth = this.minecraft.getWindow().getGuiScaledWidth();
         int screenHeight = this.minecraft.getWindow().getGuiScaledHeight();
-        int x = screenWidth / 2 - OFFSET - WIDTH;
-        int y = screenHeight - 22 - HEIGHT - 4;
+        int screenMid = screenWidth / 2;
 
-        guiGraphics.fill(x - 1, y - 1, x + WIDTH + 1, y + HEIGHT + 1, COLOR_FRAME);
-        guiGraphics.fill(x, y, x + WIDTH, y + HEIGHT, COLOR_BACK);
+        BarDesigns.BarInfo bar = ChakraAndStaminaGUI.barTypes[NarutoConfig.chakraBarDesign];
+        int barWidth = bar.width;
+        int xOffset = bar.offset;
+
+        // One bar height above the chakra bar, on the same side, so the two line up as a stack.
+        int y = screenHeight - 44;
+
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderTexture(0, bar.texture);
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        guiGraphics.blit(bar.texture, screenMid - WIDTH - OFFSET, y,
+                0, 22,
+                WIDTH, 22,
+                WIDTH, 44);
 
         float percent = Math.min(this.seninMana / this.maxSeninMana, 1.0f);
-        int filled = (int) (WIDTH * percent);
+        int filled = (int) (barWidth * percent);
         if (filled > 0) {
-            guiGraphics.fill(x, y, x + filled, y + HEIGHT, COLOR_FILL);
+            this.setColor(SENIN_COLOR);
+            guiGraphics.blit(bar.texture, screenMid - filled - OFFSET - (WIDTH - xOffset - barWidth), y,
+                    xOffset + (barWidth - filled), 0,
+                    filled, 22,
+                    WIDTH, 44);
+            this.setColor(Color.WHITE);
         }
 
-        String label = Component.translatable("gui.narutomod.senin",
-                (int) this.seninMana, (int) this.maxSeninMana).getString();
-        Font font = this.minecraft.font;
-        guiGraphics.drawString(font, label, x + WIDTH + 3, y - 1, 0xFFFFFFFF);
+        int color = ColorUtil.toMCColor(SENIN_COLOR).getValue();
+        int darker = ColorUtil.toMCColor(new Color(
+                (int) (SENIN_COLOR.getRed() * 0.25f),
+                (int) (SENIN_COLOR.getGreen() * 0.25f),
+                (int) (SENIN_COLOR.getBlue() * 0.25f))).getValue();
+        String text = (int) this.seninMana + "/" + (int) this.maxSeninMana;
+        GuiUtils.centeredTextOutlined(guiGraphics, this.minecraft.font, text,
+                screenMid - OFFSET - (barWidth / 2), y - 4, color, darker);
+    }
+
+    private void setColor(Color color) {
+        RenderSystem.setShaderColor(color.getRed() / 255f,
+                color.getGreen() / 255f,
+                color.getBlue() / 255f,
+                1.0f);
     }
 
     @Override

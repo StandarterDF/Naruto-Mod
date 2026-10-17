@@ -90,7 +90,7 @@
   "narutomod:henge": "Хенге (Трансформация)",
   "jutsu.henge.start": "Ты принимаешь облик %s",
   "jutsu.henge.end": "Твоя личина спадает",
-  "jutsu.fail.henge.notarget": "%s: перед тобой нет другого игрока, чей облик скопировать",
+  "jutsu.fail.henge.notarget": "%s: перед тобой нет живого существа, чей облик скопировать",
   "jutsu.fail.henge.disabled": "%s отключён на этом сервере",
   "death.attack.narutomod.gate_backlash": "%1$s разорвало изнутри Восемью Внутренними Вратами",
   "death.attack.narutomod.fireball": "%1$s испепелён огненным шаром",

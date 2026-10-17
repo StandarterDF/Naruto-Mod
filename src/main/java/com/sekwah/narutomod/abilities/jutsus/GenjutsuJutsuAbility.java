@@ -3,15 +3,15 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.events.GenjutsuEvents;
+import com.sekwah.narutomod.util.Targeting;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.EntityHitResult;
-import net.minecraft.world.phys.HitResult;
 
 /**
  * Genjutsu: the illusion that turns a hostile mob into a friend, or at least into somebody else's
@@ -106,9 +106,9 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Cooldown {
 
     /** @return the mob the ninja is looking at, or null when they are looking at anything else. */
     public static Mob findTarget(Player player) {
-        HitResult hit = player.pick(RANGE, 0.0f, false);
-        if (hit instanceof EntityHitResult entityHit && entityHit.getEntity() instanceof Mob mob) {
-            return mob.isAlive() ? mob : null;
+        Entity lookedAt = Targeting.lookedAtEntity(player, RANGE);
+        if (lookedAt instanceof Mob mob && mob.isAlive()) {
+            return mob;
         }
         return null;
     }

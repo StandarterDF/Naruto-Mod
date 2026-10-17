@@ -150,6 +150,14 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     @Sync(minTicks = 1)
     private String hengeTarget = "";
 
+    /**
+     * Registry id of the mob whose form the caster is wearing, or an empty string for a player (or no
+     * disguise at all). Synced for the same reason as {@link #hengeTarget}: the client renderer is
+     * the only thing that reads it.
+     */
+    @Sync(minTicks = 1)
+    private String hengeEntityType = "";
+
     /** Display name that goes with {@link #hengeTarget}, synced for the same reason. */
     @Sync(minTicks = 1)
     private String hengeName = "";
@@ -475,6 +483,16 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     }
 
     @Override
+    public String getHengeEntityType() {
+        return this.hengeEntityType;
+    }
+
+    @Override
+    public void setHengeEntityType(String entityType) {
+        this.hengeEntityType = entityType == null ? "" : entityType;
+    }
+
+    @Override
     public String getHengeName() {
         return this.hengeName;
     }
@@ -496,7 +514,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
     @Override
     public boolean isHenged() {
-        return this.hengeTicks > 0 && !this.hengeTarget.isEmpty();
+        return this.hengeTicks > 0 && (!this.hengeTarget.isEmpty() || !this.hengeEntityType.isEmpty());
     }
 
     @Override

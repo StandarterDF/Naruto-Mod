@@ -113,13 +113,20 @@ public interface INinjaData extends INBTSerializable<Tag> {
 
     /**
      * UUID of the player whose form is currently worn as a disguise, or an empty string when the
-     * caster is wearing their own face. Synced, because the only thing that uses it is the client
-     * side renderer, see {@code HengeRenderEvents}.
+     * caster is wearing their own face or the form of a mob. Synced, because the only thing that uses
+     * it is the client side renderer, see {@code HengeRenderEvents}.
      */
     String getHengeTarget();
     void setHengeTarget(String uuid);
 
-    /** Display name of the copied player, synced so the name tag can lie along with the skin. */
+    /**
+     * Registry id of the mob whose form is currently worn, or an empty string when the disguise is a
+     * player (or when nothing is worn). Synced for the same reason as {@link #getHengeTarget()}.
+     */
+    String getHengeEntityType();
+    void setHengeEntityType(String entityType);
+
+    /** Display name of the copied form, synced so the name tag can lie along with the shape. */
     String getHengeName();
     void setHengeName(String name);
 

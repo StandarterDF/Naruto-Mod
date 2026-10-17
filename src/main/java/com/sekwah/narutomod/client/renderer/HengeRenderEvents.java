@@ -9,12 +9,16 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderNameTagEvent;
@@ -38,6 +42,11 @@ import java.util.UUID;
  * <p>The copy is made twice, once per model, because the copied player may well be slim while the
  * caster is not. It is created from the renderer context Forge hands out in
  * {@code NarutoRenderEvents#addLayers}, as there is no other way to bake a player model.</p>
+ *
+ * <p>When the copied form is a mob rather than a player there is no model to swap, so a stand-in
+ * entity of that type is kept and drawn with its own renderer in the player's place. It is parked
+ * exactly where the player is and never ticked, so {@link #syncPose} carries the pose - and the limb
+ * swing - over onto it every frame.</p>
  */
 @Mod.EventBusSubscriber(value = Dist.CLIENT, modid = NarutoMod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class HengeRenderEvents {
@@ -48,6 +57,11 @@ public class HengeRenderEvents {
     private static EntityRendererProvider.Context context;
     private static HengePlayerRenderer wideRenderer;
     private static HengePlayerRenderer slimRenderer;
+
+    /** The mob model currently drawn in place of a player, rebuilt when the copied form changes. */
+    private static Entity fakeMob;
+    private static String fakeMobType = "";
+    private static ClientLevel fakeMobLevel;
 
     /** Handed to us by the mod bus event, see {@code NarutoRenderEvents#addLayers}. */
     public static void setContext(EntityRendererProvider.Context rendererContext) {
@@ -64,6 +78,11 @@ public class HengeRenderEvents {
         }
         INinjaData ninjaData = player.getCapability(NinjaCapabilityHandler.NINJA_DATA).orElse(null);
         if (ninjaData == null) {
+            return;
+        }
+        String entityType = ninjaData.getHengeEntityType();
+        if (!entityType.isEmpty()) {
+            renderAsMob(player, ninjaData, entityType, event);
             return;
         }
         String targetId = ninjaData.getHengeTarget();
@@ -91,6 +110,76 @@ public class HengeRenderEvents {
         } finally {
             rendering = false;
             renderer.setTextureOverride(null);
+        }
+    }
+
+    /**
+     * Draws a disguised player as the mob they copied. There is no way to tell a player model to look
+     * like a cow, so a stand-in entity of the copied type is kept around and its own vanilla renderer
+     * is asked to draw it in the player's place - whatever model, layers and textures that mob has.
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void renderAsMob(AbstractClientPlayer player, INinjaData ninjaData, String typeId,
+                                    RenderPlayerEvent.Pre event) {
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level == null) {
+            return;
+        }
+        Entity mob = standInMob(level, typeId);
+        if (mob == null) {
+            return;
+        }
+        syncPose(mob, player, ninjaData.getHengeName());
+        EntityRenderer renderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(mob);
+        if (renderer == null) {
+            return;
+        }
+
+        event.setCanceled(true);
+        rendering = true;
+        try {
+            float yaw = Mth.rotLerp(event.getPartialTick(), player.yRotO, player.getYRot());
+            renderer.render(mob, yaw, event.getPartialTick(), event.getPoseStack(),
+                    event.getMultiBufferSource(), event.getPackedLight());
+        } finally {
+            rendering = false;
+        }
+    }
+
+    /**
+     * @return the stand-in mob for a copied form, created once per type and reused, or null if the
+     *     type is not known on this client.
+     */
+    private static Entity standInMob(ClientLevel level, String typeId) {
+        if (fakeMob == null || fakeMobLevel != level || !typeId.equals(fakeMobType)) {
+            fakeMob = EntityType.byString(typeId).map(type -> type.create(level)).orElse(null);
+            fakeMobType = typeId;
+            fakeMobLevel = level;
+        }
+        return fakeMob;
+    }
+
+    /**
+     * Puts the stand-in mob exactly where the player is standing and copy their pose onto it. The mob
+     * is never ticked, so anything animated about it - the limb swing above all - has to be carried
+     * over from the player here.
+     */
+    private static void syncPose(Entity mob, AbstractClientPlayer player, String name) {
+        mob.setPos(player.getX(), player.getY(), player.getZ());
+        mob.setYRot(player.getYRot());
+        mob.yRotO = player.yRotO;
+        mob.setXRot(player.getXRot());
+        mob.xRotO = player.xRotO;
+        mob.tickCount = player.tickCount;
+        mob.setCustomName(name.isEmpty() ? null : Component.literal(name));
+        mob.setCustomNameVisible(!name.isEmpty());
+
+        if (mob instanceof LivingEntity living) {
+            living.yBodyRot = player.yBodyRot;
+            living.yBodyRotO = player.yBodyRotO;
+            living.setYHeadRot(player.getYHeadRot());
+            living.yHeadRotO = player.yHeadRotO;
+            living.walkAnimation.update(player.walkAnimation.speed(), 1.0f);
         }
     }
 

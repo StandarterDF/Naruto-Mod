@@ -302,7 +302,7 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   в карманное измерение `narutomod:kamui` и обратно (40 чакры, точка возврата —
   `INinjaData#getKamuiReturnLoc/getKamuiReturnDimension`, пишется в NBT, поэтому выход из игры внутри
   пустоты не запирает), а **удержание** (≥ `MIN_CHANNEL = 20` тиков, 1.5 чакры/тик) затягивает цель.
-  Цель — то, во что смотрит `player.pick(PULL_RANGE, 0, false)` (лучи не проходят через стены),
+  Цель — то, во что смотрит `Targeting.lookedAtEntity(player, PULL_RANGE)` (лучи не проходят через стены),
   `LivingEntity`, кроме кастера и креативных/наблюдателей; за сам затяг ещё 30 чакры.
   **Измерение — датапак + свой генератор**: `data/narutomod/dimension_type/kamui.json` +
   `data/narutomod/dimension/kamui.json` (биом `the_void`, небо Края, `min_y=0, height=256`), а
@@ -371,10 +371,13 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   значит, вместе с режимом они и заканчиваются; плюс `+0.5` чакры за тик и частицы `HAPPY_VILLAGER`.
   Обслуживание — `SageModeAbility#maintain`, зовётся из `PlayerEvents#onEntityUpdate` рядом с
   `EightGatesAbility#maintain`. Флаг `sageMode` (`@Sync`) **не** пишется в NBT: смерть и выход из игры
-  его закрывают. Полоска — `client/gui/SeninGUI` (рисуется руками, только когда есть что показывать,
-  над полоской чакры), добавлена в `overlays` в `NarutoInGameGUI`.
+  его закрывают. Полоска — `client/gui/SeninGUI`: рисуется **той же текстурой и геометрией, что и
+  полоска чакры** (`ChakraAndStaminaGUI.barTypes[NarutoConfig.chakraBarDesign]`), прямо над ней, с
+  зелёной заливкой (семейство частиц сенина) и подписью через `GuiUtils.centeredTextOutlined`, и
+  появляется только когда есть что показывать (накоплена мана или идёт режим) — иначе пустая плашка
+  была бы мусором. Добавлена в `overlays` в `NarutoInGameGUI`.
 * **Гендзюцу** (`GenjutsuJutsuAbility`, `C B C`, INSTANT, 35 чакры, КД 10 с) — цель берётся
-  `player.pick(RANGE=24, 0, false)` → `EntityHitResult` → `Mob`. Состояние висит **на самой сущности**
+  `Targeting.lookedAtEntity(player, RANGE=24)` → `Mob` (см. грабли про `player.pick`). Состояние висит **на самой сущности**
   в `getPersistentData()` (`narutomod:genjutsu_until` = `gameTime + DURATION`, `narutomod:genjutsu_caster`),
   поэтому переживает выгрузку чанка и сейв. `events/GenjutsuEvents` держит поведение: каждый тик
   сбрасывает недопустимую цель, раз в секунду назначает ближайшего другого моба (`findVictim`, радиус 16)
@@ -385,19 +388,29 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   (`Chakra`), привязка к первому владельцу (`Owner` UUID + `OwnerName` для подсказки). ПКМ — забрать до
   50, ПКМ+Shift — долить до 50; чужому владельцу отказывает `jutsu.fail.battery.owner`. Привязка живёт
   в NBT самого предмета, поэтому переживает смерть и сундуки; `isFoil` включается при заряде > 0.
-* **Хенге** (`HengeJutsuAbility`, `V C V`, INSTANT, 30 чакры, КД 5 с) — копия внешности другого игрока
-  на 1 минуту. Сервер пишет только `hengeTarget` (UUID строкой) и `hengeName` — оба `@Sync(minTicks = 1)`
-  (String **поддерживается** синхронизацией sekclib, `StringSyncTracker` зарегистрирован в
+* **Хенге** (`HengeJutsuAbility`, `V C V`, INSTANT, 30 чакры, КД 5 с) — личина на 1 минуту. Цель —
+  любое **живое существо**, в которое смотрит кастер (`Targeting.lookedAtEntity`): другой игрок
+  (копируется скин) или моб (копируется модель). Клоны (`ShadowCloneEntity`) в цели не берутся — они
+  сами чей-то облик. Сервер пишет `hengeTarget` (UUID игрока, строка) **или** `hengeEntityType`
+  (реестровый id моба, напр. `minecraft:cow`), плюс `hengeName` — все `@Sync(minTicks = 1)` (String
+  **поддерживается** синхронизацией sekclib, `StringSyncTracker` зарегистрирован в
   `BaseSyncTrackers`), и `hengeTicks` (server-only, **не** в NBT — выход из игры личину снимает).
-  Повторный каст снимает личину без цели. Клиент (`client/renderer/HengeRenderEvents`, FORGE-шина):
-  в `RenderPlayerEvent.Pre` **отменяется ванильный рендер**, и тот же ванильный `PlayerRenderer`
-  рисует игрока ещё раз через свою копию (`HengePlayerRenderer extends PlayerRenderer`) с
-  переопределённым `getTextureLocation` — так сохраняются броня, предметы, элитры и все слои.
-  Копий две (wide/slim): скин и модель берутся у **цели** (`PlayerInfo#getSkinLocation/getModelName`
-  из `getConnection()`, иначе сущность в уровне, иначе `DefaultPlayerSkin`), поэтому худая цель
-  рисует широкого кастера худым. Рекурсия в собственный хук гасится флагом `rendering`. Ник
-  подменяется в `RenderNameTagEvent#setContent`. Контекст рендера для `bakeLayer` приходит из
-  `NarutoRenderEvents#addLayers` (MOD-шина) в `HengeRenderEvents#setContext`.
+  `isHenged()` истинно, если заполнен любой из двух (target/entityType). Повторный каст снимает
+  личину без цели. Клиент (`client/renderer/HengeRenderEvents`, FORGE-шина) в `RenderPlayerEvent.Pre`
+  **отменяет ванильный рендер** и рисует вместо него либо копию игрока, либо моба:
+  * **игрок** — тот же ванильный `PlayerRenderer` через свою копию (`HengePlayerRenderer extends
+    PlayerRenderer`) с переопределённым `getTextureLocation`; так сохраняются броня, предметы, элитры
+    и слои. Копий две (wide/slim): скин и модель берутся у **цели** (`PlayerInfo#getSkinLocation/
+    getModelName` из `getConnection()`, иначе сущность в уровне, иначе `DefaultPlayerSkin`), поэтому
+    худая цель рисует широкого кастера худым. Ник подменяется в `RenderNameTagEvent#setContent`.
+  * **моб** — держится stand-in сущность нужного типа (`EntityType.byString(...).create(level)`,
+    кэш `fakeMob`/`fakeMobType`/`fakeMobLevel`), ей выставляется поза кастера в `syncPose` (позиция,
+    `yRot/xRot/yHeadRot/yBodyRot`, `tickCount`, `walkAnimation.update`) и рисуется её **собственным**
+    ванильным рендерером (`getEntityRenderDispatcher().getRenderer(mob)`) в точке игрока. Stand-in
+    создаётся на клиенте и никогда не тикает — поэтому позу и махи руками переносим руками. Имя —
+    `setCustomName(hengeName)` + `setCustomNameVisible`, дальше ваниль рисует нам-тег.
+  Рекурсия в собственный хук гасится флагом `rendering`. Контекст рендера для `bakeLayer` игрока
+  приходит из `NarutoRenderEvents#addLayers` (MOD-шина) в `HengeRenderEvents#setContext`.
 * **Броня с бонусами** (`item/armor/NarutoArmorItem$Bonus`, `events/NarutoArmorEvents`) — броня мода
   даёт не только защиту: `Bonus(chakraCapacity, maxHealth, chakraRegenPerSecond)` вешается на предмет
   через `setBonus(...)` (у головных повязок — регенерация, у масок АНБУ — запас чакры, у бронежилетов
@@ -466,6 +479,13 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   через `moveTo`. Игрока проще телепортировать `ServerPlayer#teleportTo(ServerLevel, ...)`: у
   `Entity` такой перегрузки нет (в SRG видно только
   `m_264318_(ServerLevel, double, double, double, Set<RelativeMovement>, float, float)`).
+* **`player.pick(...)` видит только блоки.** `Entity#pick` строит `ClipContext` по блокам и возвращает
+  `BlockHitResult` или `MISS` — `EntityHitResult` из него не приходит **никогда**, поэтому «найди, на
+  кого смотрит игрок» через `player.pick` не работает (гендзюцу, хенге и затяг Камуи так и не находили
+  цель). Клиент строит свой луч для прицела в рендере, но он недоступен на сервере. Правильный путь —
+  `util/Targeting.lookedAtEntity(player, range)`: сначала `level().clip(new ClipContext(..., Block.COLLIDER, ...))`
+  до первой стены, затем `ProjectileUtil.getEntityHitResult(shooter, eye, end, box, isPickable, distSq)`
+  на этом отрезке. Так луч не проходит сквозь стены и упирается в чужую цель.
 
 * **Текстуры предметов/блоков.** В моде они лежат в легаси-папках `textures/items/` и `textures/blocks/`
   (множественное число, как в 1.7.10), а в 1.19.4+/1.20.1 атлас собирается из директорий

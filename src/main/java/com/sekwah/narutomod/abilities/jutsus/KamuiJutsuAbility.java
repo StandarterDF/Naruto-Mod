@@ -5,6 +5,7 @@ import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.JutsuEffects;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.config.NarutoConfig;
+import com.sekwah.narutomod.util.Targeting;
 import com.sekwah.narutomod.world.KamuiChunkGenerator;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -21,8 +22,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.EntityHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.util.ITeleporter;
 
@@ -278,8 +277,7 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
     }
 
     private Entity lookedAt(Player player) {
-        HitResult hit = player.pick(PULL_RANGE, 0.0f, false);
-        return hit.getType() == HitResult.Type.ENTITY ? ((EntityHitResult) hit).getEntity() : null;
+        return Targeting.lookedAtEntity(player, PULL_RANGE);
     }
 
     /** @return the pocket dimension, or null if that datapack dimension is not loaded. */

@@ -141,7 +141,7 @@
   "narutomod:henge": "Henge (Transformation)",
   "jutsu.henge.start": "You take on the form of %s",
   "jutsu.henge.end": "Your disguise falls away",
-  "jutsu.fail.henge.notarget": "%s needs another player in front of you to copy",
+  "jutsu.fail.henge.notarget": "%s needs a living being in front of you to copy",
   "jutsu.fail.henge.disabled": "%s is disabled on this server",
   "death.attack.narutomod.gate_backlash": "%1$s was torn apart from the inside by the eight inner gates",
   "death.attack.narutomod.fireball": "%1$s was burned to ash by a fireball",

@@ -3,25 +3,29 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.config.NarutoConfig;
+import com.sekwah.narutomod.entity.ShadowCloneEntity;
+import com.sekwah.narutomod.util.Targeting;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.EntityHitResult;
-import net.minecraft.world.phys.HitResult;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * Henge: the transformation technique, used to wear somebody else's face.
  *
- * <p>Cast at the player you are looking at, it copies their skin and their name onto you for a
- * minute. Nothing about the caster changes underneath - the same inventory, the same health, the same
- * reach - so it is a disguise rather than a shape change, and its whole value is that other players
- * see whoever you picked instead of you. The rendering side of that lives in {@code HengeRenderEvents}
- * on the client; this class only records who is being copied.</p>
+ * <p>Cast at whoever you are looking at, it copies their shape onto you for a minute - the skin and
+ * model of another player, or the whole body of a mob - along with their name. Nothing about the
+ * caster changes underneath - the same inventory, the same health, the same reach - so it is a
+ * disguise rather than a shape change whose whole value is that other players see somebody else. The
+ * rendering side of that lives in {@code HengeRenderEvents} on the client; this class only records
+ * what is being copied.</p>
  *
  * <p>Casting it again while disguised takes the disguise off, whichever way the ninja is looking, so
  * a henge can always be dropped without needing a target. It is worthless in a fight and deliberately
@@ -65,7 +69,7 @@ public class HengeJutsuAbility extends Ability implements Ability.Cooldown {
         if (ninjaData.isHenged()) {
             return true;
         }
-        if (findTarget(player) == null) {
+        if (findTargetEntity(player) == null) {
             player.displayClientMessage(Component.translatable("jutsu.fail.henge.notarget",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
                     .withStyle(ChatFormatting.RED), true);
@@ -87,12 +91,18 @@ public class HengeJutsuAbility extends Ability implements Ability.Cooldown {
             clear(player, ninjaData);
             return;
         }
-        Player target = findTarget(player);
+        Entity target = findTargetEntity(player);
         if (target == null) {
             // The check in handleCost already passed; nothing to copy, so nothing happens.
             return;
         }
-        ninjaData.setHengeTarget(target.getUUID().toString());
+        if (target instanceof Player playerTarget) {
+            ninjaData.setHengeTarget(playerTarget.getUUID().toString());
+            ninjaData.setHengeEntityType("");
+        } else {
+            ninjaData.setHengeTarget("");
+            ninjaData.setHengeEntityType(EntityType.getKey(target.getType()).toString());
+        }
         ninjaData.setHengeName(target.getName().getString());
         ninjaData.setHengeTicks(DURATION);
 
@@ -112,6 +122,7 @@ public class HengeJutsuAbility extends Ability implements Ability.Cooldown {
     public static void clear(Player player, INinjaData ninjaData) {
         boolean announced = ninjaData.isHenged();
         ninjaData.setHengeTarget("");
+        ninjaData.setHengeEntityType("");
         ninjaData.setHengeName("");
         ninjaData.setHengeTicks(0);
         if (announced) {
@@ -139,14 +150,20 @@ public class HengeJutsuAbility extends Ability implements Ability.Cooldown {
         return COOLDOWN;
     }
 
-    /** @return the player the ninja is looking at, or null when they are looking at anything else. */
+    /**
+     * @return the living thing the ninja is looking at - another player or a mob - or null when they
+     *     are looking at anything else. Shadow clones are left out: they are already wearing a face,
+     *     and copying one would mean copying whoever it was copied from.
+     */
     @Nullable
-    public static Player findTarget(Player player) {
-        HitResult hit = player.pick(RANGE, 0.0f, false);
-        if (hit instanceof EntityHitResult entityHit && entityHit.getEntity() instanceof Player target
-                && target != player && target.isAlive()) {
-            return target;
+    public static Entity findTargetEntity(Player player) {
+        Entity lookedAt = Targeting.lookedAtEntity(player, RANGE);
+        if (lookedAt == null || lookedAt == player || !lookedAt.isAlive()) {
+            return null;
         }
-        return null;
+        if (lookedAt instanceof ShadowCloneEntity) {
+            return null;
+        }
+        return lookedAt instanceof LivingEntity ? lookedAt : null;
     }
 }
