@@ -113,5 +113,11 @@
       "narutomod:abilities/doublejump3"
     ],
     "subtitle": "ability.double_jump"
+  },
+  "clone_poof": {
+    "sounds": [
+      "narutomod:jutsu/clone_poof"
+    ],
+    "subtitle": "narutomod.subtitle.clone_poof"
   }
 }

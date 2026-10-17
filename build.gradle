@@ -47,7 +47,9 @@ def shaRef = githubSha != null ? "-${githubSha.substring(0, 8)}" : ""
 println "Branch ${branch}${shaRef} isRelease: '${isRelease}'"
 
 // Get version from file managed by please-release
-def versionString = (file('./version.txt').text + (isRelease ? "" : "-${snapshotName}${shaRef}")).replaceAll('\n', '')
+// Strip both CR and LF: on Windows git checks version.txt out with CRLF and a leftover \r
+// makes the jar file name invalid.
+def versionString = (file('./version.txt').text + (isRelease ? "" : "-${snapshotName}${shaRef}")).replaceAll(/[\r\n]/, '')
 setVersion(versionString)
 println "Version: ${getVersion()}"
 

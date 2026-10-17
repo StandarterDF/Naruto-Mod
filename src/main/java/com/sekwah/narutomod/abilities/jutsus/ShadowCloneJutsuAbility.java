@@ -1,0 +1,122 @@
+package com.sekwah.narutomod.abilities.jutsus;
+
+import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.entity.ShadowCloneEntity;
+import com.sekwah.narutomod.sounds.NarutoSounds;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
+
+/**
+ * Summons copies of the caster which fight for them, see {@link ShadowCloneEntity}.
+ *
+ * <p>The same class backs all three versions of the technique (normal, chibi and multi shadow
+ * clone), they only differ in their {@link Settings}.</p>
+ */
+public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown {
+
+    /**
+     * Tunables for one version of the technique.
+     *
+     * <p>{@code combo} uses the same hand seal encoding as the rest of the mod, where the digits
+     * match the jutsu keys (1 = key 1, 2 = key 2, 3 = key 3). These are the combos from the 1.7.10
+     * mod: cbbv for the shadow clone, cbvv for the chibi version and cbbvbc for the multi version.</p>
+     */
+    public record Settings(long combo, float chakraCost, int minClones, int maxClones, int lifetime,
+                           boolean chibi, double attackDamage, double movementSpeed,
+                           int cooldown, int chakraRegenDelay) {}
+
+    /** C B B V - a couple of copies of yourself. */
+    public static final Settings SHADOW_CLONE_SETTINGS =
+            new Settings(1332L, 40f, 2, 3, 20 * 25, false, 2.0d, 0.3d, 20 * 3, 20 * 2);
+
+    /** C B V V - cheap, small and weak, but you get a handful of them. */
+    public static final Settings CHIBI_SHADOW_CLONE_SETTINGS =
+            new Settings(1322L, 20f, 3, 5, 20 * 15, true, 1.0d, 0.35d, 20 * 2, 20);
+
+    /** C B B V B C - the expensive one, a small army. */
+    public static final Settings MULTI_SHADOW_CLONE_SETTINGS =
+            new Settings(133231L, 80f, 8, 11, 20 * 25, false, 2.0d, 0.3d, 20 * 10, 20 * 5);
+
+    /** Radius of the ring the clones appear in. */
+    private static final double SPAWN_RADIUS = 1.6d;
+
+    private final Settings settings;
+
+    public ShadowCloneJutsuAbility(Settings settings) {
+        this.settings = settings;
+    }
+
+    @Override
+    public ActivationType activationType() {
+        return ActivationType.INSTANT;
+    }
+
+    @Override
+    public long defaultCombo() {
+        return this.settings.combo();
+    }
+
+    @Override
+    public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
+        if (ninjaData.getChakra() < this.settings.chakraCost()) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
+            return false;
+        }
+        ninjaData.useChakra(this.settings.chakraCost(), this.settings.chakraRegenDelay());
+        return true;
+    }
+
+    @Override
+    public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
+        if (!(player.level() instanceof ServerLevel level)) {
+            return;
+        }
+
+        int cloneCount = this.settings.minClones()
+                + player.getRandom().nextInt(this.settings.maxClones() - this.settings.minClones() + 1);
+
+        for (int i = 0; i < cloneCount; i++) {
+            ShadowCloneEntity clone = new ShadowCloneEntity(level, player,
+                    this.settings.lifetime(), this.settings.chibi());
+            clone.applyVariantAttributes(this.settings.attackDamage(), this.settings.movementSpeed());
+            this.positionClone(clone, level, player, i, cloneCount);
+            level.addFreshEntity(clone);
+        }
+
+        level.sendParticles(ParticleTypes.CLOUD, player.getX(),
+                player.getY() + player.getBbHeight() / 2.0d, player.getZ(),
+                60, 0.6d, 0.8d, 0.6d, 0.02d);
+        level.playSound(null, player, NarutoSounds.SHADOW_CLONE_POOF.get(), SoundSource.PLAYERS, 0.8f, 1.0f);
+    }
+
+    /**
+     * Spreads the clones out in a ring around the caster, closing the ring in if there is no room.
+     */
+    private void positionClone(ShadowCloneEntity clone, ServerLevel level, Player player, int index, int total) {
+        double angle = (Math.PI * 2.0d / total) * index;
+
+        for (double radius : new double[]{SPAWN_RADIUS, SPAWN_RADIUS / 2.0d, 0.0d}) {
+            double x = player.getX() + Math.sin(angle) * radius;
+            double z = player.getZ() + Math.cos(angle) * radius;
+            clone.moveTo(x, player.getY(), z, player.getYRot(), player.getXRot());
+            if (level.noCollision(clone, clone.getBoundingBox())) {
+                break;
+            }
+        }
+
+        Vec3 velocity = player.getLookAngle().scale(0.05d);
+        clone.setDeltaMovement(velocity.x, 0.0d, velocity.z);
+    }
+
+    @Override
+    public int getCooldown() {
+        return this.settings.cooldown();
+    }
+}

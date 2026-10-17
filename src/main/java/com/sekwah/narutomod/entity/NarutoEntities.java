@@ -53,6 +53,9 @@ public class NarutoEntities {
     public static final RegistryObject<EntityType<SubstitutionLogEntity>> SUBSTITUTION_LOG = register("substitution_log",
             EntityType.Builder.<SubstitutionLogEntity>of(SubstitutionLogEntity::new, MobCategory.MISC).fireImmune().sized(0.3F, 0.3F).clientTrackingRange(4));
 
+    public static final RegistryObject<EntityType<ShadowCloneEntity>> SHADOW_CLONE = register("shadow_clone",
+            EntityType.Builder.<ShadowCloneEntity>of(ShadowCloneEntity::new, MobCategory.CREATURE).sized(0.6F, 1.8F).clientTrackingRange(10));
+
     private static <T extends Entity> RegistryObject<EntityType<T>> register(String key, EntityType.Builder<T> builder) {
         return ENTITIES.register(key, () -> builder.build(key));
     }
@@ -64,6 +67,7 @@ public class NarutoEntities {
     @SubscribeEvent
     public static void entityAttributeCreation(EntityAttributeCreationEvent event) {
         event.put(SUBSTITUTION_LOG.get(), SubstitutionLogEntity.createAttributes().build());
+        event.put(SHADOW_CLONE.get(), ShadowCloneEntity.createAttributes().build());
     }
 
 }

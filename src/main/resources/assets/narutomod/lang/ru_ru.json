@@ -18,5 +18,10 @@
   "block.narutomod.bonsai_tree":"Дерево Бонсай",
   "itemGroup.narutomod_armor": "Броня Ниндзя",
   "narutomod.subtitle.sizzle": "Шипящая Бумажная Бомба",
-  "itemGroup.narutomod_headbands": "Повязки Ниндзя"
+  "itemGroup.narutomod_headbands": "Повязки Ниндзя",
+  "narutomod:shadow_clone": "Дзюцу Теневого Клона",
+  "narutomod:chibi_shadow_clone": "Дзюцу Мини Теневого Клона",
+  "narutomod:multi_shadow_clone": "Дзюцу Множественного Теневого Клона",
+  "entity.narutomod.shadow_clone": "Теневой Клон",
+  "narutomod.subtitle.clone_poof": "Теневой Клон Исчезает"
 }

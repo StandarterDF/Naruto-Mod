@@ -1,0 +1,9 @@
+# The gradle build scripts read these as text and only tolerate the line endings they
+# expect, so pin them instead of letting git convert them per platform.
+version.txt text eol=lf
+
+# Batch files must stay CRLF: cmd.exe mis-parses `call :label` / `goto :label` in LF files.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+.gitattributes text eol=lf

@@ -43,6 +43,8 @@ public class NarutoRenderEvents {
 
         event.registerEntityRenderer(NarutoEntities.SUBSTITUTION_LOG.get(), SubstitutionLogRenderer::new);
 
+        event.registerEntityRenderer(NarutoEntities.SHADOW_CLONE.get(), ShadowCloneRenderer::new);
+
     }
 
     @SubscribeEvent
