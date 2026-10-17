@@ -60,7 +60,7 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
 | Теневой клон | `C B B V` | 40 | 2–3 | 25 с | 2 | 0.3 | 3 с |
 | Чиби-клон | `C B V V` | 20 | 3–5 | 15 с | 1 | 0.35 | 2 с |
 | Мульти-клон | `C B B V B C` | 80 | 8–11 | 25 с | 2 | 0.3 | 10 с |
-| Медитация чакры | `C B B C` | 60 | 2 | 30 с | 0 | 0 | 90 с |
+| Медитация чакры | `C B B C` | 60 | 2 | 60 с | 0 | 0 | 60 с |
 
 **Расход печати.** Любой призыв клонов (все четыре техники) требует `narutomod:chakra_seal` в
 инвентаре и тратит **одну** печать за каст — независимо от числа клонов. Проверка в
@@ -218,12 +218,13 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 | Чакра-щит | `B V B` | INSTANT | вся чакра (мин. 20) | `abilities/jutsus/ChakraShieldAbility.java` + `events/ChakraShieldEvents.java` |
 | Второе дыхание | `V V B` | INSTANT | вся чакра (мин. 60), КД 10 мин | `abilities/jutsus/SecondBreathAbility.java` + `events/SecondBreathEvents.java` |
 | Регенерация чакрой | `V B B C` | TOGGLE | 6 чакры + 1 еда за 1 HP | `abilities/jutsus/ChakraRegenerationAbility.java` |
-| Рудокоп (Земля) | `C V V C` | INSTANT | 40 чакры | `abilities/jutsus/OreExcavationJutsuAbility.java` |
+| Рудокоп (Земля) | `C V V C` | INSTANT | 25 чакры (нужна кирка в руке) | `abilities/jutsus/OreExcavationJutsuAbility.java` |
 | Расенган | `C B B C B` | CHANNELED | 0.6 чакры/тик | `abilities/jutsus/RasenganJutsuAbility.java` |
 | Восемь врат | `V B B B` | INSTANT | 25 чакры + 15 стамины за врата | `abilities/jutsus/EightGatesAbility.java` |
 | Запечатать врата | `V B B V` | INSTANT | бесплатно (только врата 1–7) | `abilities/jutsus/GateReleaseAbility.java` |
 | Камуи | `B V V C C` | CHANNELED | 40 чакры шаг / 1.5 за тик + 30 за затяг | `abilities/jutsus/KamuiJutsuAbility.java` + `events/KamuiEvents.java` |
 | Чакра-печать | — | предмет | 1 за призыв клонов | `NarutoItems.CHAKRA_SEAL` |
+| Печать рабочего | — | предмет | 1 за рабочего | `item/WorkerSealItem.java` + `entity/ai/WorkerHarvestGoal.java` |
 | Рамен | — | предмет (еда) | — | `NarutoItems.RAMEN` |
 | Самехада / Кубикирибочо | — | оружие | — | `item/ComboSwordItem.java` + `events/ComboSwordEvents.java` |
 
@@ -252,8 +253,14 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   6 чакры + 1 food point (`FoodData#setFoodLevel`), без еды — 15 чакры и без расхода еды. Еды
   хватает только на 2 HP за «окорочек», поэтому основной расход всё равно чакра.
 * **Рудокоп** — флудит куб радиусом 5 и ломает всё, что под тегом `forge:ores` (модовые руды тоже),
-  но не больше `MAX_BLOCKS = 64` блоков за каст. Позиции собираются **до** разрушения (иначе
-  перебор `BlockPos.immutable()` в живом уровне), ломается через `level.destroyBlock(pos, true, player)`.
+  но не больше `MAX_BLOCKS = 64` блоков за каст. **Требует кирку в руке** (`handleCost` отказывает и
+  не берёт чакру, если в главной руке не `PickaxeItem`), и каждая руда проверяется
+  `ItemStack#isCorrectToolForDrops(state)` — то есть ломается только то, что эта кирка реально взяла
+  бы (тир учитывается: каменная не возьмёт алмазную руду). Прочность тратит
+  `ItemStack#mineBlock(level, state, pos, player)`, по 1 за блок; кирка проверяется **заново перед
+  каждым блоком**, поэтому сломавшаяся в середине каста кирка обрывает остальное. Позиции собираются
+  **до** разрушения (иначе перебор `BlockPos.immutable()` в живом уровне), ломается через
+  `level.destroyBlock(pos, true, player)`.
 * **Расенган** — CHANNELED: `handleCost` жжёт 0.6 чакры/тик, `handleChannelling` рисует шар у руки,
   `performServer` получает число продержанных тиков и бьёт по площади спереди. Тап (< 20 тиков) —
   пшик, 60 тиков — максимум (урон 4→16, вылет 0.8→1.8). Дальше тиков больше — урон не растёт.
@@ -283,20 +290,48 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   пустоты не запирает), а **удержание** (≥ `MIN_CHANNEL = 20` тиков, 1.5 чакры/тик) затягивает цель.
   Цель — то, во что смотрит `player.pick(PULL_RANGE, 0, false)` (лучи не проходят через стены),
   `LivingEntity`, кроме кастера и креативных/наблюдателей; за сам затяг ещё 30 чакры.
-  **Измерение — чистый датапак**, без Java: `data/narutomod/dimension_type/kamui.json` +
-  `data/narutomod/dimension/kamui.json` (flat-генератор: один слой бедрока, биом `the_void`, небо
-  Края, `min_y=0, height=256`; точка прилёта кастера — `CASTER_ARRIVAL`, цели — `TARGET_ARRIVAL`, обе
-  на y=1). Копать там нечего, спавн запрещён событием. Затянутое живёт по таймеру и возвращается
+  **Измерение — датапак + свой генератор**: `data/narutomod/dimension_type/kamui.json` +
+  `data/narutomod/dimension/kamui.json` (биом `the_void`, небо Края, `min_y=0, height=256`), а
+  рельеф делает `world/KamuiChunkGenerator` (кодек `narutomod:kamui_pillars` в
+  `world/NarutoWorldGen`, `Registries.CHUNK_GENERATOR`): сетка квадратных платформ
+  `PLATFORM_SIZE = 5` с шагом `PLATFORM_PITCH = 7` (то есть 2 блока пустоты между ними), все одной
+  высоты, верхняя грань на y = 1. Никаких пещер, руды и мобов: `fillFromNoise` кладёт блоки по
+  координатам, остальные абстрактные методы `ChunkGenerator` — пустышки. Точка прилёта кастера —
+  `CASTER_ARRIVAL` (0.5, 1, 0.5), цели — `TARGET_ARRIVAL` (3.5, 1, 0.5), обе на первой платформе.
+  Спавн запрещён событием. Затянутое живёт по таймеру и возвращается
   **ровно туда, откуда его взяли**: координата и измерение пишутся в `entity.getPersistentData()`
   (`BANISH_TICKS` / `BANISH_RETURN` — работает и на мобах, и на игроках, и переживает сейв), обратный
   отсчёт — `KamuiEvents#onLivingTick`, который смотрит только сущности **внутри** кармана. Кастер под
   таймер не попадает. Срок хранения — конфиг `kamuiEnabled` / `kamuiTransferSeconds`.
-* **Мягкая посадка** (без комбо, автоматически) — в `PlayerEvents#livingFall`: задействуется только
-  если падение вообще нанесло бы урон (`distance > 3`, до этого ванильный урон нулевой, и тратить
-  стамину не на что), и если стамины хватает
-  на `10 + 6 × дистанция`, падение гасится полностью (`setDistance(0)`, облако частиц), стамина
-  списывается с задержкой регенерации 3 с. Не хватило — работает старый мягкий пересчёт ванильного
-  урона. Это самая дорогая трата стамины в моде: падение на 10 блоков стоит ~70 из 100.
+* **Фазовое тело Камуи** — пока канал удержан, `INinjaData#isKamuiPhasing()` (поле `@Sync`, поэтому
+  состояние едет на клиент) включается в `handleChannelling`, а применяется каждый тик в
+  `KamuiJutsuAbility#applyPhasing`, который зовётся из `NinjaCapabilityHandler#onPlayerUpdate` **на
+  обеих сторонах**: `player.noPhysics = true` + `setNoGravity(true)`. Клиент обязан выключать
+  коллизии тоже, иначе он выталкивает игрока из стены, которую сервер разрешает пройти, и шаг
+  дёргается; гравитация выключается, чтобы кастер не провалился сквозь пол, пока идёт сквозь стену.
+  Урон гасится в `KamuiEvents#onLivingHurt` (приоритет `HIGHEST`, чтобы не тратить «второе дыхание» на
+  удар, который и так не пройдёт): исключения — `DamageTypeTags.BYPASSES_INVULNERABILITY` (`/kill`,
+  пустота) и `DamageTypes.STARVE`. `isHolding` не верит одному флагу — техника обязана быть той же,
+  что каналится, иначе смерть/разрыв связи оставили бы игрока бессмертным. `performServer` всегда
+  снимает флаг и зовёт `unstick`, который ищет свободное место в радиусе 2/вверх 4, если игрок отпустил
+  комбо внутри стены.
+* **Мягкая посадка** (без комбо, автоматически) — в `PlayerEvents#livingFall`: считается урон, который
+  приземление всё равно отняло бы (ванильная формула `ceil(distance - 3 - jumpBoost)`), цена —
+  `SOFT_LANDING_STAMINA_PER_DAMAGE = 2` стамины за единицу урона. Хватает — падение гасится полностью
+  (`setDistance(0)`, облако частиц) с задержкой регенерации 3 с; не хватает — **приземление обычное и
+  стамина не тратится вообще**. Прежний «частичный пересчёт» (`distance *= 0.3`, `-= 5`, `*= 0.6`)
+  удалён: он и выглядел случайным. Цена теперь пропорциональна опасности: 4 блока — 2 стамины,
+  40 блоков — 74.
+* **Печать рабочего** (`item/WorkerSealItem`, ПКМ по блоку) — тот же `ShadowCloneEntity`, но с флагом
+  `worker` (`DATA_WORKER`, сохраняется в NBT), пустыми руками, сроком жизни 10 минут и координатой
+  «поста» (`workerHome`). Гол `WorkerHarvestGoal` (приоритет 1, работает только у рабочих) ищет
+  спелые `#minecraft:crops` в радиусе 8 блоков от поста, срезает их через
+  `Block.getDrops(...)` + `level.destroyBlock(pos, false)` и **сразу засевает заново**
+  (`CropBlock#getStateForAge(0)`), а лут кладёт в свой мешок (`collect`), сериализуемый в NBT
+  (`WorkerBag`). `CloneFollowOwnerGoal` отказывается работать у рабочих, как и у медитирующих.
+  При исчезновении (`dispel` → `releaseLoot`) мешок отдаётся **через 30 секунд**
+  (`WORKER_LOOT_DELAY`) через `INinjaData#scheduleDelayedTickEvent`: это то, что делает рабочего
+  работником, а не телепортом фермы. Если владелец не в сети — лут выпадает на месте клона.
 * **Великие мечи** (`ComboSwordItem`) — цепочка ударов живёт **в NBT стека**
   (`narutomod:combo`, `narutomod:combo_time`): каждый удар, попавший в окно (4–5 с), добавляет звено,
   урон следующего удара растёт (`damagePerStep`; Самехада — 0.5, Кубикирибочо — 0.75, максимум 20
@@ -325,6 +360,16 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   `dimension_type` битый или отсутствует, сервер **не падает**: измерение просто не регистрируется, а
   `Server#getLevel(...)` возвращает `null` — поэтому в коде всегда проверяй результат и показывай
   игроку `jutsu.fail.kamui.nodimension`, а не телепортируй «в никуда».
+* **Свой `ChunkGenerator` требует реализации больше, чем кажется.** В 1.20.1 кроме `codec()` абстрактны
+  `fillFromNoise`, `applyCarvers`, `buildSurface`, `spawnOriginalMobs`, `getGenDepth`, `getSeaLevel`,
+  `getMinY`, `getBaseHeight`, `getBaseColumn` **и `addDebugScreenInfo(List<String>, RandomState,
+  BlockPos)`** — последний легко забыть: он не имеет диапазона строк в `client_mappings.txt`, но
+  именно он даёт ошибку «is not abstract and does not override abstract method». Генератор
+  регистрируется как кодек (`DeferredRegister.create(Registries.CHUNK_GENERATOR, MOD_ID)`), а его
+  `codec()` — `RecordCodecBuilder` с полем `biome_source` (`BiomeSource.CODEC`), потому что генератор
+  обязан получить источник биомов из JSON (`{"type": "minecraft:fixed", "biome": "minecraft:the_void"}`).
+  Официальные имена методов и сигнатуры удобно доставать грепом по `client_mappings.txt` из кэша
+  ForgeGradle (`mcp_repo/.../joined/downloadClientMappings/client_mappings.txt`), а не угадывать.
 * **`LivingSpawnEvent.CheckSpawn` в 1.20.1 больше нет.** Проверка позиции моба в цепочке спавна — это
   `net.minecraftforge.event.entity.living.MobSpawnEvent.PositionCheck` (`@HasResult`;
   `setResult(Event.Result.DENY)` запрещает спавн). Старый `CheckSpawn` из туториалов не компилируется:

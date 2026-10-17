@@ -1,18 +1,10 @@
 {
   "type": "narutomod:kamui",
   "generator": {
-    "type": "minecraft:flat",
-    "settings": {
-      "layers": [
-        {
-          "block": "minecraft:bedrock",
-          "height": 1
-        }
-      ],
-      "biome": "minecraft:the_void",
-      "lakes": false,
-      "features": false,
-      "structure_overrides": []
+    "type": "narutomod:kamui_pillars",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "minecraft:the_void"
     }
   }
 }

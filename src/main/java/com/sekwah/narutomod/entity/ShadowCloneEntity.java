@@ -1,15 +1,21 @@
 package com.sekwah.narutomod.entity;
 
 import com.sekwah.narutomod.block.NarutoBlocks;
+import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.entity.ai.CloneFollowOwnerGoal;
 import com.sekwah.narutomod.entity.ai.CloneOwnerHurtByTargetGoal;
 import com.sekwah.narutomod.entity.ai.CloneOwnerHurtTargetGoal;
 import com.sekwah.narutomod.entity.ai.CloneRangedAttackGoal;
 import com.sekwah.narutomod.entity.ai.CloneUseShieldGoal;
+import com.sekwah.narutomod.entity.ai.WorkerHarvestGoal;
 import com.sekwah.narutomod.sounds.NarutoSounds;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -55,6 +61,8 @@ import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkHooks;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -92,6 +100,8 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
             SynchedEntityData.defineId(ShadowCloneEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_MEDITATING =
             SynchedEntityData.defineId(ShadowCloneEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DATA_WORKER =
+            SynchedEntityData.defineId(ShadowCloneEntity.class, EntityDataSerializers.BOOLEAN);
 
     /** How long a clone sticks around before it runs out of chakra, in ticks. */
     public static final int DEFAULT_LIFETIME = 20 * 25;
@@ -126,6 +136,19 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
      * killing blow pops it instead of just leaving a puff of smoke.
      */
     private boolean explosive;
+
+    /**
+     * How long a worker waits after popping before its harvest is handed to the caster, see
+     * {@link #releaseLoot()}. Long enough that a worker is a farmhand rather than a way to teleport
+     * a field across the map.
+     */
+    private static final int WORKER_LOOT_DELAY = 20 * 30;
+
+    /** Where a worker was put down, and therefore the middle of the land it works. */
+    private BlockPos workerHome;
+
+    /** Crops a worker has reaped and is carrying home, see {@link #collect(ItemStack)}. */
+    private final List<ItemStack> bag = new ArrayList<>();
 
     public ShadowCloneEntity(EntityType<ShadowCloneEntity> type, Level level) {
         super(type, level);
@@ -175,11 +198,15 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.entityData.define(DATA_OWNER_NAME, "");
         this.entityData.define(DATA_CHIBI, false);
         this.entityData.define(DATA_MEDITATING, false);
+        this.entityData.define(DATA_WORKER, false);
     }
 
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
+        // A worker clone farms instead of fighting or following; the goal refuses every other kind
+        // of clone, and the combat goals have nothing to work with in the worker's empty hands.
+        this.goalSelector.addGoal(1, new WorkerHarvestGoal(this));
         // Both weapon goals are always registered and decide for themselves whether they apply, so
         // a clone that is handed a bow later (or loses one) does not need its goals rebuilt. The
         // ranged goal sits above melee and only runs while the target is too far away to hit with a
@@ -490,6 +517,8 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
                     30, 0.4d, 0.5d, 0.4d, 0.02d);
             this.playSound(NarutoSounds.SHADOW_CLONE_POOF.get(), 0.6f, this.isChibi() ? 1.3f : 1.0f);
         }
+        // A worker hands its harvest over before it goes, see releaseLoot().
+        this.releaseLoot();
         this.discard();
     }
 
@@ -621,6 +650,70 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.entityData.set(DATA_MEDITATING, meditating);
     }
 
+    /**
+     * A worker clone does not fight and does not follow: it walks the ground it was put down on and
+     * reaps whatever is ripe there, see {@code WorkerHarvestGoal} and
+     * {@code com.sekwah.narutomod.item.WorkerSealItem}.
+     */
+    public boolean isWorker() {
+        return this.entityData.get(DATA_WORKER);
+    }
+
+    public void setWorker(boolean worker) {
+        this.entityData.set(DATA_WORKER, worker);
+    }
+
+    /** The middle of a worker's field: where it was placed. */
+    public BlockPos getWorkerHome() {
+        return this.workerHome;
+    }
+
+    public void setWorkerHome(BlockPos home) {
+        this.workerHome = home;
+    }
+
+    /** Puts a reaped crop into the bag a worker carries back to its caster. */
+    public void collect(ItemStack stack) {
+        if (!stack.isEmpty()) {
+            this.bag.add(stack.copy());
+        }
+    }
+
+    /**
+     * Hands a popped worker's harvest to its caster, {@link #WORKER_LOOT_DELAY} ticks later.
+     *
+     * <p>The delay is the whole point of a worker: it makes the clone a farmhand that walks the
+     * field and comes back with the crop rather than a way to move a chest of wheat across the map
+     * the moment it pops. If the caster is not around to take it the harvest is simply dropped where
+     * the clone stood, so nothing is ever lost to a logout.</p>
+     */
+    private void releaseLoot() {
+        if (this.bag.isEmpty()) {
+            return;
+        }
+        List<ItemStack> loot = new ArrayList<>(this.bag);
+        this.bag.clear();
+        Player owner = this.getOwner();
+        if (owner != null) {
+            owner.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(data ->
+                    data.scheduleDelayedTickEvent(player -> deliverLoot(player, loot), WORKER_LOOT_DELAY));
+            return;
+        }
+        for (ItemStack stack : loot) {
+            this.spawnAtLocation(stack);
+        }
+    }
+
+    private static void deliverLoot(Player player, List<ItemStack> loot) {
+        for (ItemStack stack : loot) {
+            if (!player.getInventory().add(stack)) {
+                player.drop(stack, false);
+            }
+        }
+        player.displayClientMessage(Component.translatable("jutsu.worker.harvest")
+                .withStyle(ChatFormatting.GREEN), true);
+    }
+
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
@@ -631,6 +724,17 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         tag.putInt("Lifetime", this.lifetime);
         tag.put("Ammo", this.ammo.save(new CompoundTag()));
         tag.putBoolean("Explosive", this.explosive);
+        tag.putBoolean("Worker", this.isWorker());
+        if (this.workerHome != null) {
+            tag.putLong("WorkerHome", this.workerHome.asLong());
+        }
+        if (!this.bag.isEmpty()) {
+            ListTag bagTag = new ListTag();
+            for (ItemStack stack : this.bag) {
+                bagTag.add(stack.save(new CompoundTag()));
+            }
+            tag.put("WorkerBag", bagTag);
+        }
     }
 
     @Override
@@ -645,6 +749,18 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.lifetime = tag.contains("Lifetime") ? tag.getInt("Lifetime") : DEFAULT_LIFETIME;
         this.ammo = tag.contains("Ammo") ? ItemStack.of(tag.getCompound("Ammo")) : ItemStack.EMPTY;
         this.explosive = tag.getBoolean("Explosive");
+        this.setWorker(tag.getBoolean("Worker"));
+        if (tag.contains("WorkerHome")) {
+            this.workerHome = BlockPos.of(tag.getLong("WorkerHome"));
+        }
+        this.bag.clear();
+        ListTag bagTag = tag.getList("WorkerBag", 10);
+        for (int i = 0; i < bagTag.size(); i++) {
+            ItemStack stack = ItemStack.of(bagTag.getCompound(i));
+            if (!stack.isEmpty()) {
+                this.bag.add(stack);
+            }
+        }
         // Mob#readAdditionalSaveData resets this from the tag, which would let clones despawn.
         this.setPersistenceRequired();
     }

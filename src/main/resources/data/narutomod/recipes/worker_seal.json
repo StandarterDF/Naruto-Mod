@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "narutomod:chakra_seal" },
+    { "item": "minecraft:wheat" },
+    { "item": "minecraft:wheat" },
+    { "item": "minecraft:paper" }
+  ],
+  "result": {
+    "item": "narutomod:worker_seal",
+    "count": 1
+  }
+}

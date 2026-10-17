@@ -116,6 +116,13 @@ public class NarutoItems {
     public static final RegistryObject<Item> CHAKRA_SEAL = ITEMS.register("chakra_seal",
             () -> new Item(new Item.Properties()));
 
+    /**
+     * The Worker's Seal: used on a block, it leaves a shadow clone behind to farm the ground around
+     * that spot and hand the harvest over when it pops, see {@link WorkerSealItem}.
+     */
+    public static final RegistryObject<Item> WORKER_SEAL = ITEMS.register("worker_seal",
+            () -> new WorkerSealItem(new Item.Properties()));
+
     public static final RegistryObject<Item> KATANA = ITEMS.register("katana", ()
             -> new SwordItem(NinjaTier.KATANA, 3, -1.95F, new Item.Properties()));
 

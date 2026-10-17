@@ -49,10 +49,11 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
      * C B B C - two clones left behind to meditate, see
      * {@code ChakraMeditationJutsuAbility#tickAura(Player)}. They neither move nor fight (their
      * speed and damage are zero and their goals are skipped), so all they do is sit there and feed
-     * the caster chakra while they last. The long cooldown is the price for the refill.
+     * the caster chakra while they last. They are the one clone that is supposed to be a long term
+     * investment, so they outlive every other version of the technique by a wide margin.
      */
     public static final Settings CHAKRA_MEDITATION_SETTINGS =
-            new Settings(1331L, 60f, 2, 2, 20 * 30, false, true, 0.0d, 0.0d, 20 * 90, 20 * 3);
+            new Settings(1331L, 60f, 2, 2, 20 * 60, false, true, 0.0d, 0.0d, 20 * 60, 20 * 3);
 
     /** Radius of the ring the clones appear in. */
     private static final double SPAWN_RADIUS = 1.6d;

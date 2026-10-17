@@ -2,11 +2,18 @@ package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.jutsus.KamuiJutsuAbility;
+import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -78,5 +85,33 @@ public class KamuiEvents {
         if (KamuiJutsuAbility.banishTicksLeft(event.getEntity()) >= 0) {
             event.setResult(Event.Result.DENY);
         }
+    }
+
+    /**
+     * While the swirl is held open the caster is half inside their own pocket, and nothing that hits
+     * them is really touching them: damage is refused outright.
+     *
+     * <p>Run at the highest priority so it happens before anything that reacts to being hurt - in
+     * particular before the second breath trick, which must not spend itself on an attack that was
+     * never going to land.</p>
+     *
+     * <p>The ways out of the world are left alone: {@code /kill}, the void below the platforms and
+     * starvation still work, so phasing cannot be used to sit out a fight forever or to ignore the
+     * rules of the game.</p>
+     */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onLivingHurt(LivingHurtEvent event) {
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+        DamageSource source = event.getSource();
+        if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY) || source.is(DamageTypes.STARVE)) {
+            return;
+        }
+        player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
+            if (KamuiJutsuAbility.isHolding(ninjaData)) {
+                event.setCanceled(true);
+            }
+        });
     }
 }

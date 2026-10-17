@@ -2,6 +2,7 @@ package com.sekwah.narutomod.capabilities;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.jutsus.KamuiJutsuAbility;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
@@ -57,6 +58,7 @@ public class NinjaCapabilityHandler {
                         });
                     }
                 }
+                KamuiJutsuAbility.applyPhasing(player);
             });
         }
 

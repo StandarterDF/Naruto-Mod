@@ -19,6 +19,7 @@ import com.sekwah.narutomod.item.NarutoItems;
 import com.sekwah.narutomod.network.PacketHandler;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import com.sekwah.narutomod.sounds.NarutoSounds;
+import com.sekwah.narutomod.world.NarutoWorldGen;
 import com.sekwah.sekclib.capabilitysync.capabilitysync.RegisterCapabilitySyncEvent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -67,6 +68,7 @@ public class NarutoMod {
         NarutoAbilities.register(eventBus);
         NarutoGameEvents.register(eventBus);
         NarutoCreativeTabs.register(eventBus);
+        NarutoWorldGen.register(eventBus);
 
         DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> NarutoInGameGUI::new);
     }

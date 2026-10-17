@@ -80,6 +80,14 @@ public interface INinjaData extends INBTSerializable<Tag> {
     ResourceLocation getKamuiReturnDimension();
     void setKamuiReturnLoc(Vec3 loc, ResourceLocation dimension);
 
+    /**
+     * Whether the player is currently holding the Kamui swirl open and with it a body that passes
+     * through walls and damage, see {@code KamuiJutsuAbility}. Synced, because the client has to stop
+     * colliding too or it would keep pushing the player back out of the wall.
+     */
+    boolean isKamuiPhasing();
+    void setKamuiPhasing(boolean phasing);
+
     DoubleJumpData getDoubleJumpData();
 
     HashMap<String, CooldownTickEvent> getCooldownEvents();

@@ -115,6 +115,13 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private ResourceLocation kamuiReturnDimension;
 
     /**
+     * Set while the Kamui swirl is held open, see {@code KamuiJutsuAbility}. Synced: the client has
+     * to drop collisions as well, otherwise it fights the server's phasing body every step.
+     */
+    @Sync(minTicks = 1)
+    private boolean kamuiPhasing;
+
+    /**
      * If the player can double jump, will be updated by underlying values server side.
      *
      * Will be true if the player has enough chakra as well as
@@ -368,6 +375,16 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     public void setKamuiReturnLoc(Vec3 loc, ResourceLocation dimension) {
         this.kamuiReturnLocation = loc;
         this.kamuiReturnDimension = dimension;
+    }
+
+    @Override
+    public boolean isKamuiPhasing() {
+        return this.kamuiPhasing;
+    }
+
+    @Override
+    public void setKamuiPhasing(boolean phasing) {
+        this.kamuiPhasing = phasing;
     }
 
     @Override

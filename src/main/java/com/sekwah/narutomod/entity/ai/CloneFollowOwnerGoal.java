@@ -50,6 +50,10 @@ public class CloneFollowOwnerGoal extends Goal {
         if (this.clone.isMeditating()) {
             return false;
         }
+        // Neither is a worker: it belongs to the field it was put down on.
+        if (this.clone.isWorker()) {
+            return false;
+        }
         if (this.clone.distanceToSqr(owner) < (double) (this.startDistance * this.startDistance)) {
             return false;
         }

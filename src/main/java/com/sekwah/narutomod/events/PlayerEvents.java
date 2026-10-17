@@ -9,6 +9,8 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
@@ -21,11 +23,10 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = NarutoMod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class PlayerEvents {
 
-    /** Stamina a cushioned landing costs before the height is even counted. */
-    private static final float SOFT_LANDING_MIN_STAMINA = 10.0f;
-
-    /** Stamina per block fallen once a landing is being cushioned. */
-    private static final float SOFT_LANDING_STAMINA_PER_BLOCK = 6.0f;
+    /**
+     * Stamina paid for every point of health a landing would otherwise have taken off.
+     */
+    private static final float SOFT_LANDING_STAMINA_PER_DAMAGE = 2.0f;
 
     private static final int SOFT_LANDING_STAMINA_REGEN_DELAY = 20 * 3;
 
@@ -89,6 +90,17 @@ public class PlayerEvents {
 
     // Handle if they have some agility perk or leaps.
     //
+    /**
+     * Chakra no Ukemi: stamina spent so a landing is taken on the legs rather than the spine.
+     *
+     * <p>The price is the damage the ground was about to charge, doubled, so a short drop is a
+     * couple of points and a lethal one is most of a full bar. There is nothing to cast, it simply
+     * happens whenever it is affordable.</p>
+     *
+     * <p>It is all or nothing on purpose. Not being able to pay used to leave the caster with a
+     * partially cushioned landing, which read as the stamina doing something random; now an
+     * unaffordable fall is simply a fall, and the stamina is kept for the next one.</p>
+     */
     @SubscribeEvent
     public static void livingFall(LivingFallEvent event) {
         if (event.getEntity() instanceof Player player){
@@ -97,39 +109,28 @@ public class PlayerEvents {
                     return;
                 }
 
-                // Nothing to catch: a fall this short would not have hurt in the first place, and
-                // burning stamina on every hop off a single block is just a tax. Vanilla only starts
-                // charging for falls past three blocks.
-                if (event.getDistance() <= 3.0f) {
+                // The vanilla sum, minus the jump boost that lifted the caster in the first place:
+                // a fall that would not have hurt has nothing to cushion.
+                MobEffectInstance jump = player.getEffect(MobEffects.JUMP);
+                float jumpBoost = jump == null ? 0.0f : jump.getAmplifier() + 1;
+                float damage = (float) Math.ceil(event.getDistance() - 3.0f - jumpBoost);
+                if (damage <= 0.0f) {
                     return;
                 }
 
-                // Chakra no Ukemi: bracing with chakra takes the whole fall off. There is nothing to
-                // cast, it just happens whenever the caster can afford it, and it is priced to hurt:
-                // a fall worth cushioning eats most of a full stamina bar.
-                float staminaCost = SOFT_LANDING_MIN_STAMINA
-                        + event.getDistance() * SOFT_LANDING_STAMINA_PER_BLOCK;
-                if (ninjaData.getStamina() >= staminaCost) {
-                    ninjaData.useStamina(staminaCost, SOFT_LANDING_STAMINA_REGEN_DELAY);
-                    event.setDistance(0.0f);
-                    player.resetFallDistance();
-                    if (player.level() instanceof ServerLevel serverLevel) {
-                        serverLevel.sendParticles(ParticleTypes.CLOUD, player.getX(),
-                                player.getY() + 0.1d, player.getZ(),
-                                20, 0.35d, 0.05d, 0.35d, 0.02d);
-                    }
+                float staminaCost = damage * SOFT_LANDING_STAMINA_PER_DAMAGE;
+                if (ninjaData.getStamina() < staminaCost) {
                     return;
                 }
 
-                float distance = event.getDistance();
-                if(distance < 9){
-                    distance *= 0.3f;
+                ninjaData.useStamina(staminaCost, SOFT_LANDING_STAMINA_REGEN_DELAY);
+                event.setDistance(0.0f);
+                player.resetFallDistance();
+                if (player.level() instanceof ServerLevel serverLevel) {
+                    serverLevel.sendParticles(ParticleTypes.CLOUD, player.getX(),
+                            player.getY() + 0.1d, player.getZ(),
+                            20, 0.35d, 0.05d, 0.35d, 0.02d);
                 }
-                if(distance > 3) {
-                    distance -= 5f;
-                    distance *= 0.6f;
-                }
-                event.setDistance(distance);
             });
         }
     }
