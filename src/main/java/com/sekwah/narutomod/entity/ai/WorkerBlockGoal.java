@@ -12,7 +12,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -105,6 +107,14 @@ public abstract class WorkerBlockGoal extends Goal {
     private int stuckTicks;
     private int roamTicks;
     private int clearCooldown;
+
+    /**
+     * The spots the worker may stand at to take the current target, nearest first, and which one it
+     * is walking to. Walking at a single spot is fragile - the near side of a trunk may be walled
+     * off while the far side is open - so the goal tries them in turn.
+     */
+    private List<BlockPos> standOptions = List.of();
+    private int standIndex;
 
     /** True while {@link #target} is somewhere to wander to rather than a block to work on. */
     private boolean roaming;
@@ -231,7 +241,9 @@ public abstract class WorkerBlockGoal extends Goal {
         this.reachTicks = 0;
         this.stuckTicks = 0;
         this.roamTicks = ROAM_TICKS;
-        this.walkTo(this.target);
+        this.standOptions = this.standOptions(this.target);
+        this.standIndex = 0;
+        this.walkToStand();
         this.repathTicks = REPATH_TICKS;
     }
 
@@ -280,20 +292,25 @@ public abstract class WorkerBlockGoal extends Goal {
                         && this.clearPath(level, this.target)) {
                     this.stuckTicks = 0;
                     this.clearCooldown = PATH_CLEAR_TICKS;
-                    this.walkTo(this.target);
+                    this.walkToStand();
                     this.repathTicks = REPATH_TICKS;
                     return;
                 }
-                // Standing here with the path finished but still out of reach means there is no way
-                // to the block. Retry a couple of times in case something moved, then give it up:
-                // this is what keeps a worker from freezing beside a tree it cannot get to.
+                // This side did not get the worker there. Try the next spot to stand before giving
+                // up: the near side of a trunk is often the awkward one, while the far side is open.
+                if (this.nextStand()) {
+                    this.stuckTicks = 0;
+                    return;
+                }
+                // Every spot tried and still out of reach: retry a couple of times in case something
+                // moved, then give it up so the worker does not freeze beside a tree it cannot get to.
                 if (++this.stuckTicks > STUCK_TICKS) {
                     this.abandon();
                     return;
                 }
                 if (--this.repathTicks <= 0) {
                     this.repathTicks = REPATH_TICKS;
-                    this.walkTo(this.target);
+                    this.walkToStand();
                 }
             } else {
                 this.stuckTicks = 0;
@@ -403,9 +420,57 @@ public abstract class WorkerBlockGoal extends Goal {
         return claim.holder() != this.worker.getId();
     }
 
-    private void walkTo(BlockPos pos) {
-        BlockPos stand = this.standPosition(pos);
+    private void walkToStand() {
+        if (this.standOptions.isEmpty()) {
+            return;
+        }
+        BlockPos stand = this.standOptions.get(Math.min(this.standIndex, this.standOptions.size() - 1));
         this.worker.getNavigation().moveTo(stand.getX() + 0.5d, stand.getY(), stand.getZ() + 0.5d, 1.0d);
+    }
+
+    /**
+     * Steps to the next spot to stand and sets off for it.
+     *
+     * @return whether there was another spot to try.
+     */
+    private boolean nextStand() {
+        if (this.standIndex + 1 >= this.standOptions.size()) {
+            return false;
+        }
+        this.standIndex++;
+        this.walkToStand();
+        this.repathTicks = REPATH_TICKS;
+        return true;
+    }
+
+    /**
+     * The spots the worker could stand at to take a block, nearest first.
+     *
+     * <p>One spot is not enough: the nearest side of a trunk is often the awkward one (walled in by
+     * the tree's own trunk on a wide one, or hemmed by a slope) while the far side is open, so the
+     * goal walks to them in turn instead of writing the block off when the first try does not
+     * arrive. The block itself is kept as the last resort - aiming straight at it makes the
+     * pathfinder end the path at the closest spot it can actually reach, which tucks the worker in
+     * against the trunk.</p>
+     */
+    private List<BlockPos> standOptions(BlockPos pos) {
+        Level level = this.worker.level();
+        if (level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
+            return List.of(pos);
+        }
+        List<BlockPos> options = new ArrayList<>();
+        for (int dy : STAND_HEIGHTS) {
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                BlockPos candidate = pos.relative(dir).above(dy);
+                if (this.isStandable(candidate)) {
+                    options.add(candidate);
+                }
+            }
+        }
+        options.sort(Comparator.comparingDouble(candidate ->
+                this.worker.distanceToSqr(Vec3.atCenterOf(candidate))));
+        options.add(pos);
+        return options;
     }
 
     /** @return the closest block of this job's kind around the worker that it can walk to. */
