@@ -189,7 +189,9 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 Логика:
 
 * Бревно — сущность `entity/ChakraMarkerEntity.java` (`Mob`, `MobCategory.MISC`): не двигается
-  (`setNoGravity`, `isPushable → false`, голов нет вовсе), неубиваемое, без деспавна
+  (`setNoGravity`, `isPushable → false`, голов нет вовсе), **неубиваемое по-настоящему**
+  (`hurt → false`, `isInvulnerableTo → true`, пустые `kill`/`die`: `setInvulnerable` одного не хватает,
+  его пробивает креатив и `genericKill` от `/kill`), без деспавна
   (`setPersistenceRequired` + переприменение в `readAdditionalSaveData`), светится портальными
   частицами раз в 4 тика, знает своего владельца (`Owner` в NBT). Рендер — тем же
   `SubstitutionLogModel` + `SubstitutionLogRenderer.SUBSTITUTION_LOG`, отдельный `ChakraMarkerRenderer`.

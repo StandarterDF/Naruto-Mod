@@ -5,6 +5,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -77,6 +78,37 @@ public class ChakraMarkerEntity extends Mob {
     @Override
     public boolean isPushable() {
         return false;
+    }
+
+    /**
+     * Nothing gets to hurt the marker: it is scenery, not a mob.
+     *
+     * <p>Marking it invulnerable is not enough by itself. A player in creative mode walks straight
+     * through invulnerability, and so does the generic kill damage behind {@code /kill}, which would
+     * let anyone else take the caster's way home away from them.</p>
+     */
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        return false;
+    }
+
+    @Override
+    public boolean isInvulnerableTo(DamageSource source) {
+        return true;
+    }
+
+    /**
+     * {@code /kill} is not a way to erase a marker either. The only thing that removes one is its
+     * owner planting a new log, which erases the old one on purpose.
+     */
+    @Override
+    public void kill() {
+    }
+
+    @Override
+    public void die(DamageSource source) {
+        // Unreachable while hurt is refused, but the marker must not fall over for any reason: the
+        // caster would lose the way back with it.
     }
 
     @Override

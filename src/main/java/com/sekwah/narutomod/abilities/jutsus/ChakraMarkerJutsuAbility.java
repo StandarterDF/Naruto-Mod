@@ -28,6 +28,10 @@ import net.minecraft.world.phys.Vec3;
  * out and is still there after a restart. Its position is recorded as a coordinate, which is also
  * what makes the swap work when the log's chunk is not loaded. Cross dimension swaps are refused,
  * they would make the Nether a formality.</p>
+ *
+ * <p>The log itself cannot be destroyed by anything but its owner planting a new one, but the swap
+ * does not depend on it either way: it teleports to the recorded coordinate, so even a missing log
+ * (an admin wiping entities, say) still gets the caster home.</p>
  */
 public class ChakraMarkerJutsuAbility extends Ability implements Ability.Channeled {
 
