@@ -18,13 +18,14 @@ import net.minecraft.world.entity.player.Player;
  * <p>Every cast opens the next gate, and by the time all eight are open the caster is fast, strong
  * and hard to hurt in a way nothing else in the mod can match. The catch is that the body is not
  * built for it: the gates grind the caster down the whole time they are open, and the drain grows
- * with the square of how many are open, so the first few gates are something a caster can fight
- * through and the last few are a countdown.</p>
+ * with the square of how many are open, so two gates are something a caster can keep up for ten
+ * minutes while the last two are a countdown.</p>
  *
- * <p><b>The eighth gate cannot be closed.</b> Up to the seventh the caster can simply stop, but once
- * the last gate is open no cast shuts it again and eight gates drain a full health bar in a couple of
- * seconds. Death is the only way out, which is the point: the eighth gate is meant to be spent, not
- * used. The gates fall away with death and are gone when the caster comes back.</p>
+ * <p><b>The eighth gate cannot be closed.</b> Up to the seventh the caster can still seal them again
+ * with {@link GateReleaseAbility}, but once the last gate is open no cast shuts it and eight gates
+ * drain a full health bar in a little over half a minute. Death is the only way out, which is the
+ * point: the eighth gate is meant to be spent, not used. The gates fall away with death and are gone
+ * when the caster comes back.</p>
  *
  * <p>The effects are kept alive from {@code PlayerEvents}, not here, since they have to be refreshed
  * every tick while the gates are open.</p>
@@ -44,11 +45,14 @@ public class EightGatesAbility extends Ability {
     private static final int DRAIN_INTERVAL = 20;
 
     /**
-     * Health lost each tick of drain, multiplied by the square of the open gates. Squared on purpose:
-     * one gate is a trickle (0.15 a second), four is survivable for a while (2.4), six drains a full
-     * bar in under four seconds and the eighth leaves the caster roughly two seconds to live.
+     * Health lost each tick of drain, multiplied by the square of the open gates.
+     *
+     * <p>Anchored on two numbers rather than picked out of the air: the second gate costs a tenth of
+     * a heart a second, so a full health bar lasts ten minutes, and the eighth costs a bit over half
+     * a heart a second, which is a little over half a minute to live. Everything between follows
+     * from the square, so the early gates are a slow tax and the last two are a countdown.</p>
      */
-    private static final float DRAIN_COEFFICIENT = 0.15f;
+    private static final float DRAIN_COEFFICIENT = 0.00833f;
 
     @Override
     public ActivationType activationType() {

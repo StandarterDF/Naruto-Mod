@@ -11,6 +11,7 @@ import com.sekwah.narutomod.abilities.jutsus.ShadowCloneJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraRegenerationAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraShieldAbility;
 import com.sekwah.narutomod.abilities.jutsus.EightGatesAbility;
+import com.sekwah.narutomod.abilities.jutsus.GateReleaseAbility;
 import com.sekwah.narutomod.abilities.jutsus.OreExcavationJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.RasenganJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.SecondBreathAbility;
@@ -129,6 +130,13 @@ public class NarutoAbilities {
      */
     public static final RegistryObject<EightGatesAbility> EIGHT_GATES =
             ABILITY.register("eight_gates", EightGatesAbility::new);
+
+    /**
+     * Seals the gates that are open again, any number short of all eight. See
+     * {@link GateReleaseAbility}.
+     */
+    public static final RegistryObject<GateReleaseAbility> GATE_RELEASE =
+            ABILITY.register("gate_release", GateReleaseAbility::new);
 
     public static void register(IEventBus eventBus) {
         ABILITY.register(eventBus);

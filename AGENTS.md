@@ -219,6 +219,7 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 | Рудокоп (Земля) | `C V V C` | INSTANT | 40 чакры | `abilities/jutsus/OreExcavationJutsuAbility.java` |
 | Расенган | `C B B C B` | CHANNELED | 0.6 чакры/тик | `abilities/jutsus/RasenganJutsuAbility.java` |
 | Восемь врат | `V B B B` | INSTANT | 25 чакры + 15 стамины за врата | `abilities/jutsus/EightGatesAbility.java` |
+| Запечатать врата | `V B B V` | INSTANT | бесплатно (только врата 1–7) | `abilities/jutsus/GateReleaseAbility.java` |
 | Чакра-печать | — | предмет | 1 за призыв клонов | `NarutoItems.CHAKRA_SEAL` |
 | Рамен | — | предмет (еда) | — | `NarutoItems.RAMEN` |
 | Самехада / Кубикирибочо | — | оружие | — | `item/ComboSwordItem.java` + `events/ComboSwordEvents.java` |
@@ -253,14 +254,17 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 * **Расенган** — CHANNELED: `handleCost` жжёт 0.6 чакры/тик, `handleChannelling` рисует шар у руки,
   `performServer` получает число продержанных тиков и бьёт по площади спереди. Тап (< 20 тиков) —
   пшик, 60 тиков — максимум (урон 4→16, вылет 0.8→1.8). Дальше тиков больше — урон не растёт.
-* **Восемь врат** — состояние `INinjaData#getGateCount` (server-only, до 8). Каст открывает
-  следующее окно, а **на восьмых вратах закрыть их уже нельзя** (`jutsu.fail.gates_open`) — единственный
-  выход из них это смерть, и в этом смысл: восьмые врата рассчитаны на то, чтобы их потратить.
-  Эффекты (`SPEED`, `DAMAGE_BOOST`, `DAMAGE_RESISTANCE`, `JUMP`, длительность 40 тиков) обновляются
-  каждый тик из `EightGatesAbility.maintain`, вызываемого в `PlayerEvents#onEntityUpdate`. Плата —
-  «магический» урон раз в секунду, **квадратично** по числу врат (`DRAIN_COEFFICIENT = 0.15 × врата²`,
-  броня не спасает): 1 — 0.15/с, 4 — 2.4/с, 6 — 5.4/с, 8 — 9.6/с (полная полоса здоровья живёт ~2 с).
-  `EightGatesAbility.close` вызывает только смерть (`PlayerEvents#onPlayerClone`); `gateCount` в NBT не
+* **Восемь врат** — состояние `INinjaData#getGateCount` (server-only, до 8). Каст `V B B B` открывает
+  следующее окно, **закрыть врата 1–7 можно только отдельной техникой** `V B B V`
+  (`GateReleaseAbility`, бесплатно, `jutsu.fail.gates_none` когда нечего закрывать), а **на восьмых
+  вратах запечатать уже нельзя** (`jutsu.fail.gates_open`) — единственный выход из них это смерть, и в
+  этом смысл: восьмые врата рассчитаны на то, чтобы их потратить. Эффекты (`SPEED`, `DAMAGE_BOOST`,
+  `DAMAGE_RESISTANCE`, `JUMP`, длительность 40 тиков) обновляются каждый тик из
+  `EightGatesAbility.maintain`, вызываемого в `PlayerEvents#onEntityUpdate`. Плата — «магический» урон
+  раз в секунду, **квадратично** по числу врат (`DRAIN_COEFFICIENT = 0.00833 × врата²`, броня не
+  спасает). Кривая привязана к двум числам: 2-е врата стоят 0.033 HP/с (полная полоса — 10 минут),
+  8-е — 0.533 HP/с (~37 с жизни); между ними: 4 — 2.5 мин, 6 — 67 с, 7 — 49 с. `EightGatesAbility.close`
+  вызывает либо техника закрытия, либо смерть (`PlayerEvents#onPlayerClone`); `gateCount` в NBT не
   пишется, поэтому выход из игры врата тоже сбрасывает.
 * **Мягкая посадка** (без комбо, автоматически) — в `PlayerEvents#livingFall`: если стамины хватает
   на `10 + 6 × дистанция`, падение гасится полностью (`setDistance(0)`, облако частиц), стамина
