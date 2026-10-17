@@ -64,12 +64,16 @@ public class SupplyChestScreen extends AbstractContainerScreen<SupplyChestMenu> 
     }
 
     @Override
-    protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        super.renderLabels(graphics, mouseX, mouseY);
-        // Vanilla draws the slot items just before the labels, so the amount badges land on top of
-        // them here, before the tooltip is drawn.
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.render(graphics, mouseX, mouseY, partialTick);
+        // The item sprites are drawn deep inside super.render, so the amount badges have to go in
+        // afterwards to land in front of them instead of under the item icon.
+        this.renderAmountBadges(graphics);
+    }
+
+    private void renderAmountBadges(GuiGraphics graphics) {
         graphics.pose().pushPose();
-        graphics.pose().translate(0.0F, 0.0F, 200.0F);
+        graphics.pose().translate(0.0F, 0.0F, 300.0F);
         for (int i = 0; i < SupplyChestMenu.WINDOW_SIZE; i++) {
             int amount = this.menu.getDisplayAmount(i);
             if (amount <= 1) {
@@ -77,8 +81,9 @@ public class SupplyChestScreen extends AbstractContainerScreen<SupplyChestMenu> 
             }
             Slot slot = this.menu.slots.get(i);
             String text = SupplyChestMenu.formatAmount(amount);
-            graphics.drawString(this.font, text, slot.x + 17 - this.font.width(text), slot.y + 9,
-                    0xFFFFFF, true);
+            graphics.drawString(this.font, text,
+                    this.leftPos + slot.x + 17 - this.font.width(text),
+                    this.topPos + slot.y + 9, 0xFFFFFF, true);
         }
         graphics.pose().popPose();
     }
