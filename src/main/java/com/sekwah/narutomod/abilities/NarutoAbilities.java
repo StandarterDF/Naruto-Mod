@@ -19,6 +19,7 @@ import com.sekwah.narutomod.abilities.jutsus.SecondBreathAbility;
 import com.sekwah.narutomod.abilities.jutsus.SageModeAbility;
 import com.sekwah.narutomod.abilities.jutsus.SenjutsuChargingAbility;
 import com.sekwah.narutomod.abilities.jutsus.GenjutsuJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.HengeJutsuAbility;
 import com.sekwah.narutomod.abilities.utility.ChakraChargeAbility;
 import com.sekwah.narutomod.abilities.utility.ChakraFistAbility;
 import com.sekwah.narutomod.abilities.utility.DoubleJumpAbility;
@@ -168,6 +169,13 @@ public class NarutoAbilities {
      */
     public static final RegistryObject<GenjutsuJutsuAbility> GENJUTSU =
             ABILITY.register("genjutsu", GenjutsuJutsuAbility::new);
+
+    /**
+     * Wearing somebody else's face: a cosmetic disguise that copies another player's skin and name.
+     * See {@link HengeJutsuAbility}.
+     */
+    public static final RegistryObject<HengeJutsuAbility> HENGE =
+            ABILITY.register("henge", HengeJutsuAbility::new);
 
     public static void register(IEventBus eventBus) {
         ABILITY.register(eventBus);

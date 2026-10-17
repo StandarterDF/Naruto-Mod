@@ -136,6 +136,21 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private boolean sageMode;
 
     /**
+     * UUID of the player whose form the caster is wearing, or an empty string. Synced because the
+     * client renderer is what turns it into a copied skin and name tag, and deliberately not written
+     * to disk: logging out drops the disguise.
+     */
+    @Sync(minTicks = 1)
+    private String hengeTarget = "";
+
+    /** Display name that goes with {@link #hengeTarget}, synced for the same reason. */
+    @Sync(minTicks = 1)
+    private String hengeName = "";
+
+    /** Ticks of disguise left, server side only. */
+    private int hengeTicks;
+
+    /**
      * If the player can double jump, will be updated by underlying values server side.
      *
      * Will be true if the player has enough chakra as well as
@@ -430,6 +445,41 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     @Override
     public void setSageMode(boolean sage) {
         this.sageMode = sage;
+    }
+
+    @Override
+    public String getHengeTarget() {
+        return this.hengeTarget;
+    }
+
+    @Override
+    public void setHengeTarget(String uuid) {
+        this.hengeTarget = uuid == null ? "" : uuid;
+    }
+
+    @Override
+    public String getHengeName() {
+        return this.hengeName;
+    }
+
+    @Override
+    public void setHengeName(String name) {
+        this.hengeName = name == null ? "" : name;
+    }
+
+    @Override
+    public int getHengeTicks() {
+        return this.hengeTicks;
+    }
+
+    @Override
+    public void setHengeTicks(int ticks) {
+        this.hengeTicks = Math.max(ticks, 0);
+    }
+
+    @Override
+    public boolean isHenged() {
+        return this.hengeTicks > 0 && !this.hengeTarget.isEmpty();
     }
 
     @Override

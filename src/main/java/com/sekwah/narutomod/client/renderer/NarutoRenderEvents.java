@@ -54,6 +54,16 @@ public class NarutoRenderEvents {
         event.registerReloadListener(new NarutoResourceManager());
     }
 
+    /**
+     * The renderer context is the only way to bake a player model outside the vanilla registration,
+     * which is what henge needs to draw a disguised player with somebody else's skin. It is handed to
+     * {@link HengeRenderEvents} here and used lazily the first time a disguise is rendered.
+     */
+    @SubscribeEvent
+    public static void addLayers(EntityRenderersEvent.AddLayers event) {
+        HengeRenderEvents.setContext(event.getContext());
+    }
+
     @SubscribeEvent
     public static void layerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event)
     {

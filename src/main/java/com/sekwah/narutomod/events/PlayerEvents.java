@@ -4,6 +4,7 @@ import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.jutsus.ChakraMeditationJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraShieldAbility;
 import com.sekwah.narutomod.abilities.jutsus.EightGatesAbility;
+import com.sekwah.narutomod.abilities.jutsus.HengeJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.SageModeAbility;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import net.minecraft.ChatFormatting;
@@ -46,6 +47,8 @@ public class PlayerEvents {
             // Sage mode is fed from the nature energy pool and closes itself when it runs dry, see
             // SageModeAbility.
             SageModeAbility.maintain(player, ninjaData);
+            // A disguise is on a plain countdown, see HengeJutsuAbility.
+            HengeJutsuAbility.maintain(player, ninjaData);
         });
     }
 

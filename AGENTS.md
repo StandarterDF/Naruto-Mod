@@ -226,6 +226,7 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 | Сбор природной энергии | `V B C` | CHANNELED | бесплатно, но только стоя на месте | `abilities/jutsus/SenjutsuChargingAbility.java` |
 | Режим Мудреца | `V B V` | INSTANT | 50 сенин-маны на вход, 0.25/тик | `abilities/jutsus/SageModeAbility.java` |
 | Гендзюцу | `C B C` | INSTANT | 35 чакры, КД 10 с | `abilities/jutsus/GenjutsuJutsuAbility.java` + `events/GenjutsuEvents.java` |
+| Хенге | `V C V` | INSTANT | 30 чакры, КД 5 с | `abilities/jutsus/HengeJutsuAbility.java` + `client/renderer/HengeRenderEvents.java` |
 | Чакра-печать | — | предмет | 1 за призыв клонов | `NarutoItems.CHAKRA_SEAL` |
 | Печать рабочего | — | предмет | 1 за рабочего | `item/WorkerSealItem.java` + `entity/ai/WorkerHarvestGoal.java` |
 | Чакра-батарея | — | предмет | хранит 500, привязка к первому владельцу | `item/ChakraBatteryItem.java` |
@@ -366,6 +367,19 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   (`Chakra`), привязка к первому владельцу (`Owner` UUID + `OwnerName` для подсказки). ПКМ — забрать до
   50, ПКМ+Shift — долить до 50; чужому владельцу отказывает `jutsu.fail.battery.owner`. Привязка живёт
   в NBT самого предмета, поэтому переживает смерть и сундуки; `isFoil` включается при заряде > 0.
+* **Хенге** (`HengeJutsuAbility`, `V C V`, INSTANT, 30 чакры, КД 5 с) — копия внешности другого игрока
+  на 1 минуту. Сервер пишет только `hengeTarget` (UUID строкой) и `hengeName` — оба `@Sync(minTicks = 1)`
+  (String **поддерживается** синхронизацией sekclib, `StringSyncTracker` зарегистрирован в
+  `BaseSyncTrackers`), и `hengeTicks` (server-only, **не** в NBT — выход из игры личину снимает).
+  Повторный каст снимает личину без цели. Клиент (`client/renderer/HengeRenderEvents`, FORGE-шина):
+  в `RenderPlayerEvent.Pre` **отменяется ванильный рендер**, и тот же ванильный `PlayerRenderer`
+  рисует игрока ещё раз через свою копию (`HengePlayerRenderer extends PlayerRenderer`) с
+  переопределённым `getTextureLocation` — так сохраняются броня, предметы, элитры и все слои.
+  Копий две (wide/slim): скин и модель берутся у **цели** (`PlayerInfo#getSkinLocation/getModelName`
+  из `getConnection()`, иначе сущность в уровне, иначе `DefaultPlayerSkin`), поэтому худая цель
+  рисует широкого кастера худым. Рекурсия в собственный хук гасится флагом `rendering`. Ник
+  подменяется в `RenderNameTagEvent#setContent`. Контекст рендера для `bakeLayer` приходит из
+  `NarutoRenderEvents#addLayers` (MOD-шина) в `HengeRenderEvents#setContext`.
 
 ## Грабли, на которые уже наступали
 

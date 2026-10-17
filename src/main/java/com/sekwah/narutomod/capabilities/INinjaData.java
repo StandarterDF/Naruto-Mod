@@ -104,6 +104,25 @@ public interface INinjaData extends INBTSerializable<Tag> {
     boolean isSageMode();
     void setSageMode(boolean sage);
 
+    /**
+     * UUID of the player whose form is currently worn as a disguise, or an empty string when the
+     * caster is wearing their own face. Synced, because the only thing that uses it is the client
+     * side renderer, see {@code HengeRenderEvents}.
+     */
+    String getHengeTarget();
+    void setHengeTarget(String uuid);
+
+    /** Display name of the copied player, synced so the name tag can lie along with the skin. */
+    String getHengeName();
+    void setHengeName(String name);
+
+    /** Ticks of disguise left. Server side only: the client reads the target instead. */
+    int getHengeTicks();
+    void setHengeTicks(int ticks);
+
+    /** @return whether the caster is currently wearing somebody else's form. */
+    boolean isHenged();
+
     DoubleJumpData getDoubleJumpData();
 
     HashMap<String, CooldownTickEvent> getCooldownEvents();

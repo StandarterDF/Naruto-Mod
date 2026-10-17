@@ -76,6 +76,9 @@ public class NarutoConfig {
     private static final ForgeConfigSpec.BooleanValue CONFIG_SAGE_MODE_ENABLED;
     public static boolean sageModeEnabled;
 
+    private static final ForgeConfigSpec.BooleanValue CONFIG_HENGE_ENABLED;
+    public static boolean hengeEnabled;
+
     //private static final ForgeConfigSpec.BooleanValue CONFIG_STARTS_AS_NINJA;
     //public static boolean startsAsNinja;
 
@@ -117,6 +120,9 @@ public class NarutoConfig {
 
         CONFIG_SAGE_MODE_ENABLED = configBuilder.comment("Can players gather nature energy and enter sage mode?")
                 .define("sageModeEnabled", true);
+
+        CONFIG_HENGE_ENABLED = configBuilder.comment("Can players copy another player's skin and name with henge?")
+                .define("hengeEnabled", true);
 
         configBuilder.pop();
 
@@ -192,6 +198,7 @@ public class NarutoConfig {
         kamuiTransferSeconds = CONFIG_KAMUI_TRANSFER_SECONDS.get();
         maxSeninMana = CONFIG_MAX_SENIN_MANA.get().floatValue();
         sageModeEnabled = CONFIG_SAGE_MODE_ENABLED.get();
+        hengeEnabled = CONFIG_HENGE_ENABLED.get();
         //startsAsNinja = CONFIG_STARTS_AS_NINJA.get();
     }
 
