@@ -36,7 +36,7 @@ import java.util.function.Predicate;
  * pile onto one tree - each heads for its own.</p>
  *
  * <p>What is taken does not fall to the ground: it goes into the clone's bag, which it hands to its
- * caster when it pops (see {@code ShadowCloneEntity#releaseLoot(int)}).</p>
+ * caster when it pops (see {@code ShadowCloneEntity#releaseLoot()}).</p>
  */
 public abstract class WorkerBlockGoal extends Goal {
 
@@ -84,6 +84,9 @@ public abstract class WorkerBlockGoal extends Goal {
     /** How long a claimed block stays spoken for without being touched again. */
     private static final long CLAIM_TICKS = 1200L;
 
+    /** Ticks between two swings at whatever is blocking the walk to the target. */
+    private static final int PATH_CLEAR_TICKS = 5;
+
     /** Heights at which a block next to the target is tried, relative to the target. */
     private static final int[] STAND_HEIGHTS = {0, 1, -1};
 
@@ -101,6 +104,7 @@ public abstract class WorkerBlockGoal extends Goal {
     private int repathTicks;
     private int stuckTicks;
     private int roamTicks;
+    private int clearCooldown;
 
     /** True while {@link #target} is somewhere to wander to rather than a block to work on. */
     private boolean roaming;
@@ -171,6 +175,18 @@ public abstract class WorkerBlockGoal extends Goal {
         return Set.of();
     }
 
+    /**
+     * Clears whatever of this job's kind stands between the worker and the block it is after, when
+     * the walk has brought it as close as it can get. A lumberjack uses this for leaves: a trunk
+     * wrapped in foliage leaves no path through, so the worker hacks the leaves out of the way and
+     * tries again. The other jobs walk on open ground and have nothing to clear.
+     *
+     * @return whether a block was broken, in which case the worker sets off again.
+     */
+    protected boolean clearPath(ServerLevel level, BlockPos target) {
+        return false;
+    }
+
     @Override
     public boolean canUse() {
         if (!this.isMyJob()) {
@@ -228,6 +244,9 @@ public abstract class WorkerBlockGoal extends Goal {
 
     @Override
     public void tick() {
+        if (this.clearCooldown > 0) {
+            this.clearCooldown--;
+        }
         if (!this.queue.isEmpty()) {
             this.takeFromQueue();
             return;
@@ -254,6 +273,17 @@ public abstract class WorkerBlockGoal extends Goal {
                 return;
             }
             if (this.worker.getNavigation().isDone()) {
+                // Already as close as the ground allows. Before writing the block off, let the job
+                // clear whatever of its kind is in the way - a chopper hacks the leaves walling its
+                // tree in - and then set off again.
+                if (this.clearCooldown <= 0 && this.worker.level() instanceof ServerLevel level
+                        && this.clearPath(level, this.target)) {
+                    this.stuckTicks = 0;
+                    this.clearCooldown = PATH_CLEAR_TICKS;
+                    this.walkTo(this.target);
+                    this.repathTicks = REPATH_TICKS;
+                    return;
+                }
                 // Standing here with the path finished but still out of reach means there is no way
                 // to the block. Retry a couple of times in case something moved, then give it up:
                 // this is what keeps a worker from freezing beside a tree it cannot get to.

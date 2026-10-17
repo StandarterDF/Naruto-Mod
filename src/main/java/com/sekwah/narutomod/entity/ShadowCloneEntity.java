@@ -1,7 +1,6 @@
 package com.sekwah.narutomod.entity;
 
 import com.sekwah.narutomod.block.NarutoBlocks;
-import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.entity.ai.CloneFollowOwnerGoal;
 import com.sekwah.narutomod.entity.ai.CloneOwnerHurtByTargetGoal;
@@ -146,13 +145,6 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
      * killing blow pops it instead of just leaving a puff of smoke.
      */
     private boolean explosive;
-
-    /**
-     * How long a worker waits after popping before its harvest is handed to the caster, see
-     * {@link #releaseLoot(int)}. Long enough that a worker is a farmhand rather than a way to teleport
-     * a field across the map.
-     */
-    private static final int WORKER_LOOT_DELAY = 20 * 30;
 
     /** Where a worker was put down; kept as a record of the summoning spot. */
     private BlockPos workerHome;
@@ -525,26 +517,21 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
 
     /**
      * Pops the clone when its time runs out (or its quiver does): a puff of smoke and the classic
-     * poof sound, then it is gone. A worker hands its bag over {@link #WORKER_LOOT_DELAY} ticks
-     * later, as if it walked the harvest back.
+     * poof sound, then it is gone. A worker hands its bag straight over on the way out.
      */
     public void dispel() {
-        this.pop(WORKER_LOOT_DELAY);
+        this.pop();
     }
 
-    /**
-     * Pops the clone with the given delay before its bag reaches the caster.
-     *
-     * @param lootDelay ticks to wait before a worker's harvest is handed over; 0 hands it over now.
-     */
-    private void pop(int lootDelay) {
+    /** Pops the clone: a puff of smoke, a worker's harvest handed to its caster, and it is gone. */
+    private void pop() {
         if (this.level() instanceof ServerLevel serverLevel) {
             serverLevel.sendParticles(ParticleTypes.CLOUD, this.getX(),
                     this.getY() + this.getBbHeight() / 2.0d, this.getZ(),
                     30, 0.4d, 0.5d, 0.4d, 0.02d);
             this.playSound(NarutoSounds.SHADOW_CLONE_POOF.get(), 0.6f, this.isChibi() ? 1.3f : 1.0f);
         }
-        this.releaseLoot(lootDelay);
+        this.releaseLoot();
         this.discard();
     }
 
@@ -555,15 +542,15 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
      * it in a blast. Running out of chakra or of arrows is not a killing blow, so those clones go
      * quietly.</p>
      *
-     * <p>A worker cut down hands its bag over at once (rather than after the walk-home delay a timed
-     * out one has), so it is plain that every worker carries its own harvest.</p>
+     * <p>A worker cut down hands its bag over the same way a timed out one does: at once, so it is
+     * plain that every worker carries its own harvest.</p>
      */
     @Override
     public void die(DamageSource damageSource) {
         if (this.explosive && !this.level().isClientSide) {
             this.explode();
         }
-        this.pop(0);
+        this.pop();
     }
 
     /**
@@ -743,17 +730,15 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     }
 
     /**
-     * Hands a popped worker's harvest to its caster, after the given delay.
+     * Hands a popped worker's harvest to its caster at once.
      *
-     * <p>The delay is the whole point of a worker: it makes the clone a farmhand that walks the
-     * field and comes back with the crop rather than a way to move a chest of wheat across the map
-     * the moment it pops. A worker that is cut down skips the wait and gives its bag over there and
-     * then. If the caster is not around to take it the harvest is simply dropped where the clone
-     * stood, so nothing is ever lost to a logout.</p>
-     *
-     * @param delay ticks to wait before the bag reaches the caster; 0 delivers it immediately.
+     * <p>There is deliberately no walk-home delay: a worker's bag used to be held back for a while,
+     * but that made it look as if the harvest had been lost when the clone vanished. The bag goes to
+     * the caster the moment the clone pops, whether it ran out of time or was cut down. If the caster
+     * is not around to take it the harvest is simply dropped where the clone stood, so nothing is
+     * ever lost to a logout.</p>
      */
-    private void releaseLoot(int delay) {
+    private void releaseLoot() {
         if (this.bag.isEmpty()) {
             return;
         }
@@ -766,12 +751,7 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
             }
             return;
         }
-        if (delay <= 0) {
-            deliverLoot(owner, loot);
-            return;
-        }
-        owner.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(data ->
-                data.scheduleDelayedTickEvent(player -> deliverLoot(player, loot), delay));
+        deliverLoot(owner, loot);
     }
 
     private static void deliverLoot(Player player, List<ItemStack> loot) {

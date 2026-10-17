@@ -19,7 +19,7 @@ import java.util.List;
  *
  * <p>Only crops in the vanilla {@code #minecraft:crops} tag are touched, so a farm hand is not a
  * second ore excavation. The drops go into the clone's bag, which it hands to its caster when it
- * pops (see {@code ShadowCloneEntity#releaseLoot(int)}).</p>
+ * pops (see {@code ShadowCloneEntity#releaseLoot()}).</p>
  */
 public class WorkerHarvestGoal extends WorkerBlockGoal {
 

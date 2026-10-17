@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -102,6 +103,40 @@ public class WorkerChopGoal extends WorkerBlockGoal {
         if (state.is(BlockTags.LOGS) || this.secondary(state, pos)) {
             this.breakBlock(level, pos, state);
         }
+    }
+
+    /**
+     * Hacks the leaves out of the way when they wall a tree in so that no path to it opens.
+     *
+     * <p>The worker samples the straight line from itself to the trunk and takes the first leaf on
+     * it, one swing at a time: a tunnel through the canopy opens up instead of the whole thing
+     * coming down, and the leaves it clears are genuinely the ones between it and the wood.</p>
+     */
+    @Override
+    protected boolean clearPath(ServerLevel level, BlockPos target) {
+        Vec3 from = this.worker.position();
+        Vec3 to = new Vec3(target.getX() + 0.5d, target.getY(), target.getZ() + 0.5d);
+        Vec3 ray = to.subtract(from);
+        double length = ray.length();
+        if (length < 1.0e-4d) {
+            return false;
+        }
+        Vec3 direction = ray.scale(1.0d / length);
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        for (double travelled = 0.5d; travelled < length; travelled += 0.45d) {
+            Vec3 point = from.add(direction.scale(travelled));
+            // Check the block the line passes through and the one right above it, since a body
+            // standing in the way is usually two leaves tall.
+            for (int dy = 0; dy <= 1; dy++) {
+                cursor.set(point.x, point.y + dy, point.z);
+                BlockState state = level.getBlockState(cursor);
+                if (state.is(BlockTags.LEAVES)) {
+                    this.breakBlock(level, cursor, state);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
