@@ -236,6 +236,7 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 | Режим Мудреца | `V B V` | INSTANT | 50 сенин-маны на вход, 0.25/тик | `abilities/jutsus/SageModeAbility.java` |
 | Гендзюцу | `C B C` | INSTANT | 35 чакры, КД 10 с | `abilities/jutsus/GenjutsuJutsuAbility.java` + `events/GenjutsuEvents.java` |
 | Хенге | `V C V` | INSTANT | 30 чакры, КД 5 с | `abilities/jutsus/HengeJutsuAbility.java` + `client/renderer/HengeRenderEvents.java` |
+| Походный сундук | `B V C` | INSTANT | 20 чакры | `abilities/jutsus/StorageChestAbility.java` + `util/Inventories.java` |
 | Чакра-печать | — | предмет | 1 за призыв клонов | `NarutoItems.CHAKRA_SEAL` |
 | Печать рабочего | — | режим клонов | держится в руке, не тратится | `item/WorkerSealItem.java` + `entity/WorkerJob.java` + `entity/ai/WorkerBlockGoal.java` |
 | Чакра-батарея | — | предмет | хранит 500, привязка к первому владельцу | `item/ChakraBatteryItem.java` |
@@ -425,13 +426,28 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
     пока зверь жив и в `GIVE_UP_SQR = 32²`; `stop` сбрасывает жертву. Свою цель он берёт **сам**, а не
     через `setTarget` (тот у рабочих по-прежнему заглушён), поэтому ванильная система целей не трогается.
     Дропы убитого зверя перехватывает `ShadowCloneEvents#onLivingDrops` и кладёт в мешок (см. ниже).
-* `CloneFollowOwnerGoal` отказывается работать у рабочих, как и у медитирующих. Когда рабочий исчезает,
-  мешок отдаётся владельцу **сразу**, без задержки: и по таймеру (`dispel` → `pop`), и когда убит
+* `CloneFollowOwnerGoal` отказывается работать у рабочих, как и у медитирующих. **Добыча идёт в походный
+  сундук**, если он у владельца есть: `ShadowCloneEntity#collect` (звать из всех рабочих голов и из
+  `ShadowCloneEvents#onLivingDrops` для охотника) кладёт предмет в `Container` по
+  `INinjaData#getStashLoc` **сразу** при подборе, а в `bag` попадает только то, что не влезло или не нашлось.
+  Мешок отдаётся владельцу **сразу**, без задержки: и по таймеру (`dispel` → `pop`), и когда убит
   (`die` → `pop`). Раньше по таймеру лут приходил через 30 с (`WORKER_LOOT_DELAY`,
   `INinjaData#scheduleDelayedTickEvent`) — выдача через отложенное событие и выглядела как «мешок
   пропал», поэтому от неё отказались. Убить рабочего просто (1 HP — хватает одного удара), но собранное
   всё равно доходит. Если владелец не в сети — лут выпадает на месте клона. Мешок у каждого клона
   **свой** (поле `bag`, не `static`).
+* **Походный сундук** (`StorageChestAbility`, INSTANT `B V C`) — призыв личного сундука для рабочих,
+  **не привязанный к клонам** (ставится отдельным кастом). Ставит `Blocks.CHEST`, развёрнутый к кастеру
+  (`player.getDirection().getOpposite()`), **туда, куда смотрит игрок** (`player.pick(REACH=4, ...)` +
+  соседняя грань), иначе — в первый свободный слот из 4 соседей вокруг ног (и ±1 по высоте).
+  `canBeReplaced()` плюс проверка хитбокса кастера (не поставить сундук в себя). Позиция (`BlockPos`) и
+  измерение живут в `INinjaData#getStashLoc/getStashDimension` (`NinjaData`: поля + NBT, **без** `@Sync`),
+  поэтому переживают выход из игры. Сундук **один**: повторный каст `takeChest` опустошает старый
+  (если его чанк загружен), `removeBlock` его стирает, а содержимое переносится в новый через
+  `util/Inventories#putInto` (излишек выпадает на месте). `ShadowCloneJutsuAbility#performServer` при
+  призыве рабочих пишет ссылку на сундук в клон (`ShadowCloneEntity#setLootChest`), но
+  `#depositInStash` каждый раз ещё и переспрашивает `getStashLoc` у владельца в сети — поэтому перенос
+  сундука перенаправляет и уже работающих клонов. Незагруженный чанк или полный сундук → возврат в `bag`.
 * **XP и дропы клона — владельцу/в мешок.** `events/ShadowCloneEvents#onExperienceDrop`
   (`LivingExperienceDropEvent`): если `event.getEntity().getKillCredit()` — `ShadowCloneEntity`, а её
   владелец в сети, опыт обнуляется (`setDroppedExperience(0)`) и выдаётся владельцу

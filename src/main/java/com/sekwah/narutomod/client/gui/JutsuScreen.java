@@ -94,6 +94,7 @@ public class JutsuScreen extends Screen {
             Map.entry("sage_mode", Category.BODY),
             Map.entry("eight_gates", Category.BODY),
             Map.entry("gate_release", Category.BODY),
+            Map.entry("storage_chest", Category.BODY),
 
             Map.entry("genjutsu", Category.ILLUSION),
             Map.entry("henge", Category.ILLUSION)

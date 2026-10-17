@@ -165,6 +165,8 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
                 clone.setWorkerHome(player.blockPosition());
                 clone.setWorkerJob(workerJob(player));
                 clone.setWorkerTool(player.getMainHandItem());
+                // Deliver the harvest to the caster's storage chest, wherever they last put it down.
+                clone.setLootChest(ninjaData.getStashLoc(), ninjaData.getStashDimension());
             }
             this.positionClone(clone, level, player, i, cloneCount);
             level.addFreshEntity(clone);

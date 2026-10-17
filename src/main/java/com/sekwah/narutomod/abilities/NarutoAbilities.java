@@ -21,6 +21,7 @@ import com.sekwah.narutomod.abilities.jutsus.SageModeAbility;
 import com.sekwah.narutomod.abilities.jutsus.SenjutsuChargingAbility;
 import com.sekwah.narutomod.abilities.jutsus.GenjutsuJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.HengeJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.StorageChestAbility;
 import com.sekwah.narutomod.abilities.utility.ChakraChargeAbility;
 import com.sekwah.narutomod.abilities.utility.ChakraFistAbility;
 import com.sekwah.narutomod.abilities.utility.DoubleJumpAbility;
@@ -184,6 +185,13 @@ public class NarutoAbilities {
      */
     public static final RegistryObject<HengeJutsuAbility> HENGE =
             ABILITY.register("henge", HengeJutsuAbility::new);
+
+    /**
+     * Summons the chest the caster's worker clones carry their harvest to. See
+     * {@link StorageChestAbility}.
+     */
+    public static final RegistryObject<StorageChestAbility> STORAGE_CHEST =
+            ABILITY.register("storage_chest", StorageChestAbility::new);
 
     public static void register(IEventBus eventBus) {
         ABILITY.register(eventBus);
