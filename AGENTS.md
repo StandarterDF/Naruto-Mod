@@ -48,7 +48,7 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
 | --- | --- |
 | Сущность клона | `entity/ShadowCloneEntity.java` |
 | Четыре техники | `abilities/jutsus/ShadowCloneJutsuAbility.java` (один класс + `Settings`; медитация — `ChakraMeditationJutsuAbility`) |
-| ИИ | `entity/ai/CloneFollowOwnerGoal`, `CloneOwnerHurtByTargetGoal`, `CloneOwnerHurtTargetGoal`, `CloneRangedAttackGoal`, `CloneUseShieldGoal`, `ClonePickupLootGoal` |
+| ИИ | `entity/ai/CloneFollowOwnerGoal`, `CloneDefendOwnerGoal`, `CloneOwnerHurtByTargetGoal`, `CloneOwnerHurtTargetGoal`, `CloneRangedAttackGoal`, `CloneUseShieldGoal`, `ClonePickupLootGoal` |
 | Рендер | `client/renderer/entity/ShadowCloneRenderer.java` (`MeditatingCloneModel` + `ModelLayers.PLAYER(_SLIM)`) |
 | Регистрация/атрибуты | `entity/NarutoEntities.java` |
 | Звук | `sounds/NarutoSounds.java` + `assets/narutomod/sounds.json` (`clone_poof.ogg`) |
@@ -81,10 +81,18 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
   пропало. Убитый клон дополнительно взрывается, если был сделан из бумажной бомбы.
 * Клон **не** деспавнится по расстоянию (`removeWhenFarAway = false`), персистентность
   переприменяется в `readAdditionalSaveData` — ванильный `Mob#readAdditionalSaveData` её сбрасывает.
-* Цели **только реактивные** (как в 1.7.10): `HurtByTarget` (клона ударили) → `CloneOwnerHurtByTargetGoal`
-  (владельца ранили) → `CloneOwnerHurtTargetGoal` (владелец ударил). Клон **не** ищет врагов сам
+* Цели **без самопоиска врагов**, но защита владельца упреждающая: `HurtByTarget` (клона ударили) →
+  `CloneDefendOwnerGoal` (**моб уже взял владельца в цель**, но ещё не ударил) → `CloneOwnerHurtByTargetGoal`
+  (владельца ранили) → `CloneOwnerHurtTargetGoal` (владелец ударил). Сам клон врагов **не** ищет
   (`NearestAttackableTargetGoal` убран осознанно): иначе он уходит бить пиглинов, с которыми кастер
-  мирно торгует. Если хочется, чтобы клон сам набрасывался на мобов — это надо возвращать отдельно.
+  мирно торгует. `CloneDefendOwnerGoal` считается по `Mob#getTarget() == владелец`, поэтому ловит именно
+  того, кто сам напал на кастера (зомби, скелет, крипер), и не реагирует на корову, которую кастер задел.
+  Раз в 10–20 тиков (свой кулдаун) клон сканирует `Mob.class` в кубе 16 блоков вокруг владельца и берёт
+  ближайшего; дальше бой ведут обычные `MeleeAttackGoal`/`CloneRangedAttackGoal`, а сам гол сразу
+  отпускает цель (`canContinueToUse → false`) и потому не держит флаг. Медитирующий клон из гола
+  выключен, рабочий — тоже: цель уходит через `setTarget`, где рабочему проходит только самозащита.
+  В target-селекторе клонов теперь 1 `HurtByTarget` → 2 `CloneDefendOwnerGoal` →
+  3 `CloneOwnerHurtByTargetGoal` → 4 `CloneOwnerHurtTargetGoal`.
 * У **рабочих** нет целей по чужому выбору: `ShadowCloneEntity#setTarget` при `isWorker()` пропускает
   всё, кроме **самозащиты** — принять можно только того, кто ударил самого рабочего
   (`target == getLastHurtByMob()`), и `null` (сброс цели) проходит всегда. Так рабочий не отвлекается

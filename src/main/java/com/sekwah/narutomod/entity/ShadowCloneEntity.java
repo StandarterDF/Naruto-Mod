@@ -4,6 +4,7 @@ import com.sekwah.narutomod.block.NarutoBlocks;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.config.NarutoConfig;
+import com.sekwah.narutomod.entity.ai.CloneDefendOwnerGoal;
 import com.sekwah.narutomod.entity.ai.CloneFollowOwnerGoal;
 import com.sekwah.narutomod.entity.ai.CloneOwnerHurtByTargetGoal;
 import com.sekwah.narutomod.entity.ai.CloneOwnerHurtTargetGoal;
@@ -248,12 +249,15 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0f));
         this.goalSelector.addGoal(9, new RandomLookAroundGoal(this));
 
-        // Targets are strictly reactive, the same as the 1.7.10 clone: a clone fights what hit its
-        // caster, what its caster hit, or whatever hit the clone itself. It never picks a fight on
-        // its own, so it will not run off to beat on a piglin the caster was peacefully trading with.
+        // Targets are reactive, the same as the 1.7.10 clone: a clone fights what hit its caster,
+        // what its caster hit, or whatever hit the clone itself. On top of that it steps in front of
+        // a mob that is already hunting its caster, so the caster does not have to take the first hit
+        // while their clones stand and watch. It still never picks a fight on its own, so it will not
+        // run off to beat on a piglin the caster was peacefully trading with.
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new CloneOwnerHurtByTargetGoal(this));
-        this.targetSelector.addGoal(3, new CloneOwnerHurtTargetGoal(this));
+        this.targetSelector.addGoal(2, new CloneDefendOwnerGoal(this));
+        this.targetSelector.addGoal(3, new CloneOwnerHurtByTargetGoal(this));
+        this.targetSelector.addGoal(4, new CloneOwnerHurtTargetGoal(this));
     }
 
     /**
