@@ -213,14 +213,29 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
      * expect: their own anchor is not where they lost the fight.</p>
      */
     private Exit exitPoint(Player player, INinjaData ninjaData) {
-        CompoundTag tag = player.getPersistentData();
-        if (tag.contains(BANISH_RETURN)) {
-            CompoundTag back = tag.getCompound(BANISH_RETURN);
+        Exit home = casterHome(player, ninjaData);
+        if (player.getPersistentData().contains(BANISH_RETURN)) {
             clearBanish(player);
-            return new Exit(new Vec3(back.getDouble("x"), back.getDouble("y"), back.getDouble("z")),
-                    ResourceLocation.tryParse(back.getString("dimension")));
+        }
+        return home;
+    }
+
+    /**
+     * The same way home, without forgetting it - used when something else is sent out through the
+     * caster's door, which must not cost the caster their own anchor.
+     */
+    private Exit casterHome(Player player, INinjaData ninjaData) {
+        if (player.getPersistentData().contains(BANISH_RETURN)) {
+            return readReturn(player);
         }
         return new Exit(ninjaData.getKamuiReturnLoc(), ninjaData.getKamuiReturnDimension());
+    }
+
+    /** The place an entity was dragged in from, as written by {@link #banish}. */
+    private static Exit readReturn(Entity entity) {
+        CompoundTag back = entity.getPersistentData().getCompound(BANISH_RETURN);
+        return new Exit(new Vec3(back.getDouble("x"), back.getDouble("y"), back.getDouble("z")),
+                ResourceLocation.tryParse(back.getString("dimension")));
     }
 
     /**
@@ -235,7 +250,9 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
             level.playSound(null, player, SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.4f, 0.8f);
             return;
         }
+        // Already in the pocket? Then this is the swirl the other way round, see eject().
         if (isInKamui(living)) {
+            eject(player, ninjaData, level, living);
             return;
         }
         // Creative mode keeps its toys, and a spectator is already nowhere.
@@ -269,6 +286,45 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
         playWarp(level, living.position());
         transfer(living, kamui, TARGET_ARRIVAL);
         playWarp(kamui, TARGET_ARRIVAL);
+    }
+
+    /**
+     * The swirl the other way round: the same held cast, aimed at something that is <b>already</b>
+     * in the pocket, throws it back out instead of trying to pull it in.
+     *
+     * <p>Anything that was dragged in goes back exactly where it was taken from, as if its timer had
+     * run out. Something that was born in the void - spawned in there rather than taken - has no
+     * place of its own to go back to, so it leaves through the caster's own door: the anchor the
+     * caster stepped in from, or the world spawn when there is none. That is what turns a pen of
+     * animals kept in the void into something a caster can actually get out again.</p>
+     */
+    private void eject(Player player, INinjaData ninjaData, ServerLevel level, LivingEntity living) {
+        if (ninjaData.getChakra() < PULL_COST) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
+            return;
+        }
+        Exit home = living.getPersistentData().contains(BANISH_RETURN)
+                ? readReturn(living)
+                : casterHome(player, ninjaData);
+        ServerLevel destination = home.dimension() == null || level.getServer() == null ? null
+                : level.getServer().getLevel(ResourceKey.create(Registries.DIMENSION, home.dimension()));
+        Vec3 target = home.position();
+        if (destination == null) {
+            destination = level.getServer() == null ? null : level.getServer().overworld();
+            target = destination == null ? null : Vec3.atBottomCenterOf(destination.getSharedSpawnPos());
+        }
+        if (destination == null || target == null) {
+            return;
+        }
+
+        ninjaData.useChakra(PULL_COST, CHAKRA_REGEN_DELAY);
+        clearBanish(living);
+        player.displayClientMessage(Component.translatable("jutsu.kamui.push", living.getDisplayName())
+                .withStyle(ChatFormatting.AQUA), true);
+        playWarp(level, living.position());
+        transfer(living, destination, target);
+        playWarp(destination, target);
     }
 
     @Override

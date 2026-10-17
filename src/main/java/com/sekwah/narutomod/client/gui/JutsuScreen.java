@@ -83,6 +83,7 @@ public class JutsuScreen extends Screen {
             Map.entry("fireball", Category.ELEMENTAL),
             Map.entry("water_bullet", Category.ELEMENTAL),
             Map.entry("rasengan", Category.ELEMENTAL),
+            Map.entry("rasenshuriken", Category.ELEMENTAL),
             Map.entry("ore_excavation", Category.ELEMENTAL),
 
             Map.entry("substitution", Category.SPACE),

@@ -9,6 +9,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -36,6 +37,18 @@ public class ChakraBatteryItem extends Item {
 
     /** How much moves in or out per use. */
     public static final float TRANSFER_PER_USE = 50.0f;
+
+    /** How much a battery hands over when it is called on to keep a technique running. */
+    private static final float UPKEEP_TOP_UP = 50.0f;
+
+    /**
+     * How low the ninja's own chakra has to run before a battery is called on at all.
+     *
+     * <p>Every technique that is paid for tick by tick costs only a fraction of this per tick, so
+     * the pool is refilled well before the upkeep check can actually fail, and the battery is only
+     * drained at about the rate the technique costs - not in one burst.</p>
+     */
+    private static final float UPKEEP_RESERVE = 30.0f;
 
     private static final String OWNER_TAG = "Owner";
     private static final String OWNER_NAME_TAG = "OwnerName";
@@ -125,6 +138,56 @@ public class ChakraBatteryItem extends Item {
     private void chime(Player player) {
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.6f, 1.4f);
+    }
+
+    /**
+     * Keeps a technique that is paid for tick by tick running on battery power.
+     *
+     * <p>Called by the upkeep of sustained techniques - toggles and channeled casts - just before
+     * they check whether the caster can still pay. If the ninja's own pool has run down to the
+     * reserve, a battery in their inventory is tapped for it silently, so a technique ends when the
+     * batteries do rather than the moment the ninja's own chakra does. Nothing is taken out of the
+     * pool that the technique would not have taken anyway: the battery ends up drained at roughly
+     * the rate the technique costs.</p>
+     *
+     * <p>Only batteries in the ninja's own inventory count, and only ones that are theirs. A battery
+     * nobody has claimed is claimed on the spot, the same way the first use of it would.</p>
+     *
+     * @return the amount of chakra actually moved out of the batteries, zero if none was
+     */
+    public static float fuelUpkeep(Player player, INinjaData ninjaData) {
+        if (ninjaData.getChakra() >= UPKEEP_RESERVE) {
+            return 0.0f;
+        }
+        float room = Math.max(ninjaData.getMaxChakra() - ninjaData.getChakra(), 0.0f);
+        float wanted = Math.min(UPKEEP_TOP_UP, room);
+        if (wanted <= 0.0f) {
+            return 0.0f;
+        }
+        Inventory inventory = player.getInventory();
+        float moved = 0.0f;
+        for (int slot = 0; slot < inventory.getContainerSize() && moved < wanted; slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            if (!(stack.getItem() instanceof ChakraBatteryItem)) {
+                continue;
+            }
+            if (!hasOwner(stack)) {
+                bindOwner(stack, player);
+            } else if (!isOwner(stack, player)) {
+                continue;
+            }
+            float stored = getStoredChakra(stack);
+            float take = Math.min(Math.min(stored, wanted - moved), room - moved);
+            if (take <= 0.0f) {
+                continue;
+            }
+            setStoredChakra(stack, stored - take);
+            moved += take;
+        }
+        if (moved > 0.0f) {
+            ninjaData.addChakra(moved);
+        }
+        return moved;
     }
 
     @Override

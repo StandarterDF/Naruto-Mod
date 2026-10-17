@@ -27,8 +27,9 @@ import net.minecraft.world.phys.Vec3;
  *
  * <p>With the Worker's Seal ({@code narutomod:worker_seal}) in the off hand, the very same
  * techniques summon workers instead of fighters: the clones come out in the usual numbers but walk
- * off to farm, mine or chop around themselves, and their tool - the item in the caster's main hand -
- * decides which of the three it is. See {@link WorkerJob}.</p>
+ * off to farm, mine or chop around themselves, and their tool - the item in the caster's main hand,
+ * which has to be a tool at all for the summon to be allowed - decides which of the four it is. See
+ * {@link WorkerJob}.</p>
  */
 public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown {
 
@@ -93,6 +94,14 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
             return false;
         }
+        // A worker is defined by the tool it was summoned with, so the seal in the off hand without
+        // a tool in the main hand is not a technique at all: refusing it here costs the caster
+        // nothing - no seal, no chakra - rather than leaving them with clones and no shift to do.
+        if (summoningWorkers(player) && workerJob(player) == null) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.workertool",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
+            return false;
+        }
         if (ninjaData.getChakra() < this.settings.chakraCost()) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
@@ -149,8 +158,9 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
         consumeSeal(player);
 
         // Meditation is always just meditation: the seal in hand does not turn a clone that is meant
-        // to sit still into one that walks off to work. Every other technique follows the seal.
-        boolean summoningWorkers = !this.settings.meditating() && isHoldingWorkerSeal(player);
+        // to sit still into one that walks off to work. Every other technique follows the seal, and
+        // handleCost has already made sure a worker's tool is in hand by the time we get here.
+        boolean summoningWorkers = summoningWorkers(player);
 
         int cloneCount = this.settings.minClones()
                 + player.getRandom().nextInt(this.settings.maxClones() - this.settings.minClones() + 1);
@@ -182,9 +192,11 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
     }
 
     /**
-     * Reads the job off the item in the caster's main hand: a hoe farms, a pickaxe mines, an axe
-     * chops and a sword hunts. Anything else (or an empty hand) falls back to farming, which needs
-     * no tool.
+     * Reads the job off the item in the caster's main hand: a pickaxe mines, an axe chops, a sword
+     * hunts and a hoe farms. Any other item - and an empty hand - means there is no job to read, and
+     * the summon is refused rather than turning into a farm hand nobody asked for.
+     *
+     * @return the shift the tool means, or null when the caster is not holding a tool at all
      */
     private static WorkerJob workerJob(Player player) {
         ItemStack tool = player.getMainHandItem();
@@ -197,7 +209,15 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
         if (tool.getItem() instanceof SwordItem) {
             return WorkerJob.HUNT;
         }
-        return WorkerJob.FARM;
+        if (tool.getItem() instanceof HoeItem) {
+            return WorkerJob.FARM;
+        }
+        return null;
+    }
+
+    /** Workers are summoned by the seal in the off hand, except for the meditation, which never works. */
+    private boolean summoningWorkers(Player player) {
+        return !this.settings.meditating() && isHoldingWorkerSeal(player);
     }
 
     /**

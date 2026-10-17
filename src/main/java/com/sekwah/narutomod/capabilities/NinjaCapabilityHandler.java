@@ -2,6 +2,7 @@ package com.sekwah.narutomod.capabilities;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.item.ChakraBatteryItem;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
@@ -39,6 +40,13 @@ public class NinjaCapabilityHandler {
                     }
                     data.updateDataServer(player);
                     if(!player.isSpectator()) {
+                        // Toggles are paid for tick by tick, so a battery in the ninja's inventory
+                        // gets the chance to keep the stance up once their own chakra runs low. The
+                        // channeled cast, if there is one, has already had the same chance inside
+                        // updateDataServer, and a pool that is already full enough is left alone.
+                        if(!data.getToggleAbilityData().getAbilitiesHashSet().isEmpty()) {
+                            ChakraBatteryItem.fuelUpkeep(player, data);
+                        }
                         data.getToggleAbilityData().getAbilitiesHashSet().forEach(abilityName -> {
                             Ability ability = NarutoRegistries.ABILITIES.getValue(abilityName);
                             if(ability.handleCost(player, data)) {

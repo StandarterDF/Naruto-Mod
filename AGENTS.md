@@ -264,18 +264,19 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 | Регенерация чакрой | `V B B C` | TOGGLE | 6 чакры + 1 еда за 1 HP | `abilities/jutsus/ChakraRegenerationAbility.java` |
 | Рудокоп (Земля) | `C V V C` | INSTANT | 10 чакры + 4 за каждый сломанный блок (нужна кирка в руке) | `abilities/jutsus/OreExcavationJutsuAbility.java` |
 | Расенган | `C B B C B` | CHANNELED | 0.6 чакры/тик | `abilities/jutsus/RasenganJutsuAbility.java` |
+| Расенсюрикен | `C B B C B V` | CHANNELED | 1 чакры/тик + 25 за бросок | `abilities/jutsus/RasenshurikenJutsuAbility.java` + `entity/jutsuprojectile/RasenshurikenJutsuEntity.java` |
 | Восемь врат | `V B B B` | INSTANT | 25 чакры + 15 стамины за врата | `abilities/jutsus/EightGatesAbility.java` |
 | Запечатать врата | `V B B V` | INSTANT | бесплатно (только врата 1–7) | `abilities/jutsus/GateReleaseAbility.java` |
 | Камуи | `B V V C C` | CHANNELED | 40 чакры шаг / 1.5 за тик + 30 за затяг | `abilities/jutsus/KamuiJutsuAbility.java` + `events/KamuiEvents.java` |
 | Фазовое тело Камуи | `V C B` | TOGGLE | 0.4 чакры/тик | `abilities/jutsus/KamuiPhaseAbility.java` + `events/KamuiEvents.java` |
 | Сбор природной энергии | `V B C` | CHANNELED | бесплатно, но только стоя на месте | `abilities/jutsus/SenjutsuChargingAbility.java` |
-| Режим Мудреца | `V B V` | INSTANT | 50 сенин-маны на вход, 0.25/тик | `abilities/jutsus/SageModeAbility.java` |
+| Режим Мудреца | `V B V` | INSTANT | 50 сенин-маны на вход, 0.1/тик | `abilities/jutsus/SageModeAbility.java` |
 | Гендзюцу | `C B C` | INSTANT | 35 чакры, КД 10 с | `abilities/jutsus/GenjutsuJutsuAbility.java` + `events/GenjutsuEvents.java` |
 | Хенге | `V C V` | INSTANT | 30 чакры, КД 5 с | `abilities/jutsus/HengeJutsuAbility.java` + `client/renderer/HengeRenderEvents.java` |
 | Походный сундук | `B V C` | INSTANT | бесплатно | `abilities/jutsus/StorageChestAbility.java` + `menu/SupplyChest*.java` |
 | Чакра-печать | — | предмет | 1 за призыв клонов | `NarutoItems.CHAKRA_SEAL` |
 | Печать рабочего | — | режим клонов | держится в руке, не тратится | `item/WorkerSealItem.java` + `entity/WorkerJob.java` + `entity/ai/WorkerBlockGoal.java` |
-| Чакра-батарея | — | предмет | хранит 500, привязка к первому владельцу | `item/ChakraBatteryItem.java` |
+| Чакра-батарея | — | предмет | хранит 500, привязка к первому владельцу; сама питает поддерживающие техники | `item/ChakraBatteryItem.java` |
 | Рамен | — | предмет (еда) | — | `NarutoItems.RAMEN` |
 | Самехада / Кубикирибочо | — | оружие | — | `item/ComboSwordItem.java` + `events/ComboSwordEvents.java` |
 
@@ -323,6 +324,18 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 * **Расенган** — CHANNELED: `handleCost` жжёт 0.6 чакры/тик, `handleChannelling` рисует шар у руки,
   `performServer` получает число продержанных тиков и бьёт по площади спереди. Тап (< 20 тиков) —
   пшик, 60 тиков — максимум (урон 4→16, вылет 0.8→1.8). Дальше тиков больше — урон не растёт.
+* **Расенсюрикен** (`RasenshurikenJutsuAbility`, CHANNELED `C B B C B V`) — тот же расенган, но
+  **брошенный**: удержание стоит 1 чакры/тик, а на отпускании платится ещё `RELEASE_COST = 25`
+  (специально **ниже** `UPKEEP_RESERVE` батареи — иначе кастер с полной батареей мог бы выкачать диск
+  и не суметь его бросить) и в мир летит `RasenshurikenJutsuEntity`. Тап (< 20 тиков) — пшик, заряд
+  от 20 до 60 тиков линейно поднимает `power` (0.7→1.0) и скорость (0.55→0.95). Урон — свой тип
+  `narutomod:wind_release` (`data/narutomod/damage_type/wind_release.json`, как у остальных: **без
+  JSON датапак-тип роняет сервер**), 14 прямого попадания и до 9 по площади с падением по дистанции
+  в радиусе 4.5, с отбросом; свои (`isAlliedTo`) и кастер не задеваются. Живёт диск 80 тиков, потом
+  сам лопается (`burst`). **Модели у него нет** — рисуется предметом `narutomod:shuriken`,
+  увеличенным в 2.6 раза и крутящимся (`RasenshurikenJutsuRenderer`, спин считается в
+  `getSpinTicks/getPrevSpinTicks` на **обеих** сторонах), а «ветер» — это частицы `CLOUD`/`CRIT`/
+  `SWEEP_ATTACK`; по той же логике расенган сделан частицами, а не моделью.
 * **Восемь врат** — состояние `INinjaData#getGateCount` (server-only, до 8). Каст `V B B B` открывает
   следующее окно, **закрыть врата 1–7 можно только отдельной техникой** `V B B V`
   (`GateReleaseAbility`, бесплатно, `jutsu.fail.gates_none` когда нечего закрывать), а **на восьмых
@@ -349,6 +362,12 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   пустоты не запирает), а **удержание** (≥ `MIN_CHANNEL = 20` тиков, 1.5 чакры/тик) затягивает цель.
   Цель — то, во что смотрит `Targeting.lookedAtEntity(player, PULL_RANGE)` (лучи не проходят через стены),
   `LivingEntity`, кроме кастера и креативных/наблюдателей; за сам затяг ещё 30 чакры.
+  **Если цель уже в кармане — это бросок наружу** (`eject`): то же удержание, но на сущность внутри
+  `narutomod:kamui` не затягивает её (она уже там), а выбрасывает — затянутую **ровно туда, откуда
+  взяли** (`BANISH_RETURN`), а родившуюся в пустоте (спавн-яйцо) — через **дверь кастера**
+  (`casterHome`: сначала `BANISH_RETURN` самого кастера, потом `getKamuiReturnLoc/Dimension`), с
+  откатом на мировую точку спавна оверворлда, если у кастера и её нет. Стоит те же 30 чакры. Без этого
+  животное, заспавненное в Камуи, оттуда было не достать: `pullTarget` на такую цель молча выходил.
   **Измерение — датапак + свой генератор**: `data/narutomod/dimension_type/kamui.json` +
   `data/narutomod/dimension/kamui.json` (биом `the_void`, небо Края, `min_y=0, height=256`), а
   рельеф делает `world/KamuiChunkGenerator` (кодек `narutomod:kamui_pillars` в
@@ -397,7 +416,9 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   равно тратится. Медитация (`Settings#meditating`) режим игнорирует — она всегда медитация. Работа —
   **enum `entity/WorkerJob`** (`FARM`/`MINE`/`CHOP`/`HUNT`), выбирается по предмету в **основной** руке
   (`ShadowCloneJutsuAbility#workerJob`): кирка → `MINE`, топор → `CHOP`, меч (`SwordItem`; туда же
-  `ComboSwordItem`) → `HUNT`, всё остальное → `FARM`.
+  `ComboSwordItem`) → `HUNT`, мотыга → `FARM`. **Инструмент обязателен**: если в основной руке нет ни
+  одного из четырёх, `workerJob` возвращает `null`, и `handleCost` отказывает каст целиком
+  (`jutsu.fail.workertool`) — без печати, без чакры и без клонов-«фермеров по умолчанию».
   Флаг `worker` (`DATA_WORKER`) и `workerJob` (строка в NBT) — server-side.
   Инструмент остаётся клону в **основной** руке, вторая рука пустеет (`ShadowCloneEntity#setWorkerTool`).
 * Четыре смены рабочих — общий предок `entity/ai/WorkerBlockGoal` (приоритет 1): ищет ближайший блок
@@ -556,8 +577,9 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   в `INinjaData`/`NinjaData`; максимум — конфиг `maxSeninMana` (по умолчанию 100), выключение всей ветки
   — `sageModeEnabled`. Копит `SenjutsuChargingAbility` (CHANNELED, `V B C`): **0.5/тик и только если
   `isStill`** (на земле и `getDeltaMovement().horizontalDistanceSqr() < 0.0016`), движение прогресс не
-  сбрасывает. Тратит `SageModeAbility` (INSTANT, `V B V`): вход требует 50, дальше `DRAIN_PER_TICK = 0.25`,
-  режим **сам гаснет на нуле** (не по таймеру). Эффекты выдаются на 40 тиков и обновляются каждый тик —
+  сбрасывает. Тратит `SageModeAbility` (INSTANT, `V B V`): вход требует 50, дальше `DRAIN_PER_TICK = 0.1`,
+  режим **сам гаснет на нуле** (не по таймеру): полный пул в 100 держится 50 с.
+  Эффекты выдаются на 40 тиков и обновляются каждый тик —
   значит, вместе с режимом они и заканчиваются; плюс `+0.5` чакры за тик и частицы `HAPPY_VILLAGER`.
   Обслуживание — `SageModeAbility#maintain`, зовётся из `PlayerEvents#onEntityUpdate` рядом с
   `EightGatesAbility#maintain`. Флаг `sageMode` (`@Sync`) **не** пишется в NBT: смерть и выход из игры
@@ -578,6 +600,14 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   (`Chakra`), привязка к первому владельцу (`Owner` UUID + `OwnerName` для подсказки). ПКМ — забрать до
   50, ПКМ+Shift — долить до 50; чужому владельцу отказывает `jutsu.fail.battery.owner`. Привязка живёт
   в NBT самого предмета, поэтому переживает смерть и сундуки; `isFoil` включается при заряде > 0.
+  **Батарея сама питает поддерживающие техники** — `ChakraBatteryItem.fuelUpkeep(player, ninjaData)`
+  зовётся в **двух** местах обслуживания: в цикле тогглов (`NinjaCapabilityHandler#onPlayerUpdate`,
+  один раз на тик перед `handleCost`) и в канальном апкипе (`NinjaData#updateDataServer`, рядом с
+  `handleCost`). Работает как **резервный бак**: если своя чакра упала ниже `UPKEEP_RESERVE = 30`, из
+  батарей в инвентаре в пул переливается до `UPKEEP_TOP_UP = 50` (клампится по свободному месту), и
+  техника платит из пула как обычно. Поэтому батареи тратятся примерно со скоростью техники, а не
+  залпом, а мгновенные касты из батареи **не** финансируются — только поддержание. Батарея без
+  владельца при этом привязывается к тому, кто её «съел», как при первом ПКМ; чужие пропускаются.
 * **Хенге** (`HengeJutsuAbility`, `V C V`, INSTANT, 30 чакры, КД 5 с) — личина на 1 минуту. Цель —
   любое **живое существо**, в которое смотрит кастер (`Targeting.lookedAtEntity`): другой игрок
   (копируется скин) или моб (копируется модель). Клоны (`ShadowCloneEntity`) в цели не берутся — они

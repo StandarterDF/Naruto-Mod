@@ -8,6 +8,7 @@ import com.sekwah.narutomod.client.model.jutsu.FireballJutsuModel;
 import com.sekwah.narutomod.client.model.jutsu.WaterBulletModel;
 import com.sekwah.narutomod.client.renderer.entity.*;
 import com.sekwah.narutomod.client.renderer.entity.jutsuprojectile.FireballJutsuRenderer;
+import com.sekwah.narutomod.client.renderer.entity.jutsuprojectile.RasenshurikenJutsuRenderer;
 import com.sekwah.narutomod.client.renderer.entity.jutsuprojectile.WaterBulletJutsuRenderer;
 import com.sekwah.narutomod.entity.NarutoEntities;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
@@ -40,6 +41,7 @@ public class NarutoRenderEvents {
 
         event.registerEntityRenderer(NarutoEntities.FIREBALL_JUTSU.get(), FireballJutsuRenderer::new);
         event.registerEntityRenderer(NarutoEntities.WATER_BULLET_JUTSU.get(), WaterBulletJutsuRenderer::new);
+        event.registerEntityRenderer(NarutoEntities.RASENSHURIKEN_JUTSU.get(), RasenshurikenJutsuRenderer::new);
 
         event.registerEntityRenderer(NarutoEntities.SUBSTITUTION_LOG.get(), SubstitutionLogRenderer::new);
 

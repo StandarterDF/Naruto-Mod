@@ -18,6 +18,12 @@ public class NarutoDamageTypes {
     public static final ResourceKey<DamageType> WATER_BULLET = ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation(NarutoMod.MOD_ID, "water_bullet"));
 
     /**
+     * What the rasenshuriken cuts with: the thrown wind disc and the burst it comes apart into. Its
+     * own damage type so death messages can name the technique, see {@code RasenshurikenJutsuEntity}.
+     */
+    public static final ResourceKey<DamageType> WIND_RELEASE = create("wind_release");
+
+    /**
      * What the eight inner gates do to the body holding them open. Its own damage type so that it can
      * be excluded from every kind of mitigation: armour, resistance, absorption and the chakra shield
      * all ignore it, see the {@code bypasses_*} tag files. Otherwise the gates' own resistance buff,
@@ -57,6 +63,7 @@ public class NarutoDamageTypes {
     public static void bootstrap(BootstapContext<DamageType> context) {
         register(context, FIREBALL);
         register(context, WATER_BULLET);
+        register(context, WIND_RELEASE);
         register(context, GATE_BACKLASH);
     }
 }

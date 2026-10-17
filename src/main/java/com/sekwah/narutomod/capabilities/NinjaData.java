@@ -5,6 +5,7 @@ import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
+import com.sekwah.narutomod.item.ChakraBatteryItem;
 import com.sekwah.narutomod.menu.SupplyChestContainer;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import com.sekwah.sekclib.capabilitysync.capabilitysync.annotation.Sync;
@@ -638,6 +639,9 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         if (this.currentlyChanneled != null) {
             Ability ability = NarutoRegistries.ABILITIES.getValue(this.currentlyChanneled);
             if (ability != null && ability.activationType() == Ability.ActivationType.CHANNELED) {
+                // A cast held open is paid for tick by tick too, so it also gets to run on battery
+                // power before its upkeep check decides the caster cannot afford it any more.
+                ChakraBatteryItem.fuelUpkeep(player, this);
                 if(ability.handleCost(player, this, this.ticksChanneled)) {
                     if (ability instanceof Ability.Channeled channeled) {
                         channeled.handleChannelling(player, this, this.ticksChanneled);

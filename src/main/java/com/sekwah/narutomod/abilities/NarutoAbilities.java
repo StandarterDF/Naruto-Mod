@@ -16,6 +16,7 @@ import com.sekwah.narutomod.abilities.jutsus.KamuiJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.KamuiPhaseAbility;
 import com.sekwah.narutomod.abilities.jutsus.OreExcavationJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.RasenganJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.RasenshurikenJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.SecondBreathAbility;
 import com.sekwah.narutomod.abilities.jutsus.SageModeAbility;
 import com.sekwah.narutomod.abilities.jutsus.SenjutsuChargingAbility;
@@ -131,6 +132,12 @@ public class NarutoAbilities {
      */
     public static final RegistryObject<RasenganJutsuAbility> RASENGAN =
             ABILITY.register("rasengan", RasenganJutsuAbility::new);
+
+    /**
+     * The rasengan shaped into a thrown blade of wind. See {@link RasenshurikenJutsuAbility}.
+     */
+    public static final RegistryObject<RasenshurikenJutsuAbility> RASENSHURIKEN =
+            ABILITY.register("rasenshuriken", RasenshurikenJutsuAbility::new);
 
     /**
      * The eight inner gates, opened one at a time. See {@link EightGatesAbility}.

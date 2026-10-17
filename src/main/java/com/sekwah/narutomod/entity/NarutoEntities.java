@@ -3,6 +3,7 @@ package com.sekwah.narutomod.entity;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.entity.item.PaperBombEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.FireballJutsuEntity;
+import com.sekwah.narutomod.entity.jutsuprojectile.RasenshurikenJutsuEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.WaterBulletJutsuEntity;
 import com.sekwah.narutomod.entity.projectile.ExplosiveKunaiEntity;
 import com.sekwah.narutomod.entity.projectile.KunaiEntity;
@@ -48,6 +49,9 @@ public class NarutoEntities {
 
     public static final RegistryObject<EntityType<WaterBulletJutsuEntity>> WATER_BULLET_JUTSU = register("water_bullet_jutsu",
             EntityType.Builder.<WaterBulletJutsuEntity>of(WaterBulletJutsuEntity::new, MobCategory.MISC).fireImmune().sized(0.3F, 0.3F).clientTrackingRange(4).updateInterval(10));
+
+    public static final RegistryObject<EntityType<RasenshurikenJutsuEntity>> RASENSHURIKEN_JUTSU = register("rasenshuriken_jutsu",
+            EntityType.Builder.<RasenshurikenJutsuEntity>of(RasenshurikenJutsuEntity::new, MobCategory.MISC).fireImmune().sized(0.6F, 0.6F).clientTrackingRange(6).updateInterval(10));
 
 
     public static final RegistryObject<EntityType<SubstitutionLogEntity>> SUBSTITUTION_LOG = register("substitution_log",
