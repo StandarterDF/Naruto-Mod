@@ -509,8 +509,7 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         }
 
         if (--this.lifetime <= 0) {
-            // Out of time rather than cut down, so a worker still hands its harvest over.
-            this.dispel(true);
+            this.dispel();
             return;
         }
 
@@ -525,32 +524,16 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
 
     /**
      * Pops the clone: a puff of smoke and the classic poof sound, then it is gone.
-     *
-     * <p>A bag is not handed over here: a worker only gives its harvest to its caster when it runs
-     * out of time (see {@link #dispel(boolean)}). A clone that is cut down simply vanishes, exactly
-     * like a clone that was broken in the 1.7.10 mod.</p>
      */
     public void dispel() {
-        this.dispel(false);
-    }
-
-    /**
-     * Pops the clone, optionally handing a worker's harvest to its caster first.
-     *
-     * @param deliverHarvest whether a worker should still give up its bag on the way out. True when
-     *                       its time simply runs out; false when it is cut down, so a killed worker
-     *                       drops nothing at all.
-     */
-    public void dispel(boolean deliverHarvest) {
         if (this.level() instanceof ServerLevel serverLevel) {
             serverLevel.sendParticles(ParticleTypes.CLOUD, this.getX(),
                     this.getY() + this.getBbHeight() / 2.0d, this.getZ(),
                     30, 0.4d, 0.5d, 0.4d, 0.02d);
             this.playSound(NarutoSounds.SHADOW_CLONE_POOF.get(), 0.6f, this.isChibi() ? 1.3f : 1.0f);
         }
-        if (deliverHarvest) {
-            this.releaseLoot();
-        }
+        // A worker hands its harvest over before it goes, whether it ran out of time or was cut down.
+        this.releaseLoot();
         this.discard();
     }
 

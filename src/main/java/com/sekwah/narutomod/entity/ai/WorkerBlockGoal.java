@@ -11,6 +11,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Predicate;
 
 /**
@@ -45,6 +47,9 @@ public abstract class WorkerBlockGoal extends Goal {
     /** How long a worker tries to reach one target before it gives up and looks elsewhere. */
     private static final int UNREACHABLE_TICKS = 300;
 
+    /** How long a target the worker could not reach is left alone so it is not picked again. */
+    private static final int ABANDON_TICKS = 300;
+
     /** Heights at which a block next to the target is tried, relative to the target. */
     private static final int[] STAND_HEIGHTS = {0, 1, -1};
 
@@ -58,6 +63,13 @@ public abstract class WorkerBlockGoal extends Goal {
     /** Offsets to probe, nearest ring first (x, y, z triples), and where each ring starts in it. */
     private int[] scanOffsets;
     private int[] scanShellStart;
+
+    /**
+     * Targets the worker could not get to, with the tick they may be picked again. Without this the
+     * worker would give up on a block, re-scan, pick the very same nearest block and stand there for
+     * another cycle - which looks like it simply froze by a tree.
+     */
+    private final Map<BlockPos, Integer> abandoned = new HashMap<>();
 
     protected WorkerBlockGoal(ShadowCloneEntity worker) {
         this.worker = worker;
@@ -99,6 +111,7 @@ public abstract class WorkerBlockGoal extends Goal {
             this.cooldown--;
             return false;
         }
+        this.pruneAbandoned();
         this.target = this.findTarget();
         this.cooldown = EMPTY_COOLDOWN;
         return this.target != null;
@@ -138,6 +151,9 @@ public abstract class WorkerBlockGoal extends Goal {
             // the target up instead of pressing against the wall forever - another scan may find a
             // leaf or a different block the worker can actually get to.
             if (++this.reachTicks > UNREACHABLE_TICKS) {
+                // Remember the block so the next scan does not pick the same one and stand there
+                // all over again; the worker walks off and tries something else.
+                this.abandoned.put(this.target, this.worker.tickCount + ABANDON_TICKS);
                 this.target = null;
                 this.cooldown = EMPTY_COOLDOWN;
                 this.worker.getNavigation().stop();
@@ -162,6 +178,18 @@ public abstract class WorkerBlockGoal extends Goal {
     private boolean isMyJob() {
         return this.worker.isWorker() && this.worker.getWorkerJob() == this.job()
                 && !this.worker.level().isClientSide;
+    }
+
+    /** Drops targets that have been in the bad books long enough to be worth another try. */
+    private void pruneAbandoned() {
+        if (!this.abandoned.isEmpty()) {
+            this.abandoned.values().removeIf(until -> this.worker.tickCount >= until);
+        }
+    }
+
+    private boolean isAbandoned(BlockPos pos) {
+        Integer until = this.abandoned.get(pos);
+        return until != null && this.worker.tickCount < until;
     }
 
     private void walkTo(BlockPos pos) {
@@ -201,7 +229,7 @@ public abstract class WorkerBlockGoal extends Goal {
                 cursor.set(here.getX() + this.scanOffsets[base],
                         here.getY() + this.scanOffsets[base + 1],
                         here.getZ() + this.scanOffsets[base + 2]);
-                if (!wanted.test(cursor) || !this.hasStand(cursor)) {
+                if (this.isAbandoned(cursor) || !wanted.test(cursor) || !this.hasStand(cursor)) {
                     continue;
                 }
                 double distance = this.worker.distanceToSqr(Vec3.atCenterOf(cursor));
