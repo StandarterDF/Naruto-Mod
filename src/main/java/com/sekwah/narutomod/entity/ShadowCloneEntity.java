@@ -8,7 +8,9 @@ import com.sekwah.narutomod.entity.ai.CloneOwnerHurtByTargetGoal;
 import com.sekwah.narutomod.entity.ai.CloneOwnerHurtTargetGoal;
 import com.sekwah.narutomod.entity.ai.CloneRangedAttackGoal;
 import com.sekwah.narutomod.entity.ai.CloneUseShieldGoal;
+import com.sekwah.narutomod.entity.ai.WorkerChopGoal;
 import com.sekwah.narutomod.entity.ai.WorkerHarvestGoal;
+import com.sekwah.narutomod.entity.ai.WorkerMineGoal;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -107,6 +109,13 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     public static final int DEFAULT_LIFETIME = 20 * 25;
 
     /**
+     * How long a worker clone works. A worker is summoned by the same techniques as a fighter but
+     * with the Worker's Seal in hand, and the whole point of it is to be left behind at a field, a
+     * mine or a tree line, so it outlives every combat clone by a wide margin.
+     */
+    public static final int WORKER_LIFETIME = 20 * 60 * 10;
+
+    /**
      * Anything closer than this is melee range. A clone stops shooting at it and starts swinging
      * (and blocking), the same distance the melee goal can actually reach.
      */
@@ -146,6 +155,9 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
 
     /** Where a worker was put down, and therefore the middle of the land it works. */
     private BlockPos workerHome;
+
+    /** What a worker was told to do, decided by the tool in the caster's off hand. */
+    private WorkerJob workerJob = WorkerJob.FARM;
 
     /** Crops a worker has reaped and is carrying home, see {@link #collect(ItemStack)}. */
     private final List<ItemStack> bag = new ArrayList<>();
@@ -204,9 +216,12 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        // A worker clone farms instead of fighting or following; the goal refuses every other kind
-        // of clone, and the combat goals have nothing to work with in the worker's empty hands.
+        // A worker clone works instead of fighting or following, and which shift it works depends
+        // on the tool it was summoned with. Each goal refuses every other job (and every other kind
+        // of clone), so only the matching one ever runs.
         this.goalSelector.addGoal(1, new WorkerHarvestGoal(this));
+        this.goalSelector.addGoal(1, new WorkerMineGoal(this));
+        this.goalSelector.addGoal(1, new WorkerChopGoal(this));
         // Both weapon goals are always registered and decide for themselves whether they apply, so
         // a clone that is handed a bow later (or loses one) does not need its goals rebuilt. The
         // ranged goal sits above melee and only runs while the target is too far away to hit with a
@@ -651,9 +666,9 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     }
 
     /**
-     * A worker clone does not fight and does not follow: it walks the ground it was put down on and
-     * reaps whatever is ripe there, see {@code WorkerHarvestGoal} and
-     * {@code com.sekwah.narutomod.item.WorkerSealItem}.
+     * A worker clone does not fight and does not follow: it works the ground around the spot it was
+     * put down on, doing whatever its {@link WorkerJob} says, see
+     * {@code com.sekwah.narutomod.entity.ai.WorkerBlockGoal}.
      */
     public boolean isWorker() {
         return this.entityData.get(DATA_WORKER);
@@ -661,6 +676,27 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
 
     public void setWorker(boolean worker) {
         this.entityData.set(DATA_WORKER, worker);
+    }
+
+    /** @return the shift this worker was summoned for; meaningless on a non-worker clone. */
+    public WorkerJob getWorkerJob() {
+        return this.workerJob;
+    }
+
+    public void setWorkerJob(WorkerJob job) {
+        this.workerJob = job;
+    }
+
+    /**
+     * Gives the worker the tool it is supposed to swing and empties its other hand.
+     *
+     * <p>The constructor copies both of the caster's hands, which for a worker means the seal in the
+     * main hand and the tool in the off hand. A worker holds neither the seal nor a second item, so
+     * the tool is moved into the main hand (where a mob swings from) and the off hand is cleared.</p>
+     */
+    public void setWorkerTool(ItemStack tool) {
+        this.setItemSlot(EquipmentSlot.MAINHAND, tool.copy());
+        this.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
     }
 
     /** The middle of a worker's field: where it was placed. */
@@ -672,7 +708,7 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.workerHome = home;
     }
 
-    /** Puts a reaped crop into the bag a worker carries back to its caster. */
+    /** Puts what a worker picked up into the bag it carries back to its caster. */
     public void collect(ItemStack stack) {
         if (!stack.isEmpty()) {
             this.bag.add(stack.copy());
@@ -725,6 +761,7 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         tag.put("Ammo", this.ammo.save(new CompoundTag()));
         tag.putBoolean("Explosive", this.explosive);
         tag.putBoolean("Worker", this.isWorker());
+        tag.putString("WorkerJob", this.workerJob.name());
         if (this.workerHome != null) {
             tag.putLong("WorkerHome", this.workerHome.asLong());
         }
@@ -750,6 +787,7 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.ammo = tag.contains("Ammo") ? ItemStack.of(tag.getCompound("Ammo")) : ItemStack.EMPTY;
         this.explosive = tag.getBoolean("Explosive");
         this.setWorker(tag.getBoolean("Worker"));
+        this.workerJob = parseWorkerJob(tag.getString("WorkerJob"));
         if (tag.contains("WorkerHome")) {
             this.workerHome = BlockPos.of(tag.getLong("WorkerHome"));
         }
@@ -763,6 +801,15 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         }
         // Mob#readAdditionalSaveData resets this from the tag, which would let clones despawn.
         this.setPersistenceRequired();
+    }
+
+    /** Reads a saved job name, falling back to farming for tags written before jobs existed. */
+    private static WorkerJob parseWorkerJob(String name) {
+        try {
+            return WorkerJob.valueOf(name);
+        } catch (IllegalArgumentException | NullPointerException ignored) {
+            return WorkerJob.FARM;
+        }
     }
 
     @Override

@@ -231,7 +231,7 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 | Гендзюцу | `C B C` | INSTANT | 35 чакры, КД 10 с | `abilities/jutsus/GenjutsuJutsuAbility.java` + `events/GenjutsuEvents.java` |
 | Хенге | `V C V` | INSTANT | 30 чакры, КД 5 с | `abilities/jutsus/HengeJutsuAbility.java` + `client/renderer/HengeRenderEvents.java` |
 | Чакра-печать | — | предмет | 1 за призыв клонов | `NarutoItems.CHAKRA_SEAL` |
-| Печать рабочего | — | предмет | 1 за рабочего | `item/WorkerSealItem.java` + `entity/ai/WorkerHarvestGoal.java` |
+| Печать рабочего | — | режим клонов | держится в руке, не тратится | `item/WorkerSealItem.java` + `entity/WorkerJob.java` + `entity/ai/WorkerBlockGoal.java` |
 | Чакра-батарея | — | предмет | хранит 500, привязка к первому владельцу | `item/ChakraBatteryItem.java` |
 | Рамен | — | предмет (еда) | — | `NarutoItems.RAMEN` |
 | Самехада / Кубикирибочо | — | оружие | — | `item/ComboSwordItem.java` + `events/ComboSwordEvents.java` |
@@ -347,16 +347,34 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   стамина не тратится вообще**. Прежний «частичный пересчёт» (`distance *= 0.3`, `-= 5`, `*= 0.6`)
   удалён: он и выглядел случайным. Цена теперь пропорциональна опасности: 4 блока — 2 стамины,
   40 блоков — 74.
-* **Печать рабочего** (`item/WorkerSealItem`, ПКМ по блоку) — тот же `ShadowCloneEntity`, но с флагом
-  `worker` (`DATA_WORKER`, сохраняется в NBT), пустыми руками, сроком жизни 10 минут и координатой
-  «поста» (`workerHome`). Гол `WorkerHarvestGoal` (приоритет 1, работает только у рабочих) ищет
-  спелые `#minecraft:crops` в радиусе 8 блоков от поста, срезает их через
-  `Block.getDrops(...)` + `level.destroyBlock(pos, false)` и **сразу засевает заново**
-  (`CropBlock#getStateForAge(0)`), а лут кладёт в свой мешок (`collect`), сериализуемый в NBT
-  (`WorkerBag`). `CloneFollowOwnerGoal` отказывается работать у рабочих, как и у медитирующих.
-  При исчезновении (`dispel` → `releaseLoot`) мешок отдаётся **через 30 секунд**
-  (`WORKER_LOOT_DELAY`) через `INinjaData#scheduleDelayedTickEvent`: это то, что делает рабочего
-  работником, а не телепортом фермы. Если владелец не в сети — лут выпадает на месте клона.
+* **Рабочий клон** — это **не предмет и не отдельная техника**, а **режим** обычных клонов: если при
+  касте комбо клонов в **основной руке** лежит `item/WorkerSealItem` (`ShadowCloneJutsuAbility#isHoldingWorkerSeal`),
+  клоны выходят рабочими (количество — как у техники, срок жизни — `ShadowCloneEntity.WORKER_LIFETIME`
+  = 10 минут). Печать **не расходуется** и не кликается — это катализатор; чакра-печать за каст всё
+  равно тратится. Медитация (`Settings#meditating`) режим игнорирует — она всегда медитация. Работа —
+  **enum `entity/WorkerJob`** (`FARM`/`MINE`/`CHOP`), выбирается по инструменту во **второй** руке
+  (`ShadowCloneJutsuAbility#workerJob`): кирка → `MINE`, топор → `CHOP`, всё остальное → `FARM`.
+  Флаг `worker` (`DATA_WORKER`) и `workerJob` (строка в NBT) — server-side.
+  Инструмент кладётся клону в **основную** руку, вторая рука пустеет (`ShadowCloneEntity#setWorkerTool`).
+* Три смены рабочих — общий предок `entity/ai/WorkerBlockGoal` (приоритет 1): ищет ближайший блок
+  своего класса в радиусе 8 / ±3 от поста (`workerHome` = `player.blockPosition()` места призыва),
+  подходит, «бьёт» (кулдаун 15 тиков, скан пустой цели — 20), лут кладёт в мешок (`collect`, NBT
+  `WorkerBag`). Подклассы задают только `matches`/`work`:
+  * `WorkerHarvestGoal` (`FARM`) — спелые `#minecraft:crops`, срезает через `Block.getDrops(...)` +
+    `level.destroyBlock(pos, false)` и **сразу засевает заново** (`CropBlock#getStateForAge(0)`).
+  * `WorkerMineGoal` (`MINE`) — камень тега `#minecraft:base_stone_overworld` + руды `forge:ores`;
+    берёт только то, что проходит `ItemStack#isCorrectToolForDrops` (тир кирки учитывается), инструмент
+    изнашивается (`ItemStack#hurtAndBreak(1, worker, …)` — `mineBlock` требует **Player**, а клон им не
+    является; когда инструмент сломался, он больше не проходит проверку и смена прекращается).
+  * `WorkerChopGoal` (`CHOP`) — `#minecraft:logs`, обходит ствол целиком (BFS, кап `MAX_LOGS = 64`).
+* `CloneFollowOwnerGoal` отказывается работать у рабочих, как и у медитирующих. При исчезновении
+  (`dispel` → `releaseLoot`) мешок отдаётся **через 30 секунд** (`WORKER_LOOT_DELAY`) через
+  `INinjaData#scheduleDelayedTickEvent`: это то, что делает рабочего работником, а не телепортом фермы.
+  Если владелец не в сети — лут выпадает на месте клона.
+* **XP клона — владельцу.** `events/ShadowCloneEvents#onExperienceDrop` (`LivingExperienceDropEvent`):
+  если `event.getEntity().getKillCredit()` — `ShadowCloneEntity`, а её владелец в сети, опыт обнуляется
+  (`setDroppedExperience(0)`) и выдаётся владельцу (`Player#giveExperiencePoints`). Так опыт за убийство
+  клоном не остаётся орбами за полкарты. Если владелец не в сети — орбы падают как обычно (не теряются).
 * **Великие мечи** (`ComboSwordItem`) — цепочка ударов живёт **в NBT стека**
   (`narutomod:combo`, `narutomod:combo_time`): каждый удар, попавший в окно (4–5 с), добавляет звено,
   урон следующего удара растёт (`damagePerStep`; Самехада — 0.5, Кубикирибочо — 0.75, максимум 20
