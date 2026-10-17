@@ -3,9 +3,11 @@ package com.sekwah.narutomod.entity.ai;
 import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import com.sekwah.narutomod.entity.WorkerJob;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockState;
@@ -56,10 +58,21 @@ public class WorkerChopGoal extends WorkerBlockGoal {
     /**
      * Leaves are not wood, but they can wall a trunk in so that no log has a reachable side. When no
      * log can be got at, the chopper clears the leaves in its way and only then reaches the trunk.
+     * Only leaves touching a log count, so a worker is not turned into a leaf mower once the wood is
+     * gone.
      */
     @Override
-    protected boolean secondary(BlockState state) {
-        return state.is(BlockTags.LEAVES);
+    protected boolean secondary(BlockState state, BlockPos pos) {
+        if (!state.is(BlockTags.LEAVES)) {
+            return false;
+        }
+        Level level = this.worker.level();
+        for (Direction dir : Direction.values()) {
+            if (level.getBlockState(pos.relative(dir)).is(BlockTags.LOGS)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

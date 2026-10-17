@@ -39,6 +39,9 @@ public abstract class WorkerBlockGoal extends Goal {
     /** Ticks between scans when there is nothing to go for. */
     private static final int EMPTY_COOLDOWN = 20;
 
+    /** Ticks between attempts to find a path, so a blocked worker does not path every tick. */
+    private static final int REPATH_TICKS = 20;
+
     /** How long a worker tries to reach one target before it gives up and looks elsewhere. */
     private static final int UNREACHABLE_TICKS = 300;
 
@@ -50,6 +53,11 @@ public abstract class WorkerBlockGoal extends Goal {
     private BlockPos target;
     private int cooldown;
     private int reachTicks;
+    private int repathTicks;
+
+    /** Offsets to probe, nearest ring first (x, y, z triples), and where each ring starts in it. */
+    private int[] scanOffsets;
+    private int[] scanShellStart;
 
     protected WorkerBlockGoal(ShadowCloneEntity worker) {
         this.worker = worker;
@@ -69,9 +77,11 @@ public abstract class WorkerBlockGoal extends Goal {
      * Blocks a worker may clear when nothing of its own kind is within reach.
      *
      * <p>A lumberjack uses this for leaves: a trunk walled in by foliage has no reachable side at
-     * all, so the worker first clears the leaves in its way and only then gets at the wood.</p>
+     * all, so the worker first clears the leaves in its way and only then gets at the wood. The
+     * position is given so a subclass can require the block to be worth clearing (a leaf touching a
+     * trunk, say) instead of every block of that kind in sight.</p>
      */
-    protected boolean secondary(BlockState state) {
+    protected boolean secondary(BlockState state, BlockPos pos) {
         return false;
     }
 
@@ -100,7 +110,7 @@ public abstract class WorkerBlockGoal extends Goal {
             return false;
         }
         BlockState state = this.worker.level().getBlockState(this.target);
-        return this.matches(state) || this.secondary(state);
+        return this.matches(state) || this.secondary(state, this.target);
     }
 
     @Override
@@ -108,6 +118,7 @@ public abstract class WorkerBlockGoal extends Goal {
         this.cooldown = 0;
         this.reachTicks = 0;
         this.walkTo(this.target);
+        this.repathTicks = REPATH_TICKS;
     }
 
     @Override
@@ -132,7 +143,10 @@ public abstract class WorkerBlockGoal extends Goal {
                 this.worker.getNavigation().stop();
                 return;
             }
-            if (this.worker.getNavigation().isDone()) {
+            // A failed path search leaves the navigation "done", so trying again every tick would
+            // run A* from scratch sixty times a second; only retry every so often instead.
+            if (this.worker.getNavigation().isDone() && --this.repathTicks <= 0) {
+                this.repathTicks = REPATH_TICKS;
                 this.walkTo(this.target);
             }
             return;
@@ -157,36 +171,95 @@ public abstract class WorkerBlockGoal extends Goal {
 
     /** @return the closest block of this job's kind around the worker that it can walk to. */
     private BlockPos findTarget() {
-        BlockPos primary = this.findNearest(this::matches);
+        Level level = this.worker.level();
+        BlockPos primary = this.findNearest(pos -> this.matches(level.getBlockState(pos)));
         if (primary != null) {
             return primary;
         }
         // Nothing of its own kind can be reached; a secondary block (foliage in a chopper's way) may
         // still be worth taking, because clearing it can open a path to the real thing.
-        return this.findNearest(this::secondary);
+        return this.findNearest(pos -> this.secondary(level.getBlockState(pos), pos));
     }
 
-    /** @return the closest block matching {@code wanted} around the worker that it can walk to. */
-    private BlockPos findNearest(Predicate<BlockState> wanted) {
+    /** @return the closest block matching {@code wanted} that the worker can walk to, or null. */
+    private BlockPos findNearest(Predicate<BlockPos> wanted) {
         // A worker looks around wherever it is rather than around a fixed post: a forest it walks
         // through keeps offering work, and when the ground around it is picked clean it drifts on to
         // the next stand of trees by itself (see the strolling goal it falls back to).
         BlockPos here = this.worker.blockPosition();
+        Level level = this.worker.level();
         int radius = this.searchRadius();
-        BlockPos nearest = null;
-        double nearestDistance = Double.MAX_VALUE;
-        for (BlockPos pos : BlockPos.betweenClosed(here.offset(-radius, -VERTICAL_REACH, -radius),
-                here.offset(radius, VERTICAL_REACH, radius))) {
-            if (!wanted.test(this.worker.level().getBlockState(pos)) || !this.hasStand(pos)) {
-                continue;
+        this.buildScanOrder(radius);
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        // Probe ring by ring so the first hit is the closest one and a forest yields a target within
+        // a couple of blocks: the far corners of a 24-block box are never touched while work is near.
+        for (int ring = 0; ring <= radius; ring++) {
+            BlockPos best = null;
+            double bestDistance = Double.MAX_VALUE;
+            for (int i = this.scanShellStart[ring]; i < this.scanShellStart[ring + 1]; i++) {
+                int base = i * 3;
+                cursor.set(here.getX() + this.scanOffsets[base],
+                        here.getY() + this.scanOffsets[base + 1],
+                        here.getZ() + this.scanOffsets[base + 2]);
+                if (!wanted.test(cursor) || !this.hasStand(cursor)) {
+                    continue;
+                }
+                double distance = this.worker.distanceToSqr(Vec3.atCenterOf(cursor));
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    best = cursor.immutable();
+                }
             }
-            double distance = this.worker.distanceToSqr(Vec3.atCenterOf(pos));
-            if (distance < nearestDistance) {
-                nearestDistance = distance;
-                nearest = pos.immutable();
+            if (best != null) {
+                return best;
             }
         }
-        return nearest;
+        return null;
+    }
+
+    /**
+     * Builds the list of offsets a scan walks through, nearest horizontal ring first. Done once,
+     * since the radius never changes; a plain box scan would re-touch the whole volume every time.
+     */
+    private void buildScanOrder(int radius) {
+        if (this.scanOffsets != null && this.scanShellStart.length > radius) {
+            return;
+        }
+        int entries = 0;
+        for (int ring = 0; ring <= radius; ring++) {
+            entries += (ring == 0 ? 1 : 8 * ring) * (2 * VERTICAL_REACH + 1);
+        }
+        this.scanOffsets = new int[entries * 3];
+        this.scanShellStart = new int[radius + 2];
+        int entry = 0;
+        for (int ring = 0; ring <= radius; ring++) {
+            this.scanShellStart[ring] = entry;
+            for (int dy = -VERTICAL_REACH; dy <= VERTICAL_REACH; dy++) {
+                int ringSize = ring == 0 ? 1 : 8 * ring;
+                for (int i = 0; i < ringSize; i++) {
+                    int dx;
+                    int dz;
+                    if (ring == 0) {
+                        dx = 0;
+                        dz = 0;
+                    } else {
+                        int side = i / (2 * ring);
+                        int step = i % (2 * ring);
+                        switch (side) {
+                            case 0 -> { dx = -ring + step; dz = -ring; }
+                            case 1 -> { dx = ring; dz = -ring + step; }
+                            case 2 -> { dx = ring - step; dz = ring; }
+                            default -> { dx = -ring; dz = ring - step; }
+                        }
+                    }
+                    this.scanOffsets[entry * 3] = dx;
+                    this.scanOffsets[entry * 3 + 1] = dy;
+                    this.scanOffsets[entry * 3 + 2] = dz;
+                    entry++;
+                }
+            }
+        }
+        this.scanShellStart[radius + 1] = entry;
     }
 
     /**
