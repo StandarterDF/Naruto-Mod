@@ -57,7 +57,14 @@ public class ChakraMeditationJutsuAbility extends ShadowCloneJutsuAbility {
             if (meditating <= 0) {
                 return;
             }
-            ninjaData.addChakra(CHAKRA_PER_CLONE * meditating);
+            // Sage mode runs on nature energy, not chakra, so while it is up the clones feed that
+            // instead - otherwise meditating in sage mode would refill the wrong bar entirely.
+            float refill = CHAKRA_PER_CLONE * meditating;
+            if (ninjaData.isSageMode()) {
+                ninjaData.addSeninMana(refill);
+            } else {
+                ninjaData.addChakra(refill);
+            }
             fastForwardCooldowns(ninjaData);
         });
     }

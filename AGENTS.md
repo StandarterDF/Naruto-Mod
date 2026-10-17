@@ -92,7 +92,9 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
   `ShadowCloneRenderer#setupRotations`. Баф кастеру выдаёт не клон, а
   `ChakraMeditationJutsuAbility#tickAura` (вызывается из `PlayerEvents#onEntityUpdate`): пока рядом
   (8 блоков) есть медитирующий клон владельца — `+0.2` чакры за тик на каждого и лишний тик в
-  `INinjaData#getCooldownEvents()`, то есть КД техник идут вдвое быстрее. Второй тик снимается копией
+  `INinjaData#getCooldownEvents()`, то есть КД техник идут вдвое быстрее. **В Режиме Мудреца** тот же
+  приток идёт в **сенин-ману** (`addSeninMana`), а не в чакру: режим живёт на природной энергии, и
+  медитация должна питать именно её. Второй тик снимается копией
   ключей карты, иначе `ConcurrentModificationException`.
 * **Доп. чакра медитации**: каждый медитирующий клон в радиусе поднимает **максимум** чакры кастера
   на `CAPACITY_PER_CLONE = 100` через `INinjaData#setChakraCapacityBonus` (у `getMaxChakra()` бонус

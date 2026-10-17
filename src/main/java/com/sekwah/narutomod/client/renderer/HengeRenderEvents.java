@@ -62,6 +62,7 @@ public class HengeRenderEvents {
     private static Entity fakeMob;
     private static String fakeMobType = "";
     private static ClientLevel fakeMobLevel;
+    private static long fakeMobTick = Long.MIN_VALUE;
 
     /** Handed to us by the mod bus event, see {@code NarutoRenderEvents#addLayers}. */
     public static void setContext(EntityRendererProvider.Context rendererContext) {
@@ -155,6 +156,7 @@ public class HengeRenderEvents {
             fakeMob = EntityType.byString(typeId).map(type -> type.create(level)).orElse(null);
             fakeMobType = typeId;
             fakeMobLevel = level;
+            fakeMobTick = Long.MIN_VALUE;
         }
         return fakeMob;
     }
@@ -179,7 +181,13 @@ public class HengeRenderEvents {
             living.yBodyRotO = player.yBodyRotO;
             living.setYHeadRot(player.getYHeadRot());
             living.yHeadRotO = player.yHeadRotO;
-            living.walkAnimation.update(player.walkAnimation.speed(), 1.0f);
+            // The limb swing is a per-tick accumulation, so it must be advanced once per tick and
+            // not once per frame - feeding it every frame is what made the legs twitch far too fast.
+            long gameTime = player.level().getGameTime();
+            if (gameTime != fakeMobTick) {
+                fakeMobTick = gameTime;
+                living.walkAnimation.update(player.walkAnimation.speed(), 1.0f);
+            }
         }
     }
 
