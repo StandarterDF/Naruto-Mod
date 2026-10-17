@@ -1,5 +1,7 @@
 package com.sekwah.narutomod.entity;
 
+import com.sekwah.narutomod.block.NarutoBlocks;
+import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.entity.ai.CloneFollowOwnerGoal;
 import com.sekwah.narutomod.entity.ai.CloneOwnerHurtByTargetGoal;
 import com.sekwah.narutomod.entity.ai.CloneOwnerHurtTargetGoal;
@@ -19,6 +21,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
@@ -45,6 +48,7 @@ import net.minecraft.world.entity.projectile.ThrownTrident;
 import net.minecraft.world.item.ArrowItem;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.item.TridentItem;
@@ -66,6 +70,11 @@ import java.util.UUID;
  * skeleton, pillager or drowned would: bows and crossbows fire the arrows the caster was carrying
  * (a copy, not a loan, which is spent arrow by arrow until the clone pops), while a trident is
  * simply hurled at whatever it is fighting.</p>
+ *
+ * <p>Two more things rub off on a clone. It inherits any potion effects the caster was under when it
+ * appeared, and if the caster was holding a paper bomb then so is the clone: when a killing blow
+ * pops it, it takes the charge with it, hurting everything around it but neither its caster (or
+ * their other clones) nor a single block.</p>
  *
  * <p>Ported from the 1.7.10 {@code EntityShadowClone} of the same mod.</p>
  */
@@ -106,6 +115,12 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
      */
     private ItemStack ammo = ItemStack.EMPTY;
 
+    /**
+     * True when the caster was holding a paper bomb at spawn time. Such a clone goes off when a
+     * killing blow pops it instead of just leaving a puff of smoke.
+     */
+    private boolean explosive;
+
     public ShadowCloneEntity(EntityType<ShadowCloneEntity> type, Level level) {
         super(type, level);
         this.xpReward = 0;
@@ -120,6 +135,8 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.setChibi(chibi);
         this.copyEquipment(owner);
         this.copyAmmo(owner);
+        this.copyEffects(owner);
+        this.explosive = isHoldingPaperBomb(owner);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -217,6 +234,24 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
             arrows.setCount(total);
             this.ammo = arrows;
         }
+    }
+
+    /**
+     * Copies every effect the caster is under, with its remaining duration. Drawbacks come along too,
+     * which is only fair: a clone of a poisoned caster is just as doomed as the caster is.
+     */
+    private void copyEffects(Player owner) {
+        for (MobEffectInstance effect : owner.getActiveEffects()) {
+            this.addEffect(new MobEffectInstance(effect));
+        }
+    }
+
+    /**
+     * A paper bomb in either hand at spawn time is all it takes to make a clone go off when it pops.
+     */
+    private static boolean isHoldingPaperBomb(Player owner) {
+        Item paperBomb = NarutoBlocks.ITEM_PAPER_BOMB.get();
+        return owner.getMainHandItem().is(paperBomb) || owner.getOffhandItem().is(paperBomb);
     }
 
     /**
@@ -429,10 +464,31 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
 
     /**
      * Clones are smoke and chakra, they never leave a body (or loot) behind.
+     *
+     * <p>A clone that was made out of a paper bomb takes the charge with it: the killing blow pops
+     * it in a blast. Running out of chakra or of arrows is not a killing blow, so those clones go
+     * quietly.</p>
      */
     @Override
     public void die(DamageSource damageSource) {
+        if (this.explosive && !this.level().isClientSide) {
+            this.explode();
+        }
         this.dispel();
+    }
+
+    /**
+     * The blast of an explosive clone. Like a paper bomb it hurts everything nearby, except that it
+     * never breaks blocks: clones are too cheap for that. The caster and their other clones are
+     * spared, see {@code ExplosionEvents}.
+     */
+    private void explode() {
+        this.level().explode(this, this.getX(), this.getY(0.0625d), this.getZ(),
+                NarutoConfig.paperbombExplosionRadius, Level.ExplosionInteraction.NONE);
+    }
+
+    public boolean isExplosive() {
+        return this.explosive;
     }
 
     /**
@@ -531,6 +587,7 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         tag.putBoolean("Chibi", this.isChibi());
         tag.putInt("Lifetime", this.lifetime);
         tag.put("Ammo", this.ammo.save(new CompoundTag()));
+        tag.putBoolean("Explosive", this.explosive);
     }
 
     @Override
@@ -543,6 +600,7 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.setChibi(tag.getBoolean("Chibi"));
         this.lifetime = tag.contains("Lifetime") ? tag.getInt("Lifetime") : DEFAULT_LIFETIME;
         this.ammo = tag.contains("Ammo") ? ItemStack.of(tag.getCompound("Ammo")) : ItemStack.EMPTY;
+        this.explosive = tag.getBoolean("Explosive");
         // Mob#readAdditionalSaveData resets this from the tag, which would let clones despawn.
         this.setPersistenceRequired();
     }
