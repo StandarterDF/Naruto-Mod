@@ -94,7 +94,7 @@
   "narutomod:rasengan": "Rasengan",
   "narutomod:eight_gates": "Eight Inner Gates",
   "jutsu.eight_gates.open": "Gate %s opens",
-  "jutsu.eight_gates.close": "The gates slam shut",
+  "jutsu.fail.gates_open": "%s cannot be closed, the eighth gate is already open",
   "ability.double_jump": "Double Jump",
   "jutsu.leap": "Leap",
   "jutsu.waterwalk": "Water Walking",

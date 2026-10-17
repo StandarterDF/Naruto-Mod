@@ -43,7 +43,7 @@
   "narutomod:rasengan": "Расенган",
   "narutomod:eight_gates": "Восемь Внутренних Врат",
   "jutsu.eight_gates.open": "Врата %s открываются",
-  "jutsu.eight_gates.close": "Врата захлопываются",
+  "jutsu.fail.gates_open": "%s уже не закрыть — восьмые врата открыты",
   "narutomod.subtitle.clone_poof": "Теневой Клон Исчезает",
   "item.narutomod.samehada": "Самехада",
   "item.narutomod.kubikiribocho": "Кубикирибочо",

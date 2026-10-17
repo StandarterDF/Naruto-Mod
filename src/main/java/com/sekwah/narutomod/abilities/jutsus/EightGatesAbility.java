@@ -17,13 +17,17 @@ import net.minecraft.world.entity.player.Player;
  *
  * <p>Every cast opens the next gate, and by the time all eight are open the caster is fast, strong
  * and hard to hurt in a way nothing else in the mod can match. The catch is that the body is not
- * built for it: the gates grind the caster down the whole time they are open, and the higher the
- * gate the faster it goes, to the point where the last few are a losing race against your own
- * health bar.</p>
+ * built for it: the gates grind the caster down the whole time they are open, and the drain grows
+ * with the square of how many are open, so the first few gates are something a caster can fight
+ * through and the last few are a countdown.</p>
  *
- * <p>Casting once more at the eighth gate slams them all shut again, which is the only way to stop
- * the drain short of dying. The effects are kept alive from {@code PlayerEvents}, not here, since
- * they have to be refreshed every tick while the gates are open.</p>
+ * <p><b>The eighth gate cannot be closed.</b> Up to the seventh the caster can simply stop, but once
+ * the last gate is open no cast shuts it again and eight gates drain a full health bar in a couple of
+ * seconds. Death is the only way out, which is the point: the eighth gate is meant to be spent, not
+ * used. The gates fall away with death and are gone when the caster comes back.</p>
+ *
+ * <p>The effects are kept alive from {@code PlayerEvents}, not here, since they have to be refreshed
+ * every tick while the gates are open.</p>
  */
 public class EightGatesAbility extends Ability {
 
@@ -37,10 +41,14 @@ public class EightGatesAbility extends Ability {
     private static final float STAMINA_PER_GATE = 15.0f;
 
     /** How often, in ticks, the open gates take their toll on the caster. */
-    private static final int DRAIN_INTERVAL = 40;
+    private static final int DRAIN_INTERVAL = 20;
 
-    /** Health lost per open gate each time the drain comes round. */
-    private static final float DRAIN_PER_GATE = 0.5f;
+    /**
+     * Health lost each tick of drain, multiplied by the square of the open gates. Squared on purpose:
+     * one gate is a trickle (0.15 a second), four is survivable for a while (2.4), six drains a full
+     * bar in under four seconds and the eighth leaves the caster roughly two seconds to live.
+     */
+    private static final float DRAIN_COEFFICIENT = 0.15f;
 
     @Override
     public ActivationType activationType() {
@@ -54,9 +62,11 @@ public class EightGatesAbility extends Ability {
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        // At the eighth gate the next cast is the one that shuts them, and that is free.
+        // There is no way back from the eighth gate: the cast that would close them fails instead.
         if (ninjaData.getGateCount() >= MAX_GATES) {
-            return true;
+            player.displayClientMessage(Component.translatable("jutsu.fail.gates_open",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
+            return false;
         }
         if (ninjaData.getChakra() < CHAKRA_PER_GATE || ninjaData.getStamina() < STAMINA_PER_GATE) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
@@ -71,17 +81,6 @@ public class EightGatesAbility extends Ability {
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
         if (!(player.level() instanceof ServerLevel level)) {
-            return;
-        }
-
-        if (ninjaData.getGateCount() >= MAX_GATES) {
-            close(player, ninjaData);
-            level.sendParticles(ParticleTypes.CLOUD, player.getX(),
-                    player.getY() + player.getBbHeight() / 2.0d, player.getZ(),
-                    30, 0.5d, 0.7d, 0.5d, 0.02d);
-            level.playSound(null, player, SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.8f, 0.7f);
-            player.displayClientMessage(Component.translatable("jutsu.eight_gates.close")
-                    .withStyle(ChatFormatting.GRAY), true);
             return;
         }
 
@@ -119,12 +118,12 @@ public class EightGatesAbility extends Ability {
         player.addEffect(new MobEffectInstance(MobEffects.JUMP, shortDuration, Math.min(gates - 1, 3), true, false));
 
         if (player.tickCount % DRAIN_INTERVAL == 0) {
-            player.hurt(player.damageSources().magic(), DRAIN_PER_GATE * gates);
+            player.hurt(player.damageSources().magic(), DRAIN_COEFFICIENT * gates * gates);
         }
     }
 
     /**
-     * Shuts every gate: no effects, no drain. Used both by the caster and by death.
+     * Shuts every gate: no effects, no drain. Only death gets to do this now, the caster cannot.
      */
     public static void close(Player player, INinjaData ninjaData) {
         ninjaData.setGateCount(0);

@@ -57,7 +57,8 @@ public class PlayerEvents {
             if (event.isWasDeath()) {
                 ninjaData.setShieldPoints(0.0f);
                 ninjaData.setSecondBreathArmed(false);
-                ninjaData.setGateCount(0);
+                // The gates are the one thing a caster cannot switch off, so death is what shuts them.
+                EightGatesAbility.close(player, ninjaData);
                 ChakraShieldAbility.removeShield(player);
             } else if (ninjaData.getShieldPoints() > 0.0f) {
                 ChakraShieldAbility.applyShield(player, ninjaData.getShieldPoints());
