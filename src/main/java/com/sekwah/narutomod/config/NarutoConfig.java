@@ -70,6 +70,12 @@ public class NarutoConfig {
     private static final ForgeConfigSpec.IntValue CONFIG_KAMUI_TRANSFER_SECONDS;
     public static int kamuiTransferSeconds;
 
+    private static final ForgeConfigSpec.DoubleValue CONFIG_MAX_SENIN_MANA;
+    public static float maxSeninMana;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_SAGE_MODE_ENABLED;
+    public static boolean sageModeEnabled;
+
     //private static final ForgeConfigSpec.BooleanValue CONFIG_STARTS_AS_NINJA;
     //public static boolean startsAsNinja;
 
@@ -105,6 +111,12 @@ public class NarutoConfig {
 
         CONFIG_SUBSTITUTION_REGEN_TIME = configBuilder.comment("Substitution Regen Time (Seconds)")
                         .defineInRange("substitutionRegenTime",  60 ,  0, Integer.MAX_VALUE);
+
+        CONFIG_MAX_SENIN_MANA = configBuilder.comment("Max nature energy (senin mana) a ninja can gather, and the pool sage mode drains")
+                .defineInRange("maxSeninMana",  100F ,  0d, Double.MAX_VALUE);
+
+        CONFIG_SAGE_MODE_ENABLED = configBuilder.comment("Can players gather nature energy and enter sage mode?")
+                .define("sageModeEnabled", true);
 
         configBuilder.pop();
 
@@ -178,6 +190,8 @@ public class NarutoConfig {
                 .get();
         kamuiEnabled = CONFIG_KAMUI_ENABLED.get();
         kamuiTransferSeconds = CONFIG_KAMUI_TRANSFER_SECONDS.get();
+        maxSeninMana = CONFIG_MAX_SENIN_MANA.get().floatValue();
+        sageModeEnabled = CONFIG_SAGE_MODE_ENABLED.get();
         //startsAsNinja = CONFIG_STARTS_AS_NINJA.get();
     }
 

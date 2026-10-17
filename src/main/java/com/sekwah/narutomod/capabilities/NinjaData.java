@@ -122,6 +122,20 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private boolean kamuiPhasing;
 
     /**
+     * Nature energy gathered by standing still and burned by sage mode, see {@code SageModeAbility}.
+     * Written to disk (a gathered pool should not evaporate on logout) and synced for the HUD.
+     */
+    @Sync(minTicks = 1)
+    private float seninMana;
+
+    /**
+     * Whether sage mode is up. Synced for the HUD and the client side effects, and never written to
+     * disk: death and logging out both end it.
+     */
+    @Sync(minTicks = 1)
+    private boolean sageMode;
+
+    /**
      * If the player can double jump, will be updated by underlying values server side.
      *
      * Will be true if the player has enough chakra as well as
@@ -204,6 +218,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private static final String MARKER_DIMENSION_TAG = "chakraMarkerDimension";
     private static final String KAMUI_RETURN_TAG = "kamuiReturn";
     private static final String KAMUI_RETURN_DIMENSION_TAG = "kamuiReturnDimension";
+    private static final String SENIN_MANA_TAG = "seninMana";
 
     private final LazyOptional<INinjaData> holder = LazyOptional.of(() -> this);
 
@@ -385,6 +400,36 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     @Override
     public void setKamuiPhasing(boolean phasing) {
         this.kamuiPhasing = phasing;
+    }
+
+    @Override
+    public float getSeninMana() {
+        return this.seninMana;
+    }
+
+    @Override
+    public void setSeninMana(float mana) {
+        this.seninMana = Math.min(Math.max(mana, 0.0f), this.getMaxSeninMana());
+    }
+
+    @Override
+    public void addSeninMana(float mana) {
+        this.setSeninMana(this.seninMana + mana);
+    }
+
+    @Override
+    public float getMaxSeninMana() {
+        return NarutoConfig.maxSeninMana;
+    }
+
+    @Override
+    public boolean isSageMode() {
+        return this.sageMode;
+    }
+
+    @Override
+    public void setSageMode(boolean sage) {
+        this.sageMode = sage;
     }
 
     @Override
@@ -576,6 +621,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         if (this.kamuiReturnDimension != null) {
             nbt.putString(KAMUI_RETURN_DIMENSION_TAG, this.kamuiReturnDimension.toString());
         }
+        nbt.putFloat(SENIN_MANA_TAG, this.seninMana);
         return nbt;
     }
 
@@ -609,6 +655,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
             if (compoundTag.contains(KAMUI_RETURN_DIMENSION_TAG)) {
                 this.kamuiReturnDimension = new ResourceLocation(compoundTag.getString(KAMUI_RETURN_DIMENSION_TAG));
             }
+            this.seninMana = compoundTag.getFloat(SENIN_MANA_TAG);
         }
     }
 

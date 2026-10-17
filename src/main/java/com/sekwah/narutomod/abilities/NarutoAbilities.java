@@ -16,6 +16,9 @@ import com.sekwah.narutomod.abilities.jutsus.KamuiJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.OreExcavationJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.RasenganJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.SecondBreathAbility;
+import com.sekwah.narutomod.abilities.jutsus.SageModeAbility;
+import com.sekwah.narutomod.abilities.jutsus.SenjutsuChargingAbility;
+import com.sekwah.narutomod.abilities.jutsus.GenjutsuJutsuAbility;
 import com.sekwah.narutomod.abilities.utility.ChakraChargeAbility;
 import com.sekwah.narutomod.abilities.utility.ChakraFistAbility;
 import com.sekwah.narutomod.abilities.utility.DoubleJumpAbility;
@@ -145,6 +148,26 @@ public class NarutoAbilities {
      */
     public static final RegistryObject<KamuiJutsuAbility> KAMUI =
             ABILITY.register("kamui", KamuiJutsuAbility::new);
+
+    /**
+     * Standing still to gather nature energy, which is what sage mode spends. See
+     * {@link SenjutsuChargingAbility}.
+     */
+    public static final RegistryObject<SenjutsuChargingAbility> SENJUTSU_CHARGING =
+            ABILITY.register("senjutsu_charging", SenjutsuChargingAbility::new);
+
+    /**
+     * Opens the gathered nature energy up as sage mode. See {@link SageModeAbility}.
+     */
+    public static final RegistryObject<SageModeAbility> SAGE_MODE =
+            ABILITY.register("sage_mode", SageModeAbility::new);
+
+    /**
+     * The illusion that stops a mob seeing players and points it at its neighbours instead. See
+     * {@link GenjutsuJutsuAbility}.
+     */
+    public static final RegistryObject<GenjutsuJutsuAbility> GENJUTSU =
+            ABILITY.register("genjutsu", GenjutsuJutsuAbility::new);
 
     public static void register(IEventBus eventBus) {
         ABILITY.register(eventBus);

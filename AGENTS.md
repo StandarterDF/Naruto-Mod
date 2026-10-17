@@ -223,8 +223,12 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 | Восемь врат | `V B B B` | INSTANT | 25 чакры + 15 стамины за врата | `abilities/jutsus/EightGatesAbility.java` |
 | Запечатать врата | `V B B V` | INSTANT | бесплатно (только врата 1–7) | `abilities/jutsus/GateReleaseAbility.java` |
 | Камуи | `B V V C C` | CHANNELED | 40 чакры шаг / 1.5 за тик + 30 за затяг | `abilities/jutsus/KamuiJutsuAbility.java` + `events/KamuiEvents.java` |
+| Сбор природной энергии | `V B C` | CHANNELED | бесплатно, но только стоя на месте | `abilities/jutsus/SenjutsuChargingAbility.java` |
+| Режим Мудреца | `V B V` | INSTANT | 50 сенин-маны на вход, 0.25/тик | `abilities/jutsus/SageModeAbility.java` |
+| Гендзюцу | `C B C` | INSTANT | 35 чакры, КД 10 с | `abilities/jutsus/GenjutsuJutsuAbility.java` + `events/GenjutsuEvents.java` |
 | Чакра-печать | — | предмет | 1 за призыв клонов | `NarutoItems.CHAKRA_SEAL` |
 | Печать рабочего | — | предмет | 1 за рабочего | `item/WorkerSealItem.java` + `entity/ai/WorkerHarvestGoal.java` |
+| Чакра-батарея | — | предмет | хранит 500, привязка к первому владельцу | `item/ChakraBatteryItem.java` |
 | Рамен | — | предмет (еда) | — | `NarutoItems.RAMEN` |
 | Самехада / Кубикирибочо | — | оружие | — | `item/ComboSwordItem.java` + `events/ComboSwordEvents.java` |
 
@@ -339,6 +343,29 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   единственный, когда цепочку можно прочитать и продлить до расчёта урона. Самехада дополнительно
   «высасывает» 1.5 чакры за удар. Оба меча — 2D-спрайты (`item/handheld`), 3D-модели 1.7.10 пока не
   портированы.
+* **Сбор природной энергии и режим Мудреца.** Пул `seninMana` (float, `@Sync`, **пишется** в NBT) живёт
+  в `INinjaData`/`NinjaData`; максимум — конфиг `maxSeninMana` (по умолчанию 100), выключение всей ветки
+  — `sageModeEnabled`. Копит `SenjutsuChargingAbility` (CHANNELED, `V B C`): **0.5/тик и только если
+  `isStill`** (на земле и `getDeltaMovement().horizontalDistanceSqr() < 0.0016`), движение прогресс не
+  сбрасывает. Тратит `SageModeAbility` (INSTANT, `V B V`): вход требует 50, дальше `DRAIN_PER_TICK = 0.25`,
+  режим **сам гаснет на нуле** (не по таймеру). Эффекты выдаются на 40 тиков и обновляются каждый тик —
+  значит, вместе с режимом они и заканчиваются; плюс `+0.5` чакры за тик и частицы `HAPPY_VILLAGER`.
+  Обслуживание — `SageModeAbility#maintain`, зовётся из `PlayerEvents#onEntityUpdate` рядом с
+  `EightGatesAbility#maintain`. Флаг `sageMode` (`@Sync`) **не** пишется в NBT: смерть и выход из игры
+  его закрывают. Полоска — `client/gui/SeninGUI` (рисуется руками, только когда есть что показывать,
+  над полоской чакры), добавлена в `overlays` в `NarutoInGameGUI`.
+* **Гендзюцу** (`GenjutsuJutsuAbility`, `C B C`, INSTANT, 35 чакры, КД 10 с) — цель берётся
+  `player.pick(RANGE=24, 0, false)` → `EntityHitResult` → `Mob`. Состояние висит **на самой сущности**
+  в `getPersistentData()` (`narutomod:genjutsu_until` = `gameTime + DURATION`, `narutomod:genjutsu_caster`),
+  поэтому переживает выгрузку чанка и сейв. `events/GenjutsuEvents` держит поведение: каждый тик
+  сбрасывает недопустимую цель, раз в секунду назначает ближайшего другого моба (`findVictim`, радиус 16)
+  и сыплет `WITCH`. Ключевое — `LivingChangeTargetEvent`: пока иллюзия держится, смена цели на игрока
+  **отменяется** (а `newTarget == null` пропускается, иначе жертву нельзя было бы отпустить). Из целей
+  исключены `Player`, `ShadowCloneEntity`, другие жертвы и всё, с чем моб и так `isAlliedTo`.
+* **Чакра-батарея** (`item/ChakraBatteryItem`, `stacksTo(1)`) — 500 чакры в NBT стека
+  (`Chakra`), привязка к первому владельцу (`Owner` UUID + `OwnerName` для подсказки). ПКМ — забрать до
+  50, ПКМ+Shift — долить до 50; чужому владельцу отказывает `jutsu.fail.battery.owner`. Привязка живёт
+  в NBT самого предмета, поэтому переживает смерть и сундуки; `isFoil` включается при заряде > 0.
 
 ## Грабли, на которые уже наступали
 

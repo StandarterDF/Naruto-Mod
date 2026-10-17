@@ -18,9 +18,10 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class NarutoInGameGUI {
 
-    private final ChakraAndStaminaGUI charkaOverlay;
+    private final ChakraAndStaminaGUI chakraOverlay;
     private final SubstitutionGUI substitutionOverlay;
     private final WorldMarkerGUI worldMarkerOverlay;
+    private final SeninGUI seninOverlay;
     private final Minecraft minecraft;
 
     private final PlayerGUI[] overlays;
@@ -35,11 +36,12 @@ public class NarutoInGameGUI {
 
     public NarutoInGameGUI(){
         this.minecraft = Minecraft.getInstance();
-        this.charkaOverlay = new ChakraAndStaminaGUI(this.minecraft);
+        this.chakraOverlay = new ChakraAndStaminaGUI(this.minecraft);
         this.substitutionOverlay = new SubstitutionGUI(this.minecraft);
         this.worldMarkerOverlay = new WorldMarkerGUI(this.minecraft);
+        this.seninOverlay = new SeninGUI(this.minecraft);
 
-        this.overlays = new PlayerGUI[]{this.worldMarkerOverlay, this.substitutionOverlay, this.charkaOverlay};
+        this.overlays = new PlayerGUI[]{this.worldMarkerOverlay, this.substitutionOverlay, this.chakraOverlay, this.seninOverlay};
 
         MinecraftForge.EVENT_BUS.addListener(this::renderGameOverlay);
         MinecraftForge.EVENT_BUS.addListener(this::clientTickEvent);

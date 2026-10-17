@@ -123,6 +123,13 @@ public class NarutoItems {
     public static final RegistryObject<Item> WORKER_SEAL = ITEMS.register("worker_seal",
             () -> new WorkerSealItem(new Item.Properties()));
 
+    /**
+     * A store of chakra that binds itself to the first ninja to use it, see
+     * {@link ChakraBatteryItem}.
+     */
+    public static final RegistryObject<Item> CHAKRA_BATTERY = ITEMS.register("chakra_battery",
+            () -> new ChakraBatteryItem(new Item.Properties().stacksTo(1)));
+
     public static final RegistryObject<Item> KATANA = ITEMS.register("katana", ()
             -> new SwordItem(NinjaTier.KATANA, 3, -1.95F, new Item.Properties()));
 

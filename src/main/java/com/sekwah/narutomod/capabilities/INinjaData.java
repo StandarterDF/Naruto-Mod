@@ -88,6 +88,22 @@ public interface INinjaData extends INBTSerializable<Tag> {
     boolean isKamuiPhasing();
     void setKamuiPhasing(boolean phasing);
 
+    /**
+     * Nature energy gathered by standing still and spent by sage mode, see {@code SageModeAbility}.
+     * Synced, because the HUD draws a bar for it.
+     */
+    float getSeninMana();
+    void setSeninMana(float mana);
+    void addSeninMana(float mana);
+    float getMaxSeninMana();
+
+    /**
+     * Whether sage mode is currently up. Server side state with a client copy, and deliberately not
+     * written to disk: death and logging out end it.
+     */
+    boolean isSageMode();
+    void setSageMode(boolean sage);
+
     DoubleJumpData getDoubleJumpData();
 
     HashMap<String, CooldownTickEvent> getCooldownEvents();

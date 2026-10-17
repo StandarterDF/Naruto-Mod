@@ -4,6 +4,7 @@ import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.jutsus.ChakraMeditationJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraShieldAbility;
 import com.sekwah.narutomod.abilities.jutsus.EightGatesAbility;
+import com.sekwah.narutomod.abilities.jutsus.SageModeAbility;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -40,8 +41,12 @@ public class PlayerEvents {
         // twice as fast, see ChakraMeditationJutsuAbility.
         ChakraMeditationJutsuAbility.tickAura(player);
         // The open gates have to be fed and refreshed every tick they are held, see EightGatesAbility.
-        player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData ->
-                EightGatesAbility.maintain(player, ninjaData));
+        player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
+            EightGatesAbility.maintain(player, ninjaData);
+            // Sage mode is fed from the nature energy pool and closes itself when it runs dry, see
+            // SageModeAbility.
+            SageModeAbility.maintain(player, ninjaData);
+        });
     }
 
     /**
