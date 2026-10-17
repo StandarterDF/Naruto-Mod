@@ -5,7 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Naruto Mod — документация (Minecraft 1.20.1 / Forge)</title>
 <meta name="description" content="Документация по форку Sekwah's Naruto Mod для Minecraft 1.20.1 / Forge: техники печатей, чакра, теневые клоны, Восемь врат, сенин-мана и карманное измерение Камуи.">
+<meta name="theme-color" content="#0e0f13">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Naruto Mod — документация (Minecraft 1.20.1 / Forge)">
+<meta property="og:description" content="Техники печатей, чакра, теневые клоны, Восемь врат, сенин-мана и карманное измерение Камуи.">
+<meta property="og:image" content="assets/narutologo.png">
 <link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#main">К содержимому</a>
@@ -20,9 +28,12 @@
     </a>
     <nav class="site-nav" aria-label="Основная навигация">
       <a href="index.html" aria-current="page">Главная</a>
+      <a href="install.html">Установка</a>
       <a href="techniques.html">Техники</a>
       <a href="items.html">Предметы</a>
       <a href="secrets.html">Секреты</a>
+      <a href="config.html">Настройки</a>
+      <a href="faq.html">FAQ</a>
     </nav>
   </div>
 </header>
@@ -31,25 +42,74 @@
 
   <!-- ============================ HERO ============================ -->
   <section class="hero">
-    <div class="wrap">
-      <h1>
-        <span class="kanji">Naruto Mod</span>
-        Стань ниндзя: печати, чакра и клоны
-      </h1>
-      <p class="tagline">
-        Порт <strong>Sekwah's Naruto Mod</strong> на Minecraft 1.20.1 / Forge: техники набираются
-        последовательностью клавиш, чакра и стамина тратятся на каждую из них, а теневые клоны копируют
-        твой стиль боя — вплоть до щита, лука и бумажной бомбы.
-      </p>
-      <p class="version">Версия форка 1.8.1-SNAPSHOT · Minecraft 1.20.1 · Forge</p>
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="techniques.html">Смотреть техники</a>
-        <a class="btn" href="secrets.html">Секреты мода</a>
+    <div class="wrap hero-grid">
+      <div>
+        <h1>
+          <span class="kanji">Naruto Mod</span>
+          Стань ниндзя: печати, чакра и клоны
+        </h1>
+        <p class="tagline">
+          Порт <strong>Sekwah's Naruto Mod</strong> на Minecraft 1.20.1 / Forge: техники набираются
+          последовательностью клавиш, чакра и стамина тратятся на каждую из них, а теневые клоны копируют
+          твой стиль боя — вплоть до щита, лука и бумажной бомбы.
+        </p>
+        <p class="version">Версия форка 1.8.1-SNAPSHOT · Minecraft 1.20.1 · Forge 47.1.62</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="techniques.html">Смотреть техники</a>
+          <a class="btn" href="install.html">Как установить</a>
+          <a class="btn" href="secrets.html">Секреты мода</a>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <a class="logo-plate" href="index.html">
+          <img src="assets/narutologo.png" alt="Логотип Naruto Mod" width="400" height="125">
+        </a>
+        <div class="hero-badges">
+          <span class="pill pill--accent"><img src="assets/textures/chakra_seal.png" alt="" width="16" height="16" loading="lazy" decoding="async">1 чакра-печать за каст клонов</span>
+          <span class="pill"><img src="assets/textures/kunai.png" alt="" width="16" height="16" loading="lazy" decoding="async">5 клавиш по умолчанию</span>
+          <span class="pill"><img src="assets/vanilla/ender_pearl.png" alt="" width="16" height="16" loading="lazy" decoding="async">Карманное измерение</span>
+        </div>
+        <div class="bar-strip" aria-hidden="true">
+          <img src="assets/textures/bar_default.png" alt="" loading="lazy" decoding="async">
+          <img src="assets/textures/bar_kunai.png" alt="" loading="lazy" decoding="async">
+          <img src="assets/textures/bar_katana.png" alt="" loading="lazy" decoding="async">
+          <img src="assets/textures/bar_scroll.png" alt="" loading="lazy" decoding="async">
+          <img src="assets/textures/bar_kubi.png" alt="" loading="lazy" decoding="async">
+        </div>
       </div>
     </div>
   </section>
 
   <div class="wrap">
+
+    <!-- ============================ ЦИФРАМИ ============================ -->
+    <section class="section" id="numbers">
+      <h2 class="section-title">Коротко о моде</h2>
+      <p class="section-lead">
+        Несколько чисел, которые сразу объясняют, как устроен мод: почти всё здесь крутится вокруг чакры,
+        стамины и последовательностей клавиш.
+      </p>
+
+      <div class="stat-strip">
+        <div class="stat">
+          <b>28</b>
+          <span>техник в списке</span>
+        </div>
+        <div class="stat">
+          <b>8</b>
+          <span>групп в меню J</span>
+        </div>
+        <div class="stat">
+          <b>100</b>
+          <span>максимум чакры</span>
+        </div>
+        <div class="stat">
+          <b>8–11</b>
+          <span>клонов у мульти-клона</span>
+        </div>
+      </div>
+    </section>
 
     <!-- ============================ ЧТО ЭТО ============================ -->
     <section class="section" id="about">
@@ -62,6 +122,7 @@
 
       <div class="grid">
         <article class="card">
+          <span class="feature-icon" aria-hidden="true"><img src="assets/textures/jutsu_substitution.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
           <span class="card-kicker">Техники</span>
           <h3>Комбо из трёх печатей</h3>
           <p>
@@ -69,9 +130,11 @@
             ~0.75 секунды). В документации комбо записаны цифрами <code>1 = C</code>,
             <code>2 = V</code>, <code>3 = B</code> и продублированы буквами.
           </p>
+          <p><a class="more" href="techniques.html">Все техники с фильтром →</a></p>
         </article>
 
         <article class="card">
+          <span class="feature-icon" aria-hidden="true"><img src="assets/textures/chakra_seal.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
           <span class="card-kicker">Клоны</span>
           <h3>Теневые клоны с твоим оружием</h3>
           <p>
@@ -79,9 +142,11 @@
             копирует скин, обе руки, четыре слота брони, эффекты и стрелы — и дерётся как ты: щит,
             лук, арбалет или трезубец.
           </p>
+          <p><a class="more" href="techniques.html#clones">Раздел о клонах →</a></p>
         </article>
 
         <article class="card">
+          <span class="feature-icon" aria-hidden="true"><span class="feature-glyph">門</span></span>
           <span class="card-kicker">Прогресс</span>
           <h3>Восемь врат и Режим Мудреца</h3>
           <p>
@@ -89,9 +154,11 @@
             ещё можно, восьмые — только смертью. Сенин-мана питает Режим Мудреца, который сам гаснет,
             когда пул пуст.
           </p>
+          <p><a class="more" href="techniques.html#body">Усиление тела →</a></p>
         </article>
 
         <article class="card">
+          <span class="feature-icon" aria-hidden="true"><img src="assets/vanilla/ender_pearl.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
           <span class="card-kicker">Пространство</span>
           <h3>Карманное измерение Камуи</h3>
           <p>
@@ -99,6 +166,7 @@
             настоящая пустота. Затянутая цель возвращается обратно по таймеру, так что карман — тюрьма,
             а не способ отобрать чужой лут.
           </p>
+          <p><a class="more" href="techniques.html#space">Пространство и перемещение →</a></p>
         </article>
       </div>
     </section>
@@ -110,30 +178,47 @@
         Чтобы пользоваться техниками, сначала нужно стать ниндзя. Делается это прямо из меню техник.
       </p>
 
-      <ol class="steps">
-        <li>Нажми <kbd>J</kbd> — откроется меню техник.</li>
-        <li>
-          Нажми «Стать ниндзя» (<code>naruto.gui.jutsu.enable</code>) — и станешь ниндзя. Обратно —
-          кнопкой «Я передумал» (<code>naruto.gui.jutsu.disable</code>).
-        </li>
-        <li>
-          После этого меню показывает <strong>весь список техник</strong>, разбитый по группам, с
-          клавишами к каждой. До посвящения вместо списка висит подсказка
-          «Стань ниндзя, чтобы увидеть список техник».
-        </li>
-        <li>
-          Список листается кнопками <code>&lt;</code> / <code>&gt;</code> — по 10 строк на страницу.
-          Группа, которая не поместилась целиком, печатает свой заголовок заново на новой странице.
-        </li>
-        <li>То же самое в чате делает команда <code>/jutsu list</code>.</li>
-      </ol>
+      <div class="grid">
+        <article class="card">
+          <span class="card-kicker">Первые шаги</span>
+          <h3>Посвящение в ниндзя</h3>
+          <ol class="steps">
+            <li>Нажми <kbd>J</kbd> — откроется меню техник.</li>
+            <li>
+              Нажми «Стать ниндзя» (<code>naruto.gui.jutsu.enable</code>) — и станешь ниндзя. Обратно —
+              кнопкой «Я передумал» (<code>naruto.gui.jutsu.disable</code>).
+            </li>
+            <li>
+              После этого меню показывает <strong>весь список техник</strong>, разбитый по группам, с
+              клавишами к каждой.
+            </li>
+            <li>
+              Список листается кнопками <code>&lt;</code> / <code>&gt;</code> — по 10 строк на страницу.
+              Группа, которая не поместилась целиком, печатает свой заголовок заново на новой странице.
+            </li>
+            <li>То же самое в чате делает команда <code>/jutsu list</code>.</li>
+          </ol>
+        </article>
 
-      <div class="note">
-        <h3>Клавиши не зависят от раскладки</h3>
-        <p>
-          В меню буквы клавиш рисуются по коду клавиши (A–Z), поэтому на русской раскладке комбо не
-          превращается в кириллицу, а переназначенные клавиши отображаются корректно.
-        </p>
+        <article class="card">
+          <span class="card-kicker">Чтение документации</span>
+          <h3>Куда смотреть дальше</h3>
+          <ul class="plain">
+            <li><a href="install.html">Установка</a> — Forge, jar, требования и все пять рецептов новых предметов.</li>
+            <li><a href="techniques.html">Техники</a> — полный список с фильтром по группам и типу применения.</li>
+            <li><a href="items.html">Предметы</a> — оружие, броня, метательное и косметика.</li>
+            <li><a href="secrets.html">Секреты</a> — приёмы, которые не видны из таблиц.</li>
+            <li><a href="config.html">Настройки</a> — что можно править в конфиге мода.</li>
+            <li><a href="faq.html">FAQ</a> — частые вопросы и грабли.</li>
+          </ul>
+          <div class="note">
+            <h3>Клавиши не зависят от раскладки</h3>
+            <p>
+              В меню буквы клавиш рисуются по коду клавиши (A–Z), поэтому на русской раскладке комбо не
+              превращается в кириллицу, а переназначенные клавиши отображаются корректно.
+            </p>
+          </div>
+        </article>
       </div>
 
       <h3 class="group-title gap-top-lg">Базовое управление</h3>
@@ -189,7 +274,7 @@
           <tbody>
             <tr><td>Чакра</td><td>100</td><td>+0.05 за тик (1 в секунду) после задержки регенерации</td></tr>
             <tr><td>Стамина</td><td>100</td><td>+0.4 за тик (8 в секунду) после задержки регенерации</td></tr>
-            <tr><td>Замены</td><td>3</td><td>+1 каждые 60 тиков (3 секунды)</td></tr>
+            <tr><td>Замены</td><td>3</td><td>По одной за время, заданное <code>substitutionRegenTime</code> (по умолчанию — раз в минуту) <a href="config.html#energy">разбор расхождения</a></td></tr>
           </tbody>
         </table>
       </div>
@@ -205,6 +290,7 @@
 
       <div class="grid gap-top">
         <article class="card">
+          <span class="feature-icon" aria-hidden="true"><img src="assets/textures/bar_default.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
           <span class="card-kicker">Полоски</span>
           <h3>Чакра, стамина и сенин-мана</h3>
           <p>
@@ -216,9 +302,11 @@
             Плашка сенин-маны появляется, только когда есть что показывать: пустая пустому новичку не
             нужна.
           </p>
+          <p><a class="more" href="config.html#bars">Восемь вариантов полоски →</a></p>
         </article>
 
         <article class="card">
+          <span class="feature-icon" aria-hidden="true"><img src="assets/vanilla/glow_berries.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
           <span class="card-kicker">Природная энергия</span>
           <h3>Режим Мудреца</h3>
           <p>
@@ -234,6 +322,7 @@
         </article>
 
         <article class="card">
+          <span class="feature-icon" aria-hidden="true"><span class="feature-glyph">門</span></span>
           <span class="card-kicker">Восемь врат</span>
           <h3>Сила за здоровье</h3>
           <p>
@@ -250,28 +339,71 @@
       </div>
     </section>
 
-    <!-- ============================ АНОНС СЕКРЕТОВ ============================ -->
-    <section class="section" id="secrets-teaser">
-      <div class="card card--accent">
-        <span class="card-kicker">Дальше</span>
-        <h3>Секреты: то, что не написано в подсказках</h3>
-        <p>
-          Клоны из бумажной бомбы, взрывающиеся при смерти, запас стрел, который копирует себе клон,
-          бонусы к чакре от медитирующих клонов и от брони, «отливание» чакры в батарею перед боем —
-          всё это собрано отдельно.
-        </p>
-        <p><a class="btn" href="secrets.html">Читать секреты</a></p>
-      </div>
-    </section>
-
-    <!-- ============================ РАЗДЕЛЫ САЙТА ============================ -->
+    <!-- ============================ РАЗДЕЛЫ ============================ -->
     <section class="section" id="pages">
-      <h2 class="section-title">Разделы</h2>
+      <h2 class="section-title">Разделы сайта</h2>
+      <p class="section-lead">
+        Шесть страниц: от установки до секретов. Всё, что описано, взято из README и кода мода.
+      </p>
+
       <ul class="toc-list">
+        <li><a href="install.html">Установка и запуск <span class="toc-count">5 рецептов</span></a></li>
         <li><a href="techniques.html">Техники <span class="toc-count">8 групп</span></a></li>
         <li><a href="items.html">Предметы и броня</a></li>
         <li><a href="secrets.html">Секреты</a></li>
+        <li><a href="config.html">Настройки мода</a></li>
+        <li><a href="faq.html">Частые вопросы <span class="toc-count">FAQ</span></a></li>
       </ul>
+
+      <div class="grid gap-top-lg">
+        <article class="card card--accent announce-card">
+          <div>
+            <span class="card-kicker">Начать</span>
+            <h3>Установка: Forge 1.20.1 и первый каст</h3>
+            <p>
+              Что нужно установить, куда положить jar, чем дев-запуск отличается от обычной игры и как
+              скрафтить чакра-печать, печать рабочего, батарею, рамен и солдатские пилюли.
+            </p>
+            <p><a class="btn btn-primary" href="install.html">Открыть инструкцию</a></p>
+          </div>
+          <div class="announce-media" aria-hidden="true">
+            <img src="assets/vanilla/paper.png" alt="" width="16" height="16" loading="lazy" decoding="async">
+            <img src="assets/vanilla/ink_sac.png" alt="" width="16" height="16" loading="lazy" decoding="async">
+            <img src="assets/textures/chakra_seal.png" alt="" width="16" height="16" loading="lazy" decoding="async">
+          </div>
+        </article>
+
+        <article class="card announce-card">
+          <div>
+            <span class="card-kicker">Дальше</span>
+            <h3>Секреты: то, что не написано в подсказках</h3>
+            <p>
+              Клоны из бумажной бомбы, взрывающиеся при смерти, запас стрел, который копирует себе клон,
+              бонусы к чакре от медитирующих клонов и от брони, «отливание» чакры в батарею перед боем —
+              всё это собрано отдельно.
+            </p>
+            <p><a class="btn" href="secrets.html">Читать секреты</a></p>
+          </div>
+          <div class="announce-media" aria-hidden="true">
+            <img src="assets/textures/paper_bomb.png" alt="" width="16" height="16" loading="lazy" decoding="async">
+          </div>
+        </article>
+
+        <article class="card announce-card">
+          <div>
+            <span class="card-kicker">Помощь</span>
+            <h3>FAQ: почему техника не сработала</h3>
+            <p>
+              Клон исчезает с одного удара, печати нет, чакры не хватает, комбо не подхватилось после
+              перезахода, а Камуи отказывается открываться — короткие ответы на самые частые вопросы.
+            </p>
+            <p><a class="btn" href="faq.html">Открыть FAQ</a></p>
+          </div>
+          <div class="announce-media" aria-hidden="true">
+            <img src="assets/vanilla/book.png" alt="" width="16" height="16" loading="lazy" decoding="async">
+          </div>
+        </article>
+      </div>
     </section>
 
   </div>
@@ -291,9 +423,12 @@
     </div>
     <nav class="footer-nav" aria-label="Навигация в подвале">
       <a href="index.html">Главная</a>
+      <a href="install.html">Установка</a>
       <a href="techniques.html">Техники</a>
       <a href="items.html">Предметы</a>
       <a href="secrets.html">Секреты</a>
+      <a href="config.html">Настройки</a>
+      <a href="faq.html">FAQ</a>
     </nav>
   </div>
 </footer>

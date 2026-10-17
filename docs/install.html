@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Установка и запуск — Naruto Mod (Minecraft 1.20.1 / Forge)</title>
+<meta name="description" content="Как установить Naruto Mod на Minecraft 1.20.1 / Forge: сборка jar, папка mods, требования и первые шаги. Плюс все пять рецептов новых предметов мода.">
+<meta name="theme-color" content="#0e0f13">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Установка и запуск — Naruto Mod (Minecraft 1.20.1 / Forge)">
+<meta property="og:description" content="Forge 1.20.1, папка mods, дев-запуск на JDK 17 и пять рецептов новых предметов.">
+<meta property="og:image" content="assets/narutologo.png">
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">К содержимому</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-mark" aria-hidden="true">忍</span>
+      <span>Naruto Mod
+        <span class="brand-sub">1.20.1 / Forge</span>
+      </span>
+    </a>
+    <nav class="site-nav" aria-label="Основная навигация">
+      <a href="index.html">Главная</a>
+      <a href="install.html" aria-current="page">Установка</a>
+      <a href="techniques.html">Техники</a>
+      <a href="items.html">Предметы</a>
+      <a href="secrets.html">Секреты</a>
+      <a href="config.html">Настройки</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap">
+
+    <section class="section page-hero" id="top">
+      <p class="eyebrow"><img src="assets/textures/bar_default.png" alt="" width="20" height="20" loading="lazy" decoding="async">Начало игры</p>
+      <h1>Установка и запуск</h1>
+      <p>
+        Мод ставится как обычный Forge-мод для <strong>Minecraft 1.20.1</strong>. Ниже — что нужно,
+        откуда взять jar, куда его положить и что сделать в первые минуты в игре, чтобы получить
+        первую технику. В конце страницы — все пять рецептов новых предметов.
+      </p>
+      <div class="hero-meta">
+        <span class="pill pill--accent">Minecraft 1.20.1</span>
+        <span class="pill">Forge 47.1.62</span>
+        <span class="pill">Версия форка 1.8.1-SNAPSHOT</span>
+        <span class="pill">JDK 17 для дев-запуска</span>
+      </div>
+
+      <nav class="toc gap-top-lg" aria-label="Оглавление страницы">
+        <h2>Оглавление</h2>
+        <p>От требований до первых техник — по порядку.</p>
+        <ul class="toc-list">
+          <li><a href="#requirements">Что нужно</a></li>
+          <li><a href="#install">Установка</a></li>
+          <li><a href="#first-steps">Первые шаги</a></li>
+          <li><a href="#recipes">Рецепты <span class="toc-count">5</span></a></li>
+          <li><a href="#next">Что дальше</a></li>
+        </ul>
+      </nav>
+    </section>
+
+    <!-- ======================= ТРЕБОВАНИЯ ======================= -->
+    <section class="section" id="requirements">
+      <h2 class="group-title">Что нужно</h2>
+      <p class="group-lead">Три вещи: правильная версия игры, Forge и сам файл мода.</p>
+
+      <div class="table-wrap">
+        <table>
+          <caption>Требования и версии</caption>
+          <thead>
+            <tr><th scope="col">Что</th><th scope="col">Версия / значение</th><th scope="col">Зачем</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Minecraft</td><td>1.20.1</td><td>Мод собран под 1.20.1; в <code>mods.toml</code> заявлено <code>minecraft [1.20,)</code>, а зависимости Forge — <code>[46,48)</code>.</td></tr>
+            <tr><td>Forge</td><td>47.1.62</td><td>Проверенная сборка для этого форка. Ветка <code>master</code>, версия мода <code>1.8.1-SNAPSHOT</code>.</td></tr>
+            <tr><td>Java для игры</td><td>JRE 17+</td><td>Игре нужен запуск Forge-профиля; на клиенте это делает лаунчер.</td></tr>
+            <tr><td>JDK 17 для дев-запуска</td><td>JDK 17</td><td>Только если запускаете мод из исходников: Gradle 8.1.1 из враппера проекта <strong>не работает</strong> на Java 18+.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <h3>О зависимостях</h3>
+        <p>
+          В <code>mods.toml</code> мод объявляет обязательную зависимость <code>sekclib</code> с
+          диапазоном <code>[1.0.0,2)</code> (в <code>build.gradle</code> она подключена как обычная
+          библиотека, а не вшита в jar). При этом ни README мода, ни эта документация о ней не
+          упоминают. Если лаунчер всё-таки жалуется на отсутствие <code>sekclib</code> — это
+          расхождение между манифестом и описанием, а не ваша ошибка установки.
+        </p>
+      </div>
+    </section>
+
+    <!-- ======================= УСТАНОВКА ======================= -->
+    <section class="section" id="install">
+      <h2 class="group-title">Установка</h2>
+      <p class="group-lead">
+        Для обычной игры всё сводится к трём шагам: поставить Forge, положить jar в <code>mods</code>,
+        запустить профиль Forge.
+      </p>
+
+      <ol class="steps">
+        <li>
+          Установите <strong>Forge 47.1.62</strong> для Minecraft 1.20.1 и запустите игру хотя бы раз —
+          чтобы появился профиль Forge и папка <code>.minecraft</code>.
+        </li>
+        <li>
+          Возьмите файл мода (<code>.jar</code>). Готовые сборки публикуются в релизах форка:
+          <a href="https://github.com/StandarterDF/Naruto-Mod/releases" target="_blank" rel="noopener">github.com/StandarterDF/Naruto-Mod/releases</a>.
+          Если в релизе нет прикреплённого jar — соберите его сами (см. «Сборка из исходников» ниже).
+        </li>
+        <li>
+          Положите jar в папку <code>mods</code> рядом с игрой. Путь по умолчанию на Windows:
+          <code>%appdata%\.minecraft\mods</code>. Папку можно создать вручную.
+        </li>
+        <li>
+          Запустите игру <strong>профилем Forge 1.20.1</strong>. Если мод загрузился, в игре появятся
+          его предметы и механика техник.
+        </li>
+      </ol>
+
+      <div class="note">
+        <h3>Сборка из исходников</h3>
+        <p>
+          Нужен <strong>JDK 17</strong>: враппер проекта (Gradle 8.1.1) не запускается на более новых
+          JVM. Сборка — обычной командой Gradle, готовый файл появится в <code>build/libs/</code>.
+        </p>
+        <pre class="code-block"><code>$env:JAVA_HOME='C:\Program Files\Java\jdk-17'
+.\gradlew.bat build</code></pre>
+        <p>
+          Для запуска из исходников в репозитории есть готовые скрипты: они сами находят JDK 17.
+        </p>
+        <pre class="code-block"><code>.\run-dev-client.bat      # дев-клиент, мир и логи лежат в .\run
+.\run-dev-server.bat      # дев-сервер, нужен run/eula.txt</code></pre>
+      </div>
+    </section>
+
+    <!-- ======================= ПЕРВЫЕ ШАГИ ======================= -->
+    <section class="section" id="first-steps">
+      <h2 class="group-title">Первые шаги</h2>
+      <p class="group-lead">
+        Прежде чем кастовать, нужно стать ниндзя — это делается прямо из меню техник, без команд и
+        предметов.
+      </p>
+
+      <div class="grid">
+        <article class="card">
+          <span class="feature-icon" aria-hidden="true"><img src="assets/vanilla/book.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+          <span class="card-kicker">Шаг 1</span>
+          <h3>Посвящение в ниндзя</h3>
+          <ol class="steps">
+            <li>Нажми <kbd>J</kbd> — откроется меню техник.</li>
+            <li>
+              Нажми «Стать ниндзя» (<code>naruto.gui.jutsu.enable</code>). Обратно — кнопкой
+              «Я передумал» (<code>naruto.gui.jutsu.disable</code>).
+            </li>
+            <li>Пока ты не ниндзя, список техник в меню не показывается — вместо него подсказка.</li>
+            <li>После посвящения меню показывает весь список, разбитый по группам и страницам.</li>
+          </ol>
+        </article>
+
+        <article class="card">
+          <span class="feature-icon" aria-hidden="true"><img src="assets/vanilla/experience_bottle.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+          <span class="card-kicker">Шаг 2</span>
+          <h3>Первый каст чакры</h3>
+          <ul class="plain">
+            <li>Набери <kbd>C</kbd> и <strong>зажми</strong> последнюю клавишу — это канальный «Чакра-заряд».</li>
+            <li>Стоя на земле, пока держишь комбо, чакра набирается по <strong>+1 за тик</strong>. На бегу и в воздухе — только <strong>+0.2</strong>.</li>
+            <li>Мгновенные техники, наоборот, не зажимаются: набери комбо и просто подожди полсекунды.</li>
+            <li>Переключатели включаются тем же комбо, которым и выключаются.</li>
+          </ul>
+          <p><a class="more" href="techniques.html#basics">Раздел «Основы» →</a></p>
+        </article>
+
+        <article class="card">
+          <span class="feature-icon" aria-hidden="true"><span class="feature-glyph">印</span></span>
+          <span class="card-kicker">Шаг 3</span>
+          <h3>Клавиши по умолчанию</h3>
+          <ul class="plain">
+            <li><kbd>X</kbd> — Прыжок (Leap). Работает только с земли и стоит 10 стамины.</li>
+            <li><kbd>C</kbd> / <kbd>V</kbd> / <kbd>B</kbd> — «1», «2» и «3» в последовательности комбо.</li>
+            <li><kbd>J</kbd> — меню дзюцу и включение режима ниндзя.</li>
+            <li>Прыжок в воздухе — двойной прыжок, сам по себе, без комбо.</li>
+          </ul>
+          <p>
+            Клавиши можно переназначить; в меню они рисуются латинскими буквами по коду клавиши, поэтому
+            на русской раскладке комбо не превращается в кириллицу.
+          </p>
+        </article>
+
+        <article class="card">
+          <span class="feature-icon" aria-hidden="true"><img src="assets/textures/bar_katana.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+          <span class="card-kicker">Шаг 4</span>
+          <h3>На что смотреть в интерфейсе</h3>
+          <ul class="plain">
+            <li><strong>Чакра</strong> — 100 максимум, +0.05 за тик после задержки регенерации.</li>
+            <li><strong>Стамина</strong> — 100 максимум, +0.4 за тик; её едят прыжок, врата и мягкая посадка.</li>
+            <li><strong>Замены</strong> — всего 3, восстанавливаются по одной за время, которое задаёт опция <code>substitutionRegenTime</code>; их тратит «Подмена».</li>
+            <li><strong>Сенин-мана</strong> — отдельная зелёная полоска над чакрой, появляется, когда есть что показывать.</li>
+          </ul>
+          <p><a class="more" href="index.html#systems">Как устроены ресурсы →</a></p>
+        </article>
+      </div>
+
+      <div class="note gap-top">
+        <h3>Три правила, которые объясняют половину «неудачных» кастов</h3>
+        <ul class="plain">
+          <li>Клоны требуют <strong>чакра-печать</strong> в инвентаре: одна печать за каст, независимо от числа клонов. В креативе печать не нужна.</li>
+          <li>После каждого каста ресурс не восстанавливается какое-то время — это и есть «настоящая» цена техники.</li>
+          <li>Набор техник читается при запуске игры, поэтому изменения подхватываются только полным перезапуском.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ======================= РЕЦЕПТЫ ======================= -->
+    <section class="section" id="recipes">
+      <h2 class="group-title">Рецепты новых предметов</h2>
+      <p class="group-lead">
+        Пять новых рецептов мода: печати для клонов, батарея для чакры, еда и пилюли. Все они —
+        обычный верстак. Бесформенные рецепты не зависят от порядка ингредиентов, «по схеме» — требуют
+        ровно такой раскладки, как на сетке.
+      </p>
+
+      <div class="recipe-list">
+
+        <!-- Чакра-печать -->
+        <article class="recipe-card">
+          <div class="recipe-head">
+            <h3>
+              <img src="assets/textures/chakra_seal.png" alt="" width="26" height="26" loading="lazy" decoding="async">
+              Чакра-печать
+            </h3>
+            <span class="recipe-kind">Бесформенный</span>
+          </div>
+          <div class="recipe-flow">
+            <div class="recipe-grid">
+              <span class="recipe-slot"><img src="assets/vanilla/paper.png" alt="Бумага" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/paper.png" alt="Бумага" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/ink_sac.png" alt="Чернильный мешок" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+            </div>
+            <span class="recipe-arrow" aria-hidden="true">→</span>
+            <div class="recipe-result">
+              <span class="recipe-slot"><img src="assets/textures/chakra_seal.png" alt="Чакра-печать" width="36" height="36" loading="lazy" decoding="async"></span>
+              <span class="recipe-count">×3</span>
+            </div>
+          </div>
+          <p class="recipe-source">
+            2 бумаги и чернильный мешок → <strong>3 чакра-печати</strong>. Расходник для призыва клонов:
+            одна печать за каст, сколько бы клонов ни вышло.
+          </p>
+        </article>
+
+        <!-- Печать рабочего -->
+        <article class="recipe-card">
+          <div class="recipe-head">
+            <h3>
+              <img src="assets/textures/worker_seal.png" alt="" width="26" height="26" loading="lazy" decoding="async">
+              Печать рабочего
+            </h3>
+            <span class="recipe-kind">Бесформенный</span>
+          </div>
+          <div class="recipe-flow">
+            <div class="recipe-grid">
+              <span class="recipe-slot"><img src="assets/textures/chakra_seal.png" alt="Чакра-печать" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/wheat.png" alt="Пшеница" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/wheat.png" alt="Пшеница" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/paper.png" alt="Бумага" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+            </div>
+            <span class="recipe-arrow" aria-hidden="true">→</span>
+            <div class="recipe-result">
+              <span class="recipe-slot"><img src="assets/textures/worker_seal.png" alt="Печать рабочего" width="36" height="36" loading="lazy" decoding="async"></span>
+              <span class="recipe-count">×1</span>
+            </div>
+          </div>
+          <p class="recipe-source">
+            Чакра-печать, 2 пшеницы и бумага → <strong>1 печать рабочего</strong>. Не расходуется:
+            печать держат в <strong>дополнительной (левой) руке</strong> как катализатор, а профессию
+            задаёт инструмент в <strong>основной руке</strong>, так что те же комбо клонов призывают
+            рабочих, а не бойцов.
+          </p>
+        </article>
+
+        <!-- Чакра-батарея -->
+        <article class="recipe-card">
+          <div class="recipe-head">
+            <h3>
+              <img src="assets/textures/chakra_battery.png" alt="" width="26" height="26" loading="lazy" decoding="async">
+              Чакра-батарея
+            </h3>
+            <span class="recipe-kind">По схеме</span>
+          </div>
+          <div class="recipe-flow">
+            <div class="recipe-grid">
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/redstone.png" alt="Редстоун" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/redstone.png" alt="Редстоун" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/textures/chakra_seal.png" alt="Чакра-печать" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/redstone.png" alt="Редстоун" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/redstone.png" alt="Редстоун" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+            </div>
+            <span class="recipe-arrow" aria-hidden="true">→</span>
+            <div class="recipe-result">
+              <span class="recipe-slot"><img src="assets/textures/chakra_battery.png" alt="Чакра-батарея" width="36" height="36" loading="lazy" decoding="async"></span>
+              <span class="recipe-count">×1</span>
+            </div>
+          </div>
+          <p class="recipe-source">
+            4 редстоуна крестом и чакра-печать в центре → <strong>1 чакра-батарея</strong>. Хранит до
+            500 чакры и привязывается к тому, кто использовал её первым.
+          </p>
+        </article>
+
+        <!-- Рамен -->
+        <article class="recipe-card">
+          <div class="recipe-head">
+            <h3>
+              <img src="assets/textures/ramen.png" alt="" width="26" height="26" loading="lazy" decoding="async">
+              Рамен
+            </h3>
+            <span class="recipe-kind">Бесформенный</span>
+          </div>
+          <div class="recipe-flow">
+            <div class="recipe-grid">
+              <span class="recipe-slot"><img src="assets/vanilla/bowl.png" alt="Миска" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/wheat.png" alt="Пшеница" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/cooked_porkchop.png" alt="Жареная свиная котлета" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/cooked_porkchop.png" alt="Жареная свиная котлета" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+            </div>
+            <span class="recipe-arrow" aria-hidden="true">→</span>
+            <div class="recipe-result">
+              <span class="recipe-slot"><img src="assets/textures/ramen.png" alt="Рамен" width="36" height="36" loading="lazy" decoding="async"></span>
+              <span class="recipe-count">×1</span>
+            </div>
+          </div>
+          <p class="recipe-source">
+            Миска, пшеница и 2 жареные свиные котлеты → <strong>1 рамен</strong>. Еда: 8 сытости и
+            1.2 насыщения.
+          </p>
+        </article>
+
+        <!-- Солдатские пилюли -->
+        <article class="recipe-card">
+          <div class="recipe-head">
+            <h3>
+              <img src="assets/textures/military_pills.png" alt="" width="26" height="26" loading="lazy" decoding="async">
+              Солдатские пилюли
+            </h3>
+            <span class="recipe-kind">Бесформенный</span>
+          </div>
+          <div class="recipe-flow">
+            <div class="recipe-grid">
+              <span class="recipe-slot"><img src="assets/vanilla/sugar.png" alt="Сахар" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/wheat.png" alt="Пшеница" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/glowstone_dust.png" alt="Светопыль" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+            </div>
+            <span class="recipe-arrow" aria-hidden="true">→</span>
+            <div class="recipe-result">
+              <span class="recipe-slot"><img src="assets/textures/military_pills.png" alt="Солдатские пилюли" width="36" height="36" loading="lazy" decoding="async"></span>
+              <span class="recipe-count">×3</span>
+            </div>
+          </div>
+          <p class="recipe-source">
+            Сахар, пшеница и светопыль → <strong>3 солдатские пилюли</strong>. Еда: +35 чакры и +35
+            стамины, Speed I и Haste I на 30 с, Regeneration I на 8 с, откат 1 минута.
+          </p>
+        </article>
+
+      </div>
+
+      <div class="note">
+        <h3>Откуда взялись картинки</h3>
+        <p>
+          Иконки предметов мода — это его собственные текстуры из ресурсов
+          (<code>assets/narutomod/textures/items/</code>); ванильные ингредиенты взяты из текстур
+          Minecraft. Печать рабочего и чакра-батарея в моде рисуются как чакра-печать с дополнительным
+          слоем (пшеница и редстоун), поэтому здесь они показаны так же.
+        </p>
+      </div>
+    </section>
+
+    <!-- ======================= ДАЛЬШЕ ======================= -->
+    <section class="section" id="next">
+      <h2 class="group-title">Что дальше</h2>
+      <div class="grid">
+        <article class="card">
+          <span class="feature-icon" aria-hidden="true"><img src="assets/textures/jutsu_substitution.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+          <span class="card-kicker">Техники</span>
+          <h3>Полный список с фильтром</h3>
+          <p>28 техник, 8 групп, поиск по названию и комбо, фильтр по способу применения.</p>
+          <p><a class="btn" href="techniques.html">Открыть техники</a></p>
+        </article>
+        <article class="card">
+          <span class="feature-icon" aria-hidden="true"><img src="assets/vanilla/clock.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+          <span class="card-kicker">Настройки</span>
+          <h3>Что можно поменять в конфиге</h3>
+          <p>Радиусы взрывов, порог удержания клавиши, дизайн полоски чакры, Камуи, сенин-мана и хенге.</p>
+          <p><a class="btn" href="config.html">Открыть настройки</a></p>
+        </article>
+        <article class="card">
+          <span class="feature-icon" aria-hidden="true"><img src="assets/vanilla/book.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+          <span class="card-kicker">Помощь</span>
+          <h3>Если что-то не работает</h3>
+          <p>Частые вопросы: печати, чакра, цели техник, перезапуск игры и карманное измерение.</p>
+          <p><a class="btn" href="faq.html">Открыть FAQ</a></p>
+        </article>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div>
+      <p>
+        Фан-документация по форку <strong>Sekwah's Naruto Mod</strong> под Minecraft 1.20.1 / Forge.
+        Числа и механики взяты из описания мода к этой сборке.
+      </p>
+      <p>
+        Оригинальный мод:
+        <a href="https://github.com/sekwah41/Naruto-Mod" target="_blank" rel="noopener">sekwah41/Naruto-Mod</a>.
+      </p>
+    </div>
+    <nav class="footer-nav" aria-label="Навигация в подвале">
+      <a href="index.html">Главная</a>
+      <a href="install.html">Установка</a>
+      <a href="techniques.html">Техники</a>
+      <a href="items.html">Предметы</a>
+      <a href="secrets.html">Секреты</a>
+      <a href="config.html">Настройки</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

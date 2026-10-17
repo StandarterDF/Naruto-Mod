@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Частые вопросы — Naruto Mod (Minecraft 1.20.1 / Forge)</title>
+<meta name="description" content="FAQ по Naruto Mod для Minecraft 1.20.1 / Forge: почему клон исчезает с одного удара, нужна ли чакра-печать каждый каст, почему техника не срабатывает, что делать с Камуи и врата.">
+<meta name="theme-color" content="#0e0f13">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Частые вопросы — Naruto Mod (Minecraft 1.20.1 / Forge)">
+<meta property="og:description" content="Печати, чакра, цели техник, врата, Камуи и известные расхождения документации.">
+<meta property="og:image" content="assets/narutologo.png">
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">К содержимому</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-mark" aria-hidden="true">忍</span>
+      <span>Naruto Mod
+        <span class="brand-sub">1.20.1 / Forge</span>
+      </span>
+    </a>
+    <nav class="site-nav" aria-label="Основная навигация">
+      <a href="index.html">Главная</a>
+      <a href="install.html">Установка</a>
+      <a href="techniques.html">Техники</a>
+      <a href="items.html">Предметы</a>
+      <a href="secrets.html">Секреты</a>
+      <a href="config.html">Настройки</a>
+      <a href="faq.html" aria-current="page">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap">
+
+    <section class="section page-hero" id="top">
+      <p class="eyebrow"><img src="assets/vanilla/book.png" alt="" width="20" height="20" loading="lazy" decoding="async">Вопросы и ответы</p>
+      <h1>Частые вопросы</h1>
+      <p>
+        Короткие ответы на то, с чем сталкиваются чаще всего: почему клон падает с одного удара, нужна ли
+        печать на каждый каст, почему техника молчит и что происходит с Камуи и Восьмью вратами.
+        Всё — из описания мода; спорные места честно помечены.
+      </p>
+      <div class="hero-meta">
+        <span class="pill pill--accent"><img src="assets/textures/chakra_seal.png" alt="" width="16" height="16" loading="lazy" decoding="async">23 вопроса</span>
+        <span class="pill"><img src="assets/vanilla/clock.png" alt="" width="16" height="16" loading="lazy" decoding="async">Ответы в одно раскрытие</span>
+      </div>
+
+      <nav class="toc gap-top-lg" aria-label="Оглавление страницы">
+        <h2>Оглавление</h2>
+        <p>Сгруппировано по темам.</p>
+        <ul class="toc-list">
+          <li><a href="#clones">Клоны <span class="toc-count">5</span></a></li>
+          <li><a href="#fails">Техника не срабатывает <span class="toc-count">5</span></a></li>
+          <li><a href="#resources">Чакра и стамина <span class="toc-count">3</span></a></li>
+          <li><a href="#kamui">Камуи и измерения <span class="toc-count">3</span></a></li>
+          <li><a href="#modes">Врата и режимы <span class="toc-count">4</span></a></li>
+          <li><a href="#docs">Документация и расхождения <span class="toc-count">3</span></a></li>
+        </ul>
+      </nav>
+    </section>
+
+    <!-- ======================= КЛОНЫ ======================= -->
+    <section class="section" id="clones">
+      <h2 class="group-title">Клоны</h2>
+      <p class="group-lead">Самая частая тема вопросов: клоны живут один удар, но зато копируют всё.</p>
+
+      <div class="faq">
+
+        <details class="faq-item" id="faq-clone-one-hit">
+          <summary class="faq-q">Почему клон исчезает с одного удара?</summary>
+          <div class="faq-a">
+            <p>
+              Так задумано: у клона <strong>1 единица здоровья</strong>, поэтому любой непокрытый удар его
+              «попает». Смерть выглядит как облако дыма и звук <code>clone_poof</code> — без лута и без
+              трупа.
+            </p>
+            <p>
+              Единственная защита, которая у клона есть, — это щит: если у кастера в левой руке был щит,
+              клон поднимает свой <strong>заранее</strong>, пока у него есть цель и он не стреляет. Пока
+              щит поднят, ваниль гасит удар и изнашивает щит.
+            </p>
+            <p><a class="more" href="techniques.html#clones">Как ведут себя клоны →</a></p>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-clone-seal">
+          <summary class="faq-q">Нужна ли чакра-печать на каждый каст клонов?</summary>
+          <div class="faq-a">
+            <p>
+              Да. Любой призыв клонов требует <strong>чакра-печать</strong> в инвентаре и тратит
+              <strong>одну</strong> печать за каст — независимо от того, сколько клонов вышло. Без печати
+              техника сообщает <code>jutsu.fail.noseal</code>.
+            </p>
+            <ul class="plain">
+              <li>В креативе печать не нужна и не тратится.</li>
+              <li>Мульти-клон призывает 8–11 клонов, но печать всё равно всего одна.</li>
+              <li>В режиме рабочего тратится чакра-печать, а <strong>печать рабочего</strong> — нет: это катализатор.</li>
+            </ul>
+            <p><a class="more" href="install.html#recipes">Рецепт чакра-печати →</a></p>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-clone-ammo">
+          <summary class="faq-q">Клон расстрелял стрелы и исчез — почему?</summary>
+          <div class="faq-a">
+            <p>
+              Клон копирует стрелы кастера в момент призыва: тип берётся из первой стопки, а количество —
+              сумма <strong>всех</strong> стрел в инвентаре. Это копия, инвентарь кастера не тратится, но
+              запас у клона конечный. Каждый выстрел из лука или арбалета уменьшает его, и когда стрел не
+              осталось — клон исчезает (облако дыма, без взрыва).
+            </p>
+            <p>
+              Трезубец — исключение: это оружие, а не боеприпас, поэтому он не расходуется, и бросать его
+              можно сколько угодно.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-clone-passive">
+          <summary class="faq-q">Почему клон не нападает на мобов сам?</summary>
+          <div class="faq-a">
+            <p>
+              Цели у клонов <strong>только реактивные</strong>, как в версии 1.7.10:
+            </p>
+            <ul class="plain">
+              <li>клона ударили — он отвечает;</li>
+              <li>ранили владельца — клон нападает на обидчика;</li>
+              <li>владелец сам кого-то ударил — клон переключается на его цель.</li>
+            </ul>
+            <p>
+              Сам клон врагов не ищет. Это сделано осознанно: иначе он уходил бы бить пиглинов, пока
+              владелец с ними торгует.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-clone-bomb">
+          <summary class="faq-q">Как сделать клона-«взрывника» и ломает ли он блоки?</summary>
+          <div class="faq-a">
+            <p>
+              Держите <strong>бумажную бомбу</strong> в любой руке в момент призыва — клон пометится
+              взрывным и рванёт, когда его убьют. Бомба при этом <strong>не тратится</strong>: это только
+              «метка» стиля.
+            </p>
+            <p>
+              Радиус — тот же, что у бомбы (<code>paperBombExplosionRadius</code>), но блоки взрыв клона
+              <strong>не ломает никогда</strong>, даже если у самой бомбы это включено в конфиге. Своим —
+              кастеру и его клонам — урон и отброс не достаются.
+            </p>
+            <p>
+              Отдельно: если стрелы кончились или кончилась чакра на голод, клон просто исчезает. Такой
+              «выход» взрыва не даёт.
+            </p>
+            <p><a class="more" href="config.html#weapons">Радиусы взрывов в конфиге →</a></p>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- ======================= ПРОВАЛЫ ======================= -->
+    <section class="section" id="fails">
+      <h2 class="group-title">Техника не срабатывает</h2>
+      <p class="group-lead">
+        Почти все «не работает» объясняются одним из пяти: не ниндзя, нет ресурса, нет печати, нет цели
+        или не выполнено условие техники.
+      </p>
+
+      <div class="faq">
+
+        <details class="faq-item" id="faq-not-ninja">
+          <summary class="faq-q">Нажимаю комбо — ничего не происходит</summary>
+          <div class="faq-a">
+            <p>
+              Первым делом проверьте, что вы <strong>ниндзя</strong>: нажмите <kbd>J</kbd> и включите
+              режим кнопкой «Стать ниндзя» (<code>naruto.gui.jutsu.enable</code>). Пока режим выключен,
+              список техник в меню не показывается, и техники не работают.
+            </p>
+            <p>
+              Второе — режим набора: комбо надо нажимать <strong>подряд, в один поток</strong>, с паузами
+              меньше ~0.75 секунды. Мгновенная техника срабатывает сама примерно через полсекунды после
+              набора; канальной нужно <strong>зажать последнюю клавишу</strong>.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-no-resource">
+          <summary class="faq-q">Появляется <code>jutsu.fail.notenoughchakra</code> или не хватает стамины</summary>
+          <div class="faq-a">
+            <p>
+              У каждой техники своя цена. Дешёвый способ набрать чакру — «Чакра-заряд»
+              (<kbd>C</kbd> с удержанием): <strong>стоя на земле +1 за тик</strong>, на бегу и в воздухе
+              только +0.2. Стамину тратят прыжок (10), восемь врат (15 за каждые врата), двойной прыжок (5)
+              и мягкая посадка (2 за единицу урона).
+            </p>
+            <p>
+              Помните про <strong>задержку регенерации</strong>: после траты ресурс какое-то время не
+              восстанавливается, поэтому «пустая» полоска может оставаться такой дольше, чем кажется.
+            </p>
+            <p><a class="more" href="techniques.html#basics">Основы и чакра-заряд →</a></p>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-no-target">
+          <summary class="faq-q">Техника требует цель, но не находит её</summary>
+          <div class="faq-a">
+            <p>
+              Гендзюцу, Хенге и затяг Камуи работают по тому, на кого <strong>наведён взгляд</strong>.
+              Луч не проходит сквозь стены: если между вами блок, цели не будет
+              (<code>jutsu.fail.genjutsu.notarget</code>, <code>jutsu.fail.kamui.notarget</code>).
+            </p>
+            <ul class="plain">
+              <li><strong>Гендзюцу</strong> — только мобы, не игроки, и не те, кто уже под иллюзией (<code>jutsu.fail.genjutsu.active</code>).</li>
+              <li><strong>Хенге</strong> — любое живое существо, кроме клонов: у клонов свой чужой облик.</li>
+              <li><strong>Камуи (затяг)</strong> — живые существа до 16 блоков; креативных игроков и наблюдателей затащить нельзя.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-conditions">
+          <summary class="faq-q">Условия конкретных техник: кирка, земля, транспорт</summary>
+          <div class="faq-a">
+            <ul class="plain">
+              <li><strong>Рудокоп</strong> требует кирку в руке, иначе <code>jutsu.fail.needpickaxe</code> — и чакра не тратится.</li>
+              <li><strong>Прыжок</strong> работает только с земли: в воздухе — <code>jutsu.fail.notonground</code>.</li>
+              <li><strong>Водная походка</strong> не работает на транспорте — <code>jutsu.fail.riding</code>.</li>
+              <li><strong>Бревно-метка</strong> не меняет измерение — <code>jutsu.fail.wrongdimension</code>; без поставленного бревна — <code>jutsu.fail.nomarker</code>.</li>
+              <li><strong>Запечатать врата</strong> не снимает восьмые врата (<code>jutsu.fail.gates_open</code>) и сообщает <code>jutsu.fail.gates_none</code>, если врат нет.</li>
+              <li><strong>Чакра-щит</strong> не стакается: при активном щите повторный каст падает.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-hold">
+          <summary class="faq-q">Расенган только шипит, урона нет. Способность не работает?</summary>
+          <div class="faq-a">
+            <p>
+              Работает, просто вы её «тапнули». У Расенгана <strong>тап</strong> (меньше 20 тиков) — это
+              пшик без урона. Нужно <strong>зажать</strong> и подержать: на 60 тиках урон доходит до 16, а
+              отброс — до 1.8. Дальше заряжать бессмысленно.
+            </p>
+            <p>
+              Так же ведут себя и другие канальные техники: удержание — это и есть их «рабочий режим», а не
+              украшение.
+            </p>
+            <p><a class="more" href="techniques.html#elemental">Стихийное ниндзюцу →</a></p>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- ======================= РЕСУРСЫ ======================= -->
+    <section class="section" id="resources">
+      <h2 class="group-title">Чакра, стамина и максимум</h2>
+      <p class="group-lead">Как получить больше чакры и куда девается стамина.</p>
+
+      <div class="faq">
+
+        <details class="faq-item" id="faq-max-chakra">
+          <summary class="faq-q">Как поднять максимум чакры выше 100?</summary>
+          <div class="faq-a">
+            <p>Двумя способами, и они складываются:</p>
+            <ul class="plain">
+              <li>
+                <strong>Медитирующие клоны</strong> («Медитация чакры», <code>1331</code>): пока рядом
+                (8 блоков) есть такой клон владельца, он даёт <strong>+100 к максимуму чакры</strong> и
+                <code>+0.2</code> чакры за тик, а откаты всех техник идут вдвое быстрее. Клон исчез или
+                отошёл — бонус сразу снимается.
+              </li>
+              <li>
+                <strong>Броня мода</strong>: маска АНБУ, плащ Акацуки и прочее дают бонусы к максимуму
+                чакры и к здоровью. Бонус считается по надетым частям и виден в подсказке предмета.
+              </li>
+            </ul>
+            <p>
+              Итог — это настраиваемый максимум плюс оба бонуса. Само значение максимума правится опцией
+              <code>maxChakra</code>.
+            </p>
+            <p><a class="more" href="config.html#energy">Опции ресурсов в конфиге →</a></p>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-battery">
+          <summary class="faq-q">Как «отлить» чакру в запас?</summary>
+          <div class="faq-a">
+            <p>
+              Чакра-батарея хранит до <strong>500</strong> чакры и привязывается к тому, кто использовал её
+              первым: дальше ни забрать, ни долить может только владелец (остальным —
+              <code>jutsu.fail.battery.owner</code>).
+            </p>
+            <ul class="plain">
+              <li>ПКМ — забрать до 50 чакры из батареи в себя.</li>
+              <li>ПКМ с зажатым Shift — долить до 50 чакры в батарею.</li>
+            </ul>
+            <p>
+              Привязка лежит в самом предмете, поэтому переживает сундуки и смерть. Удобно держать батарею
+              в инвентаре и сливать в неё излишки перед долгим боем.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-soft-landing">
+          <summary class="faq-q">Почему мягкая посадка не сработала и я всё равно разбился?</summary>
+          <div class="faq-a">
+            <p>
+              Она тратит <strong>2 стамины за единицу урона</strong>, который падение всё равно отняло бы.
+              Падение на 4 блока — это 2 стамины, а на 40 блоков — уже 74, почти вся полоса.
+            </p>
+            <p>
+              Если стамины <strong>не хватает</strong>, приземление происходит как обычное, а стамина не
+              тратится вообще: «половинчатого» смягчения нет.
+            </p>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- ======================= КАМУИ ======================= -->
+    <section class="section" id="kamui">
+      <h2 class="group-title">Камуи и измерения</h2>
+      <p class="group-lead">Карманное измерение — это тюрьма, а не склад.</p>
+
+      <div class="faq">
+
+        <details class="faq-item" id="faq-kamui-fail">
+          <summary class="faq-q">Шаг в Камуи не срабатывает</summary>
+          <div class="faq-a">
+            <p>Проверьте два момента:</p>
+            <ul class="plain">
+              <li>
+                Техника не отключена в конфиге: опция <code>kamuiEnabled</code> должна быть
+                <code>true</code>.
+              </li>
+              <li>
+                Измерение <code>narutomod:kamui</code> задаётся датапаком мода. Если файлы измерения
+                битые или отсутствуют, сервер не падает, но измерение не регистрируется — техника в этом
+                случае сообщает об ошибке, а не телепортирует «в никуда».
+              </li>
+            </ul>
+            <p>
+              И не забывайте, что Камуи — канальная техника: <strong>тап</strong> — это шаг в измерение,
+              а <strong>удержание</strong> — затяг цели.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-kamui-return">
+          <summary class="faq-q">Что происходит с тем, кого затянули в Камуи?</summary>
+          <div class="faq-a">
+            <p>
+              Он не остаётся там навсегда. Через <strong>30 секунд</strong> (опция
+              <code>kamuiTransferSeconds</code>) всё затянутое выбрасывается обратно
+              <strong>ровно туда, откуда его взяли</strong> — тот же мир, те же координаты. Самого кастера
+              таймер не касается: он ходит туда-обратно сколько хочет.
+            </p>
+            <p>
+              Внутри кармана нет ни руды, ни мобов, ни погоды, а естественный спавн запрещён — дюпа
+              ресурсов через измерение не получится. Между столбами настоящая пустота: упал — погиб, вещи
+              останутся там, где вы умерли.
+            </p>
+            <p><a class="more" href="techniques.html#space">Камуи в разделе техник →</a></p>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-marker-dimension">
+          <summary class="faq-q">Бревно-метка не возвращает меня назад</summary>
+          <div class="faq-a">
+            <p>Причин две, и обе описаны в механике:</p>
+            <ul class="plain">
+              <li>Бревно стоит <strong>в другом измерении</strong> — обмен запрещён (<code>jutsu.fail.wrongdimension</code>). В одном измерении дистанция любая.</li>
+              <li>Бревна нет или его не нашли — <code>jutsu.fail.nomarker</code>.</li>
+            </ul>
+            <p>
+              Важно: если чанк со старым бревном не загружен, сущность не найдётся и бревно останется
+              стоять — но <strong>возврат всё равно сработает</strong>, потому что техника телепортирует к
+              записанной координате в данных игрока, а не к самой сущности. И бревно нельзя убить ничем: ни
+              ударом, ни креативом, ни <code>/kill</code> — убрать его можно только поставив новое.
+            </p>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- ======================= РЕЖИМЫ ======================= -->
+    <section class="section" id="modes">
+      <h2 class="group-title">Врата и режимы</h2>
+      <p class="group-lead">Почему лечение не работает, а 8-е врата нельзя закрыть.</p>
+
+      <div class="faq">
+
+        <details class="faq-item" id="faq-gates-noheal">
+          <summary class="faq-q">Почему с открытыми вратами меня не лечит?</summary>
+          <div class="faq-a">
+            <p>
+              Это часть платы. Пока врата открыты, кастер <strong>не лечится вообще</strong> — ни едой, ни
+              зельями регенерации, ни техникой «Регенерация чакрой». Иначе ванильная регенерация от сытости
+              (до 2 HP в секунду) перекрывала бы слив здоровья, и врата стали бы бесплатным баффом.
+            </p>
+            <p>
+              Сам слив идёт напрямую и целыми единицами здоровья, минуя <strong>любую</strong> защиту:
+              броню, сопротивление, поглощение, чакра-щит и даже креатив. «Второе дыхание» от него тоже не
+              спасает — это не урон от врага.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-gates-eight">
+          <summary class="faq-q">Восьмые врата не закрываются</summary>
+          <div class="faq-a">
+            <p>
+              Так и должно быть. «Запечатать врата» (<code>2332</code>) закрывает любое число врат
+              <strong>с 1 по 7</strong> и бесплатна. Как только открыты все восемь, снять их не может ни
+              одна техника — единственный выход смерть.
+            </p>
+            <p>
+              Смерть или выход из игры сбрасывают счётчик врат: после возрождения врата закрыты.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-sage-mode">
+          <summary class="faq-q">Режим Мудреца гаснет слишком быстро, а сенин-мана не копится</summary>
+          <div class="faq-a">
+            <p>
+              Сенин-мана копится <strong>только стоя на земле неподвижно</strong>, по 0.5 за тик, максимум
+              100 (опция <code>maxSeninMana</code>) — то есть полный пул требует 10 секунд стояния.
+              Двинулись — сбор просто останавливается, прогресс не теряется.
+            </p>
+            <p>
+              На вход в Режим Мудреца нужно минимум 50 сенин-маны, дальше он тратит по 0.25 за тик и
+              <strong>сам гаснет, когда пул кончился</strong>. Приток от медитирующих клонов в этом режиме
+              идёт в сенин-ману, а не в чакру, — так режим можно держать дольше.
+            </p>
+            <p>
+              Если <code>sageModeEnabled = false</code>, вся ветка сендзюцу выключена.
+            </p>
+            <p><a class="more" href="techniques.html#body">Сбор энергии и Режим Мудреца →</a></p>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-reset-on-death">
+          <summary class="faq-q">Что сбрасывается при смерти и выходе из игры?</summary>
+          <div class="faq-a">
+            <p>
+              Техники, состояние которых намеренно <strong>не</strong> пишется в сохранение, после смерти
+              или выхода из игры выключаются:
+            </p>
+            <ul class="plain">
+              <li><strong>Восемь врат</strong> — счётчик врат сбрасывается.</li>
+              <li><strong>Режим Мудреца</strong> — флаг режима закрывается.</li>
+              <li><strong>Фазовое тело Камуи</strong> — стойка снимается (а если выключить внутри стены, техника выталкивает в ближайшее свободное место).</li>
+              <li><strong>Хенге</strong> — личина сбрасывается.</li>
+              <li><strong>Чакра-щит</strong> — смерть стирает щит.</li>
+              <li><strong>Второе дыхание</strong> — смерть забирает взведённый эффект и сбрасывает откат.</li>
+            </ul>
+            <p>
+              А вот сенин-мана, координата бревна-метки и точка возврата из Камуи <strong>сохраняются</strong>:
+              они лежат в данных игрока.
+            </p>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- ======================= ДОКИ ======================= -->
+    <section class="section" id="docs">
+      <h2 class="group-title">Документация и расхождения</h2>
+      <p class="group-lead">
+        Отдельная страница — для того, что не объясняется механикой: полный перезапуск, раскладка и
+        расхождение между описанием мода и кодом.
+      </p>
+
+      <div class="faq">
+
+        <details class="faq-item" id="faq-restart">
+          <summary class="faq-q">Почему новые комбо подхватываются только после полного перезапуска игры?</summary>
+          <div class="faq-a">
+            <p>
+              Список техник собирается в карту при <strong>запуске игры</strong>, и меню <kbd>J</kbd>
+              читает уже готовую карту. Поэтому изменения набора техник (например, после обновления мода)
+              видны только после <strong>полного перезапуска</strong> — перезахода в мир или
+              <code>/reload</code> недостаточно.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-layout">
+          <summary class="faq-q">Почему в меню техник буквы латинские, а не мои клавиши?</summary>
+          <div class="faq-a">
+            <p>
+              Так и задумано. Буквы клавиш рисуются <strong>по коду клавиши</strong> (A–Z = 65–90), а не
+              через имя клавиши из системы: на русской раскладке имя приходит кириллицей, и комбо выглядело
+              бы как «с/и/м». Поэтому в меню всегда латиница — и она же следует за вашими
+              переназначениями.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item" id="faq-discrepancies">
+          <summary class="faq-q">Пишут по-разному: чему верить, если описания расходятся?</summary>
+          <div class="faq-a">
+            <p>
+              Мы намеренно не «дописываем» спорное. Сверка документации мода с кодом и конфигом показала
+              ровно одно расхождение:
+            </p>
+            <ul class="plain">
+              <li>
+                <strong>Восстановление замен.</strong> README говорит «+1 каждые 60 тиков
+                (3 секунды)», а опция конфига <code>substitutionRegenTime</code> подписана как секунды и
+                умножается на 20 — то есть по умолчанию это одна замена в минуту, а не за три секунды.
+              </li>
+            </ul>
+            <p>
+              Остальные числа здесь сверены с кодом и конфигом. Если расхождение всё же попадётся —
+              ориентируйтесь на поведение игры и на конфиг: его значения всегда однозначны.
+            </p>
+            <p><a class="more" href="config.html">Все опции конфига →</a></p>
+          </div>
+        </details>
+
+      </div>
+
+      <div class="note gap-top">
+        <h3>Не нашли ответ?</h3>
+        <p>
+          Список всех техник с ценой и типом применения — на странице
+          <a href="techniques.html">«Техники»</a>, приёмы, которые не видны из таблиц — в разделе
+          <a href="secrets.html">«Секреты»</a>, предметы и броня — на странице
+          <a href="items.html">«Предметы»</a>.
+        </p>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div>
+      <p>
+        Фан-документация по форку <strong>Sekwah's Naruto Mod</strong> под Minecraft 1.20.1 / Forge.
+        Числа и механики взяты из описания мода к этой сборке.
+      </p>
+      <p>
+        Оригинальный мод:
+        <a href="https://github.com/sekwah41/Naruto-Mod" target="_blank" rel="noopener">sekwah41/Naruto-Mod</a>.
+      </p>
+    </div>
+    <nav class="footer-nav" aria-label="Навигация в подвале">
+      <a href="index.html">Главная</a>
+      <a href="install.html">Установка</a>
+      <a href="techniques.html">Техники</a>
+      <a href="items.html">Предметы</a>
+      <a href="secrets.html">Секреты</a>
+      <a href="config.html">Настройки</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

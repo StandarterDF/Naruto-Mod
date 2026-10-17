@@ -5,7 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Техники — Naruto Mod (Minecraft 1.20.1 / Forge)</title>
 <meta name="description" content="Все техники Naruto Mod для Minecraft 1.20.1 / Forge: комбо печатей, тип применения, расход чакры и стамины, кулдауны, группы меню J.">
+<meta name="theme-color" content="#0e0f13">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Техники — Naruto Mod (Minecraft 1.20.1 / Forge)">
+<meta property="og:description" content="Все техники мода с комбо печатей, ценой в чакре и кулдаунами.">
+<meta property="og:image" content="assets/narutologo.png">
 <link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#main">К содержимому</a>
@@ -20,9 +28,12 @@
     </a>
     <nav class="site-nav" aria-label="Основная навигация">
       <a href="index.html">Главная</a>
+      <a href="install.html">Установка</a>
       <a href="techniques.html" aria-current="page">Техники</a>
       <a href="items.html">Предметы</a>
       <a href="secrets.html">Секреты</a>
+      <a href="config.html">Настройки</a>
+      <a href="faq.html">FAQ</a>
     </nav>
   </div>
 </header>
@@ -54,6 +65,48 @@
           <li><a href="#notes">Общие примечания</a></li>
         </ul>
       </nav>
+
+      <div class="filter-panel gap-top" id="jutsu-filter">
+        <div class="filter-row">
+          <label class="filter-search" for="jutsu-search">
+            <span class="visually-hidden">Поиск по техникам</span>
+            <span class="filter-search-icon" aria-hidden="true">⌕</span>
+            <input type="search" id="jutsu-search" placeholder="Поиск: клон, камуи, 1332, врата…" autocomplete="off" spellcheck="false">
+          </label>
+          <button type="button" class="btn btn--small" id="jutsu-reset">Сбросить</button>
+        </div>
+
+        <div class="filter-row">
+          <span class="filter-label">Группа</span>
+          <div class="chips" id="jutsu-cats" role="group" aria-label="Фильтр по группам техник">
+            <button type="button" class="chip is-active" data-filter="all" aria-pressed="true">Все</button>
+            <button type="button" class="chip" data-filter="basics" aria-pressed="false">Основы</button>
+            <button type="button" class="chip" data-filter="clones" aria-pressed="false">Клоны</button>
+            <button type="button" class="chip" data-filter="defence" aria-pressed="false">Защита</button>
+            <button type="button" class="chip" data-filter="elemental" aria-pressed="false">Стихии</button>
+            <button type="button" class="chip" data-filter="space" aria-pressed="false">Пространство</button>
+            <button type="button" class="chip" data-filter="body" aria-pressed="false">Тело</button>
+            <button type="button" class="chip" data-filter="illusion" aria-pressed="false">Иллюзии</button>
+            <button type="button" class="chip" data-filter="other" aria-pressed="false">Прочее</button>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <span class="filter-label">Тип</span>
+          <div class="chips" id="jutsu-types" role="group" aria-label="Фильтр по способу применения">
+            <button type="button" class="chip is-active" data-filter="all" aria-pressed="true">Любой</button>
+            <button type="button" class="chip" data-filter="instant" aria-pressed="false">Мгновенная</button>
+            <button type="button" class="chip" data-filter="channel" aria-pressed="false">Канал</button>
+            <button type="button" class="chip" data-filter="toggle" aria-pressed="false">Переключатель</button>
+            <button type="button" class="chip" data-filter="auto" aria-pressed="false">Автоматически</button>
+            <button type="button" class="chip" data-filter="icon" aria-pressed="false">Режим</button>
+          </div>
+        </div>
+
+        <p class="filter-status" id="jutsu-status" role="status" aria-live="polite">Показаны все техники: 28.</p>
+      </div>
+
+      <p class="no-results" id="jutsu-empty" hidden>Ничего не нашлось. Попробуйте другой запрос или нажмите «Сбросить».</p>
     </section>
 
     <!-- ======================= ОСНОВЫ ======================= -->
@@ -64,9 +117,12 @@
       <div class="jutsu-list">
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Чакра-заряд</h3>
-            <span class="badge badge--channel">Канал</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon jutsu-icon--glyph" aria-hidden="true">気</span>
+            <div class="jutsu-headtext">
+              <h3>Чакра-заряд</h3>
+              <span class="badge badge--channel">Канал</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd></span>
@@ -89,9 +145,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Водная походка</h3>
-            <span class="badge badge--toggle">Переключатель</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/vanilla/water_bucket.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Водная походка</h3>
+              <span class="badge badge--toggle">Переключатель</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>B</kbd></span>
@@ -115,9 +174,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Чакра-кулак</h3>
-            <span class="badge badge--toggle">Переключатель</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon jutsu-icon--glyph" aria-hidden="true">拳</span>
+            <div class="jutsu-headtext">
+              <h3>Чакра-кулак</h3>
+              <span class="badge badge--toggle">Переключатель</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>C</kbd></span>
@@ -171,9 +233,12 @@
       <div class="jutsu-list">
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Теневой клон</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon jutsu-icon--glyph" aria-hidden="true">影</span>
+            <div class="jutsu-headtext">
+              <h3>Теневой клон</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>B</kbd><kbd>V</kbd></span>
@@ -196,9 +261,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Чиби-клон</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon jutsu-icon--glyph" aria-hidden="true">小</span>
+            <div class="jutsu-headtext">
+              <h3>Чиби-клон</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>V</kbd><kbd>V</kbd></span>
@@ -221,9 +289,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Мульти-клон</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon jutsu-icon--glyph" aria-hidden="true">群</span>
+            <div class="jutsu-headtext">
+              <h3>Мульти-клон</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>B</kbd><kbd>V</kbd><kbd>B</kbd><kbd>C</kbd></span>
@@ -246,9 +317,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Медитация чакры</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon jutsu-icon--glyph" aria-hidden="true">座</span>
+            <div class="jutsu-headtext">
+              <h3>Медитация чакры</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>B</kbd><kbd>C</kbd></span>
@@ -285,9 +359,12 @@
       <div class="jutsu-list">
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Чакра-щит</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/vanilla/shield.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Чакра-щит</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>B</kbd><kbd>V</kbd><kbd>B</kbd></span>
@@ -310,9 +387,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Второе дыхание</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/vanilla/totem_of_undying.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Второе дыхание</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>V</kbd><kbd>B</kbd></span>
@@ -336,9 +416,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Регенерация чакрой</h3>
-            <span class="badge badge--toggle">Переключатель</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/vanilla/potion.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Регенерация чакрой</h3>
+              <span class="badge badge--toggle">Переключатель</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>B</kbd><kbd>B</kbd><kbd>C</kbd></span>
@@ -368,9 +451,12 @@
       <div class="jutsu-list">
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Огненный шар</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/vanilla/fire_charge.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Огненный шар</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>V</kbd><kbd>C</kbd></span>
@@ -389,9 +475,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Водяная пуля</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon jutsu-icon--glyph" aria-hidden="true">水</span>
+            <div class="jutsu-headtext">
+              <h3>Водяная пуля</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>V</kbd></span>
@@ -411,9 +500,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Рудокоп</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/vanilla/iron_pickaxe.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Рудокоп</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>V</kbd><kbd>V</kbd><kbd>C</kbd></span>
@@ -440,9 +532,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Расенган</h3>
-            <span class="badge badge--channel">Канал</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon jutsu-icon--glyph" aria-hidden="true">玉</span>
+            <div class="jutsu-headtext">
+              <h3>Расенган</h3>
+              <span class="badge badge--channel">Канал</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>B</kbd><kbd>C</kbd><kbd>B</kbd></span>
@@ -473,9 +568,12 @@
       <div class="jutsu-list">
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Подмена</h3>
-            <span class="badge badge--channel">Канал</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/textures/jutsu_substitution.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Подмена</h3>
+              <span class="badge badge--channel">Канал</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>V</kbd></span>
@@ -499,9 +597,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Бревно-метка</h3>
-            <span class="badge badge--channel">Канал</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/textures/jutsu_substitution_marker.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Бревно-метка</h3>
+              <span class="badge badge--channel">Канал</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>B</kbd><kbd>V</kbd><kbd>C</kbd></span>
@@ -527,9 +628,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Камуи</h3>
-            <span class="badge badge--channel">Канал</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/vanilla/ender_pearl.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Камуи</h3>
+              <span class="badge badge--channel">Канал</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>B</kbd><kbd>V</kbd><kbd>V</kbd><kbd>C</kbd><kbd>C</kbd></span>
@@ -559,9 +663,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Фазовое тело Камуи</h3>
-            <span class="badge badge--toggle">Переключатель</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/vanilla/dragon_breath.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Фазовое тело Камуи</h3>
+              <span class="badge badge--toggle">Переключатель</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>C</kbd><kbd>B</kbd></span>
@@ -594,9 +701,12 @@
       <div class="jutsu-list">
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Восемь врат</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon jutsu-icon--glyph" aria-hidden="true">門</span>
+            <div class="jutsu-headtext">
+              <h3>Восемь врат</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>B</kbd><kbd>B</kbd><kbd>B</kbd></span>
@@ -621,9 +731,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Запечатать врата</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon jutsu-icon--glyph" aria-hidden="true">封</span>
+            <div class="jutsu-headtext">
+              <h3>Запечатать врата</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>B</kbd><kbd>B</kbd><kbd>V</kbd></span>
@@ -643,9 +756,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Сбор природной энергии</h3>
-            <span class="badge badge--channel">Канал</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/vanilla/glow_berries.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Сбор природной энергии</h3>
+              <span class="badge badge--channel">Канал</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>B</kbd><kbd>C</kbd></span>
@@ -671,9 +787,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Режим Мудреца</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/vanilla/golden_apple.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Режим Мудреца</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>B</kbd><kbd>V</kbd></span>
@@ -751,9 +870,12 @@
       <div class="jutsu-list">
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Гендзюцу</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/vanilla/fermented_spider_eye.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Гендзюцу</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>C</kbd></span>
@@ -780,9 +902,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Хенге (трансформация)</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon jutsu-icon--glyph" aria-hidden="true">変</span>
+            <div class="jutsu-headtext">
+              <h3>Хенге (трансформация)</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>C</kbd><kbd>V</kbd></span>
@@ -823,9 +948,12 @@
       <div class="jutsu-list">
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Прыжок (Leap)</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/vanilla/feather.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Прыжок (Leap)</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Клавиша</span><kbd class="k-x">X</kbd></span>
@@ -845,9 +973,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Двойной прыжок</h3>
-            <span class="badge badge--instant">Мгновенная</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/vanilla/rabbit_foot.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Двойной прыжок</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Ввод</span><kbd class="k-x">Прыжок в воздухе</kbd></span>
@@ -867,9 +998,12 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Мягкая посадка</h3>
-            <span class="badge badge--auto">Автоматически</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon jutsu-icon--glyph" aria-hidden="true">落</span>
+            <div class="jutsu-headtext">
+              <h3>Мягкая посадка</h3>
+              <span class="badge badge--auto">Автоматически</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Ввод</span><kbd class="k-x">без комбо</kbd></span>
@@ -893,30 +1027,34 @@
         </article>
 
         <article class="jutsu card">
-          <div class="jutsu-head">
-            <h3>Рабочий клон</h3>
-            <span class="badge badge--icon">Режим клонов</span>
+          <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon" aria-hidden="true"><img src="assets/textures/worker_seal.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
+            <div class="jutsu-headtext">
+              <h3>Рабочий клон</h3>
+              <span class="badge badge--icon">Режим клонов</span>
+            </div>
           </div>
           <div class="combo-row">
             <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>B</kbd><kbd>V</kbd></span>
-            <span class="combo-digits">любое комбо клонов + печать рабочего в основной руке</span>
+            <span class="combo-digits">любое комбо клонов + печать рабочего в дополнительной (левой) руке</span>
           </div>
           <div class="jutsu-body">
             <p>
               Это не отдельная техника, а <strong>режим</strong>: те же комбо клонов, но с печатью
-              рабочего в основной руке призывают клонов работать, а не воевать. Работу задаёт
-              инструмент во второй руке.
+              рабочего в <strong>дополнительной (левой) руке</strong> призывают клонов работать, а не
+              воевать. Работу задаёт инструмент в <strong>основной руке</strong>.
             </p>
           </div>
           <ul class="meta">
             <li><b>Мотыга (и всё, кроме кирки и топора):</b> собирает спелые культуры и сразу засевает заново</li>
             <li><b>Кирка:</b> камень и руды, только те, что взяла бы кирка в руке</li>
-            <li><b>Топор:</b> валит деревья, обходя ствол целиком (до 64 блоков)</li>
+            <li><b>Топор:</b> валит деревья, обходя ствол целиком (до 128 блоков)</li>
             <li><b>Жизнь:</b> 10 минут</li>
           </ul>
           <ul class="facts">
-            <li><span class="fact-label">Полезно знать:</span> место призыва становится «постом» — рабочие не уходят от него дальше 8 блоков, а несколько рабочих делят один пост.</li>
-            <li><span class="fact-label">Полезно знать:</span> за тобой не идёт и не воюет (разве что огрызнётся на того, кто его ударит), а собранное складывает в мешок, который отдаётся тебе через 30 секунд после исчезновения.</li>
+            <li><span class="fact-label">Полезно знать:</span> работу рабочий ищет вокруг <em>себя</em>: 8 блоков у полевого, 12 у рудокопа и 24 у лесоруба, а место призыва запоминается просто как справка. Кончилась работа рядом — он сам бредёт дальше и ищет новую, а недостижимую цель бросает примерно через 15 секунд.</li>
+            <li><span class="fact-label">Полезно знать:</span> лесоруб сначала валит деревья, а если ствол заслонён листвой — сперва срубает мешающие листья, чтобы открыть себе подход.</li>
+            <li><span class="fact-label">Полезно знать:</span> за тобой не идёт и <strong>не воюет вообще</strong> — даже не отвечает на удар, так что рабочий с мечом в руке не убежит убивать чужих коров. Собранное складывает в мешок, который отдаётся тебе через 30 секунд, но только если рабочий исчез по времени: убитый он пропадает вместе с мешком.</li>
             <li><span class="fact-label">Полезно знать:</span> печать рабочего не расходуется — это катализатор, но чакра-печать за каст всё равно тратится. Инструмент из твоего инвентаря тоже не тратится: клон работает копией и прекращает работу, когда она сломается.</li>
             <li><span class="fact-label">Полезно знать:</span> опыт за убийство не теряется: если клон добивает моба, XP уходит сразу тебе, а не орбами на месте смерти.</li>
           </ul>
@@ -970,9 +1108,12 @@
     </div>
     <nav class="footer-nav" aria-label="Навигация в подвале">
       <a href="index.html">Главная</a>
+      <a href="install.html">Установка</a>
       <a href="techniques.html">Техники</a>
       <a href="items.html">Предметы</a>
       <a href="secrets.html">Секреты</a>
+      <a href="config.html">Настройки</a>
+      <a href="faq.html">FAQ</a>
     </nav>
   </div>
 </footer>
