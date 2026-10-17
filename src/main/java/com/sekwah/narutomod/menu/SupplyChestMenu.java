@@ -196,23 +196,19 @@ public class SupplyChestMenu extends AbstractContainerMenu {
 
     @Override
     public void broadcastChanges() {
-        if (this.player instanceof ServerPlayer serverPlayer) {
-            if (this.container.getContainerSize() != this.openedSize) {
-                // The slot layout is fixed once built, so a chest that grew under the open window is
-                // shown by opening it afresh rather than by trying to move slots around. The swap is
-                // held back a tick so it never happens in the middle of the container tick that
-                // noticed it, and while the caster is carrying something, since a window swap would
-                // put the carried stack back.
-                if (!this.getCarried().isEmpty()) {
-                    return;
-                }
-                if (this.reopening) {
-                    this.reopen(serverPlayer);
-                } else {
-                    this.reopening = true;
-                }
+        if (this.player instanceof ServerPlayer serverPlayer
+                && this.container.getContainerSize() != this.openedSize
+                && this.getCarried().isEmpty()) {
+            // The slot layout is fixed once built, so a chest that grew under the open window is
+            // shown by opening it afresh rather than by trying to move slots around. The swap is held
+            // back a tick so it never happens in the middle of the container tick that noticed it,
+            // and while the caster is carrying something, since a window swap would put the carried
+            // stack back - until then the window keeps syncing as it is.
+            if (this.reopening) {
+                this.reopen(serverPlayer);
                 return;
             }
+            this.reopening = true;
         }
         super.broadcastChanges();
         if (this.player instanceof ServerPlayer serverPlayer) {

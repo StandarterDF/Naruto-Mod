@@ -120,6 +120,13 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     public static final int WORKER_LIFETIME = 20 * 90;
 
     /**
+     * How much health a worker has. A fighting clone pops at the first touch, the same as in 1.7.10,
+     * but a worker is left alone to work and deserves a chance to hit back rather than dying to the
+     * first stray swipe of a zombie that wandered into its field.
+     */
+    public static final double WORKER_HEALTH = 4.0d;
+
+    /**
      * Anything closer than this is melee range. A clone stops shooting at it and starts swinging
      * (and blocking), the same distance the melee goal can actually reach.
      */
@@ -213,6 +220,10 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
+        // A worker fetches loot between swings of its tool, so its instance of the goal has to come
+        // before the shift goals below - a worker's shift holds the movement flag the whole time it
+        // works, and anything further down would never get a turn.
+        this.goalSelector.addGoal(1, new ClonePickupLootGoal(this, true));
         // A worker clone works instead of fighting or following, and which shift it works depends
         // on the tool it was summoned with. Each goal refuses every other job (and every other kind
         // of clone), so only the matching one ever runs.
@@ -230,10 +241,10 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.2d, false));
         this.goalSelector.addGoal(3, new CloneUseShieldGoal(this));
         this.goalSelector.addGoal(4, new CloneFollowOwnerGoal(this, 1.1d, 10.0f, 2.0f, 20.0f));
-        // Below combat and following, so a clone never drops a fight or its caster to chase a
-        // dropped item, but above the idle stroll: anything lying around is picked up and sent to
-        // the caster's supply chest, whether the clone is a worker or one that was summoned to fight.
-        this.goalSelector.addGoal(5, new ClonePickupLootGoal(this));
+        // Below combat and following, so a fighting clone never drops a target or its caster to
+        // chase a dropped item, but above the idle stroll: anything lying around is picked up and
+        // sent to the caster's supply chest, whether the clone is a worker or one summoned to fight.
+        this.goalSelector.addGoal(5, new ClonePickupLootGoal(this, false));
         this.goalSelector.addGoal(6, new OpenDoorGoal(this, true));
         this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0d));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0f));
@@ -687,18 +698,32 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
 
     public void setWorker(boolean worker) {
         this.entityData.set(DATA_WORKER, worker);
+        if (worker) {
+            // A worker is not a front line fighter, but it should not pop at the first touch either:
+            // it gets a few points of health so it can take a hit and give one back before it goes.
+            // Only a whole clone is topped up, so a worker that was wounded and saved comes back as
+            // wounded as it left.
+            boolean wasWhole = this.getHealth() >= this.getMaxHealth();
+            this.setAttributeValue(Attributes.MAX_HEALTH, WORKER_HEALTH);
+            if (wasWhole) {
+                this.setHealth((float) WORKER_HEALTH);
+            }
+        }
     }
 
     /**
      * Workers do not pick fights through the vanilla target system: a farmhand that wandered off to
-     * kill the cows its caster happened to hit would look broken, so any target handed to a worker -
-     * by its own hurt reaction or by its caster's - is dropped. It sticks to its shift instead. (A
+     * kill the cows its caster happened to hit would look broken, so a target handed to a worker by
+     * its caster - or by another clone's alarm - is dropped. The one exception is self defence: a
+     * worker that is struck may hit back at whatever struck it, and only at that - and never at its
+     * own caster or a fellow clone of the same caster, who are allies even when they swing first. (A
      * hunting worker does go after animals, but it does so through its own goal, not through
      * {@code setTarget}.)
      */
     @Override
     public void setTarget(LivingEntity target) {
-        if (this.isWorker()) {
+        if (this.isWorker() && target != null
+                && (target != this.getLastHurtByMob() || this.isAlliedTo(target))) {
             return;
         }
         super.setTarget(target);
@@ -828,6 +853,10 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
+        // The worker flag goes on before the health is read back: a worker has a higher maximum than
+        // a fighting clone, and vanilla clamps saved health to the maximum, so the flag has to be in
+        // place first or every worker would come back from a save at one point of health.
+        this.setWorker(tag.getBoolean("Worker"));
         super.readAdditionalSaveData(tag);
         if (tag.hasUUID("Owner")) {
             this.entityData.set(DATA_OWNER, Optional.of(tag.getUUID("Owner")));
@@ -838,7 +867,6 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.lifetime = tag.contains("Lifetime") ? tag.getInt("Lifetime") : DEFAULT_LIFETIME;
         this.ammo = tag.contains("Ammo") ? ItemStack.of(tag.getCompound("Ammo")) : ItemStack.EMPTY;
         this.explosive = tag.getBoolean("Explosive");
-        this.setWorker(tag.getBoolean("Worker"));
         this.workerJob = parseWorkerJob(tag.getString("WorkerJob"));
         if (tag.contains("WorkerHome")) {
             this.workerHome = BlockPos.of(tag.getLong("WorkerHome"));

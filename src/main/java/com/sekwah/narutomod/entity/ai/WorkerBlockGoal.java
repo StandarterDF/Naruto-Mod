@@ -202,6 +202,12 @@ public abstract class WorkerBlockGoal extends Goal {
         if (!this.isMyJob()) {
             return false;
         }
+        if (this.isDefending()) {
+            // Something is on top of the worker. It drops the shift and hits back rather than
+            // swinging at a block while it is being chewed on; the tool goes back to work once the
+            // fight is over.
+            return false;
+        }
         if (this.cooldown > 0) {
             this.cooldown--;
             return false;
@@ -219,7 +225,7 @@ public abstract class WorkerBlockGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
-        if (!this.isMyJob()) {
+        if (!this.isMyJob() || this.isDefending()) {
             return false;
         }
         if (!this.queue.isEmpty()) {
@@ -365,6 +371,15 @@ public abstract class WorkerBlockGoal extends Goal {
     protected boolean isMyJob() {
         return this.worker.isWorker() && this.worker.getWorkerJob() == this.job()
                 && !this.worker.level().isClientSide;
+    }
+
+    /**
+     * Whether the worker is busy defending itself. Only a target it took in self defence ever lands
+     * on a worker (see {@code ShadowCloneEntity#setTarget}), so a target means something is hitting
+     * it and the shift has to wait.
+     */
+    private boolean isDefending() {
+        return this.worker.getTarget() != null;
     }
 
     /** Drops expired claims and forgotten targets. */
