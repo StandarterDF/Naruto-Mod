@@ -18,7 +18,6 @@ import com.sekwah.narutomod.util.Inventories;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
@@ -27,13 +26,10 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -162,15 +158,6 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
 
     /** Crops a worker has reaped and is carrying home, see {@link #collect(ItemStack)}. */
     private final List<ItemStack> bag = new ArrayList<>();
-
-    /**
-     * The caster's storage chest (see {@code StorageChestAbility}), remembered at summon time. A
-     * worker drops what it gathers straight in there as it works, so the bag only ever fills up
-     * when there is no chest to reach, or the chest is full.
-     */
-    private BlockPos lootChest;
-
-    private ResourceLocation lootChestDimension;
 
     public ShadowCloneEntity(EntityType<ShadowCloneEntity> type, Level level) {
         super(type, level);
@@ -743,62 +730,37 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.workerHome = home;
     }
 
-    /** Remembers where this worker's harvest goes: the caster's storage chest, if they have one. */
-    public void setLootChest(BlockPos chest, ResourceLocation dimension) {
-        this.lootChest = chest;
-        this.lootChestDimension = dimension;
-    }
-
     /**
-     * Takes what a worker just picked up. It goes straight into the caster's storage chest when
-     * there is one within reach; anything that will not fit (or a chest that is not around) falls
-     * back into the bag, which is handed over when the worker pops, so nothing is lost either way.
+     * Takes what a worker just picked up. It goes straight into the caster's supply chest when they
+     * have one; anything that will not fit (or a caster who is not around) falls back into the bag,
+     * which is handed over when the worker pops, so nothing is lost either way.
      */
     public void collect(ItemStack stack) {
         if (stack.isEmpty()) {
             return;
         }
-        ItemStack leftover = this.depositInStash(stack);
+        ItemStack leftover = this.depositInSupplyChest(stack);
         if (!leftover.isEmpty()) {
             this.bag.add(leftover);
         }
     }
 
     /**
-     * Puts one stack into the caster's storage chest.
+     * Puts one stack into the caster's supply chest, directly. The chest lives in the caster's own
+     * data rather than in a block, so there is no distance or chunk to worry about.
      *
-     * @return what would not fit, or the whole stack when there is no chest to reach.
+     * @return what would not fit, or the whole stack when the caster is not around.
      */
-    private ItemStack depositInStash(ItemStack stack) {
-        if (!(this.level() instanceof ServerLevel server)) {
-            return stack.copy();
-        }
-        BlockPos chest = this.lootChest;
-        ResourceLocation dimension = this.lootChestDimension;
-        // Prefer where the caster keeps the chest right now, so moving it also redirects workers
-        // that are already out in the field.
+    private ItemStack depositInSupplyChest(ItemStack stack) {
         Player owner = this.getOwner();
-        if (owner != null) {
-            INinjaData data = owner.getCapability(NinjaCapabilityHandler.NINJA_DATA).orElse(null);
-            if (data != null && data.getStashLoc() != null) {
-                chest = data.getStashLoc();
-                dimension = data.getStashDimension();
-            }
-        }
-        if (chest == null) {
+        if (owner == null) {
             return stack.copy();
         }
-        ServerLevel target = server;
-        if (dimension != null && !dimension.equals(server.dimension().location())) {
-            MinecraftServer minecraftServer = server.getServer();
-            target = minecraftServer == null ? null
-                    : minecraftServer.getLevel(ResourceKey.create(Registries.DIMENSION, dimension));
-        }
-        if (target == null || !target.isLoaded(chest)
-                || !(target.getBlockEntity(chest) instanceof Container container)) {
+        INinjaData ninjaData = owner.getCapability(NinjaCapabilityHandler.NINJA_DATA).orElse(null);
+        if (ninjaData == null) {
             return stack.copy();
         }
-        return Inventories.putInto(container, stack);
+        return Inventories.putInto(ninjaData.getSupplyChest(), stack);
     }
 
     /**
@@ -851,12 +813,6 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         if (this.workerHome != null) {
             tag.putLong("WorkerHome", this.workerHome.asLong());
         }
-        if (this.lootChest != null) {
-            tag.putLong("LootChest", this.lootChest.asLong());
-        }
-        if (this.lootChestDimension != null) {
-            tag.putString("LootChestDimension", this.lootChestDimension.toString());
-        }
         if (!this.bag.isEmpty()) {
             ListTag bagTag = new ListTag();
             for (ItemStack stack : this.bag) {
@@ -882,12 +838,6 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.workerJob = parseWorkerJob(tag.getString("WorkerJob"));
         if (tag.contains("WorkerHome")) {
             this.workerHome = BlockPos.of(tag.getLong("WorkerHome"));
-        }
-        if (tag.contains("LootChest")) {
-            this.lootChest = BlockPos.of(tag.getLong("LootChest"));
-        }
-        if (tag.contains("LootChestDimension")) {
-            this.lootChestDimension = new ResourceLocation(tag.getString("LootChestDimension"));
         }
         this.bag.clear();
         ListTag bagTag = tag.getList("WorkerBag", 10);

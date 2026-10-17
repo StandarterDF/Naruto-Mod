@@ -4,7 +4,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Helpers for pushing stacks into a container - the worker storage chest, most of all.
+ * Helpers for pushing stacks into a container - the worker supply chest, most of all.
  */
 public final class Inventories {
 

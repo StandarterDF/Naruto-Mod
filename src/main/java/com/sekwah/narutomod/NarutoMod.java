@@ -5,6 +5,7 @@ import com.sekwah.narutomod.block.NarutoBlocks;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.capabilities.NinjaData;
+import com.sekwah.narutomod.client.NarutoClientScreens;
 import com.sekwah.narutomod.client.gui.NarutoInGameGUI;
 import com.sekwah.narutomod.client.keybinds.NarutoKeyHandler;
 import com.sekwah.narutomod.client.renderer.NarutoRenderEvents;
@@ -16,6 +17,7 @@ import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.item.NarutoCreativeTabs;
 import com.sekwah.narutomod.item.NarutoDispenseItemBehavior;
 import com.sekwah.narutomod.item.NarutoItems;
+import com.sekwah.narutomod.menu.NarutoMenus;
 import com.sekwah.narutomod.network.PacketHandler;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import com.sekwah.narutomod.sounds.NarutoSounds;
@@ -69,6 +71,7 @@ public class NarutoMod {
         NarutoGameEvents.register(eventBus);
         NarutoCreativeTabs.register(eventBus);
         NarutoWorldGen.register(eventBus);
+        NarutoMenus.register(eventBus);
 
         DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> NarutoInGameGUI::new);
     }
@@ -77,6 +80,7 @@ public class NarutoMod {
     private void clientSetup(FMLClientSetupEvent event) {
         //NarutoRenderEvents.registerRenderTypes();
         //NarutoWorldRenderEvents.registerEvents();
+        event.enqueueWork(() -> DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> NarutoClientScreens::register));
     }
 
     private void setup(FMLCommonSetupEvent event) {

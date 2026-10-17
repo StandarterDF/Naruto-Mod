@@ -2,9 +2,9 @@ package com.sekwah.narutomod.capabilities;
 
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
-import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.util.INBTSerializable;
@@ -89,13 +89,11 @@ public interface INinjaData extends INBTSerializable<Tag> {
     void setMarkerLoc(Vec3 loc, ResourceLocation dimension);
 
     /**
-     * Where the player's worker storage chest stands, see {@code StorageChestAbility}. Workers
-     * summoned by the player drop what they gather into this chest as they go. Null until they have
-     * summoned one.
+     * The caster's supply chest, see {@code StorageChestAbility}: one block-free container that all
+     * of the caster's worker clones drop their harvest into. It lives in the caster's own data, so a
+     * worker can deposit from anywhere without a chunk being loaded, and it survives a logout.
      */
-    BlockPos getStashLoc();
-    ResourceLocation getStashDimension();
-    void setStashLoc(BlockPos loc, ResourceLocation dimension);
+    Container getSupplyChest();
 
     /**
      * Where a caster who stepped into the Kamui pocket is to be spat back out, see

@@ -5,17 +5,18 @@ import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
+import com.sekwah.narutomod.menu.SupplyChestMenu;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import com.sekwah.sekclib.capabilitysync.capabilitysync.annotation.Sync;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
@@ -122,12 +123,11 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private ResourceLocation markerDimension;
 
     /**
-     * Where this player's worker storage chest stands, see {@code StorageChestAbility}. Server side
-     * only and written to disk, so the workers summoned in a later session still know where home is.
+     * The supply chest a worker clone deposits into, see {@code StorageChestAbility}. It is not a
+     * block: it lives right here in the caster's own data, so a worker can reach it from anywhere and
+     * it survives a logout. There is always exactly one.
      */
-    private BlockPos stashLocation;
-
-    private ResourceLocation stashDimension;
+    private final SimpleContainer supplyChest = new SimpleContainer(SupplyChestMenu.SIZE);
 
     /**
      * Where a caster who walked into the Kamui pocket dimension is to come back out, see
@@ -256,8 +256,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private static final String SUBSTITUTION_TAG = "substitutions";
     private static final String MARKER_TAG = "chakraMarker";
     private static final String MARKER_DIMENSION_TAG = "chakraMarkerDimension";
-    private static final String STASH_TAG = "workerStash";
-    private static final String STASH_DIMENSION_TAG = "workerStashDimension";
+    private static final String SUPPLY_CHEST_TAG = "supplyChest";
     private static final String KAMUI_RETURN_TAG = "kamuiReturn";
     private static final String KAMUI_RETURN_DIMENSION_TAG = "kamuiReturnDimension";
     private static final String SENIN_MANA_TAG = "seninMana";
@@ -439,19 +438,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     }
 
     @Override
-    public BlockPos getStashLoc() {
-        return this.stashLocation;
-    }
-
-    @Override
-    public ResourceLocation getStashDimension() {
-        return this.stashDimension;
-    }
-
-    @Override
-    public void setStashLoc(BlockPos loc, ResourceLocation dimension) {
-        this.stashLocation = loc;
-        this.stashDimension = dimension;
+    public Container getSupplyChest() {
+        return this.supplyChest;
     }
 
     @Override
@@ -724,12 +712,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         if (this.markerDimension != null) {
             nbt.putString(MARKER_DIMENSION_TAG, this.markerDimension.toString());
         }
-        if (this.stashLocation != null) {
-            nbt.put(STASH_TAG, NbtUtils.writeBlockPos(this.stashLocation));
-        }
-        if (this.stashDimension != null) {
-            nbt.putString(STASH_DIMENSION_TAG, this.stashDimension.toString());
-        }
+        nbt.put(SUPPLY_CHEST_TAG, this.supplyChest.createTag());
         if (this.kamuiReturnLocation != null) {
             CompoundTag kamui = new CompoundTag();
             kamui.putDouble("x", this.kamuiReturnLocation.x);
@@ -766,11 +749,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
             if (compoundTag.contains(MARKER_DIMENSION_TAG)) {
                 this.markerDimension = new ResourceLocation(compoundTag.getString(MARKER_DIMENSION_TAG));
             }
-            if (compoundTag.contains(STASH_TAG)) {
-                this.stashLocation = NbtUtils.readBlockPos(compoundTag.getCompound(STASH_TAG));
-            }
-            if (compoundTag.contains(STASH_DIMENSION_TAG)) {
-                this.stashDimension = new ResourceLocation(compoundTag.getString(STASH_DIMENSION_TAG));
+            if (compoundTag.contains(SUPPLY_CHEST_TAG)) {
+                this.supplyChest.fromTag(compoundTag.getList(SUPPLY_CHEST_TAG, Tag.TAG_COMPOUND));
             }
             if (compoundTag.contains(KAMUI_RETURN_TAG)) {
                 CompoundTag kamui = compoundTag.getCompound(KAMUI_RETURN_TAG);
