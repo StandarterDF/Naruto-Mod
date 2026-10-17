@@ -99,6 +99,8 @@
   "jutsu.fail.gates_open": "%s cannot be closed, the eighth gate is already open",
   "jutsu.fail.gates_none": "%s has no open gates to seal",
   "death.attack.narutomod.gate_backlash": "%1$s was torn apart from the inside by the eight inner gates",
+  "death.attack.narutomod.fireball": "%1$s was burned to ash by a fireball",
+  "death.attack.narutomod.water_bullet": "%1$s was pierced by a water bullet",
   "ability.double_jump": "Double Jump",
   "jutsu.leap": "Leap",
   "jutsu.waterwalk": "Water Walking",

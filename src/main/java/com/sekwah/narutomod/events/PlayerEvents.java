@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
+import net.minecraftforge.event.entity.living.LivingHealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -62,6 +63,26 @@ public class PlayerEvents {
                 ChakraShieldAbility.removeShield(player);
             } else if (ninjaData.getShieldPoints() > 0.0f) {
                 ChakraShieldAbility.applyShield(player, ninjaData.getShieldPoints());
+            }
+        });
+    }
+
+    /**
+     * The open gates do not let the body knit itself back together.
+     *
+     * <p>A well fed caster regenerates up to two points of health a second from their own saturation,
+     * which is several times what the gates take from them, so without this the drain would be
+     * quietly undone and the last gates would be a free buff. While any gate is open nothing heals
+     * the caster at all: not food, not a regeneration potion, not the chakra healing technique.</p>
+     */
+    @SubscribeEvent
+    public static void livingHeal(LivingHealEvent event) {
+        if (!(event.getEntity() instanceof Player player) || player.level().isClientSide) {
+            return;
+        }
+        player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
+            if (ninjaData.getGateCount() > 0) {
+                event.setAmount(0.0f);
             }
         });
     }

@@ -48,6 +48,8 @@
   "jutsu.fail.gates_open": "%s уже не закрыть — восьмые врата открыты",
   "jutsu.fail.gates_none": "%s: нет открытых врат",
   "death.attack.narutomod.gate_backlash": "%1$s разорвало изнутри Восемью Внутренними Вратами",
+  "death.attack.narutomod.fireball": "%1$s испепелён огненным шаром",
+  "death.attack.narutomod.water_bullet": "%1$s пронзён водяной пулей",
   "narutomod.subtitle.clone_poof": "Теневой Клон Исчезает",
   "item.narutomod.samehada": "Самехада",
   "item.narutomod.kubikiribocho": "Кубикирибочо",

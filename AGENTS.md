@@ -288,6 +288,18 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 
 ## Грабли, на которые уже наступали
 
+* **Типы урона мода задаются вручную.** Датаген в проект не запускается при сборке
+  (`src/generated/resources` пуст), поэтому JSON-ы типов урона (`fireball`, `water_bullet`,
+  `gate_backlash`) лежат руками в `src/main/resources/data/narutomod/damage_type/`. Если файла нет,
+  `NarutoDamageTypes#getDamageSource` падает с `Missing key in ResourceKey[... narutomod:<name>]`
+  в первый же момент, когда снаряд попадает по цели, и **роняет сервер**. Поэтому в
+  `NarutoDamageTypes` есть только те ключи, на которые есть JSON (плюс теги `bypasses_*` для
+  `gate_backlash`). Добавляешь новый тип урона — сразу пиши и JSON.
+* **Ванильная регенерация от еды.** При сытости ≥ 18 и насыщении игрок лечит до 2 HP/с, что больше
+  любого слива здоровья в моде. Если технике нужно «сжигать» жизнь (восемь врат), одного урона
+  мало — надо гасить и лечение: см. `PlayerEvents#livingHeal` (`LivingHealEvent#setAmount(0)` при
+  `getGateCount() > 0`).
+
 * **Текстуры предметов/блоков.** В моде они лежат в легаси-папках `textures/items/` и `textures/blocks/`
   (множественное число, как в 1.7.10), а в 1.19.4+/1.20.1 атлас собирается из директорий
   `textures/item/` и `textures/block/` (единственное число) плюс описаний атласа. Поэтому в моде есть
