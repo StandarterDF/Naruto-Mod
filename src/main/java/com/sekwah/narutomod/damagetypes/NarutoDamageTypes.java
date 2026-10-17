@@ -17,6 +17,15 @@ public class NarutoDamageTypes {
     public static final ResourceKey<DamageType> FIREBALL = create("fireball");
     public static final ResourceKey<DamageType> WATER_BULLET = ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation(NarutoMod.MOD_ID, "water_bullet"));
 
+    /**
+     * What the eight inner gates do to the body holding them open. Its own damage type so that it can
+     * be excluded from every kind of mitigation: armour, resistance, absorption and the chakra shield
+     * all ignore it, see the {@code bypasses_*} tag files. Otherwise the gates' own resistance buff,
+     * or a shield shaped out of chakra, would quietly absorb the very thing that is meant to kill the
+     * caster.
+     */
+    public static final ResourceKey<DamageType> GATE_BACKLASH = create("gate_backlash");
+
     public static ResourceKey<DamageType> create(String name) {
         return ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation(NarutoMod.MOD_ID, name));
     }
@@ -48,5 +57,6 @@ public class NarutoDamageTypes {
     public static void bootstrap(BootstapContext<DamageType> context) {
         register(context, FIREBALL);
         register(context, WATER_BULLET);
+        register(context, GATE_BACKLASH);
     }
 }

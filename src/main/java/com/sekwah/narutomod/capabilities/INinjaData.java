@@ -41,6 +41,12 @@ public interface INinjaData extends INBTSerializable<Tag> {
     int getGateCount();
     void setGateCount(int gates);
 
+    /**
+     * Unpaid fraction of a point of health owed to the open gates, carried between drain ticks.
+     */
+    float getGateBacklashCarry();
+    void setGateBacklashCarry(float carry);
+
     float getSubstitutionCount();
 
     float getMaxStamina();

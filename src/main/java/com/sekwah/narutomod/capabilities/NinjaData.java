@@ -72,6 +72,13 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private int gateCount;
 
     /**
+     * Fraction of a point of health the open gates have ground away but not yet been paid. The
+     * backlash is charged in whole points of health, so the remainder is carried here between
+     * drain ticks. Server side only and not written to disk, exactly like {@link #gateCount}.
+     */
+    private float gateBacklashCarry;
+
+    /**
      * If the player should have access to all the ninja shit
      */
     @Sync(syncGlobally = true)
@@ -230,6 +237,16 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     @Override
     public void setGateCount(int gates) {
         this.gateCount = gates;
+    }
+
+    @Override
+    public float getGateBacklashCarry() {
+        return this.gateBacklashCarry;
+    }
+
+    @Override
+    public void setGateBacklashCarry(float carry) {
+        this.gateBacklashCarry = carry;
     }
 
     @Override

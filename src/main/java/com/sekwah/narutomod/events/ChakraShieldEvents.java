@@ -3,6 +3,7 @@ package com.sekwah.narutomod.events;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.jutsus.ChakraShieldAbility;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
+import com.sekwah.narutomod.damagetypes.NarutoDamageTypes;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -28,6 +29,11 @@ public class ChakraShieldEvents {
             return;
         }
         if (event.isCanceled() || event.getAmount() <= 0.0f) {
+            return;
+        }
+        if (event.getSource().is(NarutoDamageTypes.GATE_BACKLASH)) {
+            // The gate backlash is the caster's own body tearing itself apart. There is no shielding
+            // it, or eight gates would be no more dangerous than any other buff.
             return;
         }
 

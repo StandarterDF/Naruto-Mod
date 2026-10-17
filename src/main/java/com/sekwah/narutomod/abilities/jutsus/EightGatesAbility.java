@@ -2,6 +2,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.damagetypes.NarutoDamageTypes;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -51,6 +52,9 @@ public class EightGatesAbility extends Ability {
      * a heart a second, so a full health bar lasts ten minutes, and the eighth costs a bit over half
      * a heart a second, which is a little over half a minute to live. Everything between follows
      * from the square, so the early gates are a slow tax and the last two are a countdown.</p>
+     *
+     * <p>Fractions are not thrown away, they are carried: the caster is charged whole points of
+     * health so that the health bar actually moves, and the remainder waits for the next tick.</p>
      */
     private static final float DRAIN_COEFFICIENT = 0.00833f;
 
@@ -122,8 +126,45 @@ public class EightGatesAbility extends Ability {
         player.addEffect(new MobEffectInstance(MobEffects.JUMP, shortDuration, Math.min(gates - 1, 3), true, false));
 
         if (player.tickCount % DRAIN_INTERVAL == 0) {
-            player.hurt(player.damageSources().magic(), DRAIN_COEFFICIENT * gates * gates);
+            // Charged in whole points of health, because the health bar is drawn in half hearts and a
+            // drain that always arrived as a fraction of one would never visibly move it. The unpaid
+            // remainder is carried into the next tick, so the long run cost is unchanged.
+            float owed = ninjaData.getGateBacklashCarry() + DRAIN_COEFFICIENT * gates * gates;
+            int points = (int) owed;
+            ninjaData.setGateBacklashCarry(owed - points);
+            if (points > 0) {
+                backlash(player, points);
+            }
         }
+    }
+
+    /**
+     * Takes the health the open gates are owed, in whole points.
+     *
+     * <p>This is deliberately not damage in the usual sense: it goes straight onto the health bar
+     * instead of through the damage pipeline, because the backlash is the caster's own body giving
+     * out and nothing may soak it up. Armour, resistance, absorption, a chakra shield, the gates'
+     * own resistance buff and even creative mode all leave it alone, which is the whole point of an
+     * irreversible technique. The feedback vanilla would have given is replayed by hand, and dying
+     * is done by hand too so that no last-second save can cancel it.</p>
+     */
+    private static void backlash(Player player, int points) {
+        float remaining = player.getHealth() - points;
+        if (remaining > 0.0f) {
+            player.setHealth(remaining);
+            if (player.level() instanceof ServerLevel level) {
+                // The red flash and the grunt a normal hit would have caused, since this is not one.
+                level.broadcastEntityEvent(player, (byte) 2);
+                level.playSound(null, player, SoundEvents.PLAYER_HURT, SoundSource.PLAYERS, 0.5f, 1.0f);
+                level.sendParticles(ParticleTypes.DAMAGE_INDICATOR, player.getX(),
+                        player.getY() + player.getBbHeight() * 0.6d, player.getZ(),
+                        4, 0.3d, 0.3d, 0.3d, 0.0d);
+            }
+            return;
+        }
+
+        player.setHealth(0.0f);
+        player.die(NarutoDamageTypes.getDamageSource(player.level(), NarutoDamageTypes.GATE_BACKLASH));
     }
 
     /**
@@ -131,6 +172,7 @@ public class EightGatesAbility extends Ability {
      */
     public static void close(Player player, INinjaData ninjaData) {
         ninjaData.setGateCount(0);
+        ninjaData.setGateBacklashCarry(0.0f);
         player.removeEffect(MobEffects.MOVEMENT_SPEED);
         player.removeEffect(MobEffects.DAMAGE_BOOST);
         player.removeEffect(MobEffects.DAMAGE_RESISTANCE);
