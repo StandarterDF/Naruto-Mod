@@ -1,0 +1,1000 @@
+- generic [active] [ref=f2e1]:
+  - link "К содержимому" [ref=f2e2] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=f2e3]:
+    - generic [ref=f2e4]:
+      - link "Naruto Mod 1.20.1 / Forge" [ref=f2e5] [cursor=pointer]:
+        - /url: index.html
+        - generic [aria-hidden] [ref=f2e6]: 忍
+        - generic [ref=f2e7]:
+          - text: Naruto Mod
+          - generic [ref=f2e8]: 1.20.1 / Forge
+      - navigation "Основная навигация" [ref=f2e9]:
+        - link "Главная" [ref=f2e10] [cursor=pointer]:
+          - /url: index.html
+        - link "Техники" [ref=f2e11] [cursor=pointer]:
+          - /url: techniques.html
+        - link "Предметы" [ref=f2e12] [cursor=pointer]:
+          - /url: items.html
+        - link "Секреты" [ref=f2e13] [cursor=pointer]:
+          - /url: secrets.html
+  - main [ref=f2e14]:
+    - generic [ref=f2e15]:
+      - generic [ref=f2e16]:
+        - heading "Техники" [level=1] [ref=f2e17]
+        - paragraph [ref=f2e18]:
+          - text: Все техники мода, разбитые по тем же группам, что и в меню
+          - generic [ref=f2e19]: J
+          - text: ". Комбо записаны клавишами, а мелким шрифтом рядом — их цифровая форма из кода:"
+          - code [ref=f2e20]: 1 = C
+          - text: ","
+          - code [ref=f2e21]: 2 = V
+          - text: ","
+          - code [ref=f2e22]: 3 = B
+          - text: . Канальные техники нужно заканчивать удержанием последней клавиши, мгновенные срабатывают сами примерно через полсекунды после набора.
+        - navigation "Оглавление страницы" [ref=f2e23]:
+          - heading "Оглавление" [level=2] [ref=f2e24]
+          - paragraph [ref=f2e25]: Группы идут в том же порядке, что и в меню техник.
+          - list [ref=f2e26]:
+            - listitem [ref=f2e27]:
+              - link "Основы 3" [ref=f2e28] [cursor=pointer]:
+                - /url: "#basics"
+                - text: Основы
+                - generic [ref=f2e29]: "3"
+            - listitem [ref=f2e30]:
+              - link "Теневые клоны 4" [ref=f2e31] [cursor=pointer]:
+                - /url: "#clones"
+                - text: Теневые клоны
+                - generic [ref=f2e32]: "4"
+            - listitem [ref=f2e33]:
+              - link "Защита и лечение 3" [ref=f2e34] [cursor=pointer]:
+                - /url: "#defence"
+                - text: Защита и лечение
+                - generic [ref=f2e35]: "3"
+            - listitem [ref=f2e36]:
+              - link "Стихийное ниндзюцу 4" [ref=f2e37] [cursor=pointer]:
+                - /url: "#elemental"
+                - text: Стихийное ниндзюцу
+                - generic [ref=f2e38]: "4"
+            - listitem [ref=f2e39]:
+              - link "Пространство и перемещение 4" [ref=f2e40] [cursor=pointer]:
+                - /url: "#space"
+                - text: Пространство и перемещение
+                - generic [ref=f2e41]: "4"
+            - listitem [ref=f2e42]:
+              - link "Усиление тела 4" [ref=f2e43] [cursor=pointer]:
+                - /url: "#body"
+                - text: Усиление тела
+                - generic [ref=f2e44]: "4"
+            - listitem [ref=f2e45]:
+              - link "Иллюзии и превращения 2" [ref=f2e46] [cursor=pointer]:
+                - /url: "#illusion"
+                - text: Иллюзии и превращения
+                - generic [ref=f2e47]: "2"
+            - listitem [ref=f2e48]:
+              - link "Прочее 4" [ref=f2e49] [cursor=pointer]:
+                - /url: "#other"
+                - text: Прочее
+                - generic [ref=f2e50]: "4"
+            - listitem [ref=f2e51]:
+              - link "Общие примечания" [ref=f2e52] [cursor=pointer]:
+                - /url: "#notes"
+      - generic [ref=f2e53]:
+        - heading "Основы" [level=2] [ref=f2e54]
+        - paragraph [ref=f2e55]: "Три стойки, которые всегда под рукой: заряд чакры, ходьба по воде и чакра-кулак."
+        - generic [ref=f2e56]:
+          - article [ref=f2e57]:
+            - generic [ref=f2e58]:
+              - heading "Чакра-заряд" [level=3] [ref=f2e59]
+              - generic [ref=f2e60]: Канал
+            - generic [ref=f2e61]:
+              - generic [ref=f2e62]:
+                - generic [ref=f2e63]: Комбо
+                - generic [ref=f2e64]: C
+              - generic [ref=f2e65]: "цифрами: 1"
+            - paragraph [ref=f2e67]: "Базовая техника «наполнить полоску»: пока держишь комбо, кастер набирает чакру. Без удержания (тапом) не работает вообще."
+            - list [ref=f2e68]:
+              - listitem [ref=f2e69]: "Стоя на земле: +1 чакры за тик"
+              - listitem [ref=f2e70]: "На бегу или в воздухе: +0.2 чакры за тик"
+            - list [ref=f2e71]:
+              - listitem [ref=f2e72]: "Полезно знать: стоя канал в пять раз выгоднее, чем на ходу — дешевле остановиться и подождать."
+              - listitem [ref=f2e73]: "Полезно знать: тапом эта техника не даёт ничего, ей нужно именно удержание."
+          - article [ref=f2e74]:
+            - generic [ref=f2e75]:
+              - heading "Водная походка" [level=3] [ref=f2e76]
+              - generic [ref=f2e77]: Переключатель
+            - generic [ref=f2e78]:
+              - generic [ref=f2e79]:
+                - generic [ref=f2e80]: Комбо
+                - generic [ref=f2e81]: B
+              - generic [ref=f2e82]: "цифрами: 3"
+            - paragraph [ref=f2e84]: Держит игрока на воде и не даёт проваливаться. Пока поверхность воды «под ногами» — дешёвая; если техника вытолкнула игрока вверх из глубокого провала — дорогая.
+            - list [ref=f2e85]:
+              - listitem [ref=f2e86]: "По поверхности: 0.12 чакры за тик"
+              - listitem [ref=f2e87]: "Выталкивает вверх: 1 чакра за тик"
+              - listitem [ref=f2e88]: "Тип: переключатель"
+            - list [ref=f2e89]:
+              - listitem [ref=f2e90]: "Полезно знать: пока техника работает, она возвращает заряд двойного прыжка и гасит падение."
+              - listitem [ref=f2e91]:
+                - text: "Полезно знать: на транспорте не работает ("
+                - code [ref=f2e92]: jutsu.fail.riding
+                - text: ).
+          - article [ref=f2e93]:
+            - generic [ref=f2e94]:
+              - heading "Чакра-кулак" [level=3] [ref=f2e95]
+              - generic [ref=f2e96]: Переключатель
+            - generic [ref=f2e97]:
+              - generic [ref=f2e98]:
+                - generic [ref=f2e99]: Комбо
+                - generic [ref=f2e100]: C
+                - generic [ref=f2e101]: C
+              - generic [ref=f2e102]: "цифрами: 11"
+            - paragraph [ref=f2e104]: "Стойка «работать и драться»: копание ускоряется, а ближний удар становится сильнее — за чакру."
+            - list [ref=f2e105]:
+              - listitem [ref=f2e106]: "Копание: в 2.5 раза быстрее"
+              - listitem [ref=f2e107]: "За блок: 1 чакра"
+              - listitem [ref=f2e108]: "За удар: 3 чакры и +3 урона"
+              - listitem [ref=f2e109]: "Налог: 0.02 чакры за тик"
+            - list [ref=f2e110]:
+              - listitem [ref=f2e111]:
+                - text: "Полезно знать: ×2.5 — это умножение"
+                - emphasis [ref=f2e112]: той
+                - text: скорости, которую уже посчитала ваниль вместе с инструментом. С киркой берётся скорость с киркой и умножается, а не «просто в два с половиной раза быстрее, чем рукой».
+              - listitem [ref=f2e113]: "Полезно знать: регенерация чакры «придавлена» на 10 тиков, поэтому стойка стоит не только налогом."
+      - generic [ref=f2e114]:
+        - heading "Теневые клоны" [level=2] [ref=f2e115]
+        - paragraph [ref=f2e116]:
+          - text: Все четыре техники призывают одну и ту же сущность клона с разными настройками. Любой призыв требует
+          - strong [ref=f2e117]: чакра-печать
+          - text: в инвентаре и тратит
+          - strong [ref=f2e118]: одну
+          - text: печать за каст — независимо от числа клонов. В креативе печать не нужна и не тратится; нет печати —
+          - code [ref=f2e119]: jutsu.fail.noseal
+          - text: .
+        - generic [ref=f2e120]:
+          - heading "Как ведут себя клоны" [level=3] [ref=f2e121]
+          - list [ref=f2e122]:
+            - listitem [ref=f2e123]:
+              - strong [ref=f2e124]: 1 единица здоровья
+              - text: ": любой непокрытый удар «попает» клона. Смерть — облако дыма и звук"
+              - code [ref=f2e125]: clone_poof
+              - text: ", без лута и без трупа."
+            - listitem [ref=f2e126]:
+              - text: Клон
+              - strong [ref=f2e127]: не
+              - text: деспавнится по расстоянию и не исчезает сам, кроме конца времени жизни.
+            - listitem [ref=f2e128]:
+              - text: Цели
+              - strong [ref=f2e129]: только реактивные
+              - text: ": ударили клона — ответил; ранили владельца — напал на обидчика; владелец сам кого-то ударил — напал на его цель. Сам клон врагов не ищет."
+            - listitem [ref=f2e130]:
+              - text: Клон копирует
+              - strong [ref=f2e131]: стиль боя кастера
+              - text: "в момент призыва: скин, обе руки и четыре слота брони, эффекты (и баффы, и дебаффы) и стрелы."
+            - listitem [ref=f2e132]:
+              - strong [ref=f2e133]: Щит
+              - text: из левой руки владельца клон поднимает заранее, пока есть цель и он не стреляет.
+            - listitem [ref=f2e134]:
+              - strong [ref=f2e135]: Лук, арбалет и трезубец
+              - text: работают как у игрока, с их зачарованиями; ближе 3 блоков клон убирает дальнобойное оружие и бьёт мечом.
+            - listitem [ref=f2e136]:
+              - strong [ref=f2e137]: Стрелы
+              - text: "— копия: тип берётся из первой стопки стрел кастера, количество — сумма всех стрел. Каждый выстрел уменьшает запас, и когда стрел не осталось, клон исчезает."
+            - listitem [ref=f2e138]:
+              - strong [ref=f2e139]: Бумажная бомба
+              - text: "в руке кастера при призыве делает клона взрывным: он взрывается, когда его убивают. Бомба у кастера не тратится, блоки не ломаются."
+        - generic [ref=f2e140]:
+          - article [ref=f2e141]:
+            - generic [ref=f2e142]:
+              - heading "Теневой клон" [level=3] [ref=f2e143]
+              - generic [ref=f2e144]: Мгновенная
+            - generic [ref=f2e145]:
+              - generic [ref=f2e146]:
+                - generic [ref=f2e147]: Комбо
+                - generic [ref=f2e148]: C
+                - generic [ref=f2e149]: B
+                - generic [ref=f2e150]: B
+                - generic [ref=f2e151]: V
+              - generic [ref=f2e152]: "цифрами: 1332"
+            - paragraph [ref=f2e154]: Пара копий себя — рабочая лошадка любого боя.
+            - list [ref=f2e155]:
+              - listitem [ref=f2e156]: "Расход: 40 чакры + 1 чакра-печать"
+              - listitem [ref=f2e157]: "Клонов: 2–3"
+              - listitem [ref=f2e158]: "Жизнь: 25 с"
+              - listitem [ref=f2e159]: "Урон: 2"
+              - listitem [ref=f2e160]: "Скорость: 0.3"
+              - listitem [ref=f2e161]: "Откат: 3 с"
+            - list [ref=f2e162]:
+              - listitem [ref=f2e163]: "Полезно знать: печать тратится одна на каст, а не на каждого клона."
+          - article [ref=f2e164]:
+            - generic [ref=f2e165]:
+              - heading "Чиби-клон" [level=3] [ref=f2e166]
+              - generic [ref=f2e167]: Мгновенная
+            - generic [ref=f2e168]:
+              - generic [ref=f2e169]:
+                - generic [ref=f2e170]: Комбо
+                - generic [ref=f2e171]: C
+                - generic [ref=f2e172]: B
+                - generic [ref=f2e173]: V
+                - generic [ref=f2e174]: V
+              - generic [ref=f2e175]: "цифрами: 1322"
+            - paragraph [ref=f2e177]: Дешёвые, мелкие и слабые клоны — зато их выходит целая горсть. Рост и хитбокс уменьшены.
+            - list [ref=f2e178]:
+              - listitem [ref=f2e179]: "Расход: 20 чакры + 1 чакра-печать"
+              - listitem [ref=f2e180]: "Клонов: 3–5"
+              - listitem [ref=f2e181]: "Жизнь: 15 с"
+              - listitem [ref=f2e182]: "Урон: 1"
+              - listitem [ref=f2e183]: "Скорость: 0.35"
+              - listitem [ref=f2e184]: "Откат: 2 с"
+            - list [ref=f2e185]:
+              - listitem [ref=f2e186]: "Полезно знать: самый быстрый откат из клонов — их выгодно призывать часто, а не сильно."
+          - article [ref=f2e187]:
+            - generic [ref=f2e188]:
+              - heading "Мульти-клон" [level=3] [ref=f2e189]
+              - generic [ref=f2e190]: Мгновенная
+            - generic [ref=f2e191]:
+              - generic [ref=f2e192]:
+                - generic [ref=f2e193]: Комбо
+                - generic [ref=f2e194]: C
+                - generic [ref=f2e195]: B
+                - generic [ref=f2e196]: B
+                - generic [ref=f2e197]: V
+                - generic [ref=f2e198]: B
+                - generic [ref=f2e199]: C
+              - generic [ref=f2e200]: "цифрами: 133231"
+            - paragraph [ref=f2e202]: Дорогая версия, которая поднимает небольшую армию.
+            - list [ref=f2e203]:
+              - listitem [ref=f2e204]: "Расход: 80 чакры + 1 чакра-печать"
+              - listitem [ref=f2e205]: "Клонов: 8–11"
+              - listitem [ref=f2e206]: "Жизнь: 25 с"
+              - listitem [ref=f2e207]: "Урон: 2"
+              - listitem [ref=f2e208]: "Скорость: 0.3"
+              - listitem [ref=f2e209]: "Откат: 10 с"
+            - list [ref=f2e210]:
+              - listitem [ref=f2e211]: "Полезно знать: комбо самое длинное в моде — шесть печатей, легко сбить при спешке."
+          - article [ref=f2e212]:
+            - generic [ref=f2e213]:
+              - heading "Медитация чакры" [level=3] [ref=f2e214]
+              - generic [ref=f2e215]: Мгновенная
+            - generic [ref=f2e216]:
+              - generic [ref=f2e217]:
+                - generic [ref=f2e218]: Комбо
+                - generic [ref=f2e219]: C
+                - generic [ref=f2e220]: B
+                - generic [ref=f2e221]: B
+                - generic [ref=f2e222]: C
+              - generic [ref=f2e223]: "цифрами: 1331"
+            - paragraph [ref=f2e225]:
+              - text: Оставляет двух
+              - strong [ref=f2e226]: медитирующих
+              - text: "клонов: руки пустые, снаряжение и эффекты не копируются, урон и скорость нулевые — они просто сидят там, где поставлены. Это единственная техника клонов «в долгую»."
+            - list [ref=f2e227]:
+              - listitem [ref=f2e228]: "Расход: 60 чакры + 1 чакра-печать"
+              - listitem [ref=f2e229]: "Клонов: 2"
+              - listitem [ref=f2e230]: "Жизнь: 180 с"
+              - listitem [ref=f2e231]: "Откат: 60 с"
+            - list [ref=f2e232]:
+              - listitem [ref=f2e233]:
+                - text: "Полезно знать: пока рядом (8 блоков) есть медитирующий клон владельца, он даёт"
+                - code [ref=f2e234]: "+0.2"
+                - text: чакры за тик, а откаты всех техник идут
+                - strong [ref=f2e235]: вдвое быстрее
+                - text: .
+              - listitem [ref=f2e236]:
+                - text: "Полезно знать: и вдобавок"
+                - code [ref=f2e237]: "+100"
+                - text: к максимуму чакры за каждого такого клона — бонус снимается сразу, как только клон пропал или отошёл.
+              - listitem [ref=f2e238]: "Полезно знать: в Режиме Мудреца этот приток идёт не в чакру, а в сенин-ману."
+      - generic [ref=f2e239]:
+        - heading "Защита и лечение" [level=2] [ref=f2e240]
+        - paragraph [ref=f2e241]: "Три способа не умереть: щит из чакры, отложенное воскрешение и лечение чакрой."
+        - generic [ref=f2e242]:
+          - article [ref=f2e243]:
+            - generic [ref=f2e244]:
+              - heading "Чакра-щит" [level=3] [ref=f2e245]
+              - generic [ref=f2e246]: Мгновенная
+            - generic [ref=f2e247]:
+              - generic [ref=f2e248]:
+                - generic [ref=f2e249]: Комбо
+                - generic [ref=f2e250]: B
+                - generic [ref=f2e251]: V
+                - generic [ref=f2e252]: B
+              - generic [ref=f2e253]: "цифрами: 323"
+            - paragraph [ref=f2e255]:
+              - text: Превращает
+              - strong [ref=f2e256]: всю
+              - text: "чакру в щит: пока он не пуст, здоровье не теряется вообще. Показывается как полоска брони и тратится 1:1 входящим уроном."
+            - list [ref=f2e257]:
+              - listitem [ref=f2e258]: "Расход: вся чакра (минимум 20)"
+              - listitem [ref=f2e259]: "Стоимость урона: 1 очко щита за 1 урона"
+            - list [ref=f2e260]:
+              - listitem [ref=f2e261]: "Полезно знать: стакать нельзя — при активном щите повторный каст падает."
+              - listitem [ref=f2e262]: "Полезно знать: смерть стирает щит, а смена измерения переприменяет модификатор."
+          - article [ref=f2e263]:
+            - generic [ref=f2e264]:
+              - heading "Второе дыхание" [level=3] [ref=f2e265]
+              - generic [ref=f2e266]: Мгновенная
+            - generic [ref=f2e267]:
+              - generic [ref=f2e268]:
+                - generic [ref=f2e269]: Комбо
+                - generic [ref=f2e270]: V
+                - generic [ref=f2e271]: V
+                - generic [ref=f2e272]: B
+              - generic [ref=f2e273]: "цифрами: 223"
+            - paragraph [ref=f2e275]:
+              - text: "Тратит всю чакру и «взводит» флаг: пока он висит, первый"
+              - strong [ref=f2e276]: смертельный
+              - text: удар отменяется.
+            - list [ref=f2e277]:
+              - listitem [ref=f2e278]: "Расход: вся чакра (минимум 60)"
+              - listitem [ref=f2e279]: "Откат: 10 минут"
+              - listitem [ref=f2e280]: "После срабатывания: 5 сердец"
+            - list [ref=f2e281]:
+              - listitem [ref=f2e282]:
+                - text: "Полезно знать: вместе со спасением на минуту накладывается"
+                - code [ref=f2e283]: DARKNESS
+                - text: — мягкая слепота, а не полная.
+              - listitem [ref=f2e284]: "Полезно знать: смерть забирает эффект и сбрасывает откат."
+          - article [ref=f2e285]:
+            - generic [ref=f2e286]:
+              - heading "Регенерация чакрой" [level=3] [ref=f2e287]
+              - generic [ref=f2e288]: Переключатель
+            - generic [ref=f2e289]:
+              - generic [ref=f2e290]:
+                - generic [ref=f2e291]: Комбо
+                - generic [ref=f2e292]: V
+                - generic [ref=f2e293]: B
+                - generic [ref=f2e294]: B
+                - generic [ref=f2e295]: C
+              - generic [ref=f2e296]: "цифрами: 2331"
+            - paragraph [ref=f2e298]: Лечит по 1 HP раз в 2 секунды, пока хватает ресурсов.
+            - list [ref=f2e299]:
+              - listitem [ref=f2e300]: "С едой: 6 чакры и 1 единица сытости за 1 HP"
+              - listitem [ref=f2e301]: "Голоден: 15 чакры за 1 HP"
+              - listitem [ref=f2e302]: "Темп: 1 HP раз в 2 секунды"
+            - list [ref=f2e303]:
+              - listitem [ref=f2e304]: "Полезно знать: основной расход всё равно чакра — одной «котлеты» сытости хватает всего на 2 HP."
+      - generic [ref=f2e305]:
+        - heading "Стихийное ниндзюцу" [level=2] [ref=f2e306]
+        - paragraph [ref=f2e307]: "Снаряды и ударные техники: огонь, вода, земля и Расенган."
+        - generic [ref=f2e308]:
+          - article [ref=f2e309]:
+            - generic [ref=f2e310]:
+              - heading "Огненный шар" [level=3] [ref=f2e311]
+              - generic [ref=f2e312]: Мгновенная
+            - generic [ref=f2e313]:
+              - generic [ref=f2e314]:
+                - generic [ref=f2e315]: Комбо
+                - generic [ref=f2e316]: C
+                - generic [ref=f2e317]: V
+                - generic [ref=f2e318]: C
+              - generic [ref=f2e319]: "цифрами: 121"
+            - paragraph [ref=f2e321]: "Классика: через 10 тиков после каста в направлении взгляда уходит огненный шар."
+            - list [ref=f2e322]:
+              - listitem [ref=f2e323]: "Расход: 30 чакры"
+              - listitem [ref=f2e324]: "Откат: 3 с"
+            - list [ref=f2e325]:
+              - listitem [ref=f2e326]: "Полезно знать: шар вылетает не мгновенно, а с задержкой в полсекунды — цель может успеть сойти с линии."
+          - article [ref=f2e327]:
+            - generic [ref=f2e328]:
+              - heading "Водяная пуля" [level=3] [ref=f2e329]
+              - generic [ref=f2e330]: Мгновенная
+            - generic [ref=f2e331]:
+              - generic [ref=f2e332]:
+                - generic [ref=f2e333]: Комбо
+                - generic [ref=f2e334]: C
+                - generic [ref=f2e335]: B
+                - generic [ref=f2e336]: V
+              - generic [ref=f2e337]: "цифрами: 132"
+            - paragraph [ref=f2e339]:
+              - text: Запускает
+              - strong [ref=f2e340]: три
+              - text: водяные пули подряд, а не одну.
+            - list [ref=f2e341]:
+              - listitem [ref=f2e342]: "Расход: 30 чакры"
+              - listitem [ref=f2e343]: "Откат: 4 с"
+              - listitem [ref=f2e344]: "Залп: на 10, 25 и 40 тик"
+            - list [ref=f2e345]:
+              - listitem [ref=f2e346]: "Полезно знать: из-за растянутого залпа пули выгоднее бить по толпе или по медленной цели."
+          - article [ref=f2e347]:
+            - generic [ref=f2e348]:
+              - heading "Рудокоп" [level=3] [ref=f2e349]
+              - generic [ref=f2e350]: Мгновенная
+            - generic [ref=f2e351]:
+              - generic [ref=f2e352]:
+                - generic [ref=f2e353]: Комбо
+                - generic [ref=f2e354]: C
+                - generic [ref=f2e355]: V
+                - generic [ref=f2e356]: V
+                - generic [ref=f2e357]: C
+              - generic [ref=f2e358]: "цифрами: 1221"
+            - paragraph [ref=f2e360]:
+              - text: Находит рядом руды и проходит
+              - strong [ref=f2e361]: всю жилу целиком
+              - text: ": от первой найденной руды техника идёт по соседним блокам той же руды, поэтому из земли выходит вся залежь, даже если она уходит за пределы радиуса в 5 блоков. Дроп падает нормально, как при игре."
+            - list [ref=f2e362]:
+              - listitem [ref=f2e363]: "Каст: 10 чакры"
+              - listitem [ref=f2e364]: "За каждый вышедший блок: +4 чакры"
+              - listitem [ref=f2e365]: "Максимум: 128 блоков за каст"
+              - listitem [ref=f2e366]: Нужна кирка в руке
+            - list [ref=f2e367]:
+              - listitem [ref=f2e368]: "Полезно знать: цена — как за работу, а не как за заклинание: нашёл богатую жилу — заплатил за неё, нашёл пустоту — заплатил только за попытку. Кончилась чакра на середине — остаток жилы остаётся в земле."
+              - listitem [ref=f2e369]: "Полезно знать: ломается только то, что эта кирка реально может сломать (каменная вытрясет уголь, но алмазы оставит), каждый блок тратит 1 прочность, и сломавшаяся в середине каста кирка обрывает остальное."
+              - listitem [ref=f2e370]:
+                - text: "Полезно знать: без кирки в руке техника не кастуется ("
+                - code [ref=f2e371]: jutsu.fail.needpickaxe
+                - text: ) и чакра не тратится.
+          - article [ref=f2e372]:
+            - generic [ref=f2e373]:
+              - heading "Расенган" [level=3] [ref=f2e374]
+              - generic [ref=f2e375]: Канал
+            - generic [ref=f2e376]:
+              - generic [ref=f2e377]:
+                - generic [ref=f2e378]: Комбо
+                - generic [ref=f2e379]: C
+                - generic [ref=f2e380]: B
+                - generic [ref=f2e381]: B
+                - generic [ref=f2e382]: C
+                - generic [ref=f2e383]: B
+              - generic [ref=f2e384]: "цифрами: 13313"
+            - paragraph [ref=f2e386]: В правой руке растёт шар чакры, сила удара зависит от того, как долго его держали.
+            - list [ref=f2e387]:
+              - listitem [ref=f2e388]: "Расход: 0.6 чакры за тик"
+              - listitem [ref=f2e389]: "Тап: меньше 20 тиков — пшик без урона"
+              - listitem [ref=f2e390]: "Максимум: 60 тиков — урон 4 → 16, отброс 0.8 → 1.8"
+            - list [ref=f2e391]:
+              - listitem [ref=f2e392]: "Полезно знать: чтобы получить урон, шар надо именно зажать и подержать — иначе будет только звук тушения."
+              - listitem [ref=f2e393]: "Полезно знать: дальше 60 тиков заряжать бессмысленно, урон не растёт."
+      - generic [ref=f2e394]:
+        - heading "Пространство и перемещение" [level=2] [ref=f2e395]
+        - paragraph [ref=f2e396]: Телепорты, метка, карманное измерение и фазовое тело.
+        - generic [ref=f2e397]:
+          - article [ref=f2e398]:
+            - generic [ref=f2e399]:
+              - heading "Подмена" [level=3] [ref=f2e400]
+              - generic [ref=f2e401]: Канал
+            - generic [ref=f2e402]:
+              - generic [ref=f2e403]:
+                - generic [ref=f2e404]: Комбо
+                - generic [ref=f2e405]: C
+                - generic [ref=f2e406]: V
+              - generic [ref=f2e407]: "цифрами: 12"
+            - paragraph [ref=f2e409]: "Обмен местами с бревном-подменой: тапом — телепорт к метке (или случайный прыжок, если метки нет), удержанием — поставить метку."
+            - list [ref=f2e410]:
+              - listitem [ref=f2e411]: "Расход: 1 замена (в креативе бесплатно)"
+              - listitem [ref=f2e412]: "Тап — к метке: до 70 блоков, то же измерение"
+              - listitem [ref=f2e413]: "Тап без метки: случайный телепорт в радиусе ~25 блоков, не ближе 10"
+            - list [ref=f2e414]:
+              - listitem [ref=f2e415]: "Полезно знать: на месте игрока остаётся бревно, а сам он получает невидимость на 5 тиков — момент для передышки."
+              - listitem [ref=f2e416]: "Полезно знать: метка живёт в памяти и не переживает выход из игры — для долгой метки есть «Бревно-метка»."
+          - article [ref=f2e417]:
+            - generic [ref=f2e418]:
+              - heading "Бревно-метка" [level=3] [ref=f2e419]
+              - generic [ref=f2e420]: Канал
+            - generic [ref=f2e421]:
+              - generic [ref=f2e422]:
+                - generic [ref=f2e423]: Комбо
+                - generic [ref=f2e424]: C
+                - generic [ref=f2e425]: B
+                - generic [ref=f2e426]: B
+                - generic [ref=f2e427]: V
+                - generic [ref=f2e428]: C
+              - generic [ref=f2e429]: "цифрами: 13321"
+            - paragraph [ref=f2e431]:
+              - text: "Постоянная метка-бревно: она неподвижна, неубиваема, не деспавнится и светится портальными частицами. В отличие от подмены, бревно"
+              - strong [ref=f2e432]: переживает выход из игры
+              - text: .
+            - list [ref=f2e433]:
+              - listitem [ref=f2e434]: "Удержание (поставить бревно): 25 чакры"
+              - listitem [ref=f2e435]: "Тап (обмен): 15 чакры"
+              - listitem [ref=f2e436]: "Дистанция обмена: любая, но только в одном измерении"
+            - list [ref=f2e437]:
+              - listitem [ref=f2e438]:
+                - text: "Полезно знать: бревно"
+                - strong [ref=f2e439]: нельзя убить
+                - text: — ни ударом, ни в креативе, ни командой
+                - code [ref=f2e440]: /kill
+                - text: . Стереть его может только новый поставленный лог.
+              - listitem [ref=f2e441]: "Полезно знать: старое бревно стирается при постановке нового — это и есть способ его убрать."
+              - listitem [ref=f2e442]:
+                - text: "Полезно знать: обмен между измерениями запрещён ("
+                - code [ref=f2e443]: jutsu.fail.wrongdimension
+                - text: ), а без бревна будет
+                - code [ref=f2e444]: jutsu.fail.nomarker
+                - text: .
+              - listitem [ref=f2e445]:
+                - text: "Полезно знать: если чанк со старым бревном не загружен, бревно не найдётся и останется стоять. Зато возврат"
+                - strong [ref=f2e446]: всё равно сработает
+                - text: — техника телепортирует к записанной координате, а не к самой сущности бревна.
+          - article [ref=f2e447]:
+            - generic [ref=f2e448]:
+              - heading "Камуи" [level=3] [ref=f2e449]
+              - generic [ref=f2e450]: Канал
+            - generic [ref=f2e451]:
+              - generic [ref=f2e452]:
+                - generic [ref=f2e453]: Комбо
+                - generic [ref=f2e454]: B
+                - generic [ref=f2e455]: V
+                - generic [ref=f2e456]: V
+                - generic [ref=f2e457]: C
+                - generic [ref=f2e458]: C
+              - generic [ref=f2e459]: "цифрами: 32211"
+            - paragraph [ref=f2e461]:
+              - text: Две разные техники в одном комбо, и различаются они тем, как закончить ввод.
+              - strong [ref=f2e462]: Тап
+              - text: — шаг в карманное измерение (или обратно),
+              - strong [ref=f2e463]: удержание
+              - text: — затянуть того, на кого смотришь.
+            - list [ref=f2e464]:
+              - listitem [ref=f2e465]: "Шаг (тап): 40 чакры"
+              - listitem [ref=f2e466]: "Удержание: 1.5 чакры за тик"
+              - listitem [ref=f2e467]: "Сам затяг: +30 чакры"
+              - listitem [ref=f2e468]: "Дальность затяга: до 16 блоков"
+            - list [ref=f2e469]:
+              - listitem [ref=f2e470]:
+                - text: "Полезно знать: измерение"
+                - code [ref=f2e471]: narutomod:kamui
+                - text: "— это не плита, а поле квадратных каменных столбов 5×5 высотой 7–8 блоков с промежутками в 2 блока; низ столба — неразрушимый бедрок, выше — камень. Между столбами настоящая пустота: упал — погиб, вещи пропадут."
+              - listitem [ref=f2e472]: "Полезно знать: внутри кармана руды, мобов и погоды нет, естественный спавн запрещён — дюпа ресурсов через карман не получится."
+              - listitem [ref=f2e473]: "Полезно знать: точка возврата хранится в данных игрока, так что тап из пустоты возвращает ровно туда, откуда вошёл, и выход из игры внутри кармана ничего не ломает."
+              - listitem [ref=f2e474]:
+                - text: "Полезно знать: затянуть можно только существо по прямой видимости: если между вами стена, выйдет"
+                - code [ref=f2e475]: jutsu.fail.kamui.notarget
+                - text: . Креативных игроков и наблюдателей затащить нельзя.
+              - listitem [ref=f2e476]:
+                - text: "Полезно знать: через"
+                - strong [ref=f2e477]: 30 секунд
+                - text: (настройка
+                - code [ref=f2e478]: kamuiTransferSeconds
+                - text: ) всё затянутое выбрасывается обратно ровно туда, где было. Это тюрьма, а не способ отобрать чужой лут, и самого кастера таймер не касается.
+              - listitem [ref=f2e479]:
+                - text: "Полезно знать: техника целиком отключается конфигом ("
+                - code [ref=f2e480]: kamuiEnabled = false
+                - text: ).
+          - article [ref=f2e481]:
+            - generic [ref=f2e482]:
+              - heading "Фазовое тело Камуи" [level=3] [ref=f2e483]
+              - generic [ref=f2e484]: Переключатель
+            - generic [ref=f2e485]:
+              - generic [ref=f2e486]:
+                - generic [ref=f2e487]: Комбо
+                - generic [ref=f2e488]: V
+                - generic [ref=f2e489]: C
+                - generic [ref=f2e490]: B
+              - generic [ref=f2e491]: "цифрами: 213"
+            - paragraph [ref=f2e493]: "Отдельная техника: тело становится дымом, проходит сквозь стены и не получает урона."
+            - list [ref=f2e494]:
+              - listitem [ref=f2e495]: "Расход: 0.4 чакры за тик (~8 в секунду)"
+              - listitem [ref=f2e496]: "Тип: переключатель"
+            - list [ref=f2e497]:
+              - listitem [ref=f2e498]:
+                - text: "Полезно знать: урон не проходит вообще — ни удар, ни стрела, ни взрыв. Исключения:"
+                - code [ref=f2e499]: /kill
+                - text: ", пустота и голод."
+              - listitem [ref=f2e500]: "Полезно знать: управление работает как в полёте (вверх/вниз/вбок), а состояние полёта, которое было до включения, запоминается и возвращается при выключении: в креативе крылья остаются, в выживании не появляются."
+              - listitem [ref=f2e501]: "Полезно знать: кончилась чакра — стойка гаснет сама; смерть и выход из игры её тоже снимают, а если выключить внутри стены, техника выталкивает в ближайшее свободное место."
+      - generic [ref=f2e502]:
+        - heading "Усиление тела" [level=2] [ref=f2e503]
+        - paragraph [ref=f2e504]: Врата, природная энергия и режим Мудреца — то, что делает кастера сильнее ценой тела.
+        - generic [ref=f2e505]:
+          - article [ref=f2e506]:
+            - generic [ref=f2e507]:
+              - heading "Восемь врат" [level=3] [ref=f2e508]
+              - generic [ref=f2e509]: Мгновенная
+            - generic [ref=f2e510]:
+              - generic [ref=f2e511]:
+                - generic [ref=f2e512]: Комбо
+                - generic [ref=f2e513]: V
+                - generic [ref=f2e514]: B
+                - generic [ref=f2e515]: B
+                - generic [ref=f2e516]: B
+              - generic [ref=f2e517]: "цифрами: 2333"
+            - paragraph [ref=f2e519]:
+              - text: Каждый каст открывает
+              - strong [ref=f2e520]: следующие
+              - text: "врата: вспышка пламени и рёв, а эффекты обновляются каждый тик и растут с их числом. Плата — собственное здоровье."
+            - list [ref=f2e521]:
+              - listitem [ref=f2e522]: "За каждые врата: 25 чакры и 15 стамины"
+              - listitem [ref=f2e523]: "Всего врат: 8"
+              - listitem [ref=f2e524]:
+                - text: "Плата:"
+                - code [ref=f2e525]: 0.00833 × (число врат)²
+                - text: HP в секунду
+            - list [ref=f2e526]:
+              - listitem [ref=f2e527]:
+                - text: "Полезно знать: слив идёт целыми единицами здоровья и напрямую, минуя"
+                - strong [ref=f2e528]: любую
+                - text: "защиту: броня, сопротивление, поглощение, чакра-щит и даже креатив его не останавливают. Это не урон от врага, а тело, которое разрывает из себя, — «второе дыхание» от него тоже не спасает."
+              - listitem [ref=f2e529]: "Полезно знать: пока врата открыты, кастер не лечится вообще: ни едой, ни зельями регенерации, ни техникой регенерации чакрой. Иначе ванильное лечение перекрывало бы слив, и врата стали бы бесплатным баффом."
+              - listitem [ref=f2e530]: "Полезно знать: смерть или выход из игры сбрасывают счётчик врат — после возрождения они закрыты."
+          - article [ref=f2e531]:
+            - generic [ref=f2e532]:
+              - heading "Запечатать врата" [level=3] [ref=f2e533]
+              - generic [ref=f2e534]: Мгновенная
+            - generic [ref=f2e535]:
+              - generic [ref=f2e536]:
+                - generic [ref=f2e537]: Комбо
+                - generic [ref=f2e538]: V
+                - generic [ref=f2e539]: B
+                - generic [ref=f2e540]: B
+                - generic [ref=f2e541]: V
+              - generic [ref=f2e542]: "цифрами: 2332"
+            - paragraph [ref=f2e544]:
+              - text: Бесплатная техника, которая закрывает
+              - strong [ref=f2e545]: любое число врат с 1 по 7
+              - text: "сразу: эффекты и слив здоровья прекращаются."
+            - list [ref=f2e546]:
+              - listitem [ref=f2e547]: "Расход: нет"
+              - listitem [ref=f2e548]: "Закрывает: врата 1–7"
+            - list [ref=f2e549]:
+              - listitem [ref=f2e550]:
+                - text: "Полезно знать: на восьмых вратах не работает ("
+                - code [ref=f2e551]: jutsu.fail.gates_open
+                - text: ") — единственный выход из них это смерть, и в этом смысл: восьмые врата рассчитаны на то, чтобы их потратить."
+              - listitem [ref=f2e552]:
+                - text: "Полезно знать: если врат нет, техника сообщает"
+                - code [ref=f2e553]: jutsu.fail.gates_none
+                - text: .
+          - article [ref=f2e554]:
+            - generic [ref=f2e555]:
+              - heading "Сбор природной энергии" [level=3] [ref=f2e556]
+              - generic [ref=f2e557]: Канал
+            - generic [ref=f2e558]:
+              - generic [ref=f2e559]:
+                - generic [ref=f2e560]: Комбо
+                - generic [ref=f2e561]: V
+                - generic [ref=f2e562]: B
+                - generic [ref=f2e563]: C
+              - generic [ref=f2e564]: "цифрами: 231"
+            - paragraph [ref=f2e566]:
+              - text: "Сендзюцу-канал: удерживай комбо, чтобы копить природную энергию (сенин-ману). Копится"
+              - strong [ref=f2e567]: только пока стоишь на земле неподвижно
+              - text: .
+            - list [ref=f2e568]:
+              - listitem [ref=f2e569]: "Расход: бесплатно"
+              - listitem [ref=f2e570]: "Скорость: 0.5 сенин-маны за тик"
+              - listitem [ref=f2e571]: "Максимум пула: 100 (по умолчанию)"
+              - listitem [ref=f2e572]: "Полный пул: 10 секунд стояния"
+            - list [ref=f2e573]:
+              - listitem [ref=f2e574]: "Полезно знать: цена этой техники — время и неподвижность. Двинулся — сбор просто останавливается, прогресс не теряется, следующий заход продолжает с того же места."
+              - listitem [ref=f2e575]: "Полезно знать: раз в 10 тиков прогресс пишется в action bar, а вокруг игрока сыпятся зелёные частицы."
+              - listitem [ref=f2e576]: "Полезно знать: пул записывается в сохранение, поэтому выход из игры его не обнуляет."
+          - article [ref=f2e577]:
+            - generic [ref=f2e578]:
+              - heading "Режим Мудреца" [level=3] [ref=f2e579]
+              - generic [ref=f2e580]: Мгновенная
+            - generic [ref=f2e581]:
+              - generic [ref=f2e582]:
+                - generic [ref=f2e583]: Комбо
+                - generic [ref=f2e584]: V
+                - generic [ref=f2e585]: B
+                - generic [ref=f2e586]: V
+              - generic [ref=f2e587]: "цифрами: 232"
+            - paragraph [ref=f2e589]:
+              - text: "Открывает собранную природную энергию: нужно минимум"
+              - strong [ref=f2e590]: 50 сенин-маны
+              - text: ", дальше режим тратит её по 0.25 за тик и"
+              - strong [ref=f2e591]: сам закрывается, когда пул кончился
+              - text: .
+            - list [ref=f2e592]:
+              - listitem [ref=f2e593]: "Вход: 50 сенин-маны"
+              - listitem [ref=f2e594]: "Поддержание: 0.25 сенин-маны за тик"
+              - listitem [ref=f2e595]: "Эффекты: Speed II, Strength II, Resistance I, Jump Boost I, Regeneration I"
+              - listitem [ref=f2e596]: "Бонус: +0.5 чакры за тик"
+            - list [ref=f2e597]:
+              - listitem [ref=f2e598]: "Полезно знать: эффекты выдаются на 40 тиков и обновляются каждый тик, поэтому вместе с режимом они и заканчиваются."
+              - listitem [ref=f2e599]:
+                - text: "Полезно знать: смерть и выход из игры закрывают режим: состояние намеренно не пишется в сохранение. Отключается конфигом"
+                - code [ref=f2e600]: sageModeEnabled
+                - text: .
+              - listitem [ref=f2e601]: "Полезно знать: медитирующие клоны питают именно эту полоску, а не чакру, — так режим можно держать дольше."
+        - generic [ref=f2e602]:
+          - heading "Что дают открытые врата" [level=3] [ref=f2e603]
+          - paragraph [ref=f2e604]: Эффекты обновляются каждый тик и растут с числом открытых врат.
+          - table [ref=f2e606]:
+            - caption [ref=f2e607]: Эффекты по числу врат
+            - rowgroup [ref=f2e608]:
+              - row [ref=f2e609]:
+                - columnheader "Врата" [ref=f2e610]
+                - columnheader "Speed" [ref=f2e611]
+                - columnheader "Strength" [ref=f2e612]
+                - columnheader "Resistance" [ref=f2e613]
+                - columnheader "Jump" [ref=f2e614]
+            - rowgroup [ref=f2e615]:
+              - row [ref=f2e616]:
+                - cell "1" [ref=f2e617]
+                - cell "I" [ref=f2e618]
+                - cell "I" [ref=f2e619]
+                - cell "I" [ref=f2e620]
+                - cell "I" [ref=f2e621]
+              - row [ref=f2e622]:
+                - cell "2" [ref=f2e623]
+                - cell "II" [ref=f2e624]
+                - cell "I" [ref=f2e625]
+                - cell "I" [ref=f2e626]
+                - cell "II" [ref=f2e627]
+              - row [ref=f2e628]:
+                - cell "3" [ref=f2e629]
+                - cell "III" [ref=f2e630]
+                - cell "II" [ref=f2e631]
+                - cell "I" [ref=f2e632]
+                - cell "III" [ref=f2e633]
+              - row [ref=f2e634]:
+                - cell "4" [ref=f2e635]
+                - cell "IV" [ref=f2e636]
+                - cell "II" [ref=f2e637]
+                - cell "II" [ref=f2e638]
+                - cell "IV" [ref=f2e639]
+              - row [ref=f2e640]:
+                - cell "5" [ref=f2e641]
+                - cell "V" [ref=f2e642]
+                - cell "III" [ref=f2e643]
+                - cell "II" [ref=f2e644]
+                - cell "IV" [ref=f2e645]
+              - row [ref=f2e646]:
+                - cell "6" [ref=f2e647]
+                - cell "VI" [ref=f2e648]
+                - cell "III" [ref=f2e649]
+                - cell "II" [ref=f2e650]
+                - cell "IV" [ref=f2e651]
+              - row [ref=f2e652]:
+                - cell "7" [ref=f2e653]
+                - cell "VII" [ref=f2e654]
+                - cell "IV" [ref=f2e655]
+                - cell "III" [ref=f2e656]
+                - cell "IV" [ref=f2e657]
+              - row [ref=f2e658]:
+                - cell "8" [ref=f2e659]
+                - cell "VIII" [ref=f2e660]
+                - cell "IV" [ref=f2e661]
+                - cell "III" [ref=f2e662]
+                - cell "IV" [ref=f2e663]
+          - table [ref=f2e665]:
+            - caption [ref=f2e666]: "Плата за врата: слив здоровья в секунду"
+            - rowgroup [ref=f2e667]:
+              - row [ref=f2e668]:
+                - columnheader "Врата" [ref=f2e669]
+                - columnheader "Расход в секунду" [ref=f2e670]
+                - columnheader "Полная полоса здоровья (10 сердец)" [ref=f2e671]
+            - rowgroup [ref=f2e672]:
+              - row [ref=f2e673]:
+                - cell "1" [ref=f2e674]
+                - cell "0.008" [ref=f2e675]
+                - cell "~40 минут" [ref=f2e676]
+              - row [ref=f2e677]:
+                - cell "2" [ref=f2e678]
+                - cell "0.033" [ref=f2e679]
+                - cell "10 минут" [ref=f2e680]
+              - row [ref=f2e681]:
+                - cell "3" [ref=f2e682]
+                - cell "0.075" [ref=f2e683]
+                - cell "~4.5 минуты" [ref=f2e684]
+              - row [ref=f2e685]:
+                - cell "4" [ref=f2e686]
+                - cell "0.133" [ref=f2e687]
+                - cell "~2.5 минуты" [ref=f2e688]
+              - row [ref=f2e689]:
+                - cell "5" [ref=f2e690]
+                - cell "0.208" [ref=f2e691]
+                - cell "~1.6 минуты" [ref=f2e692]
+              - row [ref=f2e693]:
+                - cell "6" [ref=f2e694]
+                - cell "0.300" [ref=f2e695]
+                - cell "67 секунд" [ref=f2e696]
+              - row [ref=f2e697]:
+                - cell "7" [ref=f2e698]
+                - cell "0.408" [ref=f2e699]
+                - cell "49 секунд" [ref=f2e700]
+              - row [ref=f2e701]:
+                - cell "8" [ref=f2e702]
+                - cell "0.533" [ref=f2e703]
+                - cell "~37 секунд" [ref=f2e704]
+      - generic [ref=f2e705]:
+        - heading "Иллюзии и превращения" [level=2] [ref=f2e706]
+        - paragraph [ref=f2e707]: "Две техники обмана: заставить моба забыть о тебе и надеть чужой облик."
+        - generic [ref=f2e708]:
+          - article [ref=f2e709]:
+            - generic [ref=f2e710]:
+              - heading "Гендзюцу" [level=3] [ref=f2e711]
+              - generic [ref=f2e712]: Мгновенная
+            - generic [ref=f2e713]:
+              - generic [ref=f2e714]:
+                - generic [ref=f2e715]: Комбо
+                - generic [ref=f2e716]: C
+                - generic [ref=f2e717]: B
+                - generic [ref=f2e718]: C
+              - generic [ref=f2e719]: "цифрами: 131"
+            - paragraph [ref=f2e721]:
+              - text: Иллюзия, которая смотрит на того,
+              - strong [ref=f2e722]: на кого наведён взгляд
+              - text: ", и держит моба 30 секунд."
+            - list [ref=f2e723]:
+              - listitem [ref=f2e724]: "Расход: 35 чакры"
+              - listitem [ref=f2e725]: "Дальность: до 24 блоков"
+              - listitem [ref=f2e726]: "Длительность: 30 секунд"
+              - listitem [ref=f2e727]: "Откат: 10 секунд"
+            - list [ref=f2e728]:
+              - listitem [ref=f2e729]: "Полезно знать: жертва вообще не видит игроков — ни один гол не может назначить игрока целью, а уже выбранная цель сбрасывается в тот же тик."
+              - listitem [ref=f2e730]:
+                - text: "Полезно знать: вместо этого жертва набрасывается на ближайшего другого моба в радиусе 16 блоков и бьёт его всем, чем бьёт обычно; цель пересматривается раз в секунду, а над головой каждый тик висят частицы"
+                - code [ref=f2e731]: WITCH
+                - text: .
+              - listitem [ref=f2e732]: "Полезно знать: флаг иллюзии лежит в данных сущности, поэтому перезагрузка мира или выгрузка чанка её не сбрасывают. Клоны кастера и другие жертвы в цели не берутся."
+              - listitem [ref=f2e733]:
+                - text: "Провалы:"
+                - code [ref=f2e734]: jutsu.fail.genjutsu.notarget
+                - text: (перед тобой не моб),
+                - code [ref=f2e735]: jutsu.fail.genjutsu.active
+                - text: (уже под иллюзией),
+                - code [ref=f2e736]: jutsu.fail.notenoughchakra
+                - text: .
+          - article [ref=f2e737]:
+            - generic [ref=f2e738]:
+              - heading "Хенге (трансформация)" [level=3] [ref=f2e739]
+              - generic [ref=f2e740]: Мгновенная
+            - generic [ref=f2e741]:
+              - generic [ref=f2e742]:
+                - generic [ref=f2e743]: Комбо
+                - generic [ref=f2e744]: V
+                - generic [ref=f2e745]: C
+                - generic [ref=f2e746]: V
+              - generic [ref=f2e747]: "цифрами: 212"
+            - paragraph [ref=f2e749]:
+              - text: Копирует
+              - strong [ref=f2e750]: облик живого существа, на которое наведён взгляд
+              - text: ": нажми комбо — и на 1 минуту ты становишься им снаружи."
+            - list [ref=f2e751]:
+              - listitem [ref=f2e752]: "Расход: 30 чакры"
+              - listitem [ref=f2e753]: "Дальность: до 16 блоков"
+              - listitem [ref=f2e754]: "Длительность: 1 минута"
+              - listitem [ref=f2e755]: "Откат: 5 секунд"
+            - list [ref=f2e756]:
+              - listitem [ref=f2e757]: "Полезно знать: взгляд на игрока копирует его скин вместе с slim/wide-моделью (худая цель рисует тебя худым, даже если ты широкий) и ник над головой; взгляд на моба копирует модель и имя этого моба."
+              - listitem [ref=f2e758]: "Полезно знать: инвентарь, здоровье, урон и хитбокс не меняются — это только личина. Техника для обмана, а не боевая."
+              - listitem [ref=f2e759]: "Полезно знать: повторный каст снимает личину (цель для этого не нужна), через минуту она спадает сама. Смерть и выход из игры личину сбрасывают — она не пишется в сохранение. Клоны целью не берутся."
+              - listitem [ref=f2e760]:
+                - text: "Полезно знать: отключается конфигом"
+                - code [ref=f2e761]: hengeEnabled
+                - text: .
+      - generic [ref=f2e762]:
+        - heading "Прочее" [level=2] [ref=f2e763]
+        - paragraph [ref=f2e764]:
+          - text: Механики, которых нет в списке меню
+          - generic [ref=f2e765]: J
+          - text: ": прыжок висит на отдельной клавише, двойной прыжок и мягкая посадка срабатывают сами, а рабочий клон — это режим обычных клонов, а не отдельная техника."
+        - generic [ref=f2e766]:
+          - article [ref=f2e767]:
+            - generic [ref=f2e768]:
+              - heading "Прыжок (Leap)" [level=3] [ref=f2e769]
+              - generic [ref=f2e770]: Мгновенная
+            - generic [ref=f2e771]:
+              - generic [ref=f2e772]:
+                - generic [ref=f2e773]: Клавиша
+                - generic [ref=f2e774]: X
+              - generic [ref=f2e775]: без комбо
+            - paragraph [ref=f2e777]: Бросает игрока по направлению взгляда. Работает только с земли.
+            - list [ref=f2e778]:
+              - listitem [ref=f2e779]: "Расход: 10 стамины"
+              - listitem [ref=f2e780]: "Задержка регенерации: 40 тиков"
+              - listitem [ref=f2e781]: "Бросок: горизонтально ×2.41, вертикально 60 % взгляда + 0.8"
+            - list [ref=f2e782]:
+              - listitem [ref=f2e783]:
+                - text: "Провалы: в воздухе —"
+                - code [ref=f2e784]: jutsu.fail.notonground
+                - text: ", меньше 10 стамины —"
+                - code [ref=f2e785]: jutsu.fail.notenoughstamina
+                - text: .
+          - article [ref=f2e786]:
+            - generic [ref=f2e787]:
+              - heading "Двойной прыжок" [level=3] [ref=f2e788]
+              - generic [ref=f2e789]: Мгновенная
+            - generic [ref=f2e790]:
+              - generic [ref=f2e791]:
+                - generic [ref=f2e792]: Ввод
+                - generic [ref=f2e793]: Прыжок в воздухе
+              - generic [ref=f2e794]: без комбо
+            - paragraph [ref=f2e796]: Срабатывает автоматически, когда игрок жмёт прыжок в воздухе, — один раз до приземления.
+            - list [ref=f2e797]:
+              - listitem [ref=f2e798]: "Расход: 2 чакры и 5 стамины"
+              - listitem [ref=f2e799]:
+                - text: "Погашение падения:"
+                - code [ref=f2e800]: fallDistance = 0
+            - list [ref=f2e801]:
+              - listitem [ref=f2e802]: "Полезно знать: кроме гашения падения техника даёт облако частиц и звук."
+              - listitem [ref=f2e803]: "Полезно знать: заряд двойного прыжка возвращается на земле и при «устойчивом» шаге по воде."
+          - article [ref=f2e804]:
+            - generic [ref=f2e805]:
+              - heading "Мягкая посадка" [level=3] [ref=f2e806]
+              - generic [ref=f2e807]: Автоматически
+            - generic [ref=f2e808]:
+              - generic [ref=f2e809]:
+                - generic [ref=f2e810]: Ввод
+                - generic [ref=f2e811]: без комбо
+              - generic [ref=f2e812]: срабатывает при падении
+            - paragraph [ref=f2e814]:
+              - text: При падении берётся урон,
+              - strong [ref=f2e815]: который приземление всё равно отняло бы
+              - text: (ванильная формула
+              - code [ref=f2e816]: dist - 3
+              - text: ", без прыжкового бафа), и умножается на 2 стамины за единицу урона."
+            - list [ref=f2e817]:
+              - listitem [ref=f2e818]: "Цена: 2 стамины за единицу урона"
+              - listitem [ref=f2e819]: "Задержка регенерации: 3 секунды"
+            - list [ref=f2e820]:
+              - listitem [ref=f2e821]: "Полезно знать: падение на 4 блока = 1 урон = 2 стамины; падение на 40 блоков = 74 стамины, почти вся полоса."
+              - listitem [ref=f2e822]: "Полезно знать: если стамины не хватает — приземление происходит как обычное, а стамина не тратится вообще: «половинчатого» смягчения нет."
+          - article [ref=f2e823]:
+            - generic [ref=f2e824]:
+              - heading "Рабочий клон" [level=3] [ref=f2e825]
+              - generic [ref=f2e826]: Режим клонов
+            - generic [ref=f2e827]:
+              - generic [ref=f2e828]:
+                - generic [ref=f2e829]: Комбо
+                - generic [ref=f2e830]: C
+                - generic [ref=f2e831]: B
+                - generic [ref=f2e832]: B
+                - generic [ref=f2e833]: V
+              - generic [ref=f2e834]: любое комбо клонов + печать рабочего в основной руке
+            - paragraph [ref=f2e836]:
+              - text: Это не отдельная техника, а
+              - strong [ref=f2e837]: режим
+              - text: ": те же комбо клонов, но с печатью рабочего в основной руке призывают клонов работать, а не воевать. Работу задаёт инструмент во второй руке."
+            - list [ref=f2e838]:
+              - listitem [ref=f2e839]: "Мотыга (и всё, кроме кирки и топора): собирает спелые культуры и сразу засевает заново"
+              - listitem [ref=f2e840]: "Кирка: камень и руды, только те, что взяла бы кирка в руке"
+              - listitem [ref=f2e841]: "Топор: валит деревья, обходя ствол целиком (до 64 блоков)"
+              - listitem [ref=f2e842]: "Жизнь: 10 минут"
+            - list [ref=f2e843]:
+              - listitem [ref=f2e844]: "Полезно знать: место призыва становится «постом» — рабочие не уходят от него дальше 8 блоков, а несколько рабочих делят один пост."
+              - listitem [ref=f2e845]: "Полезно знать: за тобой не идёт и не воюет (разве что огрызнётся на того, кто его ударит), а собранное складывает в мешок, который отдаётся тебе через 30 секунд после исчезновения."
+              - listitem [ref=f2e846]: "Полезно знать: печать рабочего не расходуется — это катализатор, но чакра-печать за каст всё равно тратится. Инструмент из твоего инвентаря тоже не тратится: клон работает копией и прекращает работу, когда она сломается."
+              - listitem [ref=f2e847]: "Полезно знать: опыт за убийство не теряется: если клон добивает моба, XP уходит сразу тебе, а не орбами на месте смерти."
+      - generic [ref=f2e848]:
+        - heading "Общие примечания" [level=2] [ref=f2e849]
+        - generic [ref=f2e850]:
+          - article [ref=f2e851]:
+            - generic [ref=f2e852]: Печати и комбо
+            - heading "Что стоит держать в голове" [level=3] [ref=f2e853]
+            - list [ref=f2e854]:
+              - listitem [ref=f2e855]: Комбо читаются из карты, которая заполняется при запуске игры, поэтому изменения набора техник подхватываются только полным перезапуском.
+              - listitem [ref=f2e856]: "Часть техник ест не чакру, а стамину: Прыжок (10), Восемь врат (15 за каждые врата), Двойной прыжок (5) и Мягкая посадка (2 за единицу урона)."
+              - listitem [ref=f2e857]:
+                - text: Подмена тратит не чакру, а
+                - strong [ref=f2e858]: замену
+                - text: ; всего замен 3, по одной каждые 3 секунды. В креативе замена бесплатна.
+              - listitem [ref=f2e859]:
+                - text: Любой призыв клонов тратит
+                - strong [ref=f2e860]: одну
+                - text: чакра-печать за каст — независимо от числа клонов. В креативе печать не нужна и не тратится.
+          - article [ref=f2e861]:
+            - generic [ref=f2e862]: Регенерация
+            - heading "Задержка после траты" [level=3] [ref=f2e863]
+            - list [ref=f2e864]:
+              - listitem [ref=f2e865]: Каждая техника накладывает свою задержку регенерации ресурса, поэтому её реальная цена выше видимой.
+              - listitem [ref=f2e866]: Чакра восстанавливается по 0.05 за тик (1 в секунду), стамина — по 0.4 за тик (8 в секунду).
+              - listitem [ref=f2e867]:
+                - text: С этой страницей рядом стоит «
+                - link "Секреты" [ref=f2e868] [cursor=pointer]:
+                  - /url: secrets.html
+                - text: "»: там собраны приёмы, которые не видны из таблиц, — медитация, броня, батарея и прочее."
+  - contentinfo [ref=f2e869]:
+    - generic [ref=f2e870]:
+      - generic [ref=f2e871]:
+        - paragraph [ref=f2e872]:
+          - text: Фан-документация по форку
+          - strong [ref=f2e873]: Sekwah's Naruto Mod
+          - text: под Minecraft 1.20.1 / Forge. Числа и механики взяты из описания мода к этой сборке.
+        - paragraph [ref=f2e874]:
+          - text: "Оригинальный мод:"
+          - link "sekwah41/Naruto-Mod" [ref=f2e875] [cursor=pointer]:
+            - /url: https://github.com/sekwah41/Naruto-Mod
+          - text: .
+      - navigation "Навигация в подвале" [ref=f2e876]:
+        - link "Главная" [ref=f2e877] [cursor=pointer]:
+          - /url: index.html
+        - link "Техники" [ref=f2e878] [cursor=pointer]:
+          - /url: techniques.html
+        - link "Предметы" [ref=f2e879] [cursor=pointer]:
+          - /url: items.html
+        - link "Секреты" [ref=f2e880] [cursor=pointer]:
+          - /url: secrets.html

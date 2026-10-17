@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Техники — Naruto Mod (Minecraft 1.20.1 / Forge)</title>
+<meta name="description" content="Все техники Naruto Mod для Minecraft 1.20.1 / Forge: комбо печатей, тип применения, расход чакры и стамины, кулдауны, группы меню J.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">К содержимому</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-mark" aria-hidden="true">忍</span>
+      <span>Naruto Mod
+        <span class="brand-sub">1.20.1 / Forge</span>
+      </span>
+    </a>
+    <nav class="site-nav" aria-label="Основная навигация">
+      <a href="index.html">Главная</a>
+      <a href="techniques.html" aria-current="page">Техники</a>
+      <a href="items.html">Предметы</a>
+      <a href="secrets.html">Секреты</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap">
+
+    <section class="section" id="top">
+      <h1 class="section-title">Техники</h1>
+      <p class="section-lead">
+        Все техники мода, разбитые по тем же группам, что и в меню <kbd>J</kbd>. Комбо записаны
+        клавишами, а мелким шрифтом рядом — их цифровая форма из кода: <code>1 = C</code>,
+        <code>2 = V</code>, <code>3 = B</code>. Канальные техники нужно заканчивать удержанием
+        последней клавиши, мгновенные срабатывают сами примерно через полсекунды после набора.
+      </p>
+
+      <nav class="toc" aria-label="Оглавление страницы">
+        <h2>Оглавление</h2>
+        <p>Группы идут в том же порядке, что и в меню техник.</p>
+        <ul class="toc-list">
+          <li><a href="#basics">Основы <span class="toc-count">3</span></a></li>
+          <li><a href="#clones">Теневые клоны <span class="toc-count">4</span></a></li>
+          <li><a href="#defence">Защита и лечение <span class="toc-count">3</span></a></li>
+          <li><a href="#elemental">Стихийное ниндзюцу <span class="toc-count">4</span></a></li>
+          <li><a href="#space">Пространство и перемещение <span class="toc-count">4</span></a></li>
+          <li><a href="#body">Усиление тела <span class="toc-count">4</span></a></li>
+          <li><a href="#illusion">Иллюзии и превращения <span class="toc-count">2</span></a></li>
+          <li><a href="#other">Прочее <span class="toc-count">4</span></a></li>
+          <li><a href="#notes">Общие примечания</a></li>
+        </ul>
+      </nav>
+    </section>
+
+    <!-- ======================= ОСНОВЫ ======================= -->
+    <section class="section" id="basics">
+      <h2 class="group-title">Основы</h2>
+      <p class="group-lead">Три стойки, которые всегда под рукой: заряд чакры, ходьба по воде и чакра-кулак.</p>
+
+      <div class="jutsu-list">
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Чакра-заряд</h3>
+            <span class="badge badge--channel">Канал</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd></span>
+            <span class="combo-digits">цифрами: 1</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Базовая техника «наполнить полоску»: пока держишь комбо, кастер набирает чакру.
+              Без удержания (тапом) не работает вообще.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Стоя на земле:</b> +1 чакры за тик</li>
+            <li><b>На бегу или в воздухе:</b> +0.2 чакры за тик</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> стоя канал в пять раз выгоднее, чем на ходу — дешевле остановиться и подождать.</li>
+            <li><span class="fact-label">Полезно знать:</span> тапом эта техника не даёт ничего, ей нужно именно удержание.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Водная походка</h3>
+            <span class="badge badge--toggle">Переключатель</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>B</kbd></span>
+            <span class="combo-digits">цифрами: 3</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Держит игрока на воде и не даёт проваливаться. Пока поверхность воды «под ногами» —
+              дешёвая; если техника вытолкнула игрока вверх из глубокого провала — дорогая.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>По поверхности:</b> 0.12 чакры за тик</li>
+            <li><b>Выталкивает вверх:</b> 1 чакра за тик</li>
+            <li><b>Тип:</b> переключатель</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> пока техника работает, она возвращает заряд двойного прыжка и гасит падение.</li>
+            <li><span class="fact-label">Полезно знать:</span> на транспорте не работает (<code>jutsu.fail.riding</code>).</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Чакра-кулак</h3>
+            <span class="badge badge--toggle">Переключатель</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>C</kbd></span>
+            <span class="combo-digits">цифрами: 11</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Стойка «работать и драться»: копание ускоряется, а ближний удар становится сильнее —
+              за чакру.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Копание:</b> в 2.5 раза быстрее</li>
+            <li><b>За блок:</b> 1 чакра</li>
+            <li><b>За удар:</b> 3 чакры и +3 урона</li>
+            <li><b>Налог:</b> 0.02 чакры за тик</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> ×2.5 — это умножение <em>той</em> скорости, которую уже посчитала ваниль вместе с инструментом. С киркой берётся скорость с киркой и умножается, а не «просто в два с половиной раза быстрее, чем рукой».</li>
+            <li><span class="fact-label">Полезно знать:</span> регенерация чакры «придавлена» на 10 тиков, поэтому стойка стоит не только налогом.</li>
+          </ul>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ======================= КЛОНЫ ======================= -->
+    <section class="section" id="clones">
+      <h2 class="group-title">Теневые клоны</h2>
+      <p class="group-lead">
+        Все четыре техники призывают одну и ту же сущность клона с разными настройками. Любой призыв
+        требует <strong>чакра-печать</strong> в инвентаре и тратит <strong>одну</strong> печать за каст
+        — независимо от числа клонов. В креативе печать не нужна и не тратится; нет печати —
+        <code>jutsu.fail.noseal</code>.
+      </p>
+
+      <div class="note">
+        <h3>Как ведут себя клоны</h3>
+        <ul class="plain">
+          <li><strong>1 единица здоровья</strong>: любой непокрытый удар «попает» клона. Смерть — облако дыма и звук <code>clone_poof</code>, без лута и без трупа.</li>
+          <li>Клон <strong>не</strong> деспавнится по расстоянию и не исчезает сам, кроме конца времени жизни.</li>
+          <li>Цели <strong>только реактивные</strong>: ударили клона — ответил; ранили владельца — напал на обидчика; владелец сам кого-то ударил — напал на его цель. Сам клон врагов не ищет.</li>
+          <li>Клон копирует <strong>стиль боя кастера</strong> в момент призыва: скин, обе руки и четыре слота брони, эффекты (и баффы, и дебаффы) и стрелы.</li>
+          <li><strong>Щит</strong> из левой руки владельца клон поднимает заранее, пока есть цель и он не стреляет.</li>
+          <li><strong>Лук, арбалет и трезубец</strong> работают как у игрока, с их зачарованиями; ближе 3 блоков клон убирает дальнобойное оружие и бьёт мечом.</li>
+          <li><strong>Стрелы</strong> — копия: тип берётся из первой стопки стрел кастера, количество — сумма всех стрел. Каждый выстрел уменьшает запас, и когда стрел не осталось, клон исчезает.</li>
+          <li><strong>Бумажная бомба</strong> в руке кастера при призыве делает клона взрывным: он взрывается, когда его убивают. Бомба у кастера не тратится, блоки не ломаются.</li>
+        </ul>
+      </div>
+
+      <div class="jutsu-list">
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Теневой клон</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>B</kbd><kbd>V</kbd></span>
+            <span class="combo-digits">цифрами: 1332</span>
+          </div>
+          <div class="jutsu-body">
+            <p>Пара копий себя — рабочая лошадка любого боя.</p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> 40 чакры + 1 чакра-печать</li>
+            <li><b>Клонов:</b> 2–3</li>
+            <li><b>Жизнь:</b> 25 с</li>
+            <li><b>Урон:</b> 2</li>
+            <li><b>Скорость:</b> 0.3</li>
+            <li><b>Откат:</b> 3 с</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> печать тратится одна на каст, а не на каждого клона.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Чиби-клон</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>V</kbd><kbd>V</kbd></span>
+            <span class="combo-digits">цифрами: 1322</span>
+          </div>
+          <div class="jutsu-body">
+            <p>Дешёвые, мелкие и слабые клоны — зато их выходит целая горсть. Рост и хитбокс уменьшены.</p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> 20 чакры + 1 чакра-печать</li>
+            <li><b>Клонов:</b> 3–5</li>
+            <li><b>Жизнь:</b> 15 с</li>
+            <li><b>Урон:</b> 1</li>
+            <li><b>Скорость:</b> 0.35</li>
+            <li><b>Откат:</b> 2 с</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> самый быстрый откат из клонов — их выгодно призывать часто, а не сильно.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Мульти-клон</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>B</kbd><kbd>V</kbd><kbd>B</kbd><kbd>C</kbd></span>
+            <span class="combo-digits">цифрами: 133231</span>
+          </div>
+          <div class="jutsu-body">
+            <p>Дорогая версия, которая поднимает небольшую армию.</p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> 80 чакры + 1 чакра-печать</li>
+            <li><b>Клонов:</b> 8–11</li>
+            <li><b>Жизнь:</b> 25 с</li>
+            <li><b>Урон:</b> 2</li>
+            <li><b>Скорость:</b> 0.3</li>
+            <li><b>Откат:</b> 10 с</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> комбо самое длинное в моде — шесть печатей, легко сбить при спешке.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Медитация чакры</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>B</kbd><kbd>C</kbd></span>
+            <span class="combo-digits">цифрами: 1331</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Оставляет двух <strong>медитирующих</strong> клонов: руки пустые, снаряжение и эффекты
+              не копируются, урон и скорость нулевые — они просто сидят там, где поставлены. Это
+              единственная техника клонов «в долгую».
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> 60 чакры + 1 чакра-печать</li>
+            <li><b>Клонов:</b> 2</li>
+            <li><b>Жизнь:</b> 180 с</li>
+            <li><b>Откат:</b> 60 с</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> пока рядом (8 блоков) есть медитирующий клон владельца, он даёт <code>+0.2</code> чакры за тик, а откаты всех техник идут <strong>вдвое быстрее</strong>.</li>
+            <li><span class="fact-label">Полезно знать:</span> и вдобавок <code>+100</code> к максимуму чакры за каждого такого клона — бонус снимается сразу, как только клон пропал или отошёл.</li>
+            <li><span class="fact-label">Полезно знать:</span> в Режиме Мудреца этот приток идёт не в чакру, а в сенин-ману.</li>
+          </ul>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ======================= ЗАЩИТА ======================= -->
+    <section class="section" id="defence">
+      <h2 class="group-title">Защита и лечение</h2>
+      <p class="group-lead">Три способа не умереть: щит из чакры, отложенное воскрешение и лечение чакрой.</p>
+
+      <div class="jutsu-list">
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Чакра-щит</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>B</kbd><kbd>V</kbd><kbd>B</kbd></span>
+            <span class="combo-digits">цифрами: 323</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Превращает <strong>всю</strong> чакру в щит: пока он не пуст, здоровье не теряется
+              вообще. Показывается как полоска брони и тратится 1:1 входящим уроном.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> вся чакра (минимум 20)</li>
+            <li><b>Стоимость урона:</b> 1 очко щита за 1 урона</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> стакать нельзя — при активном щите повторный каст падает.</li>
+            <li><span class="fact-label">Полезно знать:</span> смерть стирает щит, а смена измерения переприменяет модификатор.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Второе дыхание</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>V</kbd><kbd>B</kbd></span>
+            <span class="combo-digits">цифрами: 223</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Тратит всю чакру и «взводит» флаг: пока он висит, первый <strong>смертельный</strong>
+              удар отменяется.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> вся чакра (минимум 60)</li>
+            <li><b>Откат:</b> 10 минут</li>
+            <li><b>После срабатывания:</b> 5 сердец</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> вместе со спасением на минуту накладывается <code>DARKNESS</code> — мягкая слепота, а не полная.</li>
+            <li><span class="fact-label">Полезно знать:</span> смерть забирает эффект и сбрасывает откат.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Регенерация чакрой</h3>
+            <span class="badge badge--toggle">Переключатель</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>B</kbd><kbd>B</kbd><kbd>C</kbd></span>
+            <span class="combo-digits">цифрами: 2331</span>
+          </div>
+          <div class="jutsu-body">
+            <p>Лечит по 1 HP раз в 2 секунды, пока хватает ресурсов.</p>
+          </div>
+          <ul class="meta">
+            <li><b>С едой:</b> 6 чакры и 1 единица сытости за 1 HP</li>
+            <li><b>Голоден:</b> 15 чакры за 1 HP</li>
+            <li><b>Темп:</b> 1 HP раз в 2 секунды</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> основной расход всё равно чакра — одной «котлеты» сытости хватает всего на 2 HP.</li>
+          </ul>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ======================= СТИХИИ ======================= -->
+    <section class="section" id="elemental">
+      <h2 class="group-title">Стихийное ниндзюцу</h2>
+      <p class="group-lead">Снаряды и ударные техники: огонь, вода, земля и Расенган.</p>
+
+      <div class="jutsu-list">
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Огненный шар</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>V</kbd><kbd>C</kbd></span>
+            <span class="combo-digits">цифрами: 121</span>
+          </div>
+          <div class="jutsu-body">
+            <p>Классика: через 10 тиков после каста в направлении взгляда уходит огненный шар.</p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> 30 чакры</li>
+            <li><b>Откат:</b> 3 с</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> шар вылетает не мгновенно, а с задержкой в полсекунды — цель может успеть сойти с линии.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Водяная пуля</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>V</kbd></span>
+            <span class="combo-digits">цифрами: 132</span>
+          </div>
+          <div class="jutsu-body">
+            <p>Запускает <strong>три</strong> водяные пули подряд, а не одну.</p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> 30 чакры</li>
+            <li><b>Откат:</b> 4 с</li>
+            <li><b>Залп:</b> на 10, 25 и 40 тик</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> из-за растянутого залпа пули выгоднее бить по толпе или по медленной цели.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Рудокоп</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>V</kbd><kbd>V</kbd><kbd>C</kbd></span>
+            <span class="combo-digits">цифрами: 1221</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Находит рядом руды и проходит <strong>всю жилу целиком</strong>: от первой найденной
+              руды техника идёт по соседним блокам той же руды, поэтому из земли выходит вся залежь,
+              даже если она уходит за пределы радиуса в 5 блоков. Дроп падает нормально, как при игре.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Каст:</b> 10 чакры</li>
+            <li><b>За каждый вышедший блок:</b> +4 чакры</li>
+            <li><b>Максимум:</b> 128 блоков за каст</li>
+            <li><b>Нужна кирка в руке</b></li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> цена — как за работу, а не как за заклинание: нашёл богатую жилу — заплатил за неё, нашёл пустоту — заплатил только за попытку. Кончилась чакра на середине — остаток жилы остаётся в земле.</li>
+            <li><span class="fact-label">Полезно знать:</span> ломается только то, что эта кирка реально может сломать (каменная вытрясет уголь, но алмазы оставит), каждый блок тратит 1 прочность, и сломавшаяся в середине каста кирка обрывает остальное.</li>
+            <li><span class="fact-label">Полезно знать:</span> без кирки в руке техника не кастуется (<code>jutsu.fail.needpickaxe</code>) и чакра не тратится.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Расенган</h3>
+            <span class="badge badge--channel">Канал</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>B</kbd><kbd>C</kbd><kbd>B</kbd></span>
+            <span class="combo-digits">цифрами: 13313</span>
+          </div>
+          <div class="jutsu-body">
+            <p>В правой руке растёт шар чакры, сила удара зависит от того, как долго его держали.</p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> 0.6 чакры за тик</li>
+            <li><b>Тап:</b> меньше 20 тиков — пшик без урона</li>
+            <li><b>Максимум:</b> 60 тиков — урон 4 → 16, отброс 0.8 → 1.8</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> чтобы получить урон, шар надо именно зажать и подержать — иначе будет только звук тушения.</li>
+            <li><span class="fact-label">Полезно знать:</span> дальше 60 тиков заряжать бессмысленно, урон не растёт.</li>
+          </ul>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ======================= ПРОСТРАНСТВО ======================= -->
+    <section class="section" id="space">
+      <h2 class="group-title">Пространство и перемещение</h2>
+      <p class="group-lead">Телепорты, метка, карманное измерение и фазовое тело.</p>
+
+      <div class="jutsu-list">
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Подмена</h3>
+            <span class="badge badge--channel">Канал</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>V</kbd></span>
+            <span class="combo-digits">цифрами: 12</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Обмен местами с бревном-подменой: тапом — телепорт к метке (или случайный прыжок, если
+              метки нет), удержанием — поставить метку.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> 1 замена (в креативе бесплатно)</li>
+            <li><b>Тап — к метке:</b> до 70 блоков, то же измерение</li>
+            <li><b>Тап без метки:</b> случайный телепорт в радиусе ~25 блоков, не ближе 10</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> на месте игрока остаётся бревно, а сам он получает невидимость на 5 тиков — момент для передышки.</li>
+            <li><span class="fact-label">Полезно знать:</span> метка живёт в памяти и не переживает выход из игры — для долгой метки есть «Бревно-метка».</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Бревно-метка</h3>
+            <span class="badge badge--channel">Канал</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>B</kbd><kbd>V</kbd><kbd>C</kbd></span>
+            <span class="combo-digits">цифрами: 13321</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Постоянная метка-бревно: она неподвижна, неубиваема, не деспавнится и светится
+              портальными частицами. В отличие от подмены, бревно <strong>переживает выход из игры</strong>.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Удержание (поставить бревно):</b> 25 чакры</li>
+            <li><b>Тап (обмен):</b> 15 чакры</li>
+            <li><b>Дистанция обмена:</b> любая, но только в одном измерении</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> бревно <strong>нельзя убить</strong> — ни ударом, ни в креативе, ни командой <code>/kill</code>. Стереть его может только новый поставленный лог.</li>
+            <li><span class="fact-label">Полезно знать:</span> старое бревно стирается при постановке нового — это и есть способ его убрать.</li>
+            <li><span class="fact-label">Полезно знать:</span> обмен между измерениями запрещён (<code>jutsu.fail.wrongdimension</code>), а без бревна будет <code>jutsu.fail.nomarker</code>.</li>
+            <li><span class="fact-label">Полезно знать:</span> если чанк со старым бревном не загружен, бревно не найдётся и останется стоять. Зато возврат <strong>всё равно сработает</strong> — техника телепортирует к записанной координате, а не к самой сущности бревна.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Камуи</h3>
+            <span class="badge badge--channel">Канал</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>B</kbd><kbd>V</kbd><kbd>V</kbd><kbd>C</kbd><kbd>C</kbd></span>
+            <span class="combo-digits">цифрами: 32211</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Две разные техники в одном комбо, и различаются они тем, как закончить ввод.
+              <strong>Тап</strong> — шаг в карманное измерение (или обратно), <strong>удержание</strong>
+              — затянуть того, на кого смотришь.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Шаг (тап):</b> 40 чакры</li>
+            <li><b>Удержание:</b> 1.5 чакры за тик</li>
+            <li><b>Сам затяг:</b> +30 чакры</li>
+            <li><b>Дальность затяга:</b> до 16 блоков</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> измерение <code>narutomod:kamui</code> — это не плита, а поле квадратных каменных столбов 5×5 высотой 7–8 блоков с промежутками в 2 блока; низ столба — неразрушимый бедрок, выше — камень. Между столбами настоящая пустота: упал — погиб, вещи пропадут.</li>
+            <li><span class="fact-label">Полезно знать:</span> внутри кармана руды, мобов и погоды нет, естественный спавн запрещён — дюпа ресурсов через карман не получится.</li>
+            <li><span class="fact-label">Полезно знать:</span> точка возврата хранится в данных игрока, так что тап из пустоты возвращает ровно туда, откуда вошёл, и выход из игры внутри кармана ничего не ломает.</li>
+            <li><span class="fact-label">Полезно знать:</span> затянуть можно только существо по прямой видимости: если между вами стена, выйдет <code>jutsu.fail.kamui.notarget</code>. Креативных игроков и наблюдателей затащить нельзя.</li>
+            <li><span class="fact-label">Полезно знать:</span> через <strong>30 секунд</strong> (настройка <code>kamuiTransferSeconds</code>) всё затянутое выбрасывается обратно ровно туда, где было. Это тюрьма, а не способ отобрать чужой лут, и самого кастера таймер не касается.</li>
+            <li><span class="fact-label">Полезно знать:</span> техника целиком отключается конфигом (<code>kamuiEnabled = false</code>).</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Фазовое тело Камуи</h3>
+            <span class="badge badge--toggle">Переключатель</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>C</kbd><kbd>B</kbd></span>
+            <span class="combo-digits">цифрами: 213</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Отдельная техника: тело становится дымом, проходит сквозь стены и не получает урона.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> 0.4 чакры за тик (~8 в секунду)</li>
+            <li><b>Тип:</b> переключатель</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> урон не проходит вообще — ни удар, ни стрела, ни взрыв. Исключения: <code>/kill</code>, пустота и голод.</li>
+            <li><span class="fact-label">Полезно знать:</span> управление работает как в полёте (вверх/вниз/вбок), а состояние полёта, которое было до включения, запоминается и возвращается при выключении: в креативе крылья остаются, в выживании не появляются.</li>
+            <li><span class="fact-label">Полезно знать:</span> кончилась чакра — стойка гаснет сама; смерть и выход из игры её тоже снимают, а если выключить внутри стены, техника выталкивает в ближайшее свободное место.</li>
+          </ul>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ======================= ТЕЛО ======================= -->
+    <section class="section" id="body">
+      <h2 class="group-title">Усиление тела</h2>
+      <p class="group-lead">Врата, природная энергия и режим Мудреца — то, что делает кастера сильнее ценой тела.</p>
+
+      <div class="jutsu-list">
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Восемь врат</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>B</kbd><kbd>B</kbd><kbd>B</kbd></span>
+            <span class="combo-digits">цифрами: 2333</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Каждый каст открывает <strong>следующие</strong> врата: вспышка пламени и рёв, а эффекты
+              обновляются каждый тик и растут с их числом. Плата — собственное здоровье.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>За каждые врата:</b> 25 чакры и 15 стамины</li>
+            <li><b>Всего врат:</b> 8</li>
+            <li><b>Плата:</b> <code>0.00833 × (число врат)²</code> HP в секунду</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> слив идёт целыми единицами здоровья и напрямую, минуя <strong>любую</strong> защиту: броня, сопротивление, поглощение, чакра-щит и даже креатив его не останавливают. Это не урон от врага, а тело, которое разрывает из себя, — «второе дыхание» от него тоже не спасает.</li>
+            <li><span class="fact-label">Полезно знать:</span> пока врата открыты, кастер не лечится вообще: ни едой, ни зельями регенерации, ни техникой регенерации чакрой. Иначе ванильное лечение перекрывало бы слив, и врата стали бы бесплатным баффом.</li>
+            <li><span class="fact-label">Полезно знать:</span> смерть или выход из игры сбрасывают счётчик врат — после возрождения они закрыты.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Запечатать врата</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>B</kbd><kbd>B</kbd><kbd>V</kbd></span>
+            <span class="combo-digits">цифрами: 2332</span>
+          </div>
+          <div class="jutsu-body">
+            <p>Бесплатная техника, которая закрывает <strong>любое число врат с 1 по 7</strong> сразу: эффекты и слив здоровья прекращаются.</p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> нет</li>
+            <li><b>Закрывает:</b> врата 1–7</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> на восьмых вратах не работает (<code>jutsu.fail.gates_open</code>) — единственный выход из них это смерть, и в этом смысл: восьмые врата рассчитаны на то, чтобы их потратить.</li>
+            <li><span class="fact-label">Полезно знать:</span> если врат нет, техника сообщает <code>jutsu.fail.gates_none</code>.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Сбор природной энергии</h3>
+            <span class="badge badge--channel">Канал</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>B</kbd><kbd>C</kbd></span>
+            <span class="combo-digits">цифрами: 231</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Сендзюцу-канал: удерживай комбо, чтобы копить природную энергию (сенин-ману). Копится
+              <strong>только пока стоишь на земле неподвижно</strong>.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> бесплатно</li>
+            <li><b>Скорость:</b> 0.5 сенин-маны за тик</li>
+            <li><b>Максимум пула:</b> 100 (по умолчанию)</li>
+            <li><b>Полный пул:</b> 10 секунд стояния</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> цена этой техники — время и неподвижность. Двинулся — сбор просто останавливается, прогресс не теряется, следующий заход продолжает с того же места.</li>
+            <li><span class="fact-label">Полезно знать:</span> раз в 10 тиков прогресс пишется в action bar, а вокруг игрока сыпятся зелёные частицы.</li>
+            <li><span class="fact-label">Полезно знать:</span> пул записывается в сохранение, поэтому выход из игры его не обнуляет.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Режим Мудреца</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>B</kbd><kbd>V</kbd></span>
+            <span class="combo-digits">цифрами: 232</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Открывает собранную природную энергию: нужно минимум <strong>50 сенин-маны</strong>,
+              дальше режим тратит её по 0.25 за тик и <strong>сам закрывается, когда пул кончился</strong>.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Вход:</b> 50 сенин-маны</li>
+            <li><b>Поддержание:</b> 0.25 сенин-маны за тик</li>
+            <li><b>Эффекты:</b> Speed II, Strength II, Resistance I, Jump Boost I, Regeneration I</li>
+            <li><b>Бонус:</b> +0.5 чакры за тик</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> эффекты выдаются на 40 тиков и обновляются каждый тик, поэтому вместе с режимом они и заканчиваются.</li>
+            <li><span class="fact-label">Полезно знать:</span> смерть и выход из игры закрывают режим: состояние намеренно не пишется в сохранение. Отключается конфигом <code>sageModeEnabled</code>.</li>
+            <li><span class="fact-label">Полезно знать:</span> медитирующие клоны питают именно эту полоску, а не чакру, — так режим можно держать дольше.</li>
+          </ul>
+        </article>
+
+      </div>
+
+      <div class="card gap-top">
+        <h3>Что дают открытые врата</h3>
+        <p>Эффекты обновляются каждый тик и растут с числом открытых врат.</p>
+        <div class="table-wrap">
+          <table>
+            <caption>Эффекты по числу врат</caption>
+            <thead>
+              <tr><th scope="col">Врата</th><th scope="col">Speed</th><th scope="col">Strength</th><th scope="col">Resistance</th><th scope="col">Jump</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>I</td><td>I</td><td>I</td><td>I</td></tr>
+              <tr><td>2</td><td>II</td><td>I</td><td>I</td><td>II</td></tr>
+              <tr><td>3</td><td>III</td><td>II</td><td>I</td><td>III</td></tr>
+              <tr><td>4</td><td>IV</td><td>II</td><td>II</td><td>IV</td></tr>
+              <tr><td>5</td><td>V</td><td>III</td><td>II</td><td>IV</td></tr>
+              <tr><td>6</td><td>VI</td><td>III</td><td>II</td><td>IV</td></tr>
+              <tr><td>7</td><td>VII</td><td>IV</td><td>III</td><td>IV</td></tr>
+              <tr><td>8</td><td>VIII</td><td>IV</td><td>III</td><td>IV</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <caption>Плата за врата: слив здоровья в секунду</caption>
+            <thead>
+              <tr><th scope="col">Врата</th><th scope="col">Расход в секунду</th><th scope="col">Полная полоса здоровья (10 сердец)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>0.008</td><td>~40 минут</td></tr>
+              <tr><td>2</td><td>0.033</td><td>10 минут</td></tr>
+              <tr><td>3</td><td>0.075</td><td>~4.5 минуты</td></tr>
+              <tr><td>4</td><td>0.133</td><td>~2.5 минуты</td></tr>
+              <tr><td>5</td><td>0.208</td><td>~1.6 минуты</td></tr>
+              <tr><td>6</td><td>0.300</td><td>67 секунд</td></tr>
+              <tr><td>7</td><td>0.408</td><td>49 секунд</td></tr>
+              <tr><td>8</td><td>0.533</td><td>~37 секунд</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= ИЛЛЮЗИИ ======================= -->
+    <section class="section" id="illusion">
+      <h2 class="group-title">Иллюзии и превращения</h2>
+      <p class="group-lead">Две техники обмана: заставить моба забыть о тебе и надеть чужой облик.</p>
+
+      <div class="jutsu-list">
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Гендзюцу</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>C</kbd></span>
+            <span class="combo-digits">цифрами: 131</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Иллюзия, которая смотрит на того, <strong>на кого наведён взгляд</strong>, и держит моба
+              30 секунд.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> 35 чакры</li>
+            <li><b>Дальность:</b> до 24 блоков</li>
+            <li><b>Длительность:</b> 30 секунд</li>
+            <li><b>Откат:</b> 10 секунд</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> жертва вообще не видит игроков — ни один гол не может назначить игрока целью, а уже выбранная цель сбрасывается в тот же тик.</li>
+            <li><span class="fact-label">Полезно знать:</span> вместо этого жертва набрасывается на ближайшего другого моба в радиусе 16 блоков и бьёт его всем, чем бьёт обычно; цель пересматривается раз в секунду, а над головой каждый тик висят частицы <code>WITCH</code>.</li>
+            <li><span class="fact-label">Полезно знать:</span> флаг иллюзии лежит в данных сущности, поэтому перезагрузка мира или выгрузка чанка её не сбрасывают. Клоны кастера и другие жертвы в цели не берутся.</li>
+            <li><span class="fact-label">Провалы:</span> <code>jutsu.fail.genjutsu.notarget</code> (перед тобой не моб), <code>jutsu.fail.genjutsu.active</code> (уже под иллюзией), <code>jutsu.fail.notenoughchakra</code>.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Хенге (трансформация)</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>V</kbd><kbd>C</kbd><kbd>V</kbd></span>
+            <span class="combo-digits">цифрами: 212</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Копирует <strong>облик живого существа, на которое наведён взгляд</strong>: нажми комбо —
+              и на 1 минуту ты становишься им снаружи.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> 30 чакры</li>
+            <li><b>Дальность:</b> до 16 блоков</li>
+            <li><b>Длительность:</b> 1 минута</li>
+            <li><b>Откат:</b> 5 секунд</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> взгляд на игрока копирует его скин вместе с slim/wide-моделью (худая цель рисует тебя худым, даже если ты широкий) и ник над головой; взгляд на моба копирует модель и имя этого моба.</li>
+            <li><span class="fact-label">Полезно знать:</span> инвентарь, здоровье, урон и хитбокс не меняются — это только личина. Техника для обмана, а не боевая.</li>
+            <li><span class="fact-label">Полезно знать:</span> повторный каст снимает личину (цель для этого не нужна), через минуту она спадает сама. Смерть и выход из игры личину сбрасывают — она не пишется в сохранение. Клоны целью не берутся.</li>
+            <li><span class="fact-label">Полезно знать:</span> отключается конфигом <code>hengeEnabled</code>.</li>
+          </ul>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ======================= ПРОЧЕЕ ======================= -->
+    <section class="section" id="other">
+      <h2 class="group-title">Прочее</h2>
+      <p class="group-lead">
+        Механики, которых нет в списке меню <kbd>J</kbd>: прыжок висит на отдельной клавише, двойной
+        прыжок и мягкая посадка срабатывают сами, а рабочий клон — это режим обычных клонов, а не
+        отдельная техника.
+      </p>
+
+      <div class="jutsu-list">
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Прыжок (Leap)</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Клавиша</span><kbd class="k-x">X</kbd></span>
+            <span class="combo-digits">без комбо</span>
+          </div>
+          <div class="jutsu-body">
+            <p>Бросает игрока по направлению взгляда. Работает только с земли.</p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> 10 стамины</li>
+            <li><b>Задержка регенерации:</b> 40 тиков</li>
+            <li><b>Бросок:</b> горизонтально ×2.41, вертикально 60 % взгляда + 0.8</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Провалы:</span> в воздухе — <code>jutsu.fail.notonground</code>, меньше 10 стамины — <code>jutsu.fail.notenoughstamina</code>.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Двойной прыжок</h3>
+            <span class="badge badge--instant">Мгновенная</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Ввод</span><kbd class="k-x">Прыжок в воздухе</kbd></span>
+            <span class="combo-digits">без комбо</span>
+          </div>
+          <div class="jutsu-body">
+            <p>Срабатывает автоматически, когда игрок жмёт прыжок в воздухе, — один раз до приземления.</p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> 2 чакры и 5 стамины</li>
+            <li><b>Погашение падения:</b> <code>fallDistance = 0</code></li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> кроме гашения падения техника даёт облако частиц и звук.</li>
+            <li><span class="fact-label">Полезно знать:</span> заряд двойного прыжка возвращается на земле и при «устойчивом» шаге по воде.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Мягкая посадка</h3>
+            <span class="badge badge--auto">Автоматически</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Ввод</span><kbd class="k-x">без комбо</kbd></span>
+            <span class="combo-digits">срабатывает при падении</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              При падении берётся урон, <strong>который приземление всё равно отняло бы</strong>
+              (ванильная формула <code>dist - 3</code>, без прыжкового бафа), и умножается на 2 стамины
+              за единицу урона.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Цена:</b> 2 стамины за единицу урона</li>
+            <li><b>Задержка регенерации:</b> 3 секунды</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> падение на 4 блока = 1 урон = 2 стамины; падение на 40 блоков = 74 стамины, почти вся полоса.</li>
+            <li><span class="fact-label">Полезно знать:</span> если стамины не хватает — приземление происходит как обычное, а стамина не тратится вообще: «половинчатого» смягчения нет.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head">
+            <h3>Рабочий клон</h3>
+            <span class="badge badge--icon">Режим клонов</span>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>C</kbd><kbd>B</kbd><kbd>B</kbd><kbd>V</kbd></span>
+            <span class="combo-digits">любое комбо клонов + печать рабочего в основной руке</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Это не отдельная техника, а <strong>режим</strong>: те же комбо клонов, но с печатью
+              рабочего в основной руке призывают клонов работать, а не воевать. Работу задаёт
+              инструмент во второй руке.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Мотыга (и всё, кроме кирки и топора):</b> собирает спелые культуры и сразу засевает заново</li>
+            <li><b>Кирка:</b> камень и руды, только те, что взяла бы кирка в руке</li>
+            <li><b>Топор:</b> валит деревья, обходя ствол целиком (до 64 блоков)</li>
+            <li><b>Жизнь:</b> 10 минут</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> место призыва становится «постом» — рабочие не уходят от него дальше 8 блоков, а несколько рабочих делят один пост.</li>
+            <li><span class="fact-label">Полезно знать:</span> за тобой не идёт и не воюет (разве что огрызнётся на того, кто его ударит), а собранное складывает в мешок, который отдаётся тебе через 30 секунд после исчезновения.</li>
+            <li><span class="fact-label">Полезно знать:</span> печать рабочего не расходуется — это катализатор, но чакра-печать за каст всё равно тратится. Инструмент из твоего инвентаря тоже не тратится: клон работает копией и прекращает работу, когда она сломается.</li>
+            <li><span class="fact-label">Полезно знать:</span> опыт за убийство не теряется: если клон добивает моба, XP уходит сразу тебе, а не орбами на месте смерти.</li>
+          </ul>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ======================= ПРИМЕЧАНИЯ ======================= -->
+    <section class="section" id="notes">
+      <h2 class="group-title">Общие примечания</h2>
+
+      <div class="grid">
+        <article class="card">
+          <span class="card-kicker">Печати и комбо</span>
+          <h3>Что стоит держать в голове</h3>
+          <ul class="plain">
+            <li>Комбо читаются из карты, которая заполняется при запуске игры, поэтому изменения набора техник подхватываются только полным перезапуском.</li>
+            <li>Часть техник ест не чакру, а стамину: Прыжок (10), Восемь врат (15 за каждые врата), Двойной прыжок (5) и Мягкая посадка (2 за единицу урона).</li>
+            <li>Подмена тратит не чакру, а <strong>замену</strong>; всего замен 3, по одной каждые 3 секунды. В креативе замена бесплатна.</li>
+            <li>Любой призыв клонов тратит <strong>одну</strong> чакра-печать за каст — независимо от числа клонов. В креативе печать не нужна и не тратится.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <span class="card-kicker">Регенерация</span>
+          <h3>Задержка после траты</h3>
+          <ul class="plain">
+            <li>Каждая техника накладывает свою задержку регенерации ресурса, поэтому её реальная цена выше видимой.</li>
+            <li>Чакра восстанавливается по 0.05 за тик (1 в секунду), стамина — по 0.4 за тик (8 в секунду).</li>
+            <li>С этой страницей рядом стоит «<a href="secrets.html">Секреты</a>»: там собраны приёмы, которые не видны из таблиц, — медитация, броня, батарея и прочее.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div>
+      <p>
+        Фан-документация по форку <strong>Sekwah's Naruto Mod</strong> под Minecraft 1.20.1 / Forge.
+        Числа и механики взяты из описания мода к этой сборке.
+      </p>
+      <p>
+        Оригинальный мод:
+        <a href="https://github.com/sekwah41/Naruto-Mod" target="_blank" rel="noopener">sekwah41/Naruto-Mod</a>.
+      </p>
+    </div>
+    <nav class="footer-nav" aria-label="Навигация в подвале">
+      <a href="index.html">Главная</a>
+      <a href="techniques.html">Техники</a>
+      <a href="items.html">Предметы</a>
+      <a href="secrets.html">Секреты</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

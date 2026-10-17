@@ -3,8 +3,10 @@ package com.sekwah.narutomod.entity.ai;
 import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import com.sekwah.narutomod.entity.WorkerJob;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
@@ -39,6 +41,9 @@ public abstract class WorkerBlockGoal extends Goal {
     /** Ticks between scans when there is nothing to go for. */
     private static final int EMPTY_COOLDOWN = 20;
 
+    /** Heights at which a block next to the target is tried, relative to the target. */
+    private static final int[] STAND_HEIGHTS = {0, 1, -1};
+
     protected final ShadowCloneEntity worker;
 
     private BlockPos target;
@@ -60,8 +65,7 @@ public abstract class WorkerBlockGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        if (!this.worker.isWorker() || this.worker.getWorkerJob() != this.job()
-                || this.worker.level().isClientSide) {
+        if (!this.isMyJob()) {
             return false;
         }
         if (this.cooldown > 0) {
@@ -75,8 +79,7 @@ public abstract class WorkerBlockGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
-        return this.target != null && this.worker.isWorker()
-                && this.worker.getWorkerJob() == this.job()
+        return this.target != null && this.isMyJob()
                 && this.matches(this.worker.level().getBlockState(this.target));
     }
 
@@ -111,11 +114,17 @@ public abstract class WorkerBlockGoal extends Goal {
         this.cooldown = SWING_COOLDOWN;
     }
 
-    private void walkTo(BlockPos pos) {
-        this.worker.getNavigation().moveTo(pos.getX() + 0.5d, pos.getY(), pos.getZ() + 0.5d, 1.0d);
+    private boolean isMyJob() {
+        return this.worker.isWorker() && this.worker.getWorkerJob() == this.job()
+                && !this.worker.level().isClientSide;
     }
 
-    /** @return the closest block of this job's kind around the worker's post, or null. */
+    private void walkTo(BlockPos pos) {
+        BlockPos stand = this.standPosition(pos);
+        this.worker.getNavigation().moveTo(stand.getX() + 0.5d, stand.getY(), stand.getZ() + 0.5d, 1.0d);
+    }
+
+    /** @return the closest block of this job's kind around the worker's post that it can walk to. */
     private BlockPos findTarget() {
         BlockPos home = this.worker.getWorkerHome() != null
                 ? this.worker.getWorkerHome() : this.worker.blockPosition();
@@ -123,7 +132,7 @@ public abstract class WorkerBlockGoal extends Goal {
         double nearestDistance = Double.MAX_VALUE;
         for (BlockPos pos : BlockPos.betweenClosed(home.offset(-RADIUS, -VERTICAL_REACH, -RADIUS),
                 home.offset(RADIUS, VERTICAL_REACH, RADIUS))) {
-            if (!this.matches(this.worker.level().getBlockState(pos))) {
+            if (!this.matches(this.worker.level().getBlockState(pos)) || !this.hasStand(pos)) {
                 continue;
             }
             double distance = this.worker.distanceToSqr(Vec3.atCenterOf(pos));
@@ -133,5 +142,51 @@ public abstract class WorkerBlockGoal extends Goal {
             }
         }
         return nearest;
+    }
+
+    /**
+     * Whether there is anywhere to stand by the block. A solid block (a log, a lump of stone) has no
+     * path node of its own, so the worker has to stand next to it; if no side works there is no point
+     * picking that block at all.
+     */
+    private boolean hasStand(BlockPos pos) {
+        Level level = this.worker.level();
+        return level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()
+                || this.standPosition(pos) != pos;
+    }
+
+    /**
+     * The spot to walk to for a block. A crop can be walked right up to, but a solid block cannot -
+     * the pathfinder has no node inside it, and navigating at it simply leaves the worker standing
+     * where it is. For those the nearest walkable neighbour is used instead.
+     */
+    private BlockPos standPosition(BlockPos pos) {
+        Level level = this.worker.level();
+        if (level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
+            return pos;
+        }
+        BlockPos best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (int dy : STAND_HEIGHTS) {
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                BlockPos candidate = pos.relative(dir).above(dy);
+                if (!this.isStandable(candidate)) {
+                    continue;
+                }
+                double distance = this.worker.distanceToSqr(Vec3.atCenterOf(candidate));
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    best = candidate;
+                }
+            }
+        }
+        return best != null ? best : pos;
+    }
+
+    /** A block with room for the clone and solid ground underneath it. */
+    private boolean isStandable(BlockPos pos) {
+        Level level = this.worker.level();
+        return level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()
+                && level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP);
     }
 }

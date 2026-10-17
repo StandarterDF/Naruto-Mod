@@ -1,0 +1,239 @@
+- generic [active] [ref=f1e1]:
+  - link "К содержимому" [ref=f1e2] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - link "Naruto Mod 1.20.1 / Forge" [ref=f1e5] [cursor=pointer]:
+        - /url: index.html
+        - generic [aria-hidden] [ref=f1e6]: 忍
+        - generic [ref=f1e7]:
+          - text: Naruto Mod
+          - generic [ref=f1e8]: 1.20.1 / Forge
+      - navigation "Основная навигация" [ref=f1e9]:
+        - link "Главная" [ref=f1e10] [cursor=pointer]:
+          - /url: index.html
+        - link "Техники" [ref=f1e11] [cursor=pointer]:
+          - /url: techniques.html
+        - link "Предметы" [ref=f1e12] [cursor=pointer]:
+          - /url: items.html
+        - link "Секреты" [ref=f1e13] [cursor=pointer]:
+          - /url: secrets.html
+  - main [ref=f1e14]:
+    - generic [ref=f1e16]:
+      - 'heading "Naruto Mod Стань ниндзя: печати, чакра и клоны" [level=1] [ref=f1e17]':
+        - generic [ref=f1e18]: Naruto Mod
+        - text: "Стань ниндзя: печати, чакра и клоны"
+      - paragraph [ref=f1e19]:
+        - text: Порт
+        - strong [ref=f1e20]: Sekwah's Naruto Mod
+        - text: "на Minecraft 1.20.1 / Forge: техники набираются последовательностью клавиш, чакра и стамина тратятся на каждую из них, а теневые клоны копируют твой стиль боя — вплоть до щита, лука и бумажной бомбы."
+      - paragraph [ref=f1e21]: Версия форка 1.8.1-SNAPSHOT · Minecraft 1.20.1 · Forge
+      - generic [ref=f1e22]:
+        - link "Смотреть техники" [ref=f1e23] [cursor=pointer]:
+          - /url: techniques.html
+        - link "Секреты мода" [ref=f1e24] [cursor=pointer]:
+          - /url: secrets.html
+    - generic [ref=f1e25]:
+      - generic [ref=f1e26]:
+        - heading "Что это" [level=2] [ref=f1e27]
+        - paragraph [ref=f1e28]: "Мод добавляет в игру ниндзя-механику: комбинации клавиш превращаются в техники, у каждой техники своя цена в чакре (иногда — в стамине или в замене), а часть техник работает только при удержании клавиши. Цель этого форка — поведение, максимально близкое к версии 1.7.10, плюс новые техники."
+        - generic [ref=f1e29]:
+          - article [ref=f1e30]:
+            - generic [ref=f1e31]: Техники
+            - heading "Комбо из трёх печатей" [level=3] [ref=f1e32]
+            - paragraph [ref=f1e33]:
+              - text: Любая техника — это последовательность клавиш, набранная в один поток (паузы меньше ~0.75 секунды). В документации комбо записаны цифрами
+              - code [ref=f1e34]: 1 = C
+              - text: ","
+              - code [ref=f1e35]: 2 = V
+              - text: ","
+              - code [ref=f1e36]: 3 = B
+              - text: и продублированы буквами.
+          - article [ref=f1e37]:
+            - generic [ref=f1e38]: Клоны
+            - heading "Теневые клоны с твоим оружием" [level=3] [ref=f1e39]
+            - paragraph [ref=f1e40]: "Клон получает 1 единицу здоровья, поэтому любой непокрытый удар его «попает». Зато он копирует скин, обе руки, четыре слота брони, эффекты и стрелы — и дерётся как ты: щит, лук, арбалет или трезубец."
+          - article [ref=f1e41]:
+            - generic [ref=f1e42]: Прогресс
+            - heading "Восемь врат и Режим Мудреца" [level=3] [ref=f1e43]
+            - paragraph [ref=f1e44]: Врата дают растущие эффекты и снимают здоровье по квадратичной формуле, а седьмые закрыть ещё можно, восьмые — только смертью. Сенин-мана питает Режим Мудреца, который сам гаснет, когда пул пуст.
+          - article [ref=f1e45]:
+            - generic [ref=f1e46]: Пространство
+            - heading "Карманное измерение Камуи" [level=3] [ref=f1e47]
+            - paragraph [ref=f1e48]:
+              - text: Шаг в
+              - code [ref=f1e49]: narutomod:kamui
+              - text: — поле каменных столбов под небом Края, между которыми настоящая пустота. Затянутая цель возвращается обратно по таймеру, так что карман — тюрьма, а не способ отобрать чужой лут.
+      - generic [ref=f1e50]:
+        - heading "Как начать" [level=2] [ref=f1e51]
+        - paragraph [ref=f1e52]: Чтобы пользоваться техниками, сначала нужно стать ниндзя. Делается это прямо из меню техник.
+        - list [ref=f1e53]:
+          - listitem [ref=f1e54]:
+            - text: Нажми
+            - generic [ref=f1e55]: J
+            - text: — откроется меню техник.
+          - listitem [ref=f1e56]:
+            - text: Нажми «Стать ниндзя» (
+            - code [ref=f1e57]: naruto.gui.jutsu.enable
+            - text: ) — и станешь ниндзя. Обратно — кнопкой «Я передумал» (
+            - code [ref=f1e58]: naruto.gui.jutsu.disable
+            - text: ).
+          - listitem [ref=f1e59]:
+            - text: После этого меню показывает
+            - strong [ref=f1e60]: весь список техник
+            - text: ", разбитый по группам, с клавишами к каждой. До посвящения вместо списка висит подсказка «Стань ниндзя, чтобы увидеть список техник»."
+          - listitem [ref=f1e61]:
+            - text: Список листается кнопками
+            - code [ref=f1e62]: <
+            - text: /
+            - code [ref=f1e63]: ">"
+            - text: — по 10 строк на страницу. Группа, которая не поместилась целиком, печатает свой заголовок заново на новой странице.
+          - listitem [ref=f1e64]:
+            - text: То же самое в чате делает команда
+            - code [ref=f1e65]: /jutsu list
+            - text: .
+        - generic [ref=f1e66]:
+          - heading "Клавиши не зависят от раскладки" [level=3] [ref=f1e67]
+          - paragraph [ref=f1e68]: В меню буквы клавиш рисуются по коду клавиши (A–Z), поэтому на русской раскладке комбо не превращается в кириллицу, а переназначенные клавиши отображаются корректно.
+        - heading "Базовое управление" [level=3] [ref=f1e69]
+        - table [ref=f1e71]:
+          - caption [ref=f1e72]: Клавиши по умолчанию
+          - rowgroup [ref=f1e73]:
+            - row [ref=f1e74]:
+              - columnheader "Клавиша" [ref=f1e75]
+              - columnheader "Что делает" [ref=f1e76]
+          - rowgroup [ref=f1e77]:
+            - row [ref=f1e78]:
+              - cell "X" [ref=f1e79]
+              - cell "Прыжок (Leap)" [ref=f1e81]
+            - row [ref=f1e82]:
+              - cell "C" [ref=f1e83]
+              - cell "«1» в комбо-последовательности" [ref=f1e85]
+            - row [ref=f1e86]:
+              - cell "V" [ref=f1e87]
+              - cell "«2» в комбо-последовательности" [ref=f1e89]
+            - row [ref=f1e90]:
+              - cell "B" [ref=f1e91]
+              - cell "«3» в комбо-последовательности" [ref=f1e93]
+            - row [ref=f1e94]:
+              - cell "J" [ref=f1e95]
+              - 'cell "Меню дзюцу: список всех техник с их клавишами плюс включение и выключение режима ниндзя" [ref=f1e97]'
+            - row [ref=f1e98]:
+              - cell "Прыжок в воздухе" [ref=f1e99]
+              - cell "Двойной прыжок (сам, без комбо)" [ref=f1e100]
+        - heading "Тап, удержание и переключатели" [level=3] [ref=f1e101]
+        - list [ref=f1e102]:
+          - listitem [ref=f1e103]:
+            - strong [ref=f1e104]: Мгновенные техники
+            - text: — набрал комбо и просто подожди полсекунды, техника сработает сама.
+          - listitem [ref=f1e105]:
+            - strong [ref=f1e106]: Канальные техники
+            - text: — последнюю клавишу комбо надо зажать. Отпустил раньше ~0.75 секунды — это «тап» (короткий вариант), держишь дольше — техника заряжается и работает, пока клавиша нажата.
+          - listitem [ref=f1e107]:
+            - strong [ref=f1e108]: Переключатели
+            - text: — набрал комбо, техника включилась; набрал то же комбо ещё раз — выключилась.
+      - generic [ref=f1e109]:
+        - heading "Системы мода" [level=2] [ref=f1e110]
+        - paragraph [ref=f1e111]: Ресурсы, которые тратят техники, и два больших «режима», вокруг которых построена половина арсенала.
+        - table [ref=f1e113]:
+          - caption [ref=f1e114]: "Ресурсы: максимум и восстановление"
+          - rowgroup [ref=f1e115]:
+            - row [ref=f1e116]:
+              - columnheader "Ресурс" [ref=f1e117]
+              - columnheader "Максимум" [ref=f1e118]
+              - columnheader "Восстановление" [ref=f1e119]
+          - rowgroup [ref=f1e120]:
+            - row [ref=f1e121]:
+              - cell "Чакра" [ref=f1e122]
+              - cell "100" [ref=f1e123]
+              - cell "+0.05 за тик (1 в секунду) после задержки регенерации" [ref=f1e124]
+            - row [ref=f1e125]:
+              - cell "Стамина" [ref=f1e126]
+              - cell "100" [ref=f1e127]
+              - cell "+0.4 за тик (8 в секунду) после задержки регенерации" [ref=f1e128]
+            - row [ref=f1e129]:
+              - cell "Замены" [ref=f1e130]
+              - cell "3" [ref=f1e131]
+              - cell "+1 каждые 60 тиков (3 секунды)" [ref=f1e132]
+        - generic [ref=f1e133]:
+          - heading "Задержка регенерации — скрытая цена" [level=3] [ref=f1e134]
+          - paragraph [ref=f1e135]: "Любая техника после траты накладывает задержку регенерации: своё число тиков, в течение которых ресурс не восстанавливается. Именно поэтому дешёвая на вид техника на практике может стоить дороже — она «съедает» регенерацию на несколько секунд."
+        - generic [ref=f1e136]:
+          - article [ref=f1e137]:
+            - generic [ref=f1e138]: Полоски
+            - heading "Чакра, стамина и сенин-мана" [level=3] [ref=f1e139]
+            - paragraph [ref=f1e140]:
+              - text: Чакра и стамина рисуются полосками интерфейса. Текущая сенин-мана показывается полоской
+              - strong [ref=f1e141]: того же вида, что и чакра, прямо над ней
+              - text: ", отличается только зелёная заливка в цвет частиц сенина, с цифрами «текущая/максимум»."
+            - paragraph [ref=f1e142]: "Плашка сенин-маны появляется, только когда есть что показывать: пустая пустому новичку не нужна."
+          - article [ref=f1e143]:
+            - generic [ref=f1e144]: Природная энергия
+            - heading "Режим Мудреца" [level=3] [ref=f1e145]
+            - paragraph [ref=f1e146]:
+              - text: Сенин-ману копит
+              - strong [ref=f1e147]: Сбор природной энергии
+              - text: (
+              - code [ref=f1e148]: "231"
+              - text: "): только стоя на земле неподвижно, по 0.5 за тик. Максимум пула по умолчанию 100, и пул записывается в сохранение."
+            - paragraph [ref=f1e149]:
+              - strong [ref=f1e150]: Режим Мудреца
+              - text: (
+              - code [ref=f1e151]: "232"
+              - text: ) требует минимум 50 сенин-маны, тратит её по 0.25 за тик и сам гаснет, когда пул кончился. Смерть и выход из игры тоже его закрывают.
+            - paragraph [ref=f1e152]:
+              - link "Подробнее в разделе «Усиление тела» →" [ref=f1e153] [cursor=pointer]:
+                - /url: techniques.html#body
+          - article [ref=f1e154]:
+            - generic [ref=f1e155]: Восемь врат
+            - heading "Сила за здоровье" [level=3] [ref=f1e156]
+            - paragraph [ref=f1e157]:
+              - text: "Каждый каст открывает следующие врата: 25 чакры и 15 стамины за каждые. Эффекты растут с числом врат, а плата — слив здоровья по формуле"
+              - code [ref=f1e158]: 0.00833 × (число врат)²
+              - text: в секунду, целыми единицами и напрямую, мимо любой защиты.
+            - paragraph [ref=f1e159]: Врата с 1 по 7 закрываются бесплатной техникой «Запечатать врата», а восьмые — только смертью.
+            - paragraph [ref=f1e160]:
+              - link "Открыть таблицу врат →" [ref=f1e161] [cursor=pointer]:
+                - /url: techniques.html#body
+      - generic [ref=f1e163]:
+        - generic [ref=f1e164]: Дальше
+        - 'heading "Секреты: то, что не написано в подсказках" [level=3] [ref=f1e165]'
+        - paragraph [ref=f1e166]: Клоны из бумажной бомбы, взрывающиеся при смерти, запас стрел, который копирует себе клон, бонусы к чакре от медитирующих клонов и от брони, «отливание» чакры в батарею перед боем — всё это собрано отдельно.
+        - paragraph [ref=f1e167]:
+          - link "Читать секреты" [ref=f1e168] [cursor=pointer]:
+            - /url: secrets.html
+      - generic [ref=f1e169]:
+        - heading "Разделы" [level=2] [ref=f1e170]
+        - list [ref=f1e171]:
+          - listitem [ref=f1e172]:
+            - link "Техники 8 групп" [ref=f1e173] [cursor=pointer]:
+              - /url: techniques.html
+              - text: Техники
+              - generic [ref=f1e174]: 8 групп
+          - listitem [ref=f1e175]:
+            - link "Предметы и броня" [ref=f1e176] [cursor=pointer]:
+              - /url: items.html
+          - listitem [ref=f1e177]:
+            - link "Секреты" [ref=f1e178] [cursor=pointer]:
+              - /url: secrets.html
+  - contentinfo [ref=f1e179]:
+    - generic [ref=f1e180]:
+      - generic [ref=f1e181]:
+        - paragraph [ref=f1e182]:
+          - text: Фан-документация по форку
+          - strong [ref=f1e183]: Sekwah's Naruto Mod
+          - text: под Minecraft 1.20.1 / Forge. Числа и механики взяты из описания мода к этой сборке.
+        - paragraph [ref=f1e184]:
+          - text: "Оригинальный мод:"
+          - link "sekwah41/Naruto-Mod" [ref=f1e185] [cursor=pointer]:
+            - /url: https://github.com/sekwah41/Naruto-Mod
+          - text: .
+      - navigation "Навигация в подвале" [ref=f1e186]:
+        - link "Главная" [ref=f1e187] [cursor=pointer]:
+          - /url: index.html
+        - link "Техники" [ref=f1e188] [cursor=pointer]:
+          - /url: techniques.html
+        - link "Предметы" [ref=f1e189] [cursor=pointer]:
+          - /url: items.html
+        - link "Секреты" [ref=f1e190] [cursor=pointer]:
+          - /url: secrets.html
