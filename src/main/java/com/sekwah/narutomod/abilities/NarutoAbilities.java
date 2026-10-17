@@ -8,7 +8,14 @@ import com.sekwah.narutomod.abilities.jutsus.WaterBulletJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraMarkerJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraMeditationJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ShadowCloneJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.ChakraRegenerationAbility;
+import com.sekwah.narutomod.abilities.jutsus.ChakraShieldAbility;
+import com.sekwah.narutomod.abilities.jutsus.EightGatesAbility;
+import com.sekwah.narutomod.abilities.jutsus.OreExcavationJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.RasenganJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.SecondBreathAbility;
 import com.sekwah.narutomod.abilities.utility.ChakraChargeAbility;
+import com.sekwah.narutomod.abilities.utility.ChakraFistAbility;
 import com.sekwah.narutomod.abilities.utility.DoubleJumpAbility;
 import com.sekwah.narutomod.abilities.utility.LeapAbility;
 import com.sekwah.narutomod.abilities.utility.WaterWalkAbility;
@@ -54,6 +61,12 @@ public class NarutoAbilities {
 
     public static final RegistryObject<DoubleJumpAbility> DOUBLE_JUMP = ABILITY.register("double_jump", DoubleJumpAbility::new);
 
+    /**
+     * The chakra fist stance: faster mining, harder punches, paid for by the block and the hit.
+     * See {@link ChakraFistAbility}.
+     */
+    public static final RegistryObject<ChakraFistAbility> CHAKRA_FIST = ABILITY.register("chakra_fist", ChakraFistAbility::new);
+
     public static final RegistryObject<SubstitutionJutsuAbility> SUBSTITUTION = ABILITY.register("substitution", SubstitutionJutsuAbility::new);
 
     public static final RegistryObject<ShadowCloneJutsuAbility> SHADOW_CLONE = ABILITY.register("shadow_clone",
@@ -78,6 +91,44 @@ public class NarutoAbilities {
      */
     public static final RegistryObject<ChakraMarkerJutsuAbility> CHAKRA_MARKER =
             ABILITY.register("chakra_marker", ChakraMarkerJutsuAbility::new);
+
+    /**
+     * Turns the whole chakra bar into a shield that is eaten away hit by hit. See
+     * {@link ChakraShieldAbility}.
+     */
+    public static final RegistryObject<ChakraShieldAbility> CHAKRA_SHIELD =
+            ABILITY.register("chakra_shield", ChakraShieldAbility::new);
+
+    /**
+     * Buys one escape from death with the whole chakra bar. See {@link SecondBreathAbility}.
+     */
+    public static final RegistryObject<SecondBreathAbility> SECOND_BREATH =
+            ABILITY.register("second_breath", SecondBreathAbility::new);
+
+    /**
+     * Closes wounds with chakra and food rather than saturation. See
+     * {@link ChakraRegenerationAbility}.
+     */
+    public static final RegistryObject<ChakraRegenerationAbility> CHAKRA_REGENERATION =
+            ABILITY.register("chakra_regeneration", ChakraRegenerationAbility::new);
+
+    /**
+     * Shakes the ore out of the ground around the caster. See {@link OreExcavationJutsuAbility}.
+     */
+    public static final RegistryObject<OreExcavationJutsuAbility> ORE_EXCAVATION =
+            ABILITY.register("ore_excavation", OreExcavationJutsuAbility::new);
+
+    /**
+     * The channelled sphere of chakra. See {@link RasenganJutsuAbility}.
+     */
+    public static final RegistryObject<RasenganJutsuAbility> RASENGAN =
+            ABILITY.register("rasengan", RasenganJutsuAbility::new);
+
+    /**
+     * The eight inner gates, opened one at a time. See {@link EightGatesAbility}.
+     */
+    public static final RegistryObject<EightGatesAbility> EIGHT_GATES =
+            ABILITY.register("eight_gates", EightGatesAbility::new);
 
     public static void register(IEventBus eventBus) {
         ABILITY.register(eventBus);

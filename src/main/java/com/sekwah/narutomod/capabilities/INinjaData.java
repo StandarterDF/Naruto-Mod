@@ -16,6 +16,31 @@ public interface INinjaData extends INBTSerializable<Tag> {
     float getMaxChakra();
     float getStamina();
 
+    /**
+     * Extra chakra capacity on top of the configured maximum. Currently handed out by the chakra
+     * meditation clones, a hundred points per clone, and cleared again as soon as they are gone.
+     */
+    float getChakraCapacityBonus();
+    void setChakraCapacityBonus(float bonus);
+
+    /**
+     * Armour points bought with chakra, spent as they soak up damage. Zero when there is no shield.
+     */
+    float getShieldPoints();
+    void setShieldPoints(float points);
+
+    /**
+     * Whether the second breath trick has been paid for and is waiting for a killing blow.
+     */
+    boolean isSecondBreathArmed();
+    void setSecondBreathArmed(boolean armed);
+
+    /**
+     * How many of the eight inner gates are currently open, from none to all eight.
+     */
+    int getGateCount();
+    void setGateCount(int gates);
+
     float getSubstitutionCount();
 
     float getMaxStamina();

@@ -30,6 +30,13 @@ public class ChakraMeditationJutsuAbility extends ShadowCloneJutsuAbility {
     /** Chakra pushed into the caster every tick, per meditating clone in range. */
     private static final float CHAKRA_PER_CLONE = 0.2f;
 
+    /**
+     * Chakra capacity each meditating clone opens up while it is linked to its caster, on top of
+     * the configured maximum. This is where most of the refill comes from: the caster can bank
+     * chakra they would not otherwise be able to hold at all.
+     */
+    private static final float CAPACITY_PER_CLONE = 100.0f;
+
     public ChakraMeditationJutsuAbility() {
         super(CHAKRA_MEDITATION_SETTINGS);
     }
@@ -42,10 +49,13 @@ public class ChakraMeditationJutsuAbility extends ShadowCloneJutsuAbility {
      */
     public static void tickAura(Player player) {
         int meditating = countMeditatingClones(player);
-        if (meditating <= 0) {
-            return;
-        }
         player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
+            // The extra capacity goes up and down with the clones, whether or not there is any to
+            // draw on right now.
+            ninjaData.setChakraCapacityBonus(CAPACITY_PER_CLONE * meditating);
+            if (meditating <= 0) {
+                return;
+            }
             ninjaData.addChakra(CHAKRA_PER_CLONE * meditating);
             fastForwardCooldowns(ninjaData);
         });

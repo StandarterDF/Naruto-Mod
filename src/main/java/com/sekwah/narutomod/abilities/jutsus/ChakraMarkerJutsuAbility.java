@@ -31,8 +31,8 @@ import net.minecraft.world.phys.Vec3;
  */
 public class ChakraMarkerJutsuAbility extends Ability implements Ability.Channeled {
 
-    /** C B - the substitution technique's neighbour in the combo list. */
-    public static final long COMBO = 13L;
+    /** C B B V C - a deliberately long string of seals for a two way trip between two places. */
+    public static final long COMBO = 13321L;
 
     /** Chakra spent leaving a log behind. */
     private static final float PLANT_COST = 25.0f;

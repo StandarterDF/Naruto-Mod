@@ -45,6 +45,33 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private float maxChakra;
 
     /**
+     * Chakra capacity granted on top of the configured maximum, see
+     * {@code INinjaData#getChakraCapacityBonus()}. Kept out of the save file: it is recomputed every
+     * tick by whatever is handing it out (the meditation clones) and means nothing without them.
+     */
+    @Sync(minTicks = 1)
+    private float chakraCapacityBonus;
+
+    /**
+     * Shield bought with chakra, see {@code ChakraShieldAbility}. Shown as armour points and spent
+     * point for point as damage comes in, so it is really a second health bar the armour display
+     * happens to render.
+     */
+    @Sync(minTicks = 1)
+    private float shieldPoints;
+
+    /**
+     * Whether the second breath trick is armed. Server side only, the client has no use for it.
+     */
+    private boolean secondBreathArmed;
+
+    /**
+     * How many of the eight inner gates are open. Server side only, the client sees the resulting
+     * effects instead.
+     */
+    private int gateCount;
+
+    /**
      * If the player should have access to all the ninja shit
      */
     @Sync(syncGlobally = true)
@@ -162,7 +189,47 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
     @Override
     public float getMaxChakra() {
-        return this.maxChakra;
+        return this.maxChakra + this.chakraCapacityBonus;
+    }
+
+    @Override
+    public float getChakraCapacityBonus() {
+        return this.chakraCapacityBonus;
+    }
+
+    @Override
+    public void setChakraCapacityBonus(float bonus) {
+        this.chakraCapacityBonus = bonus;
+    }
+
+    @Override
+    public float getShieldPoints() {
+        return this.shieldPoints;
+    }
+
+    @Override
+    public void setShieldPoints(float points) {
+        this.shieldPoints = points;
+    }
+
+    @Override
+    public boolean isSecondBreathArmed() {
+        return this.secondBreathArmed;
+    }
+
+    @Override
+    public void setSecondBreathArmed(boolean armed) {
+        this.secondBreathArmed = armed;
+    }
+
+    @Override
+    public int getGateCount() {
+        return this.gateCount;
+    }
+
+    @Override
+    public void setGateCount(int gates) {
+        this.gateCount = gates;
     }
 
     @Override
@@ -209,7 +276,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
     @Override
     public void addChakra(float amount) {
-        this.chakra = Math.min(Math.max(this.chakra + amount, 0), maxChakra);
+        this.chakra = Math.min(Math.max(this.chakra + amount, 0), this.getMaxChakra());
     }
 
     @Override
@@ -360,7 +427,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         this.substitutions += NarutoConfig.substitutionRegenRate;
         this.substitutions = Math.min(Math.max(this.substitutions, 0), this.maxSubstitutions);
         this.stamina = Math.min(Math.max(this.stamina, 0), this.maxStamina);
-        this.chakra = Math.min(Math.max(this.chakra, 0), this.maxChakra);
+        this.chakra = Math.min(Math.max(this.chakra, 0), this.getMaxChakra());
 
         if (this.currentlyChanneled != null) {
             Ability ability = NarutoRegistries.ABILITIES.getValue(this.currentlyChanneled);

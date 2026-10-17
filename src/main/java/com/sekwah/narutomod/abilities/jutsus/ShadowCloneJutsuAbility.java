@@ -3,6 +3,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.entity.ShadowCloneEntity;
+import com.sekwah.narutomod.item.NarutoItems;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -10,6 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -73,6 +75,13 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
+        // Every version of the technique burns one seal talisman. It is taken in performServer,
+        // here we only make sure there is one to take so the caster is not charged for nothing.
+        if (!hasSeal(player)) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.noseal",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
+            return false;
+        }
         if (ninjaData.getChakra() < this.settings.chakraCost()) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
@@ -82,11 +91,51 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
         return true;
     }
 
+    /**
+     * Whether the caster has a seal talisman to burn. Creative casters are spared the bookkeeping,
+     * the same way they are spared food.
+     */
+    private static boolean hasSeal(Player player) {
+        if (player.isCreative()) {
+            return true;
+        }
+        return player.getInventory().items.stream().anyMatch(ShadowCloneJutsuAbility::isSeal)
+                || player.getInventory().offhand.stream().anyMatch(ShadowCloneJutsuAbility::isSeal);
+    }
+
+    /**
+     * Takes one seal off the caster: the first stack found, wherever it is. Called once per summon
+     * no matter how many clones are about to appear.
+     */
+    private static void consumeSeal(Player player) {
+        if (player.isCreative()) {
+            return;
+        }
+        for (ItemStack stack : player.getInventory().items) {
+            if (isSeal(stack)) {
+                stack.shrink(1);
+                return;
+            }
+        }
+        for (ItemStack stack : player.getInventory().offhand) {
+            if (isSeal(stack)) {
+                stack.shrink(1);
+                return;
+            }
+        }
+    }
+
+    private static boolean isSeal(ItemStack stack) {
+        return stack.is(NarutoItems.CHAKRA_SEAL.get());
+    }
+
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
+
+        consumeSeal(player);
 
         int cloneCount = this.settings.minClones()
                 + player.getRandom().nextInt(this.settings.maxClones() - this.settings.minClones() + 1);

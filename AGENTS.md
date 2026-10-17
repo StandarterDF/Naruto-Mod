@@ -62,6 +62,11 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
 | Мульти-клон | `C B B V B C` | 80 | 8–11 | 25 с | 2 | 0.3 | 10 с |
 | Медитация чакры | `C B B C` | 60 | 2 | 30 с | 0 | 0 | 90 с |
 
+**Расход печати.** Любой призыв клонов (все четыре техники) требует `narutomod:chakra_seal` в
+инвентаре и тратит **одну** печать за каст — независимо от числа клонов. Проверка в
+`ShadowCloneJutsuAbility#handleCost`, списание в `#performServer` (креатив ничего не тратит и может
+кастовать без печати). Нет печати — `jutsu.fail.noseal`.
+
 ### Поведение (паритет с 1.7.10)
 
 * **1 HP**: любой непокрытый удар «попает» клона. Урон/скорость/время жизни задаются техникой через
@@ -89,6 +94,10 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
   (8 блоков) есть медитирующий клон владельца — `+0.2` чакры за тик на каждого и лишний тик в
   `INinjaData#getCooldownEvents()`, то есть КД техник идут вдвое быстрее. Второй тик снимается копией
   ключей карты, иначе `ConcurrentModificationException`.
+* **Доп. чакра медитации**: каждый медитирующий клон в радиусе поднимает **максимум** чакры кастера
+  на `CAPACITY_PER_CLONE = 100` через `INinjaData#setChakraCapacityBonus` (у `getMaxChakra()` бонус
+  прибавляется к настраиваемому максимуму, сам бонус — `@Sync` и в NBT не пишется). Клон исчез /
+  отошёл — бонус сбрасывается в том же тике (`tickAura` выставляет его всегда, даже когда клонов нет).
 
 ### «Плюшки»: клон наследует стиль боя кастера
 
@@ -169,7 +178,8 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 
 ### Бревно-метка (`narutomod:chakra_marker`)
 
-`abilities/jutsus/ChakraMarkerJutsuAbility.java` — CHANNELED, комбо `C B` (сосед техники подмены `C V`):
+`abilities/jutsus/ChakraMarkerJutsuAbility.java` — CHANNELED, комбо `C B B V` → **`C B B V C`** (5
+печатей; удлинено по просьбе — двух знаков было слишком мало):
 
 * **Тап** (`MIN_ACTIVATE`, `ticksActive == -1`, `canActivateBelowMinCharge()` по умолчанию true) — обмен:
   кастер встаёт туда, где бревно, бревно — туда, где стоял кастер (15 чакры). То есть возврат «домой»
@@ -194,6 +204,72 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   остальных ванильных `jutsu.fail.*` русских переводов как не было, так и нет).
 * `getTranslationKey(ninjaData, ticksActive)` добавляет `.mark` при удержании, ровно как у подмены:
   «You cast Chakra Marker» / «... - Log Planted».
+
+## Техники и предметы второго набора
+
+Всё ниже — один батч, добавленный после клонов. Комбо свободны и не конфликтуют с ванильными
+(`1`, `2`, `3`, `12`, `121`, `132`, `1332`, `1322`, `133231`):
+
+| Техника / предмет | Комбо | Тип | Расход | Файл |
+| --- | --- | --- | --- | --- |
+| Кулак чакры | `C C` | TOGGLE | 0.02 чакры/тик + 1 за блок + 3 за удар | `abilities/utility/ChakraFistAbility.java` + `events/ChakraFistEvents.java` |
+| Чакра-щит | `B V B` | INSTANT | вся чакра (мин. 20) | `abilities/jutsus/ChakraShieldAbility.java` + `events/ChakraShieldEvents.java` |
+| Второе дыхание | `V V B` | INSTANT | вся чакра (мин. 60), КД 10 мин | `abilities/jutsus/SecondBreathAbility.java` + `events/SecondBreathEvents.java` |
+| Регенерация чакрой | `V B B C` | TOGGLE | 6 чакры + 1 еда за 1 HP | `abilities/jutsus/ChakraRegenerationAbility.java` |
+| Рудокоп (Земля) | `C V V C` | INSTANT | 40 чакры | `abilities/jutsus/OreExcavationJutsuAbility.java` |
+| Расенган | `C B B C B` | CHANNELED | 0.6 чакры/тик | `abilities/jutsus/RasenganJutsuAbility.java` |
+| Восемь врат | `V B B B` | INSTANT | 25 чакры + 15 стамины за врата | `abilities/jutsus/EightGatesAbility.java` |
+| Чакра-печать | — | предмет | 1 за призыв клонов | `NarutoItems.CHAKRA_SEAL` |
+| Рамен | — | предмет (еда) | — | `NarutoItems.RAMEN` |
+| Самехада / Кубикирибочо | — | оружие | — | `item/ComboSwordItem.java` + `events/ComboSwordEvents.java` |
+
+Ключевые решения:
+
+* **Кулак чакры** — сила живёт в Forge-событиях, а не в способности: `PlayerEvent.BreakSpeed` множит
+  скорость копания на `2.5` (правится **на обоих сторонах**, иначе клиент рисует медленное копание),
+  `BlockEvent.BreakEvent` берёт по 1 чакре **за сломанный блок** (не за тик), `LivingHurtEvent` —
+  3 чакры за ближний удар и `+3` урона. `handleCost` дополнительно держит регенерацию чакры
+  «придавленной» (`REGEN_DELAY = 10`, обновляется каждый тик) — стойка стоит не только 0.02/тик.
+  Способность реализует `Ability.Toggled`, состояние спрашивается через
+  `ChakraFistAbility.isActive(ninjaData)` (`getToggleAbilityData().getAbilitiesHashSet().contains(ID)`).
+* **Чакра-щит** — «вторая полоска здоровья», показанная как броня. Вся чакра превращается в пул
+  очков (`INinjaData#getShieldPoints`), пул висит на атрибуте `Attributes.ARMOR` как
+  `addTransientModifier` с фиксированным UUID (`ChakraShieldAbility.applyShield/removeShield`), а урон
+  снимается **до** здоровья в `ChakraShieldEvents#onLivingHurt` (щит тратится 1:1, атрибут
+  переприменяется, чтобы полоска брони шла вниз). Стакать нельзя: при активном щите каст падает с
+  `jutsu.fail.shield`. На респавне — `PlayerEvent.Clone`: смерть стирает щит, смена измерения
+  переприменяет модификатор (новый `Player` не наследует модификаторы).
+* **Второе дыхание** — тратит **всю** чакру и ставит флаг `INinjaData#isSecondBreathArmed`. Флаг
+  висит, пока не прилетит **смертельный** удар: `SecondBreathEvents#onLivingHurt` (приоритет
+  `LOWEST`, чтобы не отбирать спасение у других эффектов) отменяет событие, поднимает HP до
+  `SECOND_LIFE_HEALTH = 10`, снимает флаг и даёт `DARKNESS` на минуту (мягкая «слепота»: ванильный
+  `BLINDNESS` слепит полностью, а просили «не сильную»). КД 10 минут — через `Ability.Cooldown`.
+* **Регенерация чакрой** — TOGGLE, лечит по 1 HP раз в `HEAL_INTERVAL = 40` тиков. С едой —
+  6 чакры + 1 food point (`FoodData#setFoodLevel`), без еды — 15 чакры и без расхода еды. Еды
+  хватает только на 2 HP за «окорочек», поэтому основной расход всё равно чакра.
+* **Рудокоп** — флудит куб радиусом 5 и ломает всё, что под тегом `forge:ores` (модовые руды тоже),
+  но не больше `MAX_BLOCKS = 64` блоков за каст. Позиции собираются **до** разрушения (иначе
+  перебор `BlockPos.immutable()` в живом уровне), ломается через `level.destroyBlock(pos, true, player)`.
+* **Расенган** — CHANNELED: `handleCost` жжёт 0.6 чакры/тик, `handleChannelling` рисует шар у руки,
+  `performServer` получает число продержанных тиков и бьёт по площади спереди. Тап (< 20 тиков) —
+  пшик, 60 тиков — максимум (урон 4→16, вылет 0.8→1.8). Дальше тиков больше — урон не растёт.
+* **Восемь врат** — состояние `INinjaData#getGateCount` (server-only, до 8). Каст открывает
+  следующее окно, каст на восьмом — закрывает все. Эффекты (`SPEED`, `DAMAGE_BOOST`,
+  `DAMAGE_RESISTANCE`, `JUMP` с длительностью 60 тиков) обновляются каждый тик из
+  `EightGatesAbility.maintain`, вызываемого в `PlayerEvents#onEntityUpdate`. Плата — «магический»
+  урон `0.5 × врата` раз в 40 тиков (броня не спасает). Смерть/респавн обнуляют врата в
+  `PlayerEvents#onPlayerClone`; закрытие снимает эффекты (`close`).
+* **Мягкая посадка** (без комбо, автоматически) — в `PlayerEvents#livingFall`: если стамины хватает
+  на `10 + 6 × дистанция`, падение гасится полностью (`setDistance(0)`, облако частиц), стамина
+  списывается с задержкой регенерации 3 с. Не хватило — работает старый мягкий пересчёт ванильного
+  урона. Это самая дорогая трата стамины в моде: падение на 10 блоков стоит ~70 из 100.
+* **Великие мечи** (`ComboSwordItem`) — цепочка ударов живёт **в NBT стека**
+  (`narutomod:combo`, `narutomod:combo_time`): каждый удар, попавший в окно (4–5 с), добавляет звено,
+  урон следующего удара растёт (`damagePerStep`; Самехада — 0.5, Кубикирибочо — 0.75, максимум 20
+  звеньев). Урон добавляется в `ComboSwordEvents#onLivingHurt` (приоритет `HIGH`) — момент удара
+  единственный, когда цепочку можно прочитать и продлить до расчёта урона. Самехада дополнительно
+  «высасывает» 1.5 чакры за удар. Оба меча — 2D-спрайты (`item/handheld`), 3D-модели 1.7.10 пока не
+  портированы.
 
 ## Грабли, на которые уже наступали
 

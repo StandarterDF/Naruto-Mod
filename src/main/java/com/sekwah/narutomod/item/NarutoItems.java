@@ -100,8 +100,38 @@ public class NarutoItems {
             () -> new MilitaryPillItem(new Item.Properties().stacksTo(16)
                     .food(new FoodProperties.Builder().nutrition(6).saturationMod(0.6f).build())));
 
+    /**
+     * Ichiraku's finest. A proper meal rather than a snack: more than a full hunger bar's worth in
+     * one bowl, and enough saturation to keep the caster topped up for a while afterwards.
+     */
+    public static final RegistryObject<Item> RAMEN = ITEMS.register("ramen",
+            () -> new Item(new Item.Properties().stacksTo(16)
+                    .food(new FoodProperties.Builder().nutrition(8).saturationMod(1.2f).build())));
+
+    /**
+     * The talisman every clone technique burns, see
+     * {@code ShadowCloneJutsuAbility#handleCost(Player, INinjaData, int)}. One per summon, no matter
+     * how many clones come out of it.
+     */
+    public static final RegistryObject<Item> CHAKRA_SEAL = ITEMS.register("chakra_seal",
+            () -> new Item(new Item.Properties()));
+
     public static final RegistryObject<Item> KATANA = ITEMS.register("katana", ()
             -> new SwordItem(NinjaTier.KATANA, 3, -1.95F, new Item.Properties()));
+
+    /**
+     * Samehada: quick enough for a chain to be kept alive, and it takes chakra off whatever it cuts.
+     */
+    public static final RegistryObject<Item> SAMEHADA = ITEMS.register("samehada",
+            () -> new ComboSwordItem(NinjaTier.KATANA, 4, -2.4F, new Item.Properties().stacksTo(1),
+                    0.5f, 20, 20 * 4, 1.5f));
+
+    /**
+     * Kubikiribocho: slow, heavy, and the chain is worth far more per step.
+     */
+    public static final RegistryObject<Item> KUBIKIRIBOCHO = ITEMS.register("kubikiribocho",
+            () -> new ComboSwordItem(NinjaTier.KATANA, 6, -3.2F, new Item.Properties().stacksTo(1),
+                    0.75f, 20, 20 * 5, 0.0f));
 
     // Ninja Masks
 
