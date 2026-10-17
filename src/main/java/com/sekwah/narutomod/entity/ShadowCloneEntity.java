@@ -153,10 +153,10 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
      */
     private static final int WORKER_LOOT_DELAY = 20 * 30;
 
-    /** Where a worker was put down, and therefore the middle of the land it works. */
+    /** Where a worker was put down; kept as a record of the summoning spot. */
     private BlockPos workerHome;
 
-    /** What a worker was told to do, decided by the tool in the caster's off hand. */
+    /** What a worker was told to do, decided by the tool in the caster's main hand. */
     private WorkerJob workerJob = WorkerJob.FARM;
 
     /** Crops a worker has reaped and is carrying home, see {@link #collect(ItemStack)}. */
@@ -690,9 +690,9 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     /**
      * Gives the worker the tool it is supposed to swing and empties its other hand.
      *
-     * <p>The constructor copies both of the caster's hands, which for a worker means the seal in the
-     * main hand and the tool in the off hand. A worker holds neither the seal nor a second item, so
-     * the tool is moved into the main hand (where a mob swings from) and the off hand is cleared.</p>
+     * <p>The constructor copies both of the caster's hands, which for a worker means the tool in the
+     * main hand and the seal in the off hand. A worker holds the tool (where a mob swings from) but
+     * not the seal, so the off hand is cleared.</p>
      */
     public void setWorkerTool(ItemStack tool) {
         this.setItemSlot(EquipmentSlot.MAINHAND, tool.copy());

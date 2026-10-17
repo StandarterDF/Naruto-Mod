@@ -348,14 +348,14 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   удалён: он и выглядел случайным. Цена теперь пропорциональна опасности: 4 блока — 2 стамины,
   40 блоков — 74.
 * **Рабочий клон** — это **не предмет и не отдельная техника**, а **режим** обычных клонов: если при
-  касте комбо клонов в **основной руке** лежит `item/WorkerSealItem` (`ShadowCloneJutsuAbility#isHoldingWorkerSeal`),
+  касте комбо клонов в **дополнительной (off) руке** лежит `item/WorkerSealItem` (`ShadowCloneJutsuAbility#isHoldingWorkerSeal`),
   клоны выходят рабочими (количество — как у техники, срок жизни — `ShadowCloneEntity.WORKER_LIFETIME`
   = 10 минут). Печать **не расходуется** и не кликается — это катализатор; чакра-печать за каст всё
   равно тратится. Медитация (`Settings#meditating`) режим игнорирует — она всегда медитация. Работа —
-  **enum `entity/WorkerJob`** (`FARM`/`MINE`/`CHOP`), выбирается по инструменту во **второй** руке
+  **enum `entity/WorkerJob`** (`FARM`/`MINE`/`CHOP`), выбирается по инструменту в **основной** руке
   (`ShadowCloneJutsuAbility#workerJob`): кирка → `MINE`, топор → `CHOP`, всё остальное → `FARM`.
   Флаг `worker` (`DATA_WORKER`) и `workerJob` (строка в NBT) — server-side.
-  Инструмент кладётся клону в **основную** руку, вторая рука пустеет (`ShadowCloneEntity#setWorkerTool`).
+  Инструмент остаётся клону в **основной** руке, вторая рука пустеет (`ShadowCloneEntity#setWorkerTool`).
 * Три смены рабочих — общий предок `entity/ai/WorkerBlockGoal` (приоритет 1): ищет ближайший блок
   своего класса **вокруг самого рабочего** (центр — `worker.blockPosition()`, не пост) в радиусе
   `searchRadius()` / ±3. `searchRadius()`: по умолчанию 8, `WorkerMineGoal` — 12, `WorkerChopGoal` —

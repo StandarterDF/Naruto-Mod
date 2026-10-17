@@ -11,11 +11,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * The Worker's Seal: hold it in your main hand while casting a clone technique and the clones come
+ * The Worker's Seal: hold it in your off hand while casting a clone technique and the clones come
  * out as workers instead of fighters.
  *
  * <p>It is a catalyst, not a one-shot: it is never right-clicked and never consumed. What the
- * workers do is decided by the tool in the caster's other hand - a hoe sends them to the fields, a
+ * workers do is decided by the tool in the caster's main hand - a hoe sends them to the fields, a
  * pickaxe down the mine and an axe to the tree line. They appear in the same numbers the technique
  * normally summons and around the caster, just like ordinary clones, and then walk off to work
  * around that spot until their chakra runs out. See

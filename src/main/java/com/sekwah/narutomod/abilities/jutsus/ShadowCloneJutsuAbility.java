@@ -24,10 +24,10 @@ import net.minecraft.world.phys.Vec3;
  * <p>The same class backs all three versions of the technique (normal, chibi and multi shadow
  * clone), they only differ in their {@link Settings}.</p>
  *
- * <p>With the Worker's Seal ({@code narutomod:worker_seal}) in the main hand, the very same
+ * <p>With the Worker's Seal ({@code narutomod:worker_seal}) in the off hand, the very same
  * techniques summon workers instead of fighters: the clones come out in the usual numbers but walk
- * off to farm, mine or chop around the spot they appeared on, and their tool - the item in the
- * caster's off hand - decides which of the three it is. See {@link WorkerJob}.</p>
+ * off to farm, mine or chop around themselves, and their tool - the item in the caster's main hand -
+ * decides which of the three it is. See {@link WorkerJob}.</p>
  */
 public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown {
 
@@ -163,7 +163,7 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
                 clone.setWorker(true);
                 clone.setWorkerHome(player.blockPosition());
                 clone.setWorkerJob(workerJob(player));
-                clone.setWorkerTool(player.getOffhandItem());
+                clone.setWorkerTool(player.getMainHandItem());
             }
             this.positionClone(clone, level, player, i, cloneCount);
             level.addFreshEntity(clone);
@@ -175,17 +175,17 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
         level.playSound(null, player, NarutoSounds.SHADOW_CLONE_POOF.get(), SoundSource.PLAYERS, 0.8f, 1.0f);
     }
 
-    /** Whether the caster is holding the Worker's Seal, which turns clones into workers. */
+    /** Whether the caster is holding the Worker's Seal in their off hand, which turns clones into workers. */
     private static boolean isHoldingWorkerSeal(Player player) {
-        return player.getMainHandItem().is(NarutoItems.WORKER_SEAL.get());
+        return player.getOffhandItem().is(NarutoItems.WORKER_SEAL.get());
     }
 
     /**
-     * Reads the job off the tool in the caster's off hand: a hoe farms, a pickaxe mines and an axe
+     * Reads the job off the tool in the caster's main hand: a hoe farms, a pickaxe mines and an axe
      * chops. Anything else (or an empty hand) falls back to farming, which needs no tool.
      */
     private static WorkerJob workerJob(Player player) {
-        ItemStack tool = player.getOffhandItem();
+        ItemStack tool = player.getMainHandItem();
         if (tool.getItem() instanceof PickaxeItem) {
             return WorkerJob.MINE;
         }
