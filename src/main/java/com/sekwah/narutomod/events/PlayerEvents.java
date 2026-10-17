@@ -97,6 +97,13 @@ public class PlayerEvents {
                     return;
                 }
 
+                // Nothing to catch: a fall this short would not have hurt in the first place, and
+                // burning stamina on every hop off a single block is just a tax. Vanilla only starts
+                // charging for falls past three blocks.
+                if (event.getDistance() <= 3.0f) {
+                    return;
+                }
+
                 // Chakra no Ukemi: bracing with chakra takes the whole fall off. There is nothing to
                 // cast, it just happens whenever the caster can afford it, and it is priced to hurt:
                 // a fall worth cushioning eats most of a full stamina bar.
