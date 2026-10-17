@@ -11,7 +11,7 @@
   "item.narutomod.chakra_seal": "Chakra Seal",
   "item.narutomod.worker_seal": "Worker's Seal",
   "item.narutomod.worker_seal.desc": "Hold it in your off hand while casting a clone technique to summon workers",
-  "item.narutomod.worker_seal.tool": "The tool in your main hand decides the work: hoe = farm, axe = trees, pickaxe = stone and ore",
+  "item.narutomod.worker_seal.tool": "The tool in your main hand decides the work: hoe = farm, axe = trees, pickaxe = ore, sword = hunting and fruit",
   "item.narutomod.chakra_battery": "Chakra Battery",
   "item.narutomod.chakra_battery.charge": "Chakra: %s/%s",
   "item.narutomod.chakra_battery.owner": "Bound to %s",

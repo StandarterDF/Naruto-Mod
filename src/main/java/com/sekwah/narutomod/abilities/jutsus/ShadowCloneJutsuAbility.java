@@ -16,6 +16,7 @@ import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.PickaxeItem;
+import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -181,8 +182,9 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
     }
 
     /**
-     * Reads the job off the tool in the caster's main hand: a hoe farms, a pickaxe mines and an axe
-     * chops. Anything else (or an empty hand) falls back to farming, which needs no tool.
+     * Reads the job off the item in the caster's main hand: a hoe farms, a pickaxe mines, an axe
+     * chops and a sword hunts. Anything else (or an empty hand) falls back to farming, which needs
+     * no tool.
      */
     private static WorkerJob workerJob(Player player) {
         ItemStack tool = player.getMainHandItem();
@@ -191,6 +193,9 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
         }
         if (tool.getItem() instanceof AxeItem) {
             return WorkerJob.CHOP;
+        }
+        if (tool.getItem() instanceof SwordItem) {
+            return WorkerJob.HUNT;
         }
         return WorkerJob.FARM;
     }

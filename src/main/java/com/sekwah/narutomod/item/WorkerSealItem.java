@@ -16,9 +16,9 @@ import java.util.List;
  *
  * <p>It is a catalyst, not a one-shot: it is never right-clicked and never consumed. What the
  * workers do is decided by the tool in the caster's main hand - a hoe sends them to the fields, a
- * pickaxe down the mine and an axe to the tree line. They appear in the same numbers the technique
- * normally summons and around the caster, just like ordinary clones, and then walk off to work
- * around that spot until their chakra runs out. See
+ * pickaxe down the mine, an axe to the tree line and a sword after game and fruit. They appear in the
+ * same numbers the technique normally summons and around the caster, just like ordinary clones, and
+ * then walk off to work around that spot until their chakra runs out. See
  * {@code com.sekwah.narutomod.entity.WorkerJob} and
  * {@code com.sekwah.narutomod.entity.ai.WorkerBlockGoal}.</p>
  */

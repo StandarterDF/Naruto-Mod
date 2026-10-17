@@ -358,16 +358,17 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   клоны выходят рабочими (количество — как у техники, срок жизни — `ShadowCloneEntity.WORKER_LIFETIME`
   = 1.5 минуты). Печать **не расходуется** и не кликается — это катализатор; чакра-печать за каст всё
   равно тратится. Медитация (`Settings#meditating`) режим игнорирует — она всегда медитация. Работа —
-  **enum `entity/WorkerJob`** (`FARM`/`MINE`/`CHOP`), выбирается по инструменту в **основной** руке
-  (`ShadowCloneJutsuAbility#workerJob`): кирка → `MINE`, топор → `CHOP`, всё остальное → `FARM`.
+  **enum `entity/WorkerJob`** (`FARM`/`MINE`/`CHOP`/`HUNT`), выбирается по предмету в **основной** руке
+  (`ShadowCloneJutsuAbility#workerJob`): кирка → `MINE`, топор → `CHOP`, меч (`SwordItem`; туда же
+  `ComboSwordItem`) → `HUNT`, всё остальное → `FARM`.
   Флаг `worker` (`DATA_WORKER`) и `workerJob` (строка в NBT) — server-side.
   Инструмент остаётся клону в **основной** руке, вторая рука пустеет (`ShadowCloneEntity#setWorkerTool`).
-* Три смены рабочих — общий предок `entity/ai/WorkerBlockGoal` (приоритет 1): ищет ближайший блок
+* Четыре смены рабочих — общий предок `entity/ai/WorkerBlockGoal` (приоритет 1): ищет ближайший блок
   своего класса **вокруг самого рабочего** (центр — `worker.blockPosition()`, не пост) в радиусе
-  `searchRadius()` / ±3. `searchRadius()`: по умолчанию 8, `WorkerMineGoal` — 12, `WorkerChopGoal` —
-  **24** (лесоруб специально широкий: смысл в том, чтобы быстро вырубить лес). Рабочий идёт к цели,
-  берёт её (кулдаун между подходами — `SWING_COOLDOWN = 15`, скан пустой цели — 20), лут кладёт в мешок
-  (`collect`, NBT `WorkerBag`).
+  `searchRadius()` / ±3. `searchRadius()`: по умолчанию 8, `WorkerMineGoal` — 12, `WorkerHuntGoal` — 16,
+  `WorkerChopGoal` — **24** (лесоруб специально широкий: смысл в том, чтобы быстро вырубить лес). Рабочий
+  идёт к цели, берёт её (кулдаун между подходами — `SWING_COOLDOWN = 15`, скан пустой цели — 20), лут
+  кладёт в мешок (`collect`, NBT `WorkerBag`).
 * **Берёт по одному блоку, а не всё сразу.** `plan()` возвращает список блоков на текущую цель (обычно
   один), и гол снимает их **по одному за `TAKE_TICKS = 6` тиков** (`take`): список уходит в очередь
   `queue`, и дерево падает бревно за бревном, а не исчезает целиком за тик — это чисто «для красоты».
@@ -403,13 +404,27 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   * `WorkerHarvestGoal` (`FARM`) — спелые `#minecraft:crops`, `plan` = один блок; `take` срезает через
     `Block.getDrops(...)` + `level.destroyBlock(pos, false)` и **сразу засевает заново**
     (`CropBlock#getStateForAge(0)`).
-  * `WorkerMineGoal` (`MINE`) — камень тега `#minecraft:base_stone_overworld` + руды `forge:ores`; `plan`
-    пуст, если `ItemStack#isCorrectToolForDrops` не проходит (тир кирки учитывается); `take` изнашивает
-    инструмент (`ItemStack#hurtAndBreak(1, worker, …)` — `mineBlock` требует **Player**, а клон им не
-    является; кирка проверяется **заново перед каждым блоком**, сломалась — смена прекращается).
+  * `WorkerMineGoal` (`MINE`) — **только руды** `forge:ores` (обычный камень тега
+    `#minecraft:base_stone_overworld` убран осознанно: рабочий «копал всё под себя», то есть просто рыл
+    яму под ногами, а должен искать руду); `plan` пуст, если `ItemStack#isCorrectToolForDrops` не
+    проходит (тир кирки учитывается); `take` изнашивает инструмент (`ItemStack#hurtAndBreak(1, worker, …)`
+    — `mineBlock` требует **Player**, а клон им не является; кирка проверяется **заново перед каждым
+    блоком**, сломалась — смена прекращается). Руды, закопанные в сплошной камень (нет проходимого соседа,
+    `hasStand`), не выбираются — рабочий ищет руду, до которой можно подойти.
   * `WorkerChopGoal` (`CHOP`) — `#minecraft:logs`; `plan` = `connectedLogs` (BFS, кап `MAX_LOGS = 128`),
     снизу вверх; `secondary` = `#minecraft:leaves`: если достижимых брёвен нет (ствол заслонён листвой),
     лесоруб сперва срубает мешающую листву (`plan` = один лист) и тем открывает себе подход.
+  * `WorkerHuntGoal` (`HUNT`) — **единственный, кто ещё и охотится**, поэтому он расширяет базовый гол, а
+    не только задаёт блоки. Блоки: спелая `SweetBerryBushBlock` (AGE ≥ 2) и `Blocks.MELON`; `take` у куста
+    собирает дропы (`Block.getDrops`) и **не выкапывает** его — ставит `AGE = 1`, как будто ягод нарвали
+    руками, а арбуз просто ломает. Пшеница и прочие `#minecraft:crops` **не трогаются** — это `FARM`.
+    Охота: `findPrey` берёт ближайшего `Animal` в радиусе `PREY_RANGE = 16`, кроме `TamableAnimal#isTame`
+    и списка `NOT_PREY` (`wolf`, `polar_bear`, `goat`, `llama`, `trader_llama` — те кусаются, а у клона 1 HP);
+    `tick` прерывает работу по блокам, если рядом объявился зверь, идёт к нему
+    (`REPATH_TICKS = 10`), бьёт `doHurtTarget` раз в `ATTACK_COOLDOWN = 20` тиков; `canContinueToUse` —
+    пока зверь жив и в `GIVE_UP_SQR = 32²`; `stop` сбрасывает жертву. Свою цель он берёт **сам**, а не
+    через `setTarget` (тот у рабочих по-прежнему заглушён), поэтому ванильная система целей не трогается.
+    Дропы убитого зверя перехватывает `ShadowCloneEvents#onLivingDrops` и кладёт в мешок (см. ниже).
 * `CloneFollowOwnerGoal` отказывается работать у рабочих, как и у медитирующих. Когда рабочий исчезает,
   мешок отдаётся владельцу **сразу**, без задержки: и по таймеру (`dispel` → `pop`), и когда убит
   (`die` → `pop`). Раньше по таймеру лут приходил через 30 с (`WORKER_LOOT_DELAY`,
@@ -417,10 +432,14 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   пропал», поэтому от неё отказались. Убить рабочего просто (1 HP — хватает одного удара), но собранное
   всё равно доходит. Если владелец не в сети — лут выпадает на месте клона. Мешок у каждого клона
   **свой** (поле `bag`, не `static`).
-* **XP клона — владельцу.** `events/ShadowCloneEvents#onExperienceDrop` (`LivingExperienceDropEvent`):
-  если `event.getEntity().getKillCredit()` — `ShadowCloneEntity`, а её владелец в сети, опыт обнуляется
-  (`setDroppedExperience(0)`) и выдаётся владельцу (`Player#giveExperiencePoints`). Так опыт за убийство
-  клоном не остаётся орбами за полкарты. Если владелец не в сети — орбы падают как обычно (не теряются).
+* **XP и дропы клона — владельцу/в мешок.** `events/ShadowCloneEvents#onExperienceDrop`
+  (`LivingExperienceDropEvent`): если `event.getEntity().getKillCredit()` — `ShadowCloneEntity`, а её
+  владелец в сети, опыт обнуляется (`setDroppedExperience(0)`) и выдаётся владельцу
+  (`Player#giveExperiencePoints`). Так опыт за убийство клоном не остаётся орбами за полкарты. Если
+  владелец не в сети — орбы падают как обычно (не теряются). А `ShadowCloneEvents#onLivingDrops`
+  (`LivingDropsEvent`) для **охотника** (`isWorker() && getWorkerJob() == HUNT`) переносит дропы убитого
+  зверя в мешок клона и **очищает** `event.getDrops()` (иначе мясо сгнило бы в поле, пока рабочий
+  дойдёт до владельца). Прочие клоны (и не-охотники) дропы оставляют как есть.
 * **Великие мечи** (`ComboSwordItem`) — цепочка ударов живёт **в NBT стека**
   (`narutomod:combo`, `narutomod:combo_time`): каждый удар, попавший в окно (4–5 с), добавляет звено,
   урон следующего удара растёт (`damagePerStep`; Самехада — 0.5, Кубикирибочо — 0.75, максимум 20

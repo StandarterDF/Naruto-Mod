@@ -361,7 +361,8 @@ public abstract class WorkerBlockGoal extends Goal {
         this.worker.getNavigation().stop();
     }
 
-    private boolean isMyJob() {
+    /** Whether this worker is this goal's kind of worker, and running on the server. */
+    protected boolean isMyJob() {
         return this.worker.isWorker() && this.worker.getWorkerJob() == this.job()
                 && !this.worker.level().isClientSide;
     }

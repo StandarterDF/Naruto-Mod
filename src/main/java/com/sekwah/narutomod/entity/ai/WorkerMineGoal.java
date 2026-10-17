@@ -4,7 +4,6 @@ import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import com.sekwah.narutomod.entity.WorkerJob;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LevelEvent;
@@ -14,8 +13,12 @@ import net.minecraftforge.common.Tags;
 import java.util.List;
 
 /**
- * The pickaxe shift of a worker clone: it digs the stone and the ore out of the ground around its
- * post and carries the spoils back in its bag.
+ * The pickaxe shift of a worker clone: it looks for the ore in the rock around itself and carries
+ * the spoils back in its bag.
+ *
+ * <p>It goes for ore, not for stone: a worker that dug whatever rock was under its feet just made a
+ * hole, while a miner that leaves the plain stone alone and works the ore it can see is actually
+ * prospecting. Buried ore that no side can be reached from is left where it is.</p>
  *
  * <p>Only what the pickaxe in its hand would actually take is broken, so a worker handed a wooden
  * pickaxe leaves the diamonds where they are instead of destroying them. The pickaxe wears down as
@@ -40,9 +43,9 @@ public class WorkerMineGoal extends WorkerBlockGoal {
 
     @Override
     protected boolean matches(BlockState state) {
-        // Stone and the rock around it, plus everything the ore tags call an ore, which includes
-        // modded ones through forge:ores.
-        return state.is(BlockTags.BASE_STONE_OVERWORLD) || state.is(Tags.Blocks.ORES);
+        // Anything the ore tags call an ore, which includes modded ones through forge:ores. Plain
+        // stone is deliberately not here: digging it out from under itself is not mining.
+        return state.is(Tags.Blocks.ORES);
     }
 
     @Override

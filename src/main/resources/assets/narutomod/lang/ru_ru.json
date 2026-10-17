@@ -9,7 +9,7 @@
   "item.narutomod.chakra_seal": "Чакра-печать",
   "item.narutomod.worker_seal": "Печать рабочего",
   "item.narutomod.worker_seal.desc": "Держите в дополнительной руке при касте техники клонов — клоны станут рабочими",
-  "item.narutomod.worker_seal.tool": "Инструмент в основной руке задаёт работу: мотыга — поле, топор — деревья, кирка — камень и руда",
+  "item.narutomod.worker_seal.tool": "Инструмент в основной руке задаёт работу: мотыга — поле, топор — деревья, кирка — руда, меч — охота и фрукты",
   "item.narutomod.chakra_battery": "Чакра-батарея",
   "item.narutomod.chakra_battery.charge": "Чакра: %s/%s",
   "item.narutomod.chakra_battery.owner": "Привязана к %s",

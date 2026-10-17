@@ -9,6 +9,7 @@ import com.sekwah.narutomod.entity.ai.CloneRangedAttackGoal;
 import com.sekwah.narutomod.entity.ai.CloneUseShieldGoal;
 import com.sekwah.narutomod.entity.ai.WorkerChopGoal;
 import com.sekwah.narutomod.entity.ai.WorkerHarvestGoal;
+import com.sekwah.narutomod.entity.ai.WorkerHuntGoal;
 import com.sekwah.narutomod.entity.ai.WorkerMineGoal;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.ChatFormatting;
@@ -215,6 +216,7 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.goalSelector.addGoal(1, new WorkerHarvestGoal(this));
         this.goalSelector.addGoal(1, new WorkerMineGoal(this));
         this.goalSelector.addGoal(1, new WorkerChopGoal(this));
+        this.goalSelector.addGoal(1, new WorkerHuntGoal(this));
         // Both weapon goals are always registered and decide for themselves whether they apply, so
         // a clone that is handed a bow later (or loses one) does not need its goals rebuilt. The
         // ranged goal sits above melee and only runs while the target is too far away to hit with a
@@ -669,7 +671,8 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     /**
      * A worker clone does not fight and does not follow: it works the ground around the spot it was
      * put down on, doing whatever its {@link WorkerJob} says, see
-     * {@code com.sekwah.narutomod.entity.ai.WorkerBlockGoal}.
+     * {@code com.sekwah.narutomod.entity.ai.WorkerBlockGoal}. (The one exception is a hunter, which
+     * goes after game as part of its shift.)
      */
     public boolean isWorker() {
         return this.entityData.get(DATA_WORKER);
@@ -680,9 +683,11 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     }
 
     /**
-     * Workers never fight. A farmhand that wanders off to kill the cows its caster happened to hit
-     * looks broken, so any target handed to a worker - by its own hurt reaction or by its caster's -
-     * is dropped. It sticks to its shift instead.
+     * Workers do not pick fights through the vanilla target system: a farmhand that wandered off to
+     * kill the cows its caster happened to hit would look broken, so any target handed to a worker -
+     * by its own hurt reaction or by its caster's - is dropped. It sticks to its shift instead. (A
+     * hunting worker does go after animals, but it does so through its own goal, not through
+     * {@code setTarget}.)
      */
     @Override
     public void setTarget(LivingEntity target) {
