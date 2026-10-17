@@ -220,10 +220,12 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        // A worker fetches loot between swings of its tool, so its instance of the goal has to come
-        // before the shift goals below - a worker's shift holds the movement flag the whole time it
-        // works, and anything further down would never get a turn.
-        this.goalSelector.addGoal(1, new ClonePickupLootGoal(this, true));
+        // Above every other goal on purpose. Vanilla only lets a goal take the movement flag from a
+        // running goal that has a strictly worse priority number, so a loot goal further down would
+        // never get a turn: a clone is working, following or fighting nearly all the time, and it
+        // would walk straight past anything lying on the ground. This way even a clone in the middle
+        // of a fight breaks off to fetch what it sees, then goes back to what it was doing.
+        this.goalSelector.addGoal(0, new ClonePickupLootGoal(this));
         // A worker clone works instead of fighting or following, and which shift it works depends
         // on the tool it was summoned with. Each goal refuses every other job (and every other kind
         // of clone), so only the matching one ever runs.
@@ -241,10 +243,6 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.2d, false));
         this.goalSelector.addGoal(3, new CloneUseShieldGoal(this));
         this.goalSelector.addGoal(4, new CloneFollowOwnerGoal(this, 1.1d, 10.0f, 2.0f, 20.0f));
-        // Below combat and following, so a fighting clone never drops a target or its caster to
-        // chase a dropped item, but above the idle stroll: anything lying around is picked up and
-        // sent to the caster's supply chest, whether the clone is a worker or one summoned to fight.
-        this.goalSelector.addGoal(5, new ClonePickupLootGoal(this, false));
         this.goalSelector.addGoal(6, new OpenDoorGoal(this, true));
         this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0d));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0f));

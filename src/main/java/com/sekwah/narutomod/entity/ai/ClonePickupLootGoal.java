@@ -1,6 +1,7 @@
 package com.sekwah.narutomod.entity.ai;
 
 import com.sekwah.narutomod.entity.ShadowCloneEntity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -18,22 +19,29 @@ import java.util.Map;
  * {@link ShadowCloneEntity#collect(ItemStack)}. If the caster is not around to take it, it waits in
  * the clone's own bag and is handed over when the clone pops, so nothing is ever lost.</p>
  *
- * <p>It is registered for every clone rather than only for workers: even one that was summoned for
- * a fight should not walk past loot. For a fighter the goal sits below combat and following, so it
- * never abandons a target or its caster to chase a dropped item; a worker's shift, on the other
- * hand, holds the movement flag the whole time it works, so the worker's own instance sits above
- * the shift goals and the worker fetches what it finds between swings of its tool.</p>
+ * <p>The goal sits at priority 0, above every other goal a clone has, because of how vanilla
+ * {@code GoalSelector} hands out flags: {@code WrappedGoal#canBeReplacedBy} lets a goal take a flag
+ * from a running one only when its priority number is <em>strictly</em> smaller, so a loot goal
+ * anywhere below the work, following and combat goals would simply never run - the clone is busy
+ * with one of those almost all the time, and a busy clone would walk straight past the loot.</p>
  */
 public class ClonePickupLootGoal extends Goal {
 
     /** How far from the clone it looks for loot. */
     private static final double SEARCH_RANGE = 8.0d;
 
-    /** How close it has to get before it can take an item. */
-    private static final double PICKUP_RANGE_SQR = 2.25d;
+    /** How close it has to get before it can take an item: two blocks, a worker's reach. */
+    private static final double PICKUP_RANGE_SQR = 4.0d;
 
     /** Ticks between one attempt to find a path and the next. */
     private static final int REPATH_TICKS = 10;
+
+    /**
+     * How old an item has to be before the clone will take it. A dropped item is left alone for
+     * half a second, so a clone standing next to its caster does not pluck a thrown item out of the
+     * air on the very tick it appears.
+     */
+    private static final int SNATCH_TICKS = 10;
 
     /** How long a clone tries to reach one item before it leaves it be. */
     private static final int GIVE_UP_TICKS = 120;
@@ -53,9 +61,6 @@ public class ClonePickupLootGoal extends Goal {
 
     private final ShadowCloneEntity clone;
 
-    /** True on the instance that serves workers, false on the one that serves every other clone. */
-    private final boolean forWorkers;
-
     /** Items this clone gave up on, with the tick they may be picked again. */
     private final Map<Integer, Integer> forgotten = new HashMap<>();
 
@@ -66,15 +71,15 @@ public class ClonePickupLootGoal extends Goal {
     private int searchCooldown;
 
     /**
-     * @param forWorkers whether this instance serves workers. A clone is only ever served by one of
-     *                   the two instances; they exist apart because a worker's shift holds the
-     *                   movement flag around the clock, so a worker's loot goal has to sit above the
-     *                   shift goals to get a turn, while a fighting clone's has to sit below combat
-     *                   and following so it never drops a target for a dropped item.
+     * Whoever the clone was fighting when it set off for loot. Vanilla's melee goal clears the mob's
+     * target when it stops, and taking the movement flag away from it stops it, so the enemy is
+     * remembered here and handed back in {@link #stop()}: a clone that stepped aside for a dropped
+     * item walks back into the fight instead of forgetting it.
      */
-    public ClonePickupLootGoal(ShadowCloneEntity clone, boolean forWorkers) {
+    private LivingEntity savedTarget;
+
+    public ClonePickupLootGoal(ShadowCloneEntity clone) {
         this.clone = clone;
-        this.forWorkers = forWorkers;
         this.setFlags(EnumSet.of(Goal.Flag.MOVE));
     }
 
@@ -90,6 +95,11 @@ public class ClonePickupLootGoal extends Goal {
         this.searchCooldown = SEARCH_INTERVAL;
         this.forgotten.values().removeIf(until -> this.clone.tickCount >= until);
         this.item = this.findLoot();
+        if (this.item != null) {
+            // Read before the goal actually starts: the melee goal is stopped as soon as this goal
+            // takes the movement flag, and stopping it is what clears the target.
+            this.savedTarget = this.clone.getTarget();
+        }
         return this.item != null;
     }
 
@@ -108,18 +118,9 @@ public class ClonePickupLootGoal extends Goal {
         return true;
     }
 
-    /**
-     * Whether this goal should run at all right now: only on the server, only for the kind of clone
-     * this instance serves, and never while that clone is fighting. A fighter's instance is already
-     * outranked by combat, but a worker's sits above the shift goals and so has to step aside by
-     * hand when something is attacking the worker.
-     */
+    /** Only the server picks things up, and a meditating clone stays where it was put. */
     private boolean applies() {
-        if (this.clone.level().isClientSide || this.clone.isMeditating()
-                || this.clone.isWorker() != this.forWorkers) {
-            return false;
-        }
-        return !this.forWorkers || this.clone.getTarget() == null;
+        return !this.clone.level().isClientSide && !this.clone.isMeditating();
     }
 
     @Override
@@ -133,6 +134,14 @@ public class ClonePickupLootGoal extends Goal {
     public void stop() {
         this.item = null;
         this.clone.getNavigation().stop();
+        LivingEntity target = this.savedTarget;
+        this.savedTarget = null;
+        // Only if the clone has not picked a new enemy in the meantime, and the old one is still
+        // worth fighting: HurtByTargetGoal drops a target that died or got away, and that still
+        // holds here.
+        if (target != null && target.isAlive() && this.clone.getTarget() == null) {
+            this.clone.setTarget(target);
+        }
     }
 
     @Override
@@ -172,7 +181,7 @@ public class ClonePickupLootGoal extends Goal {
                 this.clone.getBoundingBox().inflate(SEARCH_RANGE),
                 candidate -> candidate.isAlive()
                         && !candidate.getItem().isEmpty()
-                        && !candidate.hasPickUpDelay()
+                        && candidate.tickCount >= SNATCH_TICKS
                         && !this.forgotten.containsKey(candidate.getId()));
         ItemEntity best = null;
         double bestDistance = Double.MAX_VALUE;
