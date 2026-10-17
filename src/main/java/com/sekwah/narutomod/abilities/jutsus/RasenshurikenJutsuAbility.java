@@ -20,8 +20,9 @@ import net.minecraft.world.phys.Vec3;
  *
  * <p>It is channelled like the sphere it is built on, but the release is the point of it: the longer
  * the disc is held the faster and harder it is when it leaves the hand, and where the rasengan stops
- * at the caster's arm this one carries on across the battlefield and comes apart on whatever it
- * reaches first. See {@link RasenshurikenJutsuEntity}.</p>
+ * at the caster's arm this one carries on across the battlefield. What it reaches first it scoops up
+ * off the ground and blows apart in mid-air over their head. See
+ * {@link RasenshurikenJutsuEntity}.</p>
  *
  * <p>Holding it costs more than the rasengan does, and throwing it costs a lump on top - a technique
  * that reaches that far is not meant to be free.</p>

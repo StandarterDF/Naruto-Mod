@@ -17,7 +17,7 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Draws the thrown disc as a shuriken the size of a person, spinning as it flies.
+ * Draws the thrown disc as a shuriken bigger than a person, spinning as it flies.
  *
  * <p>The technique has no model of its own: it is the mod's shuriken item blown up and spun, which
  * is what a rasenshuriken looks like from a distance anyway, and it means the wind trail is the only
@@ -36,7 +36,7 @@ public class RasenshurikenJutsuRenderer extends EntityRenderer<RasenshurikenJuts
     private static final float SPIN_SPEED = -90.0f;
 
     /** How big the thrown shuriken is compared with the one an inventory draws. */
-    private static final float SCALE = 2.6f;
+    private static final float SCALE = 5.0f;
 
     private final ItemRenderer itemRenderer;
     private final ItemStack rendered = new ItemStack(NarutoItems.SHURIKEN.get());

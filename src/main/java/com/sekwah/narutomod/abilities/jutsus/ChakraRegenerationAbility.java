@@ -20,8 +20,12 @@ import net.minecraft.world.food.FoodData;
  * put themselves back together in the middle of a fight instead of waiting for the hunger bar.</p>
  *
  * <p>The balance is deliberately flat: one point of health per mouthful of food and a small handful
- * of chakra, one point every couple of seconds. Food is the real cost, so running out of it makes
- * the technique roughly twice as expensive in chakra and eventually impossible.</p>
+ * of chakra, two points of health a second. Food is the real cost, so running out of it makes the
+ * technique roughly twice as expensive in chakra and eventually impossible.</p>
+ *
+ * <p>It closes wounds fast, faster than any potion does, because the price is paid twice over for
+ * every point it knits shut: it is meant to be the thing a ninja falls back on when they are losing
+ * a fight, not an out-of-combat top-up, and the chakra and the hunger it burns are meant to hurt.</p>
  */
 public class ChakraRegenerationAbility extends Ability implements Ability.Toggled, Ability.HandleEnded {
 
@@ -30,8 +34,12 @@ public class ChakraRegenerationAbility extends Ability implements Ability.Toggle
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_regeneration");
 
-    /** How often a point of health is knitted back, in ticks. */
-    private static final int HEAL_INTERVAL = 40;
+    /**
+     * How often a point of health is knitted back, in ticks. Ten ticks is two points of health a
+     * second, which is far quicker than any potion - it used to be one every two seconds, which was
+     * too slow to save anyone, hence the shortened interval.
+     */
+    private static final int HEAL_INTERVAL = 10;
 
     /** Chakra for one point of health while there is food to burn as well. */
     private static final float CHAKRA_PER_HEAL = 6.0f;

@@ -165,6 +165,8 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
     не достаются: `events/ExplosionEvents` на `ExplosionEvent.Detonate` выкидывает всех `isAlliedTo`
     из `getAffectedEntities()`. Это работает, потому что Forge вызывает `onExplosionDetonate` **до**
     цикла урона и передаёт тот же самый список (проверено по `patches/.../Explosion.java.patch`).
+    Тот же фильтр реализован и для серии взрывов расенсюрикена (там `getDirectSourceEntity()` — сам
+    диск, а щадит он сторону владельца диска).
   * Бомба у кастера **не тратится** — это только «метка» стиля клона.
 * **Подбор лута**: `entity/ai/ClonePickupLootGoal.java` — подбирает **любой** валяющийся на земле предмет
   (любой `ItemEntity`, без исключений по типу) в радиусе `SEARCH_RANGE` = 8 блоков и отдаёт его тем же
@@ -261,7 +263,7 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 | Кулак чакры | `C C` | TOGGLE | 0.02 чакры/тик + 1 за блок + 3 за удар | `abilities/utility/ChakraFistAbility.java` + `events/ChakraFistEvents.java` |
 | Чакра-щит | `B V B` | INSTANT | вся чакра (мин. 20) | `abilities/jutsus/ChakraShieldAbility.java` + `events/ChakraShieldEvents.java` |
 | Второе дыхание | `V V B` | INSTANT | вся чакра (мин. 60), КД 10 мин | `abilities/jutsus/SecondBreathAbility.java` + `events/SecondBreathEvents.java` |
-| Регенерация чакрой | `V B B C` | TOGGLE | 6 чакры + 1 еда за 1 HP | `abilities/jutsus/ChakraRegenerationAbility.java` |
+| Регенерация чакрой | `V B B C` | TOGGLE | 6 чакры + 1 еда за 1 HP (2 HP/с) | `abilities/jutsus/ChakraRegenerationAbility.java` |
 | Рудокоп (Земля) | `C V V C` | INSTANT | 10 чакры + 4 за каждый сломанный блок (нужна кирка в руке) | `abilities/jutsus/OreExcavationJutsuAbility.java` |
 | Расенган | `C B B C B` | CHANNELED | 0.6 чакры/тик | `abilities/jutsus/RasenganJutsuAbility.java` |
 | Расенсюрикен | `C B B C B V` | CHANNELED | 1 чакры/тик + 25 за бросок | `abilities/jutsus/RasenshurikenJutsuAbility.java` + `entity/jutsuprojectile/RasenshurikenJutsuEntity.java` |
@@ -306,7 +308,8 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   `LOWEST`, чтобы не отбирать спасение у других эффектов) отменяет событие, поднимает HP до
   `SECOND_LIFE_HEALTH = 10`, снимает флаг и даёт `DARKNESS` на минуту (мягкая «слепота»: ванильный
   `BLINDNESS` слепит полностью, а просили «не сильную»). КД 10 минут — через `Ability.Cooldown`.
-* **Регенерация чакрой** — TOGGLE, лечит по 1 HP раз в `HEAL_INTERVAL = 40` тиков. С едой —
+* **Регенерация чакрой** — TOGGLE, лечит по 1 HP раз в `HEAL_INTERVAL = 10` тиков (два HP в секунду —
+  быстрее любого зелья; изначальные 40 тиков оказались бесполезно медленными). С едой —
   6 чакры + 1 food point (`FoodData#setFoodLevel`), без еды — 15 чакры и без расхода еды. Еды
   хватает только на 2 HP за «окорочек», поэтому основной расход всё равно чакра.
 * **Рудокоп** — находит руды в кубе радиусом 5 и **обходит каждую жилу целиком**: BFS по соседним
@@ -328,14 +331,30 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   **брошенный**: удержание стоит 1 чакры/тик, а на отпускании платится ещё `RELEASE_COST = 25`
   (специально **ниже** `UPKEEP_RESERVE` батареи — иначе кастер с полной батареей мог бы выкачать диск
   и не суметь его бросить) и в мир летит `RasenshurikenJutsuEntity`. Тап (< 20 тиков) — пшик, заряд
-  от 20 до 60 тиков линейно поднимает `power` (0.7→1.0) и скорость (0.55→0.95). Урон — свой тип
-  `narutomod:wind_release` (`data/narutomod/damage_type/wind_release.json`, как у остальных: **без
-  JSON датапак-тип роняет сервер**), 14 прямого попадания и до 9 по площади с падением по дистанции
-  в радиусе 4.5, с отбросом; свои (`isAlliedTo`) и кастер не задеваются. Живёт диск 80 тиков, потом
-  сам лопается (`burst`). **Модели у него нет** — рисуется предметом `narutomod:shuriken`,
-  увеличенным в 2.6 раза и крутящимся (`RasenshurikenJutsuRenderer`, спин считается в
-  `getSpinTicks/getPrevSpinTicks` на **обеих** сторонах), а «ветер» — это частицы `CLOUD`/`CRIT`/
-  `SWEEP_ATTACK`; по той же логике расенган сделан частицами, а не моделью.
+  от 20 до 60 тиков линейно поднимает `power` (0.7→1.0) и скорость (0.55→0.95).
+  **Модели у него нет** — рисуется предметом `narutomod:shuriken`, увеличенным в **5 раз** и
+  крутящимся (`RasenshurikenJutsuRenderer`, спин считается в `getSpinTicks/getPrevSpinTicks` на
+  **обеих** сторонах), а «ветер» — это частицы `CLOUD`/`CRIT`/`SWEEP_ATTACK`; по той же логике
+  расенган сделан частицами, а не моделью.
+  * **Попадание по живому = захват, а не взрыв.** Диск не лопается о цель, а **подхватывает её**:
+    в синхронизированное поле `DATA_CARRIED_ID` (id цели, `EntityDataSerializers.INT`) пишется номер
+    сущности, и **обе стороны** сами ведут диск за целью (`level().getEntity(id)`, позиция цели
+    выставляется каждый тик) — по сети гонять позицию диска не нужно, поэтому `updateInterval`
+    остался 10. Только сервер считает `carryTicks` и поднимает цель: `Entity#teleportTo` (а не
+    `push`) на `CARRY_RISE = 0.4` блока за тик, `fallDistance = 0` — телепорт, потому что игрок на
+    `setDeltaMovement` просто уйдёт из захвата своим клиентом. Креатив, наблюдатели, кастер и его
+    `isAlliedTo` не хватают (`canCarry` → сразу `burst`).
+  * **После `CARRY_TICKS = 24` тиков подъёма** (≈10 блоков) начинается шторм: до
+    `CARRY_TICKS + DETONATION_TICKS = 54` тиков каждые `BARRAGE_INTERVAL = 5` тиков в
+    `BARRAGE_SPREAD = 2` блоках вокруг цели срабатывает 1–2 взрыва `BARRAGE_RADIUS = 1.6`
+    (`Level#explode`, `ExplosionInteraction.NONE` — блоки не ломаются), а в конце — финальный
+    `FINAL_RADIUS = 3` и `burst` с уроном `narutomod:wind_release`. Свою сторону от серии взрывов
+    защищает `ExplosionEvents` (см. клона из бумажной бомбы). Если цель умерла/выгрузилась раньше —
+    шторм срабатывает там, где диск.
+  * Прямой удар — 14 урона (`narutomod:wind_release`, `data/narutomod/damage_type/wind_release.json`,
+    как у остальных: **без JSON датапак-тип роняет сервер**), финальный `burst` — до 9 по площади с
+    падением по дистанции в радиусе 4.5 и отбросом; свои (`isAlliedTo`) и кастер не задеваются.
+    Пролетев 80 тиков без цели, диск лопается сам.
 * **Восемь врат** — состояние `INinjaData#getGateCount` (server-only, до 8). Каст `V B B B` открывает
   следующее окно, **закрыть врата 1–7 можно только отдельной техникой** `V B B V`
   (`GateReleaseAbility`, бесплатно, `jutsu.fail.gates_none` когда нечего закрывать), а **на восьмых
