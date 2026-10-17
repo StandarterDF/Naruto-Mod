@@ -2,6 +2,7 @@ package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.jutsus.KamuiJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.KamuiPhaseAbility;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.DamageTypeTags;
@@ -36,6 +37,12 @@ public class KamuiEvents {
     @SubscribeEvent
     public static void onLivingTick(LivingEvent.LivingTickEvent event) {
         LivingEntity entity = event.getEntity();
+        if (entity instanceof Player player) {
+            // The phasing body has to be written before the player moves, on both sides, because
+            // vanilla resets noPhysics at the top of Player#tick. LivingTickEvent is inside that
+            // tick and before the movement step, which PlayerTickEvent is not.
+            KamuiPhaseAbility.apply(player);
+        }
         if (entity.level().isClientSide) {
             return;
         }
@@ -88,8 +95,8 @@ public class KamuiEvents {
     }
 
     /**
-     * While the swirl is held open the caster is half inside their own pocket, and nothing that hits
-     * them is really touching them: damage is refused outright.
+     * While the phasing stance is up the caster is half inside their own pocket, and nothing that
+     * hits them is really touching them: damage is refused outright.
      *
      * <p>Run at the highest priority so it happens before anything that reacts to being hurt - in
      * particular before the second breath trick, which must not spend itself on an attack that was
@@ -109,7 +116,7 @@ public class KamuiEvents {
             return;
         }
         player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
-            if (KamuiJutsuAbility.isHolding(ninjaData)) {
+            if (KamuiPhaseAbility.isActive(ninjaData)) {
                 event.setCanceled(true);
             }
         });

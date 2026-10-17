@@ -30,6 +30,10 @@ public class ChakraFistEvents {
         }
         player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
             if (ChakraFistAbility.isActive(ninjaData)) {
+                // getNewSpeed() is the speed vanilla has already worked out, which includes the
+                // tool's own multiplier (a netherite pickaxe is far past a bare hand before the
+                // stance touches it). Multiplying it scales the tool-boosted number, it does not
+                // just add a flat "twice as fast".
                 event.setNewSpeed(event.getNewSpeed() * ChakraFistAbility.BREAK_SPEED_MULTIPLIER);
             }
         });

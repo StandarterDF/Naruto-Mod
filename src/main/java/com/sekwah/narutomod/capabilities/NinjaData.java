@@ -53,6 +53,20 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private float chakraCapacityBonus;
 
     /**
+     * Chakra capacity handed out by the armour the player is wearing, see
+     * {@code events/NarutoArmorEvents}. Kept apart from {@link #chakraCapacityBonus} so the
+     * meditation clones and the armour do not fight over one field, and out of the save file like it.
+     */
+    @Sync(minTicks = 1)
+    private float armorChakraBonus;
+
+    /**
+     * The max health bonus the worn armour last wrote onto the player's attribute. Server side only,
+     * used to tell whether the attribute modifier needs rebuilding.
+     */
+    private float armorHealthBonus;
+
+    /**
      * Shield bought with chakra, see {@code ChakraShieldAbility}. Shown as armour points and spent
      * point for point as damage comes in, so it is really a second health bar the armour display
      * happens to render.
@@ -113,13 +127,6 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private Vec3 kamuiReturnLocation;
 
     private ResourceLocation kamuiReturnDimension;
-
-    /**
-     * Set while the Kamui swirl is held open, see {@code KamuiJutsuAbility}. Synced: the client has
-     * to drop collisions as well, otherwise it fights the server's phasing body every step.
-     */
-    @Sync(minTicks = 1)
-    private boolean kamuiPhasing;
 
     /**
      * Nature energy gathered by standing still and burned by sage mode, see {@code SageModeAbility}.
@@ -244,7 +251,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
     @Override
     public float getMaxChakra() {
-        return this.maxChakra + this.chakraCapacityBonus;
+        return this.maxChakra + this.chakraCapacityBonus + this.armorChakraBonus;
     }
 
     @Override
@@ -255,6 +262,26 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     @Override
     public void setChakraCapacityBonus(float bonus) {
         this.chakraCapacityBonus = bonus;
+    }
+
+    @Override
+    public float getArmorChakraBonus() {
+        return this.armorChakraBonus;
+    }
+
+    @Override
+    public void setArmorChakraBonus(float bonus) {
+        this.armorChakraBonus = bonus;
+    }
+
+    @Override
+    public float getArmorHealthBonus() {
+        return this.armorHealthBonus;
+    }
+
+    @Override
+    public void setArmorHealthBonus(float bonus) {
+        this.armorHealthBonus = bonus;
     }
 
     @Override
@@ -405,16 +432,6 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     public void setKamuiReturnLoc(Vec3 loc, ResourceLocation dimension) {
         this.kamuiReturnLocation = loc;
         this.kamuiReturnDimension = dimension;
-    }
-
-    @Override
-    public boolean isKamuiPhasing() {
-        return this.kamuiPhasing;
-    }
-
-    @Override
-    public void setKamuiPhasing(boolean phasing) {
-        this.kamuiPhasing = phasing;
     }
 
     @Override

@@ -24,6 +24,21 @@ public interface INinjaData extends INBTSerializable<Tag> {
     void setChakraCapacityBonus(float bonus);
 
     /**
+     * Extra chakra capacity that comes from the armour the caster is wearing, kept apart from
+     * {@link #getChakraCapacityBonus()} so the two do not overwrite each other. Recomputed every
+     * tick from the equipped pieces and not written to disk.
+     */
+    float getArmorChakraBonus();
+    void setArmorChakraBonus(float bonus);
+
+    /**
+     * The max health bonus the worn armour last put on the player's attribute, remembered so the
+     * modifier is only rebuilt when it actually changes rather than every tick. Server side only.
+     */
+    float getArmorHealthBonus();
+    void setArmorHealthBonus(float bonus);
+
+    /**
      * Armour points bought with chakra, spent as they soak up damage. Zero when there is no shield.
      */
     float getShieldPoints();
@@ -79,14 +94,6 @@ public interface INinjaData extends INBTSerializable<Tag> {
     Vec3 getKamuiReturnLoc();
     ResourceLocation getKamuiReturnDimension();
     void setKamuiReturnLoc(Vec3 loc, ResourceLocation dimension);
-
-    /**
-     * Whether the player is currently holding the Kamui swirl open and with it a body that passes
-     * through walls and damage, see {@code KamuiJutsuAbility}. Synced, because the client has to stop
-     * colliding too or it would keep pushing the player back out of the wall.
-     */
-    boolean isKamuiPhasing();
-    void setKamuiPhasing(boolean phasing);
 
     /**
      * Nature energy gathered by standing still and spent by sage mode, see {@code SageModeAbility}.

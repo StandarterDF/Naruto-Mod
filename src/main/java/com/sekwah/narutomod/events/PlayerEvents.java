@@ -5,6 +5,7 @@ import com.sekwah.narutomod.abilities.jutsus.ChakraMeditationJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraShieldAbility;
 import com.sekwah.narutomod.abilities.jutsus.EightGatesAbility;
 import com.sekwah.narutomod.abilities.jutsus.HengeJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.KamuiPhaseAbility;
 import com.sekwah.narutomod.abilities.jutsus.SageModeAbility;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import net.minecraft.ChatFormatting;
@@ -70,6 +71,8 @@ public class PlayerEvents {
                 // The gates are the one thing a caster cannot switch off, so death is what shuts them.
                 EightGatesAbility.close(player, ninjaData);
                 ChakraShieldAbility.removeShield(player);
+                // Death puts the body back together, including out of the phasing stance.
+                KamuiPhaseAbility.release(player, ninjaData);
             } else if (ninjaData.getShieldPoints() > 0.0f) {
                 ChakraShieldAbility.applyShield(player, ninjaData.getShieldPoints());
             }

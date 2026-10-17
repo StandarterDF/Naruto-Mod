@@ -60,7 +60,7 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
 | Теневой клон | `C B B V` | 40 | 2–3 | 25 с | 2 | 0.3 | 3 с |
 | Чиби-клон | `C B V V` | 20 | 3–5 | 15 с | 1 | 0.35 | 2 с |
 | Мульти-клон | `C B B V B C` | 80 | 8–11 | 25 с | 2 | 0.3 | 10 с |
-| Медитация чакры | `C B B C` | 60 | 2 | 60 с | 0 | 0 | 60 с |
+| Медитация чакры | `C B B C` | 60 | 2 | **180 с** | 0 | 0 | 60 с |
 
 **Расход печати.** Любой призыв клонов (все четыре техники) требует `narutomod:chakra_seal` в
 инвентаре и тратит **одну** печать за каст — независимо от числа клонов. Проверка в
@@ -218,11 +218,12 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 | Чакра-щит | `B V B` | INSTANT | вся чакра (мин. 20) | `abilities/jutsus/ChakraShieldAbility.java` + `events/ChakraShieldEvents.java` |
 | Второе дыхание | `V V B` | INSTANT | вся чакра (мин. 60), КД 10 мин | `abilities/jutsus/SecondBreathAbility.java` + `events/SecondBreathEvents.java` |
 | Регенерация чакрой | `V B B C` | TOGGLE | 6 чакры + 1 еда за 1 HP | `abilities/jutsus/ChakraRegenerationAbility.java` |
-| Рудокоп (Земля) | `C V V C` | INSTANT | 25 чакры (нужна кирка в руке) | `abilities/jutsus/OreExcavationJutsuAbility.java` |
+| Рудокоп (Земля) | `C V V C` | INSTANT | 10 чакры + 4 за каждый сломанный блок (нужна кирка в руке) | `abilities/jutsus/OreExcavationJutsuAbility.java` |
 | Расенган | `C B B C B` | CHANNELED | 0.6 чакры/тик | `abilities/jutsus/RasenganJutsuAbility.java` |
 | Восемь врат | `V B B B` | INSTANT | 25 чакры + 15 стамины за врата | `abilities/jutsus/EightGatesAbility.java` |
 | Запечатать врата | `V B B V` | INSTANT | бесплатно (только врата 1–7) | `abilities/jutsus/GateReleaseAbility.java` |
 | Камуи | `B V V C C` | CHANNELED | 40 чакры шаг / 1.5 за тик + 30 за затяг | `abilities/jutsus/KamuiJutsuAbility.java` + `events/KamuiEvents.java` |
+| Фазовое тело Камуи | `V C B` | TOGGLE | 0.4 чакры/тик | `abilities/jutsus/KamuiPhaseAbility.java` + `events/KamuiEvents.java` |
 | Сбор природной энергии | `V B C` | CHANNELED | бесплатно, но только стоя на месте | `abilities/jutsus/SenjutsuChargingAbility.java` |
 | Режим Мудреца | `V B V` | INSTANT | 50 сенин-маны на вход, 0.25/тик | `abilities/jutsus/SageModeAbility.java` |
 | Гендзюцу | `C B C` | INSTANT | 35 чакры, КД 10 с | `abilities/jutsus/GenjutsuJutsuAbility.java` + `events/GenjutsuEvents.java` |
@@ -242,6 +243,11 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   «придавленной» (`REGEN_DELAY = 10`, обновляется каждый тик) — стойка стоит не только 0.02/тик.
   Способность реализует `Ability.Toggled`, состояние спрашивается через
   `ChakraFistAbility.isActive(ninjaData)` (`getToggleAbilityData().getAbilitiesHashSet().contains(ID)`).
+  **`event.getNewSpeed()` — это уже посчитанная ванилью скорость вместе с множителем инструмента**
+  (`ForgeEventFactory.getBreakSpeed` вызывается в конце `Player#getDigSpeed`, после
+  `inventory.getDestroySpeed(state)`, Efficiency и Haste), так что `* 2.5` масштабирует «скорость с
+  киркой», а не добавляет фиксированные «в два раза». `originalSpeed` для этого не годится — он бы
+  выбросил чужие бонусы.
 * **Чакра-щит** — «вторая полоска здоровья», показанная как броня. Вся чакра превращается в пул
   очков (`INinjaData#getShieldPoints`), пул висит на атрибуте `Attributes.ARMOR` как
   `addTransientModifier` с фиксированным UUID (`ChakraShieldAbility.applyShield/removeShield`), а урон
@@ -257,11 +263,14 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 * **Регенерация чакрой** — TOGGLE, лечит по 1 HP раз в `HEAL_INTERVAL = 40` тиков. С едой —
   6 чакры + 1 food point (`FoodData#setFoodLevel`), без еды — 15 чакры и без расхода еды. Еды
   хватает только на 2 HP за «окорочек», поэтому основной расход всё равно чакра.
-* **Рудокоп** — флудит куб радиусом 5 и ломает всё, что под тегом `forge:ores` (модовые руды тоже),
-  но не больше `MAX_BLOCKS = 64` блоков за каст. **Требует кирку в руке** (`handleCost` отказывает и
-  не берёт чакру, если в главной руке не `PickaxeItem`), и каждая руда проверяется
-  `ItemStack#isCorrectToolForDrops(state)` — то есть ломается только то, что эта кирка реально взяла
-  бы (тир учитывается: каменная не возьмёт алмазную руду). Прочность тратит
+* **Рудокоп** — находит руды в кубе радиусом 5 и **обходит каждую жилу целиком**: BFS по соседним
+  блокам **той же руды** (`Block`, не тег — чтобы две разные жилы, случайно коснувшиеся, не слились),
+  поэтому жила вытаскивается и за пределами куба. Кап — `MAX_BLOCKS = 128`. **Цена — за работу**:
+  `handleCost` берёт `MIN_COST = 10`, а `performServer` списывает `PER_BLOCK = 4` за каждый блок **по
+  ходу рубки** и останавливается, когда чакры не хватает (недобитая жила остаётся в земле). **Требует
+  кирку в руке** (`handleCost` отказывает и не берёт чакру, если в главной руке не `PickaxeItem`), и
+  каждая руда проверяется `ItemStack#isCorrectToolForDrops(state)` — то есть ломается только то, что
+  эта кирка реально взяла бы (тир учитывается: каменная не возьмёт алмазную руду). Прочность тратит
   `ItemStack#mineBlock(level, state, pos, player)`, по 1 за блок; кирка проверяется **заново перед
   каждым блоком**, поэтому сломавшаяся в середине каста кирка обрывает остальное. Позиции собираются
   **до** разрушения (иначе перебор `BlockPos.immutable()` в живом уровне), ломается через
@@ -298,28 +307,37 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   **Измерение — датапак + свой генератор**: `data/narutomod/dimension_type/kamui.json` +
   `data/narutomod/dimension/kamui.json` (биом `the_void`, небо Края, `min_y=0, height=256`), а
   рельеф делает `world/KamuiChunkGenerator` (кодек `narutomod:kamui_pillars` в
-  `world/NarutoWorldGen`, `Registries.CHUNK_GENERATOR`): сетка квадратных платформ
-  `PLATFORM_SIZE = 5` с шагом `PLATFORM_PITCH = 7` (то есть 2 блока пустоты между ними), все одной
-  высоты, верхняя грань на y = 1. Никаких пещер, руды и мобов: `fillFromNoise` кладёт блоки по
-  координатам, остальные абстрактные методы `ChunkGenerator` — пустышки. Точка прилёта кастера —
-  `CASTER_ARRIVAL` (0.5, 1, 0.5), цели — `TARGET_ARRIVAL` (3.5, 1, 0.5), обе на первой платформе.
-  Спавн запрещён событием. Затянутое живёт по таймеру и возвращается
+  `world/NarutoWorldGen`, `Registries.CHUNK_GENERATOR`): сетка квадратных **столбов**
+  `PLATFORM_SIZE = 5` с шагом `PLATFORM_PITCH = 7` (2 блока пустоты между ними) высотой
+  `PILLAR_HEIGHT_LOW = 7` / `PILLAR_HEIGHT_HIGH = 8` в шахматном порядке по индексу столба
+  (`pillarHeight`): соседи отличаются на 1 блок, поле проходимо и выглядит как поле столбов.
+  `y = 0` — бедрок (чтобы поле нельзя было выкопать из-под кастера), выше — камень. Никаких
+  пещер, руды и мобов: `fillFromNoise` кладёт блоки по координатам, остальные абстрактные методы
+  `ChunkGenerator` — пустышки. **`applyBiomeDecoration` переопределён в no-op**: иначе ваниль
+  декорирует `the_void` его фичами, и `minecraft:void_start_platform` вешается над точкой появления
+  каменной плитой-потолком. Точка прилёта кастера — `CASTER_ARRIVAL` (0.5, `surfaceY(0,0)`, 0.5),
+  цели — `TARGET_ARRIVAL` (3.5, `surfaceY(3,0)`, 0.5), обе на первом столбе; высоты берутся из
+  генератора (`KamuiChunkGenerator#surfaceY`), а не пишутся числом. Спавн запрещён событием.
+  Затянутое живёт по таймеру и возвращается
   **ровно туда, откуда его взяли**: координата и измерение пишутся в `entity.getPersistentData()`
   (`BANISH_TICKS` / `BANISH_RETURN` — работает и на мобах, и на игроках, и переживает сейв), обратный
   отсчёт — `KamuiEvents#onLivingTick`, который смотрит только сущности **внутри** кармана. Кастер под
   таймер не попадает. Срок хранения — конфиг `kamuiEnabled` / `kamuiTransferSeconds`.
-* **Фазовое тело Камуи** — пока канал удержан, `INinjaData#isKamuiPhasing()` (поле `@Sync`, поэтому
-  состояние едет на клиент) включается в `handleChannelling`, а применяется каждый тик в
-  `KamuiJutsuAbility#applyPhasing`, который зовётся из `NinjaCapabilityHandler#onPlayerUpdate` **на
-  обеих сторонах**: `player.noPhysics = true` + `setNoGravity(true)`. Клиент обязан выключать
-  коллизии тоже, иначе он выталкивает игрока из стены, которую сервер разрешает пройти, и шаг
-  дёргается; гравитация выключается, чтобы кастер не провалился сквозь пол, пока идёт сквозь стену.
-  Урон гасится в `KamuiEvents#onLivingHurt` (приоритет `HIGHEST`, чтобы не тратить «второе дыхание» на
-  удар, который и так не пройдёт): исключения — `DamageTypeTags.BYPASSES_INVULNERABILITY` (`/kill`,
-  пустота) и `DamageTypes.STARVE`. `isHolding` не верит одному флагу — техника обязана быть той же,
-  что каналится, иначе смерть/разрыв связи оставили бы игрока бессмертным. `performServer` всегда
-  снимает флаг и зовёт `unstick`, который ищет свободное место в радиусе 2/вверх 4, если игрок отпустил
-  комбо внутри стены.
+* **Фазовое тело Камуи** (`abilities/jutsus/KamuiPhaseAbility.java`, TOGGLE `V C B`) — **отдельная
+  техника**, из `KamuiJutsuAbility` фазовое тело убрано. `isActive(ninjaData)` = наличие
+  `narutomod:kamui_phasing` в `toggleAbilityData` (то есть поле `@Sync`, состояние едет на клиент).
+  `KamuiPhaseAbility#apply(player)` зовётся из `KamuiEvents#onLivingTick` (`LivingTickEvent`, **обе
+  стороны**) и выставляет `noPhysics` + `setNoGravity`. **Почему именно `LivingTickEvent`, а не
+  `PlayerTickEvent`:** `Player#tick()` первой строкой делает `this.noPhysics = this.isSpectator()`,
+  то есть ваниль сбрасывает флаг **до** движения каждый тик; `LivingTickEvent` — внутри `tick()` после
+  сброса и до `aiStep`, поэтому флаг доживает до шага. `PlayerTickEvent.END` для этого не годится
+  вообще. Управление вверх/вниз — через `mayfly`/`flying` (server-only, `onUpdateAbilities()`), а
+  исходное состояние полёта сохраняется в `player.getPersistentData()` (`FLIGHT_TAG`) и возвращается в
+  `release` (вызывается из `handleAbilityEnded`, из `PlayerEvents#onPlayerClone` при смерти и при
+  любом тике, когда стойка уже не активна). Урон гасится в `KamuiEvents#onLivingHurt` (приоритет
+  `HIGHEST`, чтобы не тратить «второе дыхание» на удар, который и так не пройдёт): исключения —
+  `DamageTypeTags.BYPASSES_INVULNERABILITY` (`/kill`, пустота) и `DamageTypes.STARVE`. `release` зовёт
+  `unstick` (свободное место в радиусе 2/вверх 4), чтобы выключение внутри стены не закапывало кастера.
 * **Мягкая посадка** (без комбо, автоматически) — в `PlayerEvents#livingFall`: считается урон, который
   приземление всё равно отняло бы (ванильная формула `ceil(distance - 3 - jumpBoost)`), цена —
   `SOFT_LANDING_STAMINA_PER_DAMAGE = 2` стамины за единицу урона. Хватает — падение гасится полностью
@@ -380,6 +398,23 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   рисует широкого кастера худым. Рекурсия в собственный хук гасится флагом `rendering`. Ник
   подменяется в `RenderNameTagEvent#setContent`. Контекст рендера для `bakeLayer` приходит из
   `NarutoRenderEvents#addLayers` (MOD-шина) в `HengeRenderEvents#setContext`.
+* **Броня с бонусами** (`item/armor/NarutoArmorItem$Bonus`, `events/NarutoArmorEvents`) — броня мода
+  даёт не только защиту: `Bonus(chakraCapacity, maxHealth, chakraRegenPerSecond)` вешается на предмет
+  через `setBonus(...)` (у головных повязок — регенерация, у масок АНБУ — запас чакры, у бронежилетов
+  и плаща Акацуки — здоровье/чакра), показывается в подсказке предмета (`appendHoverText`) и
+  суммируется каждый тик (server-only `LivingTickEvent`) по `player.getInventory().armor`. Чакра идёт
+  в **отдельное** поле `INinjaData#getArmorChakraBonus` (складывается с `chakraCapacityBonus` от
+  медитации, оба прибавляются в `getMaxChakra()`), здоровье — через `AttributeModifier` на
+  `Attributes.MAX_HEALTH` с фиксированным UUID. Модификатор **перестраивается только когда сумма
+  изменилась**, а факт применения кэшируется в `armorHealthBonus` (server-only, не в NBT; после смерти
+  новый `Player` чист, поэтому кэш ≠ сумма и бонус навешивается заново). Регенерация — плоский
+  `addChakra` раз в 20 тиков (не трогает natural-regeneration cooldown, чтобы бонус нельзя было
+  «выключить» тратой).
+* **Меню J** (`client/gui/JutsuScreen`) — вместо старой команды `/jutsu list` список техник рисуется в
+  GUI: строки берутся из `NarutoAbilities.COMBO_MAP` (combo → ability id, заполняется в
+  `FMLCommonSetupEvent` на **клиенте тоже**, поэтому карта доступна без сервера), сортируются по комбо,
+  клавиши рисуются через `Component.keybind("naruto.keys.key" + цифра)`, поэтому следуют за
+  переназначением. Пагинация по 10 строк, кнопки `<`/`>` плюс прежние Become a ninja / Done.
 
 ## Грабли, на которые уже наступали
 
@@ -440,3 +475,15 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   иначе один голос навсегда блокирует второй.
 * **`@Override` на `performRangedAttack`** требует `implements RangedAttackMob`: в 1.20.1 `Mob` его не
   реализует (в отличие от `AbstractSkeleton`).
+* **`noPhysics` у игрока ваниль сбрасывает каждый тик.** `Player#tick()` начинается с
+  `this.noPhysics = this.isSpectator()`, а движение (`aiStep`) идёт позже в том же `tick()`. Поэтому
+  «пройти сквозь стену» нельзя включить из `TickEvent.PlayerTickEvent` (ни START, ни END — START
+  раньше сброса, END позже движения): флаг не доживает до шага. Рабочий хук — `LivingEvent.LivingTickEvent`
+  (`LivingEntity#tick` — уже внутри `Player#tick`, после сброса, до `aiStep`). Так же нужны **обе
+  стороны**: сервер авторитетен по позиции лишь формально, клиент считает коллизии сам и выталкивает
+  игрока из стены. Флаг состояния живёт в `toggleAbilityData` (`@Sync`), так что клиент знает о стойке.
+* **`ChunkGenerator#applyBiomeDecoration(WorldGenLevel, ChunkAccess, StructureManager)`** — первый
+  параметр `WorldGenLevel` (`net.minecraft.world.level.WorldGenLevel`), **не** `WorldGenRegion`;
+  перепутаешь — получишь «does not override or implement a method from a supertype». Переопределение
+  в no-op нужно, если генератор сам кладёт рельеф: иначе биомные фичи (`the_void` →
+  `minecraft:void_start_platform`) дорисовываются поверх и в измерении появляется «каменный потолок».

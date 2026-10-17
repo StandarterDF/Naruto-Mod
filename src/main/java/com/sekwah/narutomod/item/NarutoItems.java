@@ -40,37 +40,63 @@ public class NarutoItems {
 
     // Armor
 
+    /**
+     * Bonuses the armour pieces carry, see {@code events/NarutoArmorEvents}. They are ninja kit, so
+     * what they give is chakra and the body, not armour points.
+     */
+    /** A village headband helps its ninja keep hold of their chakra. */
+    private static final NarutoArmorItem.Bonus HEADBAND_BONUS = new NarutoArmorItem.Bonus(0.0f, 0.0f, 0.4f);
+    /** An ANBU mask is worn by shinobi trained to hold far more than they show. */
+    private static final NarutoArmorItem.Bonus ANBU_MASK_BONUS = new NarutoArmorItem.Bonus(75.0f, 0.0f, 0.0f);
+    /** The standard flak jacket takes a hit so its wearer does not have to. */
+    private static final NarutoArmorItem.Bonus FLAK_BONUS = new NarutoArmorItem.Bonus(0.0f, 2.0f, 0.0f);
+    /** The jonin flak is built over the same idea with better plate. */
+    private static final NarutoArmorItem.Bonus JONIN_FLAK_BONUS = new NarutoArmorItem.Bonus(0.0f, 4.0f, 0.0f);
+    /** ANBU field armour: a little less plate than a flak, a little more chakra discipline. */
+    private static final NarutoArmorItem.Bonus ANBU_ARMOR_BONUS = new NarutoArmorItem.Bonus(40.0f, 2.0f, 0.2f);
+    /** The Akatsuki cloak: S-rank chakra, and plenty of it. */
+    private static final NarutoArmorItem.Bonus AKATSUKI_BONUS = new NarutoArmorItem.Bonus(120.0f, 0.0f, 0.5f);
+
     public static final RegistryObject<Item> RED_ANBU_MASK = ITEMS.register("red_anbu_mask", ()
             -> new NarutoArmorItem(NarutoArmorMaterial.ANBU_MAT, ArmorItem.Type.HELMET, new Item.Properties())
+            .setBonus(ANBU_MASK_BONUS)
             .setShouldHideNameplate(true));
 
     public static final RegistryObject<Item> YELLOW_ANBU_MASK = ITEMS.register("yellow_anbu_mask", ()
             -> new NarutoArmorItem(NarutoArmorMaterial.ANBU_MAT, ArmorItem.Type.HELMET, new Item.Properties())
+            .setBonus(ANBU_MASK_BONUS)
             .setShouldHideNameplate(true));
 
     public static final RegistryObject<Item> GREEN_ANBU_MASK = ITEMS.register("green_anbu_mask", ()
             -> new NarutoArmorItem(NarutoArmorMaterial.ANBU_MAT, ArmorItem.Type.HELMET, new Item.Properties())
+            .setBonus(ANBU_MASK_BONUS)
             .setShouldHideNameplate(true));
 
     public static final RegistryObject<Item> BLUE_ANBU_MASK = ITEMS.register("blue_anbu_mask", ()
             -> new NarutoArmorItem(NarutoArmorMaterial.ANBU_MAT, ArmorItem.Type.HELMET, new Item.Properties())
+            .setBonus(ANBU_MASK_BONUS)
             .setShouldHideNameplate(true));
 
     public static final RegistryObject<Item> MIST_ANBU_MASK = ITEMS.register("mist_anbu_mask", ()
             -> new NarutoArmorItem(NarutoArmorMaterial.ANBU_MAT, ArmorItem.Type.HELMET, new Item.Properties())
+            .setBonus(ANBU_MASK_BONUS)
             .setShouldHideNameplate(true));
 
     public static final RegistryObject<Item> FLAK_JACKET_NEW = ITEMS.register("flak_jacket_new", ()
-            -> new NarutoArmorItem(NarutoArmorMaterial.FLAK_MAT, ArmorItem.Type.CHESTPLATE, new Item.Properties()));
+            -> new NarutoArmorItem(NarutoArmorMaterial.FLAK_MAT, ArmorItem.Type.CHESTPLATE, new Item.Properties())
+            .setBonus(FLAK_BONUS));
 
     public static final RegistryObject<Item> FLAK_JACKET = ITEMS.register("flak_jacket", ()
-            -> new NarutoArmorItem(NarutoArmorMaterial.FLAK_STRONGER_MAT, ArmorItem.Type.CHESTPLATE, new Item.Properties()));
+            -> new NarutoArmorItem(NarutoArmorMaterial.FLAK_STRONGER_MAT, ArmorItem.Type.CHESTPLATE, new Item.Properties())
+            .setBonus(JONIN_FLAK_BONUS));
 
     public static final RegistryObject<Item> ANBU_ARMOR = ITEMS.register("anbu_armor", ()
-            -> new NarutoArmorItem(NarutoArmorMaterial.FLAK_STRONGER_MAT, ArmorItem.Type.CHESTPLATE, new Item.Properties()));
+            -> new NarutoArmorItem(NarutoArmorMaterial.FLAK_STRONGER_MAT, ArmorItem.Type.CHESTPLATE, new Item.Properties())
+            .setBonus(ANBU_ARMOR_BONUS));
 
     public static final RegistryObject<Item> AKATSUKI_CLOAK = ITEMS.register("akatsuki_cloak", ()
-            -> new NarutoArmorItem(NarutoArmorMaterial.CHARACTER_CLOTHES, ArmorItem.Type.CHESTPLATE, new Item.Properties()));
+            -> new NarutoArmorItem(NarutoArmorMaterial.CHARACTER_CLOTHES, ArmorItem.Type.CHESTPLATE, new Item.Properties())
+            .setBonus(AKATSUKI_BONUS));
 
     public static final RegistryObject<Item> LONELY_MARCH = ITEMS.register("lonely_march", ()
             -> new RecordItem(41, NarutoSounds.LONELY_MARCH, new Item.Properties().stacksTo(1).rarity(Rarity.RARE), 46 * 20));
@@ -151,7 +177,8 @@ public class NarutoItems {
 
     private static RegistryObject<Item> createHeadband(String itemName) {
         return ITEMS.register(itemName, ()
-                -> new NarutoArmorItem(NarutoArmorMaterial.HEADBAND, ArmorItem.Type.HELMET, new Item.Properties()));
+                -> new NarutoArmorItem(NarutoArmorMaterial.HEADBAND, ArmorItem.Type.HELMET, new Item.Properties())
+                .setBonus(HEADBAND_BONUS));
     }
 
     //    BLANK(0, "blankBlueHeadBand", "headband_blank);"),

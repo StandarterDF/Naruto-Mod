@@ -19,8 +19,9 @@ import java.util.HashMap;
  * their own and any jutsu still on cooldown comes down twice as fast, which is what the technique
  * is really for. Walk away and the link simply stops, the clones are not dragged along.</p>
  *
- * <p>The trick lasts half a minute and then cannot be repeated for a minute and a half, so it is a
- * refill to fall back on rather than something to keep running.</p>
+ * <p>The trick lasts three minutes and then cannot be repeated for a minute, so it is a refill to
+ * fall back on rather than something to keep running - though three minutes of doubled chakra and
+ * halved cooldowns is a long time to make use of one.</p>
  */
 public class ChakraMeditationJutsuAbility extends ShadowCloneJutsuAbility {
 

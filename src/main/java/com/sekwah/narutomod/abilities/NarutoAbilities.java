@@ -13,6 +13,7 @@ import com.sekwah.narutomod.abilities.jutsus.ChakraShieldAbility;
 import com.sekwah.narutomod.abilities.jutsus.EightGatesAbility;
 import com.sekwah.narutomod.abilities.jutsus.GateReleaseAbility;
 import com.sekwah.narutomod.abilities.jutsus.KamuiJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.KamuiPhaseAbility;
 import com.sekwah.narutomod.abilities.jutsus.OreExcavationJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.RasenganJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.SecondBreathAbility;
@@ -149,6 +150,13 @@ public class NarutoAbilities {
      */
     public static final RegistryObject<KamuiJutsuAbility> KAMUI =
             ABILITY.register("kamui", KamuiJutsuAbility::new);
+
+    /**
+     * The half-in-the-other-world stance: no collisions, no gravity, no damage, paid for per tick.
+     * Split off from the Kamui eye so it can be used on its own. See {@link KamuiPhaseAbility}.
+     */
+    public static final RegistryObject<KamuiPhaseAbility> KAMUI_PHASING =
+            ABILITY.register("kamui_phasing", KamuiPhaseAbility::new);
 
     /**
      * Standing still to gather nature energy, which is what sage mode spends. See

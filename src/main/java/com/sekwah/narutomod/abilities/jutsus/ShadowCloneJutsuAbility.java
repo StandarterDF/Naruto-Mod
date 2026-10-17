@@ -53,7 +53,7 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
      * investment, so they outlive every other version of the technique by a wide margin.
      */
     public static final Settings CHAKRA_MEDITATION_SETTINGS =
-            new Settings(1331L, 60f, 2, 2, 20 * 60, false, true, 0.0d, 0.0d, 20 * 60, 20 * 3);
+            new Settings(1331L, 60f, 2, 2, 20 * 180, false, true, 0.0d, 0.0d, 20 * 60, 20 * 3);
 
     /** Radius of the ring the clones appear in. */
     private static final double SPAWN_RADIUS = 1.6d;

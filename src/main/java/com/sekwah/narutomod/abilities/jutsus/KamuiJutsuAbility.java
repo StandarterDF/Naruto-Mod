@@ -4,11 +4,9 @@ import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.JutsuEffects;
 import com.sekwah.narutomod.capabilities.INinjaData;
-import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.config.NarutoConfig;
-import com.sekwah.narutomod.registries.NarutoRegistries;
+import com.sekwah.narutomod.world.KamuiChunkGenerator;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -51,12 +49,8 @@ import java.util.function.Function;
  * in the void under an End sky with the {@code the_void} biome, so there is nothing to mine, nothing
  * to grow and nothing to kill that the casters did not bring with them.</p>
  *
- * <p>While the swirl is held open the caster is half inside their own pocket: their body stops
- * colliding with the world (so they can walk through walls) and nothing that hits them gets through
- * (see {@link #isHolding} and the damage handler in {@code KamuiEvents}). The price is chakra, which
- * is what keeps the trick from being free invulnerability: the eye closes when the caster stops
- * feeding it, and if they were standing inside a wall when it does, {@link #unstick} puts them back
- * into open air.</p>
+ * <p>The caster's own intangibility is a technique of its own, {@link KamuiPhaseAbility}: holding
+ * this technique open only opens the eye, it does not turn the body to smoke.</p>
  */
 public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
 
@@ -84,14 +78,20 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
     /** How far the dragging hand reaches. */
     private static final double PULL_RANGE = 16.0d;
 
-    /** Where the caster lands in the void, on the first platform of the pillar grid. */
-    public static final Vec3 CASTER_ARRIVAL = new Vec3(0.5d, 1.0d, 0.5d);
+    /**
+     * Where the caster lands in the void, on top of the first pillar of the grid. The height is
+     * asked of the generator rather than written down, so it stays on the pillar whatever the
+     * pillars are built like.
+     */
+    public static final Vec3 CASTER_ARRIVAL =
+            new Vec3(0.5d, KamuiChunkGenerator.surfaceY(0, 0), 0.5d);
 
     /**
      * Where anything dragged in lands, a few blocks off so it does not land in the caster's lap.
      * Kept on the same platform as {@link #CASTER_ARRIVAL}, since the rest of the world is a void.
      */
-    public static final Vec3 TARGET_ARRIVAL = new Vec3(3.5d, 1.0d, 0.5d);
+    public static final Vec3 TARGET_ARRIVAL =
+            new Vec3(3.5d, KamuiChunkGenerator.surfaceY(3, 0), 0.5d);
 
     /** NBT on anything dragged into the pocket: ticks left before it is spat back out. */
     public static final String BANISH_TICKS = "narutomod:kamuiTicks";
@@ -133,9 +133,6 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
      */
     @Override
     public void handleChannelling(Player player, INinjaData ninjaData, int ticksChanneled) {
-        // Half inside the pocket: no collisions, no gravity and (see KamuiEvents) no damage. Both
-        // sides read this flag, so the client stops colliding too and the movement is not fought.
-        ninjaData.setKamuiPhasing(true);
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
@@ -151,12 +148,9 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
 
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
-        // The eye is closing, whatever the reason: solidity and gravity come back first.
-        ninjaData.setKamuiPhasing(false);
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
-        unstick(player);
         if (ticksActive == -1) {
             // A tap: a step through, in whichever direction closes the distance to home.
             this.stepThrough(player, ninjaData, level);
@@ -286,68 +280,6 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
     private Entity lookedAt(Player player) {
         HitResult hit = player.pick(PULL_RANGE, 0.0f, false);
         return hit.getType() == HitResult.Type.ENTITY ? ((EntityHitResult) hit).getEntity() : null;
-    }
-
-    /**
-     * Whether this player currently has the Kamui swirl held open, and with it the phasing body.
-     *
-     * <p>The flag alone is not trusted: the technique has to still be the one being channelled, so a
-     * flag left behind by a death or a broken connection cannot hand out free invulnerability.</p>
-     */
-    public static boolean isHolding(INinjaData ninjaData) {
-        if (!ninjaData.isKamuiPhasing()) {
-            return false;
-        }
-        ResourceLocation channelled = ninjaData.getCurrentlyChanneledAbility();
-        if (channelled == null) {
-            return false;
-        }
-        return NarutoRegistries.ABILITIES.getValue(channelled) instanceof KamuiJutsuAbility;
-    }
-
-    /**
-     * Applies the phasing body to the player, on whichever side is asking.
-     *
-     * <p>Collisions are dropped on the client as well as the server; otherwise the client would keep
-     * pushing the player out of the wall the server is letting them walk through, and the walk would
-     * stutter. Gravity goes too, so the caster floats through the wall at the height they chose
-     * instead of dropping through the floor on the way.</p>
-     */
-    public static void applyPhasing(Player player) {
-        player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
-            boolean phasing = isHolding(ninjaData);
-            if (!phasing && ninjaData.isKamuiPhasing()) {
-                ninjaData.setKamuiPhasing(false);
-            }
-            if (player.noPhysics != phasing) {
-                player.noPhysics = phasing;
-            }
-            player.setNoGravity(phasing);
-        });
-    }
-
-    /**
-     * Puts a caster who let the swirl close while standing inside a wall back into open air, so
-     * phasing is never a way to be buried alive.
-     */
-    private static void unstick(Player player) {
-        Level level = player.level();
-        if (level.noCollision(player, player.getBoundingBox())) {
-            return;
-        }
-        BlockPos origin = player.blockPosition();
-        for (int dy = 0; dy <= 4; dy++) {
-            for (int dx = -2; dx <= 2; dx++) {
-                for (int dz = -2; dz <= 2; dz++) {
-                    BlockPos pos = origin.offset(dx, dy, dz);
-                    Vec3 spot = Vec3.atBottomCenterOf(pos);
-                    if (level.noCollision(player, player.getBoundingBox().move(spot.subtract(player.position())))) {
-                        player.teleportTo(spot.x, spot.y, spot.z);
-                        return;
-                    }
-                }
-            }
-        }
     }
 
     /** @return the pocket dimension, or null if that datapack dimension is not loaded. */
