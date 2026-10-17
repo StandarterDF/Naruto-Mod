@@ -503,6 +503,36 @@
 
         <article class="jutsu card">
           <div class="jutsu-head jutsu-head--row">
+            <span class="jutsu-icon jutsu-icon--glyph" aria-hidden="true">火</span>
+            <div class="jutsu-headtext">
+              <h3>Костер</h3>
+              <span class="badge badge--instant">Мгновенная</span>
+            </div>
+          </div>
+          <div class="combo-row">
+            <span class="combo"><span class="combo-label">Комбо</span><kbd>B</kbd><kbd>C</kbd><kbd>B</kbd></span>
+            <span class="combo-digits">цифрами: 313</span>
+          </div>
+          <div class="jutsu-body">
+            <p>
+              Поджигает <strong>бревно под прицелом</strong> и оставляет на его месте зажжённый костёр:
+              ствол дерева превращается в огонь прямо там, где стоял.
+            </p>
+          </div>
+          <ul class="meta">
+            <li><b>Расход:</b> 20 чакры</li>
+            <li><b>Дальность:</b> 8 блоков</li>
+            <li><b>Цель:</b> бревно, которое горело бы в печи (<code>#minecraft:logs_that_burn</code>)</li>
+          </ul>
+          <ul class="facts">
+            <li><span class="fact-label">Полезно знать:</span> горит <strong>ровно одно бревно</strong> за каст — ствол «сгорает» бревно за бревном, если вести прицелом.</li>
+            <li><span class="fact-label">Полезно знать:</span> костёр настоящий: светит, готовит еду и обогревает так же, как поставленный руками.</li>
+            <li><span class="fact-label">Полезно знать:</span> если прицел не на бревне, каст откажет и <strong>чакра не потратится</strong> — листва, стена и воздух стоят бесплатно.</li>
+          </ul>
+        </article>
+
+        <article class="jutsu card">
+          <div class="jutsu-head jutsu-head--row">
             <span class="jutsu-icon" aria-hidden="true"><img src="assets/vanilla/iron_pickaxe.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
             <div class="jutsu-headtext">
               <h3>Рудокоп</h3>
@@ -839,12 +869,12 @@
           <div class="jutsu-body">
             <p>
               Открывает собранную природную энергию: нужно минимум <strong>50 сенин-маны</strong>,
-              дальше режим тратит её по 0.1 за тик и <strong>сам закрывается, когда пул кончился</strong>.
+              дальше режим тратит её по 0.02 за тик и <strong>сам закрывается, когда пул кончился</strong>.
             </p>
           </div>
           <ul class="meta">
             <li><b>Вход:</b> 50 сенин-маны</li>
-            <li><b>Поддержание:</b> 0.1 сенин-маны за тик (полный пул — около 50 секунд)</li>
+            <li><b>Поддержание:</b> 0.02 сенин-маны за тик (полный пул — около 4 минут)</li>
             <li><b>Эффекты:</b> Speed II, Strength II, Resistance I, Jump Boost I, Regeneration I</li>
             <li><b>Бонус:</b> +0.5 чакры за тик</li>
           </ul>

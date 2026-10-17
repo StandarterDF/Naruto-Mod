@@ -33,8 +33,8 @@ public class SageModeAbility extends Ability {
     /** Nature energy needed to open the mode at all. */
     public static final float MIN_SENIN = 50.0f;
 
-    /** Nature energy burned every tick the mode is up (the full 100 energy is fifty seconds). */
-    private static final float DRAIN_PER_TICK = 0.1f;
+    /** Nature energy burned every tick the mode is up (the full 100 energy is a bit over four minutes). */
+    private static final float DRAIN_PER_TICK = 0.02f;
 
     /** Extra chakra the mode feeds its caster every tick. */
     private static final float CHAKRA_PER_TICK = 0.5f;

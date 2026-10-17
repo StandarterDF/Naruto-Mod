@@ -50,4 +50,20 @@ public final class Targeting {
                 entity -> !entity.isSpectator() && entity.isPickable(), limit * limit);
         return hit != null ? hit.getEntity() : null;
     }
+
+    /**
+     * The block a player is looking at within {@code range}, or null if they are looking at nothing.
+     *
+     * <p>The ray stops at the first block that has a collision shape, so a technique cannot reach a
+     * block through a wall. Fluids are look-through: water is not a wall as far as a technique aimed
+     * at the block behind it is concerned.</p>
+     */
+    @Nullable
+    public static BlockHitResult lookedAtBlock(Player player, double range) {
+        Vec3 eye = player.getEyePosition();
+        Vec3 reach = eye.add(player.getViewVector(1.0F).scale(range));
+        BlockHitResult hit = player.level().clip(new ClipContext(eye, reach,
+                ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+        return hit.getType() == HitResult.Type.BLOCK ? hit : null;
+    }
 }

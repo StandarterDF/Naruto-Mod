@@ -20,6 +20,14 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'; .\gradlew.bat build      # или
 .\run-dev-server.bat      # дев-сервер (сам находит JDK 17)
 ```
 
+Дев-клиент запускается вместе с **JEI** (Just Enough Items 15.71.0.224) — рецепты можно смотреть прямо в
+игре. Зависимость объявлена как `runtimeOnly fg.deobf("maven.modrinth:jei:15.71.0.224")`, репозиторий —
+`https://api.modrinth.com/maven`. (Тот же jar лежит и на `maven.blamejared.com`, но с этой машины он
+качается по ~300 байт/с, поэтому берём CDN Modrinth — не переключать обратно.) `runtimeOnly` выбран
+осознанно: JEI остаётся **только dev-удобством**, он не попадает ни в compile-classpath, ни в публикуемые
+jar-ы, и код мода на его API не опирается. Дев-серверу он тоже не мешает: мод сам проверяет сторону
+(`DistExecutor.safeRunWhenOn(Dist.CLIENT, ...)`), на выделенном сервере грузится только его common-часть.
+
 Автотесты без ручного геймплея:
 
 ```powershell
@@ -273,6 +281,7 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 | Второе дыхание | `V V B` | INSTANT | вся чакра (мин. 60), КД 10 мин | `abilities/jutsus/SecondBreathAbility.java` + `events/SecondBreathEvents.java` |
 | Регенерация чакрой | `V B B C` | TOGGLE | 6 чакры + 1 еда за 1 HP (2 HP/с) | `abilities/jutsus/ChakraRegenerationAbility.java` |
 | Рудокоп (Земля) | `C V V C` | INSTANT | 10 чакры + 4 за каждый сломанный блок (нужна кирка в руке) | `abilities/jutsus/OreExcavationJutsuAbility.java` |
+| Костер (Огонь) | `B C B` | INSTANT | 20 чакры (нужно смотреть на бревно) | `abilities/jutsus/CampfireJutsuAbility.java` |
 | Расенган | `C B B C B` | CHANNELED | 0.6 чакры/тик | `abilities/jutsus/RasenganJutsuAbility.java` |
 | Расенсюрикен | `C B B C B V` | CHANNELED | 1 чакры/тик + 25 за бросок | `abilities/jutsus/RasenshurikenJutsuAbility.java` + `entity/jutsuprojectile/RasenshurikenJutsuEntity.java` |
 | Восемь врат | `V B B B` | INSTANT | 25 чакры + 15 стамины за врата | `abilities/jutsus/EightGatesAbility.java` |
@@ -332,6 +341,17 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   каждым блоком**, поэтому сломавшаяся в середине каста кирка обрывает остальное. Позиции собираются
   **до** разрушения (иначе перебор `BlockPos.immutable()` в живом уровне), ломается через
   `level.destroyBlock(pos, true, player)`.
+* **Костер** (`CampfireJutsuAbility`, INSTANT `B C B`) — поджигает **бревно под прицелом** и ставит на
+  его место `Blocks.CAMPFIRE` с `LIT = true` и `FACING` по направлению кастера (как будто поставленный
+  рукой), плюс `FLINTANDSTEEL_USE` и частицы `FLAME`/`LARGE_SMOKE`. Блок ищется лучом
+  `Targeting.lookedAtBlock(player, REACH = 8)` (по коллайдерам, сквозь стены не видит), а целью служит
+  тег `#minecraft:logs_that_burn`, а не `#minecraft:logs`: варпед-стебель в костёр не превратится.
+  Горит **одно бревно за каст** — ствол «догорает» кастами, если вести прицелом. Проверка бревна
+  стоит в `handleCost` **до** списания чакры, поэтому промах (листва, стена, воздух) отказывает
+  сообщением `jutsu.fail.campfire.notlog` и не стоит ничего; `performServer` ищет блок **заново**
+  (между ценой и эффектом кастер мог отвернуться). `setBlockAndUpdate` сам создаёт block entity костра,
+  поэтому костёр настоящий: светит, готовит еду и обогревает. Комбо `313` свободно и не является ничьим
+  префиксом.
 * **Расенган** — CHANNELED: `handleCost` жжёт 0.6 чакры/тик, `handleChannelling` рисует шар у руки,
   `performServer` получает число продержанных тиков и бьёт по площади спереди. Тап (< 20 тиков) —
   пшик, 60 тиков — максимум (урон 4→16, вылет 0.8→1.8). Дальше тиков больше — урон не растёт.
@@ -604,8 +624,9 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   в `INinjaData`/`NinjaData`; максимум — конфиг `maxSeninMana` (по умолчанию 100), выключение всей ветки
   — `sageModeEnabled`. Копит `SenjutsuChargingAbility` (CHANNELED, `V B C`): **0.5/тик и только если
   `isStill`** (на земле и `getDeltaMovement().horizontalDistanceSqr() < 0.0016`), движение прогресс не
-  сбрасывает. Тратит `SageModeAbility` (INSTANT, `V B V`): вход требует 50, дальше `DRAIN_PER_TICK = 0.1`,
-  режим **сам гаснет на нуле** (не по таймеру): полный пул в 100 держится 50 с.
+  сбрасывает. Тратит `SageModeAbility` (INSTANT, `V B V`): вход требует 50, дальше `DRAIN_PER_TICK = 0.02`,
+  режим **сам гаснет на нуле** (не по таймеру): полный пул в 100 держится ~4 минуты (вход ничего не
+  списывает, важно только «не меньше 50 на входе», поэтому с минимальным пулом режим живёт ~2 минуты).
   Эффекты выдаются на 40 тиков и обновляются каждый тик —
   значит, вместе с режимом они и заканчиваются; плюс `+0.5` чакры за тик и частицы `HAPPY_VILLAGER`.
   Обслуживание — `SageModeAbility#maintain`, зовётся из `PlayerEvents#onEntityUpdate` рядом с
@@ -733,6 +754,9 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   `util/Targeting.lookedAtEntity(player, range)`: сначала `level().clip(new ClipContext(..., Block.COLLIDER, ...))`
   до первой стены, затем `ProjectileUtil.getEntityHitResult(shooter, eye, end, box, isPickable, distSq)`
   на этом отрезке. Так луч не проходит сквозь стены и упирается в чужую цель.
+  Для «найди блок, на который смотрит игрок» в `Targeting` есть `lookedAtBlock(player, range)`: он делает
+  только `level().clip(new ClipContext(..., Block.COLLIDER, ...))` и возвращает `BlockHitResult` (или
+  `null`), и этим лучом пользуется техника костра. Смотреть сквозь стены он не даёт — это и нужно.
 
 * **Текстуры предметов/блоков.** В моде они лежат в легаси-папках `textures/items/` и `textures/blocks/`
   (множественное число, как в 1.7.10), а в 1.19.4+/1.20.1 атлас собирается из директорий

@@ -9,6 +9,7 @@ import com.sekwah.narutomod.abilities.jutsus.ChakraMarkerJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraMeditationJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ShadowCloneJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraRegenerationAbility;
+import com.sekwah.narutomod.abilities.jutsus.CampfireJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraShieldAbility;
 import com.sekwah.narutomod.abilities.jutsus.EightGatesAbility;
 import com.sekwah.narutomod.abilities.jutsus.GateReleaseAbility;
@@ -126,6 +127,13 @@ public class NarutoAbilities {
      */
     public static final RegistryObject<OreExcavationJutsuAbility> ORE_EXCAVATION =
             ABILITY.register("ore_excavation", OreExcavationJutsuAbility::new);
+
+    /**
+     * Sets the log the caster is looking at alight, leaving a campfire in its place. See
+     * {@link CampfireJutsuAbility}.
+     */
+    public static final RegistryObject<CampfireJutsuAbility> CAMPFIRE =
+            ABILITY.register("campfire", CampfireJutsuAbility::new);
 
     /**
      * The channelled sphere of chakra. See {@link RasenganJutsuAbility}.

@@ -66,6 +66,9 @@ repositories {
             includeGroup "curse.maven"
         }
     }
+    // Where the JEI jar for the dev runs is pulled from - see the dependency below. (JEI also lives
+    // on maven.blamejared.com, but that one can crawl; Modrinth serves the same jar off a CDN.)
+    maven { url = "https://api.modrinth.com/maven" }
 }
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
@@ -161,6 +164,12 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     implementation fg.deobf("com.sekwah:sekclib-forge:[1.0.0,2)")
+
+    // Just Enough Items, for the dev runs only: a convenience for looking up recipes and item uses
+    // while testing the mod, not something the mod itself depends on. runtimeOnly keeps it off the
+    // compile classpath, so no mod code can accidentally start building on the JEI API, and out of
+    // the published jars. It is loaded by the dev runs like any other mod on the classpath.
+    runtimeOnly fg.deobf("maven.modrinth:jei:15.71.0.224")
     // Trick intellij to allow for better editing in here for the discord task
     // compile "org.apache.httpcomponents:httpmime:4.5.13"
     //implementation fg.deobf("curse.maven:torohealth-damage-indicators-245733:3556931")

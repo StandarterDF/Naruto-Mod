@@ -58,6 +58,8 @@
   "narutomod:second_breath": "Второе дыхание",
   "narutomod:chakra_regeneration": "Регенерация чакрой",
   "narutomod:ore_excavation": "Стиль Земли: Рудокоп",
+  "narutomod:campfire": "Стиль Огня - Техника костра",
+  "jutsu.fail.campfire.notlog": "Для %s нужно смотреть на бревно",
   "narutomod:rasengan": "Расенган",
   "narutomod:rasenshuriken": "Стиль Ветра — Расенсюрикен",
   "narutomod:eight_gates": "Восемь Внутренних Врат",

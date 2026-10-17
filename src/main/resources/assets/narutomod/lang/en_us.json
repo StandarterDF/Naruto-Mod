@@ -109,6 +109,8 @@
   "jutsu.fail.shield": "You already have a %s shaped",
   "jutsu.fail.secondbreath": "%s is already armed",
   "narutomod:ore_excavation": "Earth Style: Ore Excavation",
+  "narutomod:campfire": "Fire Style - Campfire Jutsu",
+  "jutsu.fail.campfire.notlog": "You need to be looking at a log to use %s",
   "narutomod:rasengan": "Rasengan",
   "narutomod:rasenshuriken": "Wind Style - Rasenshuriken",
   "narutomod:eight_gates": "Eight Inner Gates",
