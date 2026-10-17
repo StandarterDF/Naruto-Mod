@@ -16,8 +16,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * The axe shift of a worker clone: it fells the trees around its post and carries the logs back in
- * its bag.
+ * The axe shift of a worker clone: it fells the trees around itself and carries the logs back in its
+ * bag.
  *
  * <p>A single swing takes the whole trunk, not just the one log it chopped into: the logs connected
  * to it are collected too, so a worker is not left climbing a tree it has already started. The cap
@@ -53,23 +53,42 @@ public class WorkerChopGoal extends WorkerBlockGoal {
         return state.is(BlockTags.LOGS);
     }
 
+    /**
+     * Leaves are not wood, but they can wall a trunk in so that no log has a reachable side. When no
+     * log can be got at, the chopper clears the leaves in its way and only then reaches the trunk.
+     */
+    @Override
+    protected boolean secondary(BlockState state) {
+        return state.is(BlockTags.LEAVES);
+    }
+
     @Override
     protected void work(ServerLevel level, BlockPos pos) {
-        for (BlockPos logPos : this.connectedLogs(level, pos)) {
-            BlockState state = level.getBlockState(logPos);
-            if (!state.is(BlockTags.LOGS)) {
-                continue;
-            }
-            ItemStack tool = this.worker.getMainHandItem();
-            for (ItemStack drop : Block.getDrops(state, level, logPos, null, this.worker, tool)) {
-                this.worker.collect(drop);
-            }
-            level.levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, logPos, Block.getId(state));
-            // Wears the axe down, and empties its slot when it finally snaps. (A clone is not a
-            // Player, so ItemStack#mineBlock cannot be used here.)
-            tool.hurtAndBreak(1, this.worker, entity -> { });
-            level.destroyBlock(logPos, false);
+        BlockState state = level.getBlockState(pos);
+        if (!state.is(BlockTags.LOGS)) {
+            // A leaf cleared to get at a trunk: take just the one block and move on.
+            this.breakBlock(level, pos, state);
+            return;
         }
+        for (BlockPos logPos : this.connectedLogs(level, pos)) {
+            BlockState logState = level.getBlockState(logPos);
+            if (logState.is(BlockTags.LOGS)) {
+                this.breakBlock(level, logPos, logState);
+            }
+        }
+    }
+
+    /** Takes one block into the bag, plays the break effect, wears the axe and removes it. */
+    private void breakBlock(ServerLevel level, BlockPos pos, BlockState state) {
+        ItemStack tool = this.worker.getMainHandItem();
+        for (ItemStack drop : Block.getDrops(state, level, pos, null, this.worker, tool)) {
+            this.worker.collect(drop);
+        }
+        level.levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, pos, Block.getId(state));
+        // Wears the axe down, and empties its slot when it finally snaps. (A clone is not a
+        // Player, so ItemStack#mineBlock cannot be used here.)
+        tool.hurtAndBreak(1, this.worker, entity -> { });
+        level.destroyBlock(pos, false);
     }
 
     /** @return the trunk connected to the first log, capped at {@link #MAX_LOGS} blocks. */

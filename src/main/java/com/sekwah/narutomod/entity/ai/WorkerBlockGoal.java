@@ -11,10 +11,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
+import java.util.function.Predicate;
 
 /**
- * The shift a worker clone works: it walks to the nearest block of its kind around the spot it was
- * put down on and takes it.
+ * The shift a worker clone works: it walks to the nearest block of its kind around itself and takes
+ * it.
  *
  * <p>All three jobs (farming, mining, chopping) share the same loop of finding a target, walking to
  * it and breaking it; only what counts as a target and what happens when the worker reaches it
@@ -38,6 +39,9 @@ public abstract class WorkerBlockGoal extends Goal {
     /** Ticks between scans when there is nothing to go for. */
     private static final int EMPTY_COOLDOWN = 20;
 
+    /** How long a worker tries to reach one target before it gives up and looks elsewhere. */
+    private static final int UNREACHABLE_TICKS = 300;
+
     /** Heights at which a block next to the target is tried, relative to the target. */
     private static final int[] STAND_HEIGHTS = {0, 1, -1};
 
@@ -45,6 +49,7 @@ public abstract class WorkerBlockGoal extends Goal {
 
     private BlockPos target;
     private int cooldown;
+    private int reachTicks;
 
     protected WorkerBlockGoal(ShadowCloneEntity worker) {
         this.worker = worker;
@@ -59,6 +64,16 @@ public abstract class WorkerBlockGoal extends Goal {
 
     /** Performs the work on the block the worker has walked up to; the block is still there. */
     protected abstract void work(ServerLevel level, BlockPos pos);
+
+    /**
+     * Blocks a worker may clear when nothing of its own kind is within reach.
+     *
+     * <p>A lumberjack uses this for leaves: a trunk walled in by foliage has no reachable side at
+     * all, so the worker first clears the leaves in its way and only then gets at the wood.</p>
+     */
+    protected boolean secondary(BlockState state) {
+        return false;
+    }
 
     /** How far around itself a worker looks for its kind of block, in blocks. */
     protected int searchRadius() {
@@ -81,13 +96,17 @@ public abstract class WorkerBlockGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
-        return this.target != null && this.isMyJob()
-                && this.matches(this.worker.level().getBlockState(this.target));
+        if (this.target == null || !this.isMyJob()) {
+            return false;
+        }
+        BlockState state = this.worker.level().getBlockState(this.target);
+        return this.matches(state) || this.secondary(state);
     }
 
     @Override
     public void start() {
         this.cooldown = 0;
+        this.reachTicks = 0;
         this.walkTo(this.target);
     }
 
@@ -104,11 +123,21 @@ public abstract class WorkerBlockGoal extends Goal {
         }
         this.worker.getLookControl().setLookAt(Vec3.atCenterOf(this.target));
         if (this.worker.distanceToSqr(Vec3.atCenterOf(this.target)) > REACH_SQR) {
+            // No progress for too long usually means the way is walled off (foliage, terrain). Give
+            // the target up instead of pressing against the wall forever - another scan may find a
+            // leaf or a different block the worker can actually get to.
+            if (++this.reachTicks > UNREACHABLE_TICKS) {
+                this.target = null;
+                this.cooldown = EMPTY_COOLDOWN;
+                this.worker.getNavigation().stop();
+                return;
+            }
             if (this.worker.getNavigation().isDone()) {
                 this.walkTo(this.target);
             }
             return;
         }
+        this.reachTicks = 0;
         if (this.worker.level() instanceof ServerLevel level) {
             this.work(level, this.target);
         }
@@ -128,6 +157,17 @@ public abstract class WorkerBlockGoal extends Goal {
 
     /** @return the closest block of this job's kind around the worker that it can walk to. */
     private BlockPos findTarget() {
+        BlockPos primary = this.findNearest(this::matches);
+        if (primary != null) {
+            return primary;
+        }
+        // Nothing of its own kind can be reached; a secondary block (foliage in a chopper's way) may
+        // still be worth taking, because clearing it can open a path to the real thing.
+        return this.findNearest(this::secondary);
+    }
+
+    /** @return the closest block matching {@code wanted} around the worker that it can walk to. */
+    private BlockPos findNearest(Predicate<BlockState> wanted) {
         // A worker looks around wherever it is rather than around a fixed post: a forest it walks
         // through keeps offering work, and when the ground around it is picked clean it drifts on to
         // the next stand of trees by itself (see the strolling goal it falls back to).
@@ -137,7 +177,7 @@ public abstract class WorkerBlockGoal extends Goal {
         double nearestDistance = Double.MAX_VALUE;
         for (BlockPos pos : BlockPos.betweenClosed(here.offset(-radius, -VERTICAL_REACH, -radius),
                 here.offset(radius, VERTICAL_REACH, radius))) {
-            if (!this.matches(this.worker.level().getBlockState(pos)) || !this.hasStand(pos)) {
+            if (!wanted.test(this.worker.level().getBlockState(pos)) || !this.hasStand(pos)) {
                 continue;
             }
             double distance = this.worker.distanceToSqr(Vec3.atCenterOf(pos));
