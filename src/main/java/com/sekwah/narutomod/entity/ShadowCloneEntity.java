@@ -111,9 +111,10 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     /**
      * How long a worker clone works. A worker is summoned by the same techniques as a fighter but
      * with the Worker's Seal in hand, and the whole point of it is to be left behind at a field, a
-     * mine or a tree line, so it outlives every combat clone by a wide margin.
+     * mine or a tree line, so it outlives every combat clone by a wide margin - a minute and a half
+     * against the fighters' twenty-five seconds.
      */
-    public static final int WORKER_LIFETIME = 20 * 60 * 10;
+    public static final int WORKER_LIFETIME = 20 * 90;
 
     /**
      * Anything closer than this is melee range. A clone stops shooting at it and starts swinging
