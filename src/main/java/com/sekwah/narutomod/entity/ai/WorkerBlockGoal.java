@@ -4,15 +4,21 @@ import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import com.sekwah.narutomod.entity.WorkerJob;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayDeque;
+import java.util.Collection;
+import java.util.Deque;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -20,12 +26,17 @@ import java.util.function.Predicate;
  * it.
  *
  * <p>All three jobs (farming, mining, chopping) share the same loop of finding a target, walking to
- * it and breaking it; only what counts as a target and what happens when the worker reaches it
- * differ. The subclasses supply those two with {@link #matches(BlockState)} and
- * {@link #work(ServerLevel, BlockPos)}, and declare which {@link WorkerJob} they belong to.</p>
+ * it and taking it; only what counts as a target and what happens when the worker gets there differ.
+ * The subclasses supply those two with {@link #matches(BlockState)} and
+ * {@link #plan(ServerLevel, BlockPos)}, and declare which {@link WorkerJob} they belong to.</p>
+ *
+ * <p>A take is spread over several ticks: a lumberjack hands over the whole trunk at once and the
+ * goal then brings it down a log at a time, so a tree falls piece by piece instead of blinking out.
+ * While a worker is busy with a block the spot is claimed, so two workers in the same wood do not
+ * pile onto one tree - each heads for its own.</p>
  *
  * <p>What is taken does not fall to the ground: it goes into the clone's bag, which it hands to its
- * caster when it pops (see {@code ShadowCloneEntity#releaseLoot()}).</p>
+ * caster when it pops (see {@code ShadowCloneEntity#releaseLoot(int)}).</p>
  */
 public abstract class WorkerBlockGoal extends Goal {
 
@@ -35,8 +46,11 @@ public abstract class WorkerBlockGoal extends Goal {
     /** How close the worker has to get before it can reach the block. */
     private static final double REACH_SQR = 4.0d;
 
-    /** Ticks between one swing and the next, so a worker is not a machine. */
+    /** Ticks between one scan and the next after a take, so a worker is not a machine. */
     private static final int SWING_COOLDOWN = 15;
+
+    /** Ticks between two blocks of the same take, so a trunk comes down block by block. */
+    private static final int TAKE_TICKS = 6;
 
     /** Ticks between scans when there is nothing to go for. */
     private static final int EMPTY_COOLDOWN = 20;
@@ -44,14 +58,40 @@ public abstract class WorkerBlockGoal extends Goal {
     /** Ticks between attempts to find a path, so a blocked worker does not path every tick. */
     private static final int REPATH_TICKS = 20;
 
-    /** How long a worker tries to reach one target before it gives up and looks elsewhere. */
+    /** Hard cap on how long a worker tries to reach one target before giving up and looking elsewhere. */
     private static final int UNREACHABLE_TICKS = 300;
+
+    /**
+     * How long a worker stands with no path left before giving the target up. This is the case that
+     * used to make workers freeze by a tree: they picked a block, walked as close as the terrain
+     * allowed, the pathfinder found nothing more, and they stood there. A couple of seconds of that
+     * is enough to conclude the block is out of reach.
+     */
+    private static final int STUCK_TICKS = 40;
 
     /** How long a target the worker could not reach is left alone so it is not picked again. */
     private static final int ABANDON_TICKS = 300;
 
+    /** How long a worker walks toward a wander spot before it picks another one. */
+    private static final int ROAM_TICKS = 200;
+
+    /** How close to a wander spot counts as arrived. */
+    private static final double ROAM_ARRIVED_SQR = 2.25d;
+
+    /** How far from itself a worker will wander when there is nothing to do right here. */
+    private static final int ROAM_RANGE = 8;
+
+    /** How long a claimed block stays spoken for without being touched again. */
+    private static final long CLAIM_TICKS = 1200L;
+
     /** Heights at which a block next to the target is tried, relative to the target. */
     private static final int[] STAND_HEIGHTS = {0, 1, -1};
+
+    /** A block (or a whole tree) spoken for by one worker, so another does not join in. */
+    private record Claim(int holder, long expiry) {}
+
+    /** Claims held across every worker on the server, keyed by dimension and position. */
+    private static final Map<GlobalPos, Claim> CLAIMS = new HashMap<>();
 
     protected final ShadowCloneEntity worker;
 
@@ -59,6 +99,15 @@ public abstract class WorkerBlockGoal extends Goal {
     private int cooldown;
     private int reachTicks;
     private int repathTicks;
+    private int stuckTicks;
+    private int roamTicks;
+
+    /** True while {@link #target} is somewhere to wander to rather than a block to work on. */
+    private boolean roaming;
+
+    /** Blocks still to come down from the take in progress, and the countdown to the next one. */
+    private final Deque<BlockPos> queue = new ArrayDeque<>();
+    private int queueTicks;
 
     /** Offsets to probe, nearest ring first (x, y, z triples), and where each ring starts in it. */
     private int[] scanOffsets;
@@ -82,8 +131,20 @@ public abstract class WorkerBlockGoal extends Goal {
     /** @return whether a block is something this job takes. */
     protected abstract boolean matches(BlockState state);
 
-    /** Performs the work on the block the worker has walked up to; the block is still there. */
-    protected abstract void work(ServerLevel level, BlockPos pos);
+    /**
+     * Plans the take for the block the worker has walked up to: the blocks that should come down,
+     * the one it reached first, the rest in the order they should follow.
+     *
+     * <p>A lumberjack hands over the whole trunk here and the base goal then takes it down a log at
+     * a time; the others usually plan just the one block. The whole plan is scheduled at once, so
+     * blocks higher up the tree do not have to be reachable in their own right.</p>
+     *
+     * @return the blocks to take, or an empty list when the block is no use after all.
+     */
+    protected abstract List<BlockPos> plan(ServerLevel level, BlockPos pos);
+
+    /** Takes one block of the plan: breaks it, collects the drops and wears the tool. */
+    protected abstract void take(ServerLevel level, BlockPos pos);
 
     /**
      * Blocks a worker may clear when nothing of its own kind is within reach.
@@ -102,6 +163,14 @@ public abstract class WorkerBlockGoal extends Goal {
         return 8;
     }
 
+    /**
+     * Extra blocks to claim together with the target. A lumberjack claims the whole trunk here, so a
+     * second worker walking by sees the tree is taken and looks for one of its own.
+     */
+    protected Set<BlockPos> claimGroup(BlockPos pos) {
+        return Set.of();
+    }
+
     @Override
     public boolean canUse() {
         if (!this.isMyJob()) {
@@ -111,16 +180,30 @@ public abstract class WorkerBlockGoal extends Goal {
             this.cooldown--;
             return false;
         }
-        this.pruneAbandoned();
-        this.target = this.findTarget();
+        this.pruneBookkeeping();
+        BlockPos found = this.findTarget();
+        this.roaming = found == null;
+        this.target = this.roaming ? this.findRoam() : found;
+        if (!this.roaming && this.target != null) {
+            this.claimAround(this.target);
+        }
         this.cooldown = EMPTY_COOLDOWN;
         return this.target != null;
     }
 
     @Override
     public boolean canContinueToUse() {
-        if (this.target == null || !this.isMyJob()) {
+        if (!this.isMyJob()) {
             return false;
+        }
+        if (!this.queue.isEmpty()) {
+            return true;
+        }
+        if (this.target == null) {
+            return false;
+        }
+        if (this.roaming) {
+            return true;
         }
         BlockState state = this.worker.level().getBlockState(this.target);
         return this.matches(state) || this.secondary(state, this.target);
@@ -130,49 +213,105 @@ public abstract class WorkerBlockGoal extends Goal {
     public void start() {
         this.cooldown = 0;
         this.reachTicks = 0;
+        this.stuckTicks = 0;
+        this.roamTicks = ROAM_TICKS;
         this.walkTo(this.target);
         this.repathTicks = REPATH_TICKS;
     }
 
     @Override
     public void stop() {
+        this.queue.clear();
         this.target = null;
         this.worker.getNavigation().stop();
     }
 
     @Override
     public void tick() {
+        if (!this.queue.isEmpty()) {
+            this.takeFromQueue();
+            return;
+        }
         if (this.target == null) {
             return;
         }
         this.worker.getLookControl().setLookAt(Vec3.atCenterOf(this.target));
-        if (this.worker.distanceToSqr(Vec3.atCenterOf(this.target)) > REACH_SQR) {
-            // No progress for too long usually means the way is walled off (foliage, terrain). Give
-            // the target up instead of pressing against the wall forever - another scan may find a
-            // leaf or a different block the worker can actually get to.
-            if (++this.reachTicks > UNREACHABLE_TICKS) {
-                // Remember the block so the next scan does not pick the same one and stand there
-                // all over again; the worker walks off and tries something else.
-                this.abandoned.put(this.target, this.worker.tickCount + ABANDON_TICKS);
+
+        if (this.roaming) {
+            // Wander over: arrived, or took too long. Either way stop and look for real work again.
+            if (this.worker.distanceToSqr(Vec3.atCenterOf(this.target)) <= ROAM_ARRIVED_SQR
+                    || --this.roamTicks <= 0) {
                 this.target = null;
                 this.cooldown = EMPTY_COOLDOWN;
                 this.worker.getNavigation().stop();
-                return;
-            }
-            // A failed path search leaves the navigation "done", so trying again every tick would
-            // run A* from scratch sixty times a second; only retry every so often instead.
-            if (this.worker.getNavigation().isDone() && --this.repathTicks <= 0) {
-                this.repathTicks = REPATH_TICKS;
-                this.walkTo(this.target);
             }
             return;
         }
-        this.reachTicks = 0;
-        if (this.worker.level() instanceof ServerLevel level) {
-            this.work(level, this.target);
+
+        if (this.worker.distanceToSqr(Vec3.atCenterOf(this.target)) > REACH_SQR) {
+            if (++this.reachTicks > UNREACHABLE_TICKS) {
+                this.abandon();
+                return;
+            }
+            if (this.worker.getNavigation().isDone()) {
+                // Standing here with the path finished but still out of reach means there is no way
+                // to the block. Retry a couple of times in case something moved, then give it up:
+                // this is what keeps a worker from freezing beside a tree it cannot get to.
+                if (++this.stuckTicks > STUCK_TICKS) {
+                    this.abandon();
+                    return;
+                }
+                if (--this.repathTicks <= 0) {
+                    this.repathTicks = REPATH_TICKS;
+                    this.walkTo(this.target);
+                }
+            } else {
+                this.stuckTicks = 0;
+            }
+            return;
         }
+
+        this.reachTicks = 0;
+        this.stuckTicks = 0;
+        if (this.worker.level() instanceof ServerLevel level) {
+            List<BlockPos> planned = this.plan(level, this.target);
+            if (!planned.isEmpty()) {
+                this.claimAll(planned);
+                this.queue.addAll(planned);
+                this.queueTicks = 0;
+                this.cooldown = SWING_COOLDOWN;
+                this.target = null;
+                this.worker.getNavigation().stop();
+                return;
+            }
+        }
+        // Nothing came of it (the tool would not take the block, or it was already gone): do not let
+        // the worker pick the same spot again and swing at it in place.
+        this.abandoned.put(this.target, this.worker.tickCount + ABANDON_TICKS);
         this.target = null;
         this.cooldown = SWING_COOLDOWN;
+    }
+
+    /** Takes the next planned block once the swing timer is up, so a take comes down block by block. */
+    private void takeFromQueue() {
+        BlockPos next = this.queue.peek();
+        this.worker.getLookControl().setLookAt(Vec3.atCenterOf(next));
+        if (--this.queueTicks > 0) {
+            return;
+        }
+        this.queueTicks = TAKE_TICKS;
+        this.queue.poll();
+        if (this.worker.level() instanceof ServerLevel level) {
+            this.take(level, next);
+        }
+    }
+
+    /** Gives up on the current block: remember it for a while and stop walking at it. */
+    private void abandon() {
+        this.abandoned.put(this.target, this.worker.tickCount + ABANDON_TICKS);
+        this.target = null;
+        this.cooldown = EMPTY_COOLDOWN;
+        this.worker.getNavigation().stop();
     }
 
     private boolean isMyJob() {
@@ -180,16 +319,58 @@ public abstract class WorkerBlockGoal extends Goal {
                 && !this.worker.level().isClientSide;
     }
 
-    /** Drops targets that have been in the bad books long enough to be worth another try. */
-    private void pruneAbandoned() {
+    /** Drops expired claims and forgotten targets. */
+    private void pruneBookkeeping() {
         if (!this.abandoned.isEmpty()) {
             this.abandoned.values().removeIf(until -> this.worker.tickCount >= until);
         }
+        long now = this.worker.level().getGameTime();
+        CLAIMS.values().removeIf(claim -> claim.expiry() < now);
     }
 
     private boolean isAbandoned(BlockPos pos) {
         Integer until = this.abandoned.get(pos);
         return until != null && this.worker.tickCount < until;
+    }
+
+    private void claimAround(BlockPos pos) {
+        long expiry = this.claimExpiry();
+        this.claim(pos, expiry);
+        for (BlockPos extra : this.claimGroup(pos)) {
+            this.claim(extra, expiry);
+        }
+    }
+
+    private void claimAll(Collection<BlockPos> positions) {
+        long expiry = this.claimExpiry();
+        for (BlockPos pos : positions) {
+            this.claim(pos, expiry);
+        }
+    }
+
+    private void claim(BlockPos pos, long expiry) {
+        CLAIMS.put(GlobalPos.of(this.worker.level().dimension(), pos.immutable()),
+                new Claim(this.worker.getId(), expiry));
+    }
+
+    private long claimExpiry() {
+        return this.worker.level().getGameTime() + CLAIM_TICKS;
+    }
+
+    /** Whether another worker has this block spoken for right now. */
+    private boolean claimedByOther(BlockPos pos) {
+        GlobalPos key = GlobalPos.of(this.worker.level().dimension(), pos);
+        Claim claim = CLAIMS.get(key);
+        if (claim == null) {
+            return false;
+        }
+        long now = this.worker.level().getGameTime();
+        // Expired, or a claim left over from before a world reload (game time went backwards).
+        if (claim.expiry() < now || claim.expiry() - now > CLAIM_TICKS) {
+            CLAIMS.remove(key);
+            return false;
+        }
+        return claim.holder() != this.worker.getId();
     }
 
     private void walkTo(BlockPos pos) {
@@ -209,11 +390,40 @@ public abstract class WorkerBlockGoal extends Goal {
         return this.findNearest(pos -> this.secondary(level.getBlockState(pos), pos));
     }
 
+    /**
+     * A spot nearby to walk to when there is nothing to work on right here.
+     *
+     * <p>Workers are not tied to the block they were summoned over: when the ground around them is
+     * picked clean they drift on and look for more, which is how a forest actually gets cleared
+     * instead of a hole being dug around one post. This is a deliberate roaming goal rather than
+     * leaning on the vanilla stroll, whose random walk can fall silent once a mob has stood still
+     * for a while (it checks {@code getNoActionTime()}).</p>
+     *
+     * @return a standable spot to walk to, or null if there is nowhere to go.
+     */
+    private BlockPos findRoam() {
+        BlockPos here = this.worker.blockPosition();
+        for (int attempt = 0; attempt < 8; attempt++) {
+            int dx = this.worker.getRandom().nextInt(ROAM_RANGE * 2 + 1) - ROAM_RANGE;
+            int dz = this.worker.getRandom().nextInt(ROAM_RANGE * 2 + 1) - ROAM_RANGE;
+            if (dx == 0 && dz == 0) {
+                continue;
+            }
+            for (int dy = 2; dy >= -4; dy--) {
+                BlockPos candidate = here.offset(dx, dy, dz);
+                if (this.isStandable(candidate)) {
+                    return candidate;
+                }
+            }
+        }
+        return null;
+    }
+
     /** @return the closest block matching {@code wanted} that the worker can walk to, or null. */
     private BlockPos findNearest(Predicate<BlockPos> wanted) {
         // A worker looks around wherever it is rather than around a fixed post: a forest it walks
         // through keeps offering work, and when the ground around it is picked clean it drifts on to
-        // the next stand of trees by itself (see the strolling goal it falls back to).
+        // the next stand of trees by itself (see the roaming below).
         BlockPos here = this.worker.blockPosition();
         Level level = this.worker.level();
         int radius = this.searchRadius();
@@ -229,7 +439,8 @@ public abstract class WorkerBlockGoal extends Goal {
                 cursor.set(here.getX() + this.scanOffsets[base],
                         here.getY() + this.scanOffsets[base + 1],
                         here.getZ() + this.scanOffsets[base + 2]);
-                if (this.isAbandoned(cursor) || !wanted.test(cursor) || !this.hasStand(cursor)) {
+                if (this.isAbandoned(cursor) || this.claimedByOther(cursor)
+                        || !wanted.test(cursor) || !this.hasStand(cursor)) {
                     continue;
                 }
                 double distance = this.worker.distanceToSqr(Vec3.atCenterOf(cursor));

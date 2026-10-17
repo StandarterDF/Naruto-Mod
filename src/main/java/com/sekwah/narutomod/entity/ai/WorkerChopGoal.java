@@ -13,23 +13,25 @@ import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
  * The axe shift of a worker clone: it fells the trees around itself and carries the logs back in its
  * bag.
  *
- * <p>A single swing takes the whole trunk, not just the one log it chopped into: the logs connected
- * to it are collected too, so a worker is not left climbing a tree it has already started. The cap
- * keeps a worker from clearing a whole forest with one swing (or from wandering off the loaded
- * chunks).</p>
+ * <p>Reaching a trunk plans the whole thing, but the goal brings it down a log at a time (from the
+ * stump up), so a tree visibly falls apart instead of vanishing in one swing. The cap keeps a worker
+ * from clearing a whole forest, or wandering off the loaded chunks, in a single take.</p>
  */
 public class WorkerChopGoal extends WorkerBlockGoal {
 
     /** Cap on one felling. High enough for a jungle giant, low enough not to eat a whole forest
-     *  (and the loaded chunks around it) in a single swing. */
+     *  (and the loaded chunks around it) in a single take. */
     private static final int MAX_LOGS = 128;
 
     public WorkerChopGoal(ShadowCloneEntity worker) {
@@ -75,20 +77,44 @@ public class WorkerChopGoal extends WorkerBlockGoal {
         return false;
     }
 
+    /**
+     * The whole trunk, hung from the stump up. The base goal then takes them one at a time, which is
+     * why the upper logs do not need a way to walk to them.
+     */
     @Override
-    protected void work(ServerLevel level, BlockPos pos) {
+    protected List<BlockPos> plan(ServerLevel level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
-        if (!state.is(BlockTags.LOGS)) {
+        if (state.is(BlockTags.LOGS)) {
+            List<BlockPos> trunk = new ArrayList<>(this.connectedLogs(level, pos));
+            trunk.sort(Comparator.comparingInt(BlockPos::getY));
+            return trunk;
+        }
+        if (this.secondary(state, pos)) {
             // A leaf cleared to get at a trunk: take just the one block and move on.
+            return List.of(pos.immutable());
+        }
+        return List.of();
+    }
+
+    @Override
+    protected void take(ServerLevel level, BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
+        if (state.is(BlockTags.LOGS) || this.secondary(state, pos)) {
             this.breakBlock(level, pos, state);
-            return;
         }
-        for (BlockPos logPos : this.connectedLogs(level, pos)) {
-            BlockState logState = level.getBlockState(logPos);
-            if (logState.is(BlockTags.LOGS)) {
-                this.breakBlock(level, logPos, logState);
-            }
+    }
+
+    /**
+     * A whole trunk is spoken for the moment a chopper picks it, so the other workers in the wood
+     * move on to trees of their own instead of all hacking at the same one.
+     */
+    @Override
+    protected Set<BlockPos> claimGroup(BlockPos pos) {
+        Level level = this.worker.level();
+        if (level instanceof ServerLevel server && level.getBlockState(pos).is(BlockTags.LOGS)) {
+            return this.connectedLogs(server, pos);
         }
+        return Set.of();
     }
 
     /** Takes one block into the bag, plays the break effect, wears the axe and removes it. */

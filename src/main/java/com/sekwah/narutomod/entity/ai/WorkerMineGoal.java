@@ -11,6 +11,8 @@ import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.Tags;
 
+import java.util.List;
+
 /**
  * The pickaxe shift of a worker clone: it digs the stone and the ore out of the ground around its
  * post and carries the spoils back in its bag.
@@ -44,13 +46,19 @@ public class WorkerMineGoal extends WorkerBlockGoal {
     }
 
     @Override
-    protected void work(ServerLevel level, BlockPos pos) {
+    protected List<BlockPos> plan(ServerLevel level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
-        if (!this.matches(state)) {
-            return;
+        if (!this.matches(state) || !this.worker.getMainHandItem().isCorrectToolForDrops(state)) {
+            return List.of();
         }
+        return List.of(pos.immutable());
+    }
+
+    @Override
+    protected void take(ServerLevel level, BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
         ItemStack tool = this.worker.getMainHandItem();
-        if (!tool.isCorrectToolForDrops(state)) {
+        if (!this.matches(state) || !tool.isCorrectToolForDrops(state)) {
             return;
         }
         for (ItemStack drop : Block.getDrops(state, level, pos, null, this.worker, tool)) {

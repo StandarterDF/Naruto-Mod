@@ -148,7 +148,7 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
 
     /**
      * How long a worker waits after popping before its harvest is handed to the caster, see
-     * {@link #releaseLoot()}. Long enough that a worker is a farmhand rather than a way to teleport
+     * {@link #releaseLoot(int)}. Long enough that a worker is a farmhand rather than a way to teleport
      * a field across the map.
      */
     private static final int WORKER_LOOT_DELAY = 20 * 30;
@@ -523,17 +523,27 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     }
 
     /**
-     * Pops the clone: a puff of smoke and the classic poof sound, then it is gone.
+     * Pops the clone when its time runs out (or its quiver does): a puff of smoke and the classic
+     * poof sound, then it is gone. A worker hands its bag over {@link #WORKER_LOOT_DELAY} ticks
+     * later, as if it walked the harvest back.
      */
     public void dispel() {
+        this.pop(WORKER_LOOT_DELAY);
+    }
+
+    /**
+     * Pops the clone with the given delay before its bag reaches the caster.
+     *
+     * @param lootDelay ticks to wait before a worker's harvest is handed over; 0 hands it over now.
+     */
+    private void pop(int lootDelay) {
         if (this.level() instanceof ServerLevel serverLevel) {
             serverLevel.sendParticles(ParticleTypes.CLOUD, this.getX(),
                     this.getY() + this.getBbHeight() / 2.0d, this.getZ(),
                     30, 0.4d, 0.5d, 0.4d, 0.02d);
             this.playSound(NarutoSounds.SHADOW_CLONE_POOF.get(), 0.6f, this.isChibi() ? 1.3f : 1.0f);
         }
-        // A worker hands its harvest over before it goes, whether it ran out of time or was cut down.
-        this.releaseLoot();
+        this.releaseLoot(lootDelay);
         this.discard();
     }
 
@@ -543,13 +553,16 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
      * <p>A clone that was made out of a paper bomb takes the charge with it: the killing blow pops
      * it in a blast. Running out of chakra or of arrows is not a killing blow, so those clones go
      * quietly.</p>
+     *
+     * <p>A worker cut down hands its bag over at once (rather than after the walk-home delay a timed
+     * out one has), so it is plain that every worker carries its own harvest.</p>
      */
     @Override
     public void die(DamageSource damageSource) {
         if (this.explosive && !this.level().isClientSide) {
             this.explode();
         }
-        this.dispel();
+        this.pop(0);
     }
 
     /**
@@ -729,28 +742,35 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     }
 
     /**
-     * Hands a popped worker's harvest to its caster, {@link #WORKER_LOOT_DELAY} ticks later.
+     * Hands a popped worker's harvest to its caster, after the given delay.
      *
      * <p>The delay is the whole point of a worker: it makes the clone a farmhand that walks the
      * field and comes back with the crop rather than a way to move a chest of wheat across the map
-     * the moment it pops. If the caster is not around to take it the harvest is simply dropped where
-     * the clone stood, so nothing is ever lost to a logout.</p>
+     * the moment it pops. A worker that is cut down skips the wait and gives its bag over there and
+     * then. If the caster is not around to take it the harvest is simply dropped where the clone
+     * stood, so nothing is ever lost to a logout.</p>
+     *
+     * @param delay ticks to wait before the bag reaches the caster; 0 delivers it immediately.
      */
-    private void releaseLoot() {
+    private void releaseLoot(int delay) {
         if (this.bag.isEmpty()) {
             return;
         }
         List<ItemStack> loot = new ArrayList<>(this.bag);
         this.bag.clear();
         Player owner = this.getOwner();
-        if (owner != null) {
-            owner.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(data ->
-                    data.scheduleDelayedTickEvent(player -> deliverLoot(player, loot), WORKER_LOOT_DELAY));
+        if (owner == null) {
+            for (ItemStack stack : loot) {
+                this.spawnAtLocation(stack);
+            }
             return;
         }
-        for (ItemStack stack : loot) {
-            this.spawnAtLocation(stack);
+        if (delay <= 0) {
+            deliverLoot(owner, loot);
+            return;
         }
+        owner.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(data ->
+                data.scheduleDelayedTickEvent(player -> deliverLoot(player, loot), delay));
     }
 
     private static void deliverLoot(Player player, List<ItemStack> loot) {

@@ -11,13 +11,15 @@ import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.List;
+
 /**
  * The hoe shift of a worker clone: it walks to the nearest ripe crop around the spot it was put
  * down on, takes it and puts a fresh seed back in the ground.
  *
  * <p>Only crops in the vanilla {@code #minecraft:crops} tag are touched, so a farm hand is not a
  * second ore excavation. The drops go into the clone's bag, which it hands to its caster when it
- * pops (see {@code ShadowCloneEntity#releaseLoot()}).</p>
+ * pops (see {@code ShadowCloneEntity#releaseLoot(int)}).</p>
  */
 public class WorkerHarvestGoal extends WorkerBlockGoal {
 
@@ -37,6 +39,11 @@ public class WorkerHarvestGoal extends WorkerBlockGoal {
                 && crop.isMaxAge(state);
     }
 
+    @Override
+    protected List<BlockPos> plan(ServerLevel level, BlockPos pos) {
+        return this.matches(level.getBlockState(pos)) ? List.of(pos.immutable()) : List.of();
+    }
+
     /**
      * Takes the crop and replants it.
      *
@@ -44,7 +51,7 @@ public class WorkerHarvestGoal extends WorkerBlockGoal {
      * age zero so the field keeps producing instead of being stripped bare.</p>
      */
     @Override
-    protected void work(ServerLevel level, BlockPos pos) {
+    protected void take(ServerLevel level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
         if (!(state.getBlock() instanceof CropBlock crop) || !crop.isMaxAge(state)) {
             return;
