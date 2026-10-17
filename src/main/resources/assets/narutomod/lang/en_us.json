@@ -190,6 +190,7 @@
   "naruto.gui.jutsu.notice": "Every technique and the keys that cast it, listed below.",
   "naruto.gui.jutsu.notice2": "Press the buttons to toggle being a ninja.",
   "naruto.gui.jutsu.techniques": "Techniques",
+  "naruto.gui.jutsu.locked": "Become a ninja to see the list of techniques.",
   "naruto.gui.jutsu.page": "Page %s / %s",
   "naruto.gui.jutsu.enable": "Become a ninja",
   "naruto.gui.jutsu.disable": "I change my mind",

@@ -412,9 +412,11 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   «выключить» тратой).
 * **Меню J** (`client/gui/JutsuScreen`) — вместо старой команды `/jutsu list` список техник рисуется в
   GUI: строки берутся из `NarutoAbilities.COMBO_MAP` (combo → ability id, заполняется в
-  `FMLCommonSetupEvent` на **клиенте тоже**, поэтому карта доступна без сервера), сортируются по комбо,
-  клавиши рисуются через `Component.keybind("naruto.keys.key" + цифра)`, поэтому следуют за
-  переназначением. Пагинация по 10 строк, кнопки `<`/`>` плюс прежние Become a ninja / Done.
+  `FMLCommonSetupEvent` на **клиенте тоже**, поэтому карта доступна без сервера), сортируются по комбо.
+  Клавиши рисуются **не** через `Component.keybind` (он зависит от раскладки ОС — на кириллице давал
+  с/и/м), а из кода клавиши (`JutsuScreen#keyLetter` → латинские A–Z). Пагинация по 9 строк, кнопки
+  `<`/`>` плюс прежние Become a ninja / Done. **Список показывается только когда игрок уже ниндзя**;
+  иначе — подсказка `naruto.gui.jutsu.locked` и укороченное меню (кнопки подтягиваются вверх).
 
 ## Грабли, на которые уже наступали
 
@@ -482,6 +484,11 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   (`LivingEntity#tick` — уже внутри `Player#tick`, после сброса, до `aiStep`). Так же нужны **обе
   стороны**: сервер авторитетен по позиции лишь формально, клиент считает коллизии сам и выталкивает
   игрока из стены. Флаг состояния живёт в `toggleAbilityData` (`@Sync`), так что клиент знает о стойке.
+* **`Component.keybind` следует раскладке клавиатуры.** Внутри он берёт имя клавиши через
+  `GLFW.glfwGetKeyName`, поэтому на русской раскладке `C V B` приходят кириллицей (с/м/и, что визуально
+  похоже на C/M/H) — в меню техник это выглядело как «C H M». Код клавиши от раскладки не зависит,
+  поэтому буква вычисляется из `InputConstants.Key#getValue()` (A–Z = 65–90, 0–9 = 48–57), а fallback
+  на `getDisplayName()` остаётся только для не-букв. Так делает `JutsuScreen#keyLetter`.
 * **`ChunkGenerator#applyBiomeDecoration(WorldGenLevel, ChunkAccess, StructureManager)`** — первый
   параметр `WorldGenLevel` (`net.minecraft.world.level.WorldGenLevel`), **не** `WorldGenRegion`;
   перепутаешь — получишь «does not override or implement a method from a supertype». Переопределение

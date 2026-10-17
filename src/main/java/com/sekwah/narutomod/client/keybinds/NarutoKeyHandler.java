@@ -96,6 +96,22 @@ public class NarutoKeyHandler {
         JUTSU_B_KEY.registerClickConsumer(() -> handleJustuKey(3));
     }
 
+    /**
+     * The key a combo digit is cast with, so the jutsu menu can show what to press without guessing
+     * at the ids.
+     *
+     * @param digit one of the three jutsu key digits (1, 2 or 3).
+     * @return the mapping, or null before the client has registered the keys.
+     */
+    public static net.minecraft.client.KeyMapping getJutsuKey(int digit) {
+        return switch (digit) {
+            case 1 -> JUTSU_C_KEY;
+            case 2 -> JUTSU_V_KEY;
+            case 3 -> JUTSU_B_KEY;
+            default -> null;
+        };
+    }
+
     public static KeyBindingTickHeld registerKeyBind(String name, int keyCode, RegisterKeyMappingsEvent event) {
         if (keys.containsKey(name)) {
             return keys.get(name);

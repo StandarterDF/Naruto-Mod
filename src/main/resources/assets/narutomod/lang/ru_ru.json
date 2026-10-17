@@ -110,6 +110,7 @@
   "naruto.gui.jutsu.notice": "Ниже перечислены все техники и клавиши для их каста.",
   "naruto.gui.jutsu.notice2": "Кнопками ниже можно стать ниндзя или отказаться.",
   "naruto.gui.jutsu.techniques": "Техники",
+  "naruto.gui.jutsu.locked": "Стань ниндзя, чтобы увидеть список техник.",
   "naruto.gui.jutsu.page": "Страница %s / %s",
   "naruto.gui.jutsu.enable": "Стать ниндзя",
   "naruto.gui.jutsu.disable": "Я передумал",
