@@ -26,10 +26,7 @@ import java.util.EnumSet;
  */
 public abstract class WorkerBlockGoal extends Goal {
 
-    /** How far from its post a worker will wander, in blocks. */
-    private static final int RADIUS = 8;
-
-    /** How much higher and lower than its post a worker will look. */
+    /** How much higher and lower than itself a worker will look for a target. */
     private static final int VERTICAL_REACH = 3;
 
     /** How close the worker has to get before it can reach the block. */
@@ -62,6 +59,11 @@ public abstract class WorkerBlockGoal extends Goal {
 
     /** Performs the work on the block the worker has walked up to; the block is still there. */
     protected abstract void work(ServerLevel level, BlockPos pos);
+
+    /** How far around itself a worker looks for its kind of block, in blocks. */
+    protected int searchRadius() {
+        return 8;
+    }
 
     @Override
     public boolean canUse() {
@@ -124,14 +126,17 @@ public abstract class WorkerBlockGoal extends Goal {
         this.worker.getNavigation().moveTo(stand.getX() + 0.5d, stand.getY(), stand.getZ() + 0.5d, 1.0d);
     }
 
-    /** @return the closest block of this job's kind around the worker's post that it can walk to. */
+    /** @return the closest block of this job's kind around the worker that it can walk to. */
     private BlockPos findTarget() {
-        BlockPos home = this.worker.getWorkerHome() != null
-                ? this.worker.getWorkerHome() : this.worker.blockPosition();
+        // A worker looks around wherever it is rather than around a fixed post: a forest it walks
+        // through keeps offering work, and when the ground around it is picked clean it drifts on to
+        // the next stand of trees by itself (see the strolling goal it falls back to).
+        BlockPos here = this.worker.blockPosition();
+        int radius = this.searchRadius();
         BlockPos nearest = null;
         double nearestDistance = Double.MAX_VALUE;
-        for (BlockPos pos : BlockPos.betweenClosed(home.offset(-RADIUS, -VERTICAL_REACH, -RADIUS),
-                home.offset(RADIUS, VERTICAL_REACH, RADIUS))) {
+        for (BlockPos pos : BlockPos.betweenClosed(here.offset(-radius, -VERTICAL_REACH, -radius),
+                here.offset(radius, VERTICAL_REACH, radius))) {
             if (!this.matches(this.worker.level().getBlockState(pos)) || !this.hasStand(pos)) {
                 continue;
             }

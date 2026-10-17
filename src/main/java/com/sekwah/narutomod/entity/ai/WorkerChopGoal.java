@@ -26,8 +26,9 @@ import java.util.Set;
  */
 public class WorkerChopGoal extends WorkerBlockGoal {
 
-    /** Cap on one felling, so a worker does not clear a whole forest in a single swing. */
-    private static final int MAX_LOGS = 64;
+    /** Cap on one felling. High enough for a jungle giant, low enough not to eat a whole forest
+     *  (and the loaded chunks around it) in a single swing. */
+    private static final int MAX_LOGS = 128;
 
     public WorkerChopGoal(ShadowCloneEntity worker) {
         super(worker);
@@ -36,6 +37,15 @@ public class WorkerChopGoal extends WorkerBlockGoal {
     @Override
     protected WorkerJob job() {
         return WorkerJob.CHOP;
+    }
+
+    /**
+     * A lumberjack sweeps a much wider patch than the other jobs: the whole point of it is to strip
+     * the woods around it, so it looks a good couple of dozen blocks out for the next tree.
+     */
+    @Override
+    protected int searchRadius() {
+        return 24;
     }
 
     @Override

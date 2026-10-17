@@ -30,6 +30,12 @@ public class WorkerMineGoal extends WorkerBlockGoal {
         return WorkerJob.MINE;
     }
 
+    /** A miner works a wider patch than a farmer: it is digging a hole, not weeding a field. */
+    @Override
+    protected int searchRadius() {
+        return 12;
+    }
+
     @Override
     protected boolean matches(BlockState state) {
         // Stone and the rock around it, plus everything the ore tags call an ore, which includes
