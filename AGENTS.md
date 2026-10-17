@@ -236,7 +236,7 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 | Режим Мудреца | `V B V` | INSTANT | 50 сенин-маны на вход, 0.25/тик | `abilities/jutsus/SageModeAbility.java` |
 | Гендзюцу | `C B C` | INSTANT | 35 чакры, КД 10 с | `abilities/jutsus/GenjutsuJutsuAbility.java` + `events/GenjutsuEvents.java` |
 | Хенге | `V C V` | INSTANT | 30 чакры, КД 5 с | `abilities/jutsus/HengeJutsuAbility.java` + `client/renderer/HengeRenderEvents.java` |
-| Походный сундук | `B V C` | INSTANT | бесплатно | `abilities/jutsus/StorageChestAbility.java` + `menu/SupplyChestMenu.java` + `util/Inventories.java` |
+| Походный сундук | `B V C` | INSTANT | бесплатно | `abilities/jutsus/StorageChestAbility.java` + `menu/SupplyChest*.java` |
 | Чакра-печать | — | предмет | 1 за призыв клонов | `NarutoItems.CHAKRA_SEAL` |
 | Печать рабочего | — | режим клонов | держится в руке, не тратится | `item/WorkerSealItem.java` + `entity/WorkerJob.java` + `entity/ai/WorkerBlockGoal.java` |
 | Чакра-батарея | — | предмет | хранит 500, привязка к первому владельцу | `item/ChakraBatteryItem.java` |
@@ -438,18 +438,39 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   всё равно доходит. Если владелец не в сети — лут выпадает на месте клона. Мешок у каждого клона
   **свой** (поле `bag`, не `static`).
 * **Походный сундук** (`StorageChestAbility`, INSTANT `B V C`) — **не блок и не привязан к клонам**:
-  это виртуальное хранилище на **81 слот** (`menu/SupplyChestMenu.java`, 9×9 — три ванильных сундука),
-  которое целиком живёт в NBT игрока (`NinjaData`: `final SimpleContainer supplyChest` +
-  `SUPPLY_CHEST_TAG`, `INinjaData#getSupplyChest()`). Сундук **один** на игрока, его нельзя потерять или
-  «забыть» в незагруженном чанке, и он переживает выход из игры. Техника только **открывает** его:
-  `performServer` зовёт `ServerPlayer#openMenu` с `SupplyChestMenu`, `handleCost` бесплатен, `logInChat`
-  выключен (это взгляд внутрь, а не каст). Меню регистрируется в `menu/NarutoMenus.java`
-  (`DeferredRegister<MenuType<?>>`, `supply_chest`), экран — `client/gui/SupplyChestScreen.java`
-  (подключается через `client/NarutoClientScreens#register` из `clientSetup`, т.к. в этой сборке Forge нет
-  `RegisterMenuScreensEvent`; фон и слоты рисуются `fill`-прямоугольниками — текстуры на 9×9 нет).
+  это виртуальное хранилище на **81 слот** (9×9 — три ванильных сундука), которое целиком живёт в NBT
+  игрока и переживает выход из игры. Сундук **один** на игрока, его нельзя потерять или «забыть» в
+  незагруженном чанке. Техника только **открывает** его: `performServer` зовёт `ServerPlayer#openMenu`
+  с `SupplyChestMenu`, `handleCost` бесплатен, `logInChat` выключен (это взгляд внутрь, а не каст).
+  Меню регистрируется в `menu/NarutoMenus.java` (`DeferredRegister<MenuType<?>>`, `supply_chest`),
+  экран — `client/gui/SupplyChestScreen.java` (подключается через `client/NarutoClientScreens#register`
+  из `clientSetup`, т.к. в этой сборке Forge нет `RegisterMenuScreensEvent`).
   Рабочие пишут в контейнер **напрямую** — `ShadowCloneEntity#depositInSupplyChest` через
-  `util/Inventories#putInto`, без координат, измерений и проверок загрузки чанка. Полный контейнер или
-  офлайн-владелец → возврат в `bag`.
+  `SupplyChestContainer#insert`, без координат, измерений и проверок загрузки чанка. Полный контейнер
+  или офлайн-владелец → возврат в `bag`.
+
+  **Стаки по миллиону.** Ванильный `ItemStack` не может нести больше 127: `ItemStack.save` пишет размер
+  байтом, а `FriendlyByteBuf#writeItem` шлёт теги только у damageable-предметов. Поэтому контейнер свой:
+  `menu/SupplyChestContainer.java` хранит на слот **шаблон** предмета с count = 1 плюс отдельный
+  `int`-массив `amounts[]` (кап `MAX_AMOUNT = 1_000_000`). Ванильная синхронизация меню везёт
+  безопасные шаблоны, а реальные количества едут своим пакетом
+  `network/s2c/ClientboundSupplyChestPacket.java` (весь массив из 81 `int`), который шлётся из
+  `SupplyChestMenu#broadcastChanges`, когда снимок `snapshotAmounts()` разошёлся с последним отправленным
+  (ловит и трату игроком, и доклад рабочего). Клиент кладёт количества в `SupplyChestMenu#clientAmounts`
+  (`applyAmounts`), а бейдж рисует `SupplyChestScreen` из `getDisplayAmount`.
+  В NBT контейнер пишется целиком под `SUPPLY_CHEST_TAG` (`NinjaData`), старый формат-список из
+  `SimpleContainer` подхватывается `loadLegacy` — предметы не теряются.
+
+  **Прокрутка.** Слот `Slot` имеет финальные `x`/`y`/`index`, поэтому сдвигать слоты нельзя. Вместо
+  этого меню держит ровно `VISIBLE_ROWS = 6` рядов (`SupplyChestMenu.SupplyChestSlot`) поверх
+  `menu/SupplyChestWindow.java` — обёртки над контейнером, которая прибавляет к локальному индексу
+  `offset` (кратный девяти). Прокрутка меняет только `offset`, а слоты остаются на месте. Клиент
+  сообщает новый ряд пакетом `network/c2s/ServerSupplyChestScrollPacket.java`, сервер выставляет тот же
+  `offset` (иначе клик по локальному слоту `i` попал бы в чужой слот) и пересинхронивает содержимое.
+  Экран рисует ванильную `textures/gui/container/generic_54.png`, полосу прокрутки и бейдж количества в
+  `renderLabels` (там уже переведённая поза и предметы нарисованы), а `renderBackground(GuiGraphics)`
+  переопределён в **no-op** — именно он затемнял мир серым при открытии любого контейнера.
+
 * **XP и дропы клона — владельцу/в мешок.** `events/ShadowCloneEvents#onExperienceDrop`
   (`LivingExperienceDropEvent`): если `event.getEntity().getKillCredit()` — `ShadowCloneEntity`, а её
   владелец в сети, опыт обнуляется (`setDroppedExperience(0)`) и выдаётся владельцу

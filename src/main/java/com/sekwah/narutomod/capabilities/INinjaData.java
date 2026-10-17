@@ -2,9 +2,9 @@ package com.sekwah.narutomod.capabilities;
 
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
+import com.sekwah.narutomod.menu.SupplyChestContainer;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.util.INBTSerializable;
@@ -93,7 +93,7 @@ public interface INinjaData extends INBTSerializable<Tag> {
      * of the caster's worker clones drop their harvest into. It lives in the caster's own data, so a
      * worker can deposit from anywhere without a chunk being loaded, and it survives a logout.
      */
-    Container getSupplyChest();
+    SupplyChestContainer getSupplyChest();
 
     /**
      * Where a caster who stepped into the Kamui pocket is to be spat back out, see

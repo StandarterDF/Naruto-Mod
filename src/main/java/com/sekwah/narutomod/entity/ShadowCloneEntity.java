@@ -14,7 +14,6 @@ import com.sekwah.narutomod.entity.ai.WorkerHarvestGoal;
 import com.sekwah.narutomod.entity.ai.WorkerHuntGoal;
 import com.sekwah.narutomod.entity.ai.WorkerMineGoal;
 import com.sekwah.narutomod.sounds.NarutoSounds;
-import com.sekwah.narutomod.util.Inventories;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -760,7 +759,7 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         if (ninjaData == null) {
             return stack.copy();
         }
-        return Inventories.putInto(ninjaData.getSupplyChest(), stack);
+        return ninjaData.getSupplyChest().insert(stack);
     }
 
     /**

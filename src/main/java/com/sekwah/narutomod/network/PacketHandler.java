@@ -3,6 +3,7 @@ package com.sekwah.narutomod.network;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.network.c2s.*;
 import com.sekwah.narutomod.network.s2c.ClientTestPacket;
+import com.sekwah.narutomod.network.s2c.ClientboundSupplyChestPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -45,12 +46,14 @@ public class PacketHandler {
     public static void init() {
         // Server to client packs
         NARUTO_CHANNEL.registerMessage(getPacketID(), ClientTestPacket.class, ClientTestPacket::encode, ClientTestPacket::decode, ClientTestPacket.Handler::handle);
+        NARUTO_CHANNEL.registerMessage(getPacketID(), ClientboundSupplyChestPacket.class, ClientboundSupplyChestPacket::encode, ClientboundSupplyChestPacket::decode, ClientboundSupplyChestPacket.Handler::handle);
 
         // Client to server packets
         NARUTO_CHANNEL.registerMessage(getPacketID(), ServerJutsuCastingPacket.class, ServerJutsuCastingPacket::encode, ServerJutsuCastingPacket::decode, ServerJutsuCastingPacket.Handler::handle);
         NARUTO_CHANNEL.registerMessage(getPacketID(), ServerAbilityActivatePacket.class, ServerAbilityActivatePacket::encode, ServerAbilityActivatePacket::decode, ServerAbilityActivatePacket.Handler::handle);
         NARUTO_CHANNEL.registerMessage(getPacketID(), ServerAbilityChannelPacket.class, ServerAbilityChannelPacket::encode, ServerAbilityChannelPacket::decode, ServerAbilityChannelPacket.Handler::handle);
         NARUTO_CHANNEL.registerMessage(getPacketID(), ServerToggleNinjaPacket.class, ServerToggleNinjaPacket::encode, ServerToggleNinjaPacket::decode, ServerToggleNinjaPacket.Handler::handle);
+        NARUTO_CHANNEL.registerMessage(getPacketID(), ServerSupplyChestScrollPacket.class, ServerSupplyChestScrollPacket::encode, ServerSupplyChestScrollPacket::decode, ServerSupplyChestScrollPacket.Handler::handle);
     }
 
     private static int packetId = 0;
