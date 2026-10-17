@@ -1,0 +1,372 @@
+package com.sekwah.narutomod.abilities.jutsus;
+
+import com.sekwah.narutomod.NarutoMod;
+import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.JutsuEffects;
+import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.config.NarutoConfig;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.util.ITeleporter;
+
+import java.util.function.Function;
+
+/**
+ * The eye of the void: the caster steps into their own pocket of nothing, and anything they fix
+ * their gaze on while charging gets dragged in with them.
+ *
+ * <p>Two things happen, told apart by how the keys are used. A <b>tap</b> is a step through: from
+ * anywhere into {@code narutomod:kamui}, and from inside it straight back to wherever the caster
+ * left. A <b>held</b> cast is the dragging hand: while the caster keeps the technique up, the swirl
+ * eats chakra and whatever living thing is in front of them is marked with a second swirl, and when
+ * the keys are let go it is pulled through.</p>
+ *
+ * <p>Nothing dragged in stays forever: everything except the caster is spat back out where it was
+ * picked up after a while (see {@code NarutoConfig.kamuiTransferSeconds}), which is what keeps the
+ * pocket a prison rather than a way to delete somebody else's things. The caster is free to come and
+ * go, and the way home is written into their saved data, so logging out inside the void is not a
+ * death sentence.</p>
+ *
+ * <p>The dimension itself is a hand written datapack dimension ({@code data/narutomod/dimension/}):
+ * an endless flat bedrock plane under an End sky with the {@code the_void} biome, so there is
+ * nothing to mine, nothing to grow and nothing to kill that the casters did not bring with them.</p>
+ */
+public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
+
+    /** B V V C C */
+    public static final long COMBO = 32211L;
+
+    /** The pocket dimension, see {@code data/narutomod/dimension/kamui.json}. */
+    public static final ResourceKey<Level> KAMUI_DIMENSION =
+            ResourceKey.create(Registries.DIMENSION, new ResourceLocation(NarutoMod.MOD_ID, "kamui"));
+
+    /** Ticks of channelling before the swirl has hold of a target. */
+    private static final int MIN_CHANNEL = 20;
+
+    /** Chakra for a step through, in either direction. */
+    private static final float STEP_COST = 40.0f;
+
+    /** Chakra burned for every tick the dragging hand is held open. */
+    private static final float CHAKRA_PER_TICK = 1.5f;
+
+    /** Chakra for actually pulling a target through. */
+    private static final float PULL_COST = 30.0f;
+
+    private static final int CHAKRA_REGEN_DELAY = 20;
+
+    /** How far the dragging hand reaches. */
+    private static final double PULL_RANGE = 16.0d;
+
+    /** Where the caster lands in the void. The floor's top face is y = 1. */
+    public static final Vec3 CASTER_ARRIVAL = new Vec3(0.5d, 1.0d, 0.5d);
+
+    /** Where anything dragged in lands, a few blocks off so it does not land in the caster's lap. */
+    public static final Vec3 TARGET_ARRIVAL = new Vec3(4.5d, 1.0d, 0.5d);
+
+    /** NBT on anything dragged into the pocket: ticks left before it is spat back out. */
+    public static final String BANISH_TICKS = "narutomod:kamuiTicks";
+
+    /** NBT on anything dragged in: where it was picked up from, as a compound. */
+    public static final String BANISH_RETURN = "narutomod:kamuiReturn";
+
+    @Override
+    public ActivationType activationType() {
+        return ActivationType.CHANNELED;
+    }
+
+    @Override
+    public long defaultCombo() {
+        return COMBO;
+    }
+
+    @Override
+    public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
+        if (!NarutoConfig.kamuiEnabled) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.kamui.disabled",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        float cost = chargeAmount == -1 ? STEP_COST : CHAKRA_PER_TICK;
+        if (ninjaData.getChakra() < cost) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
+            return false;
+        }
+        ninjaData.useChakra(cost, CHAKRA_REGEN_DELAY);
+        return true;
+    }
+
+    /**
+     * The swirl held open in the caster's hand, and a second one chewing at whatever they are
+     * looking at so it is obvious what the release is about to take.
+     */
+    @Override
+    public void handleChannelling(Player player, INinjaData ninjaData, int ticksChanneled) {
+        if (!(player.level() instanceof ServerLevel level)) {
+            return;
+        }
+        Vec3 hand = JutsuEffects.handPosition(player);
+        level.sendParticles(ParticleTypes.PORTAL, hand.x, hand.y, hand.z, 6, 0.18d, 0.18d, 0.18d, 0.45d);
+
+        Entity target = this.lookedAt(player);
+        if (target != null) {
+            Vec3 at = target.position().add(0.0d, target.getBbHeight() * 0.5d, 0.0d);
+            level.sendParticles(ParticleTypes.REVERSE_PORTAL, at.x, at.y, at.z, 5, 0.3d, 0.3d, 0.3d, 0.2d);
+        }
+    }
+
+    @Override
+    public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
+        if (!(player.level() instanceof ServerLevel level)) {
+            return;
+        }
+        if (ticksActive == -1) {
+            // A tap: a step through, in whichever direction closes the distance to home.
+            this.stepThrough(player, ninjaData, level);
+        } else if (ticksActive < MIN_CHANNEL) {
+            // Let go before the swirl had hold of anything.
+            level.playSound(null, player, SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.4f, 0.8f);
+        } else {
+            this.pullTarget(player, ninjaData, level);
+        }
+    }
+
+    /**
+     * In or out of the pocket. The way home is remembered as a coordinate rather than as anything
+     * in the world, so it survives logging out in the void.
+     */
+    private void stepThrough(Player player, INinjaData ninjaData, ServerLevel level) {
+        ServerLevel kamui = kamuiLevel(level);
+        if (kamui == null) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.kamui.nodimension",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            return;
+        }
+
+        if (isInKamui(player)) {
+            Exit home = exitPoint(player, ninjaData);
+            ServerLevel destination = home.dimension() == null ? null
+                    : level.getServer().getLevel(ResourceKey.create(Registries.DIMENSION, home.dimension()));
+            if (destination == null) {
+                destination = level.getServer().overworld();
+            }
+            if (destination == null) {
+                return;
+            }
+            // Nothing recorded (or the recorded world is gone): the world spawn is the fallback.
+            Vec3 target = home.position() != null ? home.position()
+                    : Vec3.atBottomCenterOf(destination.getSharedSpawnPos());
+            player.displayClientMessage(Component.translatable("jutsu.kamui.exit").withStyle(ChatFormatting.AQUA), true);
+            playWarp(level, player.position());
+            ninjaData.setKamuiReturnLoc(null, null);
+            transfer(player, destination, target);
+            playWarp(destination, target);
+        } else {
+            ninjaData.setKamuiReturnLoc(player.position(), level.dimension().location());
+            player.displayClientMessage(Component.translatable("jutsu.kamui.enter").withStyle(ChatFormatting.AQUA), true);
+            playWarp(level, player.position());
+            transfer(player, kamui, CASTER_ARRIVAL);
+            playWarp(kamui, CASTER_ARRIVAL);
+        }
+    }
+
+    /** Where a caster standing in the void is to come out, and in which world. */
+    private record Exit(Vec3 position, ResourceLocation dimension) {
+    }
+
+    /**
+     * The way out for a caster inside the pocket.
+     *
+     * <p>Someone who walked in themselves goes back to the anchor they left behind, but someone who
+     * was <b>dragged</b> in goes back to wherever they were taken from, which is what anyone would
+     * expect: their own anchor is not where they lost the fight.</p>
+     */
+    private Exit exitPoint(Player player, INinjaData ninjaData) {
+        CompoundTag tag = player.getPersistentData();
+        if (tag.contains(BANISH_RETURN)) {
+            CompoundTag back = tag.getCompound(BANISH_RETURN);
+            clearBanish(player);
+            return new Exit(new Vec3(back.getDouble("x"), back.getDouble("y"), back.getDouble("z")),
+                    ResourceLocation.tryParse(back.getString("dimension")));
+        }
+        return new Exit(ninjaData.getKamuiReturnLoc(), ninjaData.getKamuiReturnDimension());
+    }
+
+    /**
+     * A held cast: takes the living thing under the caster's gaze through the swirl.
+     */
+    private void pullTarget(Player player, INinjaData ninjaData, ServerLevel level) {
+        Entity target = this.lookedAt(player);
+        if (!(target instanceof LivingEntity living) || living == player) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.kamui.notarget",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            level.playSound(null, player, SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.4f, 0.8f);
+            return;
+        }
+        if (isInKamui(living)) {
+            return;
+        }
+        // Creative mode keeps its toys, and a spectator is already nowhere.
+        if (living instanceof Player victim && (victim.isCreative() || victim.isSpectator())) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.kamui.notarget",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            return;
+        }
+        if (ninjaData.getChakra() < PULL_COST) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
+            return;
+        }
+        ServerLevel kamui = kamuiLevel(level);
+        if (kamui == null) {
+            return;
+        }
+        ninjaData.useChakra(PULL_COST, CHAKRA_REGEN_DELAY);
+
+        // Where it is now, before the swirl takes it away. It goes back there on its own.
+        banish(living, living.position(), level.dimension().location(),
+                NarutoConfig.kamuiTransferSeconds * 20);
+
+        player.displayClientMessage(Component.translatable("jutsu.kamui.pull", living.getDisplayName())
+                .withStyle(ChatFormatting.AQUA), true);
+        if (living instanceof ServerPlayer victim) {
+            victim.displayClientMessage(Component.translatable("jutsu.kamui.pulled", player.getDisplayName())
+                    .withStyle(ChatFormatting.DARK_PURPLE), true);
+        }
+        playWarp(level, living.position());
+        transfer(living, kamui, TARGET_ARRIVAL);
+        playWarp(kamui, TARGET_ARRIVAL);
+    }
+
+    @Override
+    public boolean useChargedMessages() {
+        return true;
+    }
+
+    private Entity lookedAt(Player player) {
+        HitResult hit = player.pick(PULL_RANGE, 0.0f, false);
+        return hit.getType() == HitResult.Type.ENTITY ? ((EntityHitResult) hit).getEntity() : null;
+    }
+
+    /** @return the pocket dimension, or null if that datapack dimension is not loaded. */
+    public static ServerLevel kamuiLevel(ServerLevel from) {
+        return from.getServer() == null ? null : from.getServer().getLevel(KAMUI_DIMENSION);
+    }
+
+    public static boolean isInKamui(Entity entity) {
+        return entity.level().dimension().equals(KAMUI_DIMENSION);
+    }
+
+    /**
+     * Writes down where an entity is to be spat back out, and how long it has in the void.
+     *
+     * <p>It rides on the entity's own persistent data, so it works for a mob just as well as for a
+     * player and survives the world being saved.</p>
+     */
+    public static void banish(Entity entity, Vec3 returnPos, ResourceLocation returnDimension, int ticks) {
+        CompoundTag tag = entity.getPersistentData();
+        tag.putInt(BANISH_TICKS, ticks);
+        CompoundTag back = new CompoundTag();
+        back.putDouble("x", returnPos.x);
+        back.putDouble("y", returnPos.y);
+        back.putDouble("z", returnPos.z);
+        back.putString("dimension", returnDimension.toString());
+        tag.put(BANISH_RETURN, back);
+    }
+
+    /** @return ticks left in the void, or -1 when the entity was not dragged in. */
+    public static int banishTicksLeft(Entity entity) {
+        CompoundTag tag = entity.getPersistentData();
+        return tag.contains(BANISH_TICKS) ? tag.getInt(BANISH_TICKS) : -1;
+    }
+
+    public static void setBanishTicksLeft(Entity entity, int ticks) {
+        entity.getPersistentData().putInt(BANISH_TICKS, ticks);
+    }
+
+    public static void clearBanish(Entity entity) {
+        CompoundTag tag = entity.getPersistentData();
+        tag.remove(BANISH_TICKS);
+        tag.remove(BANISH_RETURN);
+    }
+
+    /**
+     * Sends an entity that has served its time back where it came from.
+     */
+    public static void spitBack(Entity entity) {
+        if (!(entity.level() instanceof ServerLevel from)) {
+            return;
+        }
+        CompoundTag tag = entity.getPersistentData();
+        CompoundTag back = tag.getCompound(BANISH_RETURN);
+        Vec3 pos = new Vec3(back.getDouble("x"), back.getDouble("y"), back.getDouble("z"));
+        ResourceLocation dimension = ResourceLocation.tryParse(back.getString("dimension"));
+        clearBanish(entity);
+        ServerLevel destination = dimension == null || from.getServer() == null ? null
+                : from.getServer().getLevel(ResourceKey.create(Registries.DIMENSION, dimension));
+        if (destination == null) {
+            return;
+        }
+        playWarp(from, entity.position());
+        transfer(entity, destination, pos);
+        playWarp(destination, pos);
+    }
+
+    /**
+     * Moves an entity to a coordinate, changing world if it has to.
+     *
+     * <p>The chunk it lands in is loaded first: a mob teleported into a chunk nobody has visited
+     * yet would otherwise be added to a world that is not there.</p>
+     */
+    public static void transfer(Entity entity, ServerLevel destination, Vec3 pos) {
+        int chunkX = (int) Math.floor(pos.x) >> 4;
+        int chunkZ = (int) Math.floor(pos.z) >> 4;
+        destination.getChunk(chunkX, chunkZ);
+
+        if (entity.level() == destination) {
+            entity.teleportTo(pos.x, pos.y, pos.z);
+            return;
+        }
+        if (entity instanceof ServerPlayer player) {
+            player.teleportTo(destination, pos.x, pos.y, pos.z, player.getYRot(), player.getXRot());
+            return;
+        }
+        entity.changeDimension(destination, new ITeleporter() {
+            @Override
+            public Entity placeEntity(Entity moved, ServerLevel source, ServerLevel target, float yaw,
+                                      Function<Boolean, Entity> repositionEntity) {
+                Entity placed = repositionEntity.apply(false);
+                placed.moveTo(pos.x, pos.y, pos.z, yaw, placed.getXRot());
+                return placed;
+            }
+        });
+    }
+
+    /** The swirl and the pop that mark something going through the eye. */
+    public static void playWarp(ServerLevel level, Vec3 pos) {
+        level.sendParticles(ParticleTypes.REVERSE_PORTAL, pos.x, pos.y + 1.0d, pos.z,
+                60, 0.5d, 0.9d, 0.5d, 0.35d);
+        level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS,
+                0.7f, 0.8f);
+    }
+}

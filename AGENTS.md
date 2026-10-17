@@ -222,6 +222,7 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 | Расенган | `C B B C B` | CHANNELED | 0.6 чакры/тик | `abilities/jutsus/RasenganJutsuAbility.java` |
 | Восемь врат | `V B B B` | INSTANT | 25 чакры + 15 стамины за врата | `abilities/jutsus/EightGatesAbility.java` |
 | Запечатать врата | `V B B V` | INSTANT | бесплатно (только врата 1–7) | `abilities/jutsus/GateReleaseAbility.java` |
+| Камуи | `B V V C C` | CHANNELED | 40 чакры шаг / 1.5 за тик + 30 за затяг | `abilities/jutsus/KamuiJutsuAbility.java` + `events/KamuiEvents.java` |
 | Чакра-печать | — | предмет | 1 за призыв клонов | `NarutoItems.CHAKRA_SEAL` |
 | Рамен | — | предмет (еда) | — | `NarutoItems.RAMEN` |
 | Самехада / Кубикирибочо | — | оружие | — | `item/ComboSwordItem.java` + `events/ComboSwordEvents.java` |
@@ -276,6 +277,20 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   6 — 67 с, 7 — 49 с. `EightGatesAbility.close` вызывает либо техника закрытия, либо смерть
   (`PlayerEvents#onPlayerClone`); `gateCount` в NBT не пишется, поэтому выход из игры врата тоже
   сбрасывает.
+* **Камуи** — техника-два-в-одном, различимая по способу ввода: **тап** (`chargeAmount == -1`) это шаг
+  в карманное измерение `narutomod:kamui` и обратно (40 чакры, точка возврата —
+  `INinjaData#getKamuiReturnLoc/getKamuiReturnDimension`, пишется в NBT, поэтому выход из игры внутри
+  пустоты не запирает), а **удержание** (≥ `MIN_CHANNEL = 20` тиков, 1.5 чакры/тик) затягивает цель.
+  Цель — то, во что смотрит `player.pick(PULL_RANGE, 0, false)` (лучи не проходят через стены),
+  `LivingEntity`, кроме кастера и креативных/наблюдателей; за сам затяг ещё 30 чакры.
+  **Измерение — чистый датапак**, без Java: `data/narutomod/dimension_type/kamui.json` +
+  `data/narutomod/dimension/kamui.json` (flat-генератор: один слой бедрока, биом `the_void`, небо
+  Края, `min_y=0, height=256`; точка прилёта кастера — `CASTER_ARRIVAL`, цели — `TARGET_ARRIVAL`, обе
+  на y=1). Копать там нечего, спавн запрещён событием. Затянутое живёт по таймеру и возвращается
+  **ровно туда, откуда его взяли**: координата и измерение пишутся в `entity.getPersistentData()`
+  (`BANISH_TICKS` / `BANISH_RETURN` — работает и на мобах, и на игроках, и переживает сейв), обратный
+  отсчёт — `KamuiEvents#onLivingTick`, который смотрит только сущности **внутри** кармана. Кастер под
+  таймер не попадает. Срок хранения — конфиг `kamuiEnabled` / `kamuiTransferSeconds`.
 * **Мягкая посадка** (без комбо, автоматически) — в `PlayerEvents#livingFall`: задействуется только
   если падение вообще нанесло бы урон (`distance > 3`, до этого ванильный урон нулевой, и тратить
   стамину не на что), и если стамины хватает
@@ -303,6 +318,24 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   любого слива здоровья в моде. Если технике нужно «сжигать» жизнь (восемь врат), одного урона
   мало — надо гасить и лечение: см. `PlayerEvents#livingHeal` (`LivingHealEvent#setAmount(0)` при
   `getGateCount() > 0`).
+* **Измерения — тоже датапак, и тоже руками.** Как и типы урона, кастомное измерение задаётся файлами
+  в `src/main/resources/data/narutomod/dimension(_type)/`, датаген для них не запускается. Формат
+  сверяй по ванильным данным из `client.jar` (там же, в кэше Gradle, лежат
+  `data/minecraft/dimension_type/*.json` и `worldgen/flat_level_generator_preset/*.json`). Если
+  `dimension_type` битый или отсутствует, сервер **не падает**: измерение просто не регистрируется, а
+  `Server#getLevel(...)` возвращает `null` — поэтому в коде всегда проверяй результат и показывай
+  игроку `jutsu.fail.kamui.nodimension`, а не телепортируй «в никуда».
+* **`LivingSpawnEvent.CheckSpawn` в 1.20.1 больше нет.** Проверка позиции моба в цепочке спавна — это
+  `net.minecraftforge.event.entity.living.MobSpawnEvent.PositionCheck` (`@HasResult`;
+  `setResult(Event.Result.DENY)` запрещает спавн). Старый `CheckSpawn` из туториалов не компилируется:
+  класса `LivingSpawnEvent` в Forge 47 нет (проверено по `forge-...-sources.jar`).
+* **`ITeleporter.placeEntity`.** Переброска не-игрока между измерениями — это
+  `entity.changeDimension(level, teleporter)`, где `placeEntity(...) -> repositionEntity.apply(false)`
+  выполняет **ванильную** логику переноса (патч `Entity.java.patch`: «Forge: Start vanilla logic»), то
+  есть сущность уже добавлена в целевой уровень и чанк загружен. Позицию можно выставить после этого
+  через `moveTo`. Игрока проще телепортировать `ServerPlayer#teleportTo(ServerLevel, ...)`: у
+  `Entity` такой перегрузки нет (в SRG видно только
+  `m_264318_(ServerLevel, double, double, double, Set<RelativeMovement>, float, float)`).
 
 * **Текстуры предметов/блоков.** В моде они лежат в легаси-папках `textures/items/` и `textures/blocks/`
   (множественное число, как в 1.7.10), а в 1.19.4+/1.20.1 атлас собирается из директорий

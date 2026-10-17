@@ -12,6 +12,7 @@ import com.sekwah.narutomod.abilities.jutsus.ChakraRegenerationAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraShieldAbility;
 import com.sekwah.narutomod.abilities.jutsus.EightGatesAbility;
 import com.sekwah.narutomod.abilities.jutsus.GateReleaseAbility;
+import com.sekwah.narutomod.abilities.jutsus.KamuiJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.OreExcavationJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.RasenganJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.SecondBreathAbility;
@@ -137,6 +138,13 @@ public class NarutoAbilities {
      */
     public static final RegistryObject<GateReleaseAbility> GATE_RELEASE =
             ABILITY.register("gate_release", GateReleaseAbility::new);
+
+    /**
+     * The eye of the void: a pocket dimension the caster can step into, and a hand that drags
+     * whatever they are looking at in with them. See {@link KamuiJutsuAbility}.
+     */
+    public static final RegistryObject<KamuiJutsuAbility> KAMUI =
+            ABILITY.register("kamui", KamuiJutsuAbility::new);
 
     public static void register(IEventBus eventBus) {
         ABILITY.register(eventBus);

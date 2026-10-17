@@ -21,6 +21,8 @@ public class NarutoConfig {
     public static final String CATEGORY_UI = "ui";
     public static final String ENERGY_BARS = "energy_bars";
 
+    public static final String CATEGORY_KAMUI = "kamui";
+
     public static final ForgeConfigSpec MOD_CONFIG;
 
     private static final ForgeConfigSpec.DoubleValue CONFIG_MAX_CHAKRA;
@@ -61,6 +63,12 @@ public class NarutoConfig {
 
     private static final ForgeConfigSpec.IntValue CONFIG_CHAKRA_BAR_DESIGN;
     public static int chakraBarDesign;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_KAMUI_ENABLED;
+    public static boolean kamuiEnabled;
+
+    private static final ForgeConfigSpec.IntValue CONFIG_KAMUI_TRANSFER_SECONDS;
+    public static int kamuiTransferSeconds;
 
     //private static final ForgeConfigSpec.BooleanValue CONFIG_STARTS_AS_NINJA;
     //public static boolean startsAsNinja;
@@ -124,6 +132,16 @@ public class NarutoConfig {
 
         configBuilder.pop();
 
+        configBuilder.comment("Kamui and the pocket dimension it opens").push(CATEGORY_KAMUI);
+
+        CONFIG_KAMUI_ENABLED = configBuilder.comment("Can players use Kamui to step into the pocket dimension, and to drag targets in with them?")
+                .define("kamuiEnabled", true);
+
+        CONFIG_KAMUI_TRANSFER_SECONDS = configBuilder.comment("Seconds anything dragged into Kamui (anyone but the caster) spends in the void before it is spat back out where it was taken from")
+                .defineInRange("kamuiTransferSeconds", 30, 1, 600);
+
+        configBuilder.pop();
+
         configBuilder.pop();
 
         // ===========================================================
@@ -158,6 +176,8 @@ public class NarutoConfig {
         chakraBarDesign = CONFIG_CHAKRA_BAR_DESIGN.get();
         jutsuCastDelay = CONFIG_JUTSU_CAST_DELAY
                 .get();
+        kamuiEnabled = CONFIG_KAMUI_ENABLED.get();
+        kamuiTransferSeconds = CONFIG_KAMUI_TRANSFER_SECONDS.get();
         //startsAsNinja = CONFIG_STARTS_AS_NINJA.get();
     }
 

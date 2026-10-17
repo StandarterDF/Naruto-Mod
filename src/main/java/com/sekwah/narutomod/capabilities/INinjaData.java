@@ -72,6 +72,14 @@ public interface INinjaData extends INBTSerializable<Tag> {
     ResourceLocation getMarkerDimension();
     void setMarkerLoc(Vec3 loc, ResourceLocation dimension);
 
+    /**
+     * Where a caster who stepped into the Kamui pocket is to be spat back out, see
+     * {@code KamuiJutsuAbility}. Set on the way in and cleared on the way out.
+     */
+    Vec3 getKamuiReturnLoc();
+    ResourceLocation getKamuiReturnDimension();
+    void setKamuiReturnLoc(Vec3 loc, ResourceLocation dimension);
+
     DoubleJumpData getDoubleJumpData();
 
     HashMap<String, CooldownTickEvent> getCooldownEvents();

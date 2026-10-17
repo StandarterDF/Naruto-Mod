@@ -106,6 +106,15 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private ResourceLocation markerDimension;
 
     /**
+     * Where a caster who walked into the Kamui pocket dimension is to come back out, see
+     * {@code KamuiJutsuAbility}. Server side only and written to disk, so logging out inside the
+     * void is not a one way trip.
+     */
+    private Vec3 kamuiReturnLocation;
+
+    private ResourceLocation kamuiReturnDimension;
+
+    /**
      * If the player can double jump, will be updated by underlying values server side.
      *
      * Will be true if the player has enough chakra as well as
@@ -186,6 +195,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private static final String SUBSTITUTION_TAG = "substitutions";
     private static final String MARKER_TAG = "chakraMarker";
     private static final String MARKER_DIMENSION_TAG = "chakraMarkerDimension";
+    private static final String KAMUI_RETURN_TAG = "kamuiReturn";
+    private static final String KAMUI_RETURN_DIMENSION_TAG = "kamuiReturnDimension";
 
     private final LazyOptional<INinjaData> holder = LazyOptional.of(() -> this);
 
@@ -341,6 +352,22 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     public void setMarkerLoc(Vec3 loc, ResourceLocation dimension) {
         this.markerLocation = loc;
         this.markerDimension = dimension;
+    }
+
+    @Override
+    public Vec3 getKamuiReturnLoc() {
+        return this.kamuiReturnLocation;
+    }
+
+    @Override
+    public ResourceLocation getKamuiReturnDimension() {
+        return this.kamuiReturnDimension;
+    }
+
+    @Override
+    public void setKamuiReturnLoc(Vec3 loc, ResourceLocation dimension) {
+        this.kamuiReturnLocation = loc;
+        this.kamuiReturnDimension = dimension;
     }
 
     @Override
@@ -522,6 +549,16 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         if (this.markerDimension != null) {
             nbt.putString(MARKER_DIMENSION_TAG, this.markerDimension.toString());
         }
+        if (this.kamuiReturnLocation != null) {
+            CompoundTag kamui = new CompoundTag();
+            kamui.putDouble("x", this.kamuiReturnLocation.x);
+            kamui.putDouble("y", this.kamuiReturnLocation.y);
+            kamui.putDouble("z", this.kamuiReturnLocation.z);
+            nbt.put(KAMUI_RETURN_TAG, kamui);
+        }
+        if (this.kamuiReturnDimension != null) {
+            nbt.putString(KAMUI_RETURN_DIMENSION_TAG, this.kamuiReturnDimension.toString());
+        }
         return nbt;
     }
 
@@ -546,6 +583,14 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
             }
             if (compoundTag.contains(MARKER_DIMENSION_TAG)) {
                 this.markerDimension = new ResourceLocation(compoundTag.getString(MARKER_DIMENSION_TAG));
+            }
+            if (compoundTag.contains(KAMUI_RETURN_TAG)) {
+                CompoundTag kamui = compoundTag.getCompound(KAMUI_RETURN_TAG);
+                this.kamuiReturnLocation = new Vec3(kamui.getDouble("x"), kamui.getDouble("y"),
+                        kamui.getDouble("z"));
+            }
+            if (compoundTag.contains(KAMUI_RETURN_DIMENSION_TAG)) {
+                this.kamuiReturnDimension = new ResourceLocation(compoundTag.getString(KAMUI_RETURN_DIMENSION_TAG));
             }
         }
     }
