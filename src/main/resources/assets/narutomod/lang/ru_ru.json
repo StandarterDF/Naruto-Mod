@@ -4,6 +4,7 @@
   "item.narutomod.explosive_kunai":"Взрывной Кунай",
   "item.narutomod.senbon":"Игла",
   "block.narutomod.paper_bomb":"Бумажная Бомба",
+  "item.narutomod.military_pills": "Солдатские пилюли",
   "narutomod.subtitle.kunai_thud": "Удар Снарядом",
   "narutomod.subtitle.needle_hit": "Попадание Иглы",
   "itemGroup.narutomod_weapons": "Оружия Ниндзя",
@@ -23,5 +24,11 @@
   "narutomod:chibi_shadow_clone": "Дзюцу Мини Теневого Клона",
   "narutomod:multi_shadow_clone": "Дзюцу Множественного Теневого Клона",
   "entity.narutomod.shadow_clone": "Теневой Клон",
+  "narutomod:chakra_meditation": "Медитация Чакры",
+  "narutomod:chakra_marker": "Бревно-Метка",
+  "narutomod:chakra_marker.mark": "Бревно-Метка - бревно поставлено",
+  "entity.narutomod.chakra_marker": "Бревно-Метка",
+  "jutsu.fail.nomarker": "У вас нигде не поставлено %s",
+  "jutsu.fail.wrongdimension": "%s не работает между измерениями",
   "narutomod.subtitle.clone_poof": "Теневой Клон Исчезает"
 }

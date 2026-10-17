@@ -56,6 +56,12 @@ public class NarutoEntities {
     public static final RegistryObject<EntityType<ShadowCloneEntity>> SHADOW_CLONE = register("shadow_clone",
             EntityType.Builder.<ShadowCloneEntity>of(ShadowCloneEntity::new, MobCategory.CREATURE).sized(0.6F, 1.8F).clientTrackingRange(10));
 
+    /**
+     * The log left behind by the chakra marker technique. Sized like a log standing on end.
+     */
+    public static final RegistryObject<EntityType<ChakraMarkerEntity>> CHAKRA_MARKER = register("chakra_marker",
+            EntityType.Builder.<ChakraMarkerEntity>of(ChakraMarkerEntity::new, MobCategory.MISC).fireImmune().sized(0.5F, 1.0F).clientTrackingRange(10));
+
     private static <T extends Entity> RegistryObject<EntityType<T>> register(String key, EntityType.Builder<T> builder) {
         return ENTITIES.register(key, () -> builder.build(key));
     }
@@ -68,6 +74,7 @@ public class NarutoEntities {
     public static void entityAttributeCreation(EntityAttributeCreationEvent event) {
         event.put(SUBSTITUTION_LOG.get(), SubstitutionLogEntity.createAttributes().build());
         event.put(SHADOW_CLONE.get(), ShadowCloneEntity.createAttributes().build());
+        event.put(CHAKRA_MARKER.get(), ChakraMarkerEntity.createAttributes().build());
     }
 
 }

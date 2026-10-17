@@ -47,9 +47,9 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
 | Что | Где |
 | --- | --- |
 | Сущность клона | `entity/ShadowCloneEntity.java` |
-| Три техники | `abilities/jutsus/ShadowCloneJutsuAbility.java` (один класс + `Settings`) |
-| ИИ | `entity/ai/CloneFollowOwnerGoal`, `CloneOwnerHurtByTargetGoal`, `CloneOwnerHurtTargetGoal`, `CloneBowAttackGoal`, `CloneUseShieldGoal` |
-| Рендер | `client/renderer/entity/ShadowCloneRenderer.java` (ванильные `PlayerModel` + `ModelLayers.PLAYER(_SLIM)`) |
+| Четыре техники | `abilities/jutsus/ShadowCloneJutsuAbility.java` (один класс + `Settings`; медитация — `ChakraMeditationJutsuAbility`) |
+| ИИ | `entity/ai/CloneFollowOwnerGoal`, `CloneOwnerHurtByTargetGoal`, `CloneOwnerHurtTargetGoal`, `CloneRangedAttackGoal`, `CloneUseShieldGoal` |
+| Рендер | `client/renderer/entity/ShadowCloneRenderer.java` (`MeditatingCloneModel` + `ModelLayers.PLAYER(_SLIM)`) |
 | Регистрация/атрибуты | `entity/NarutoEntities.java` |
 | Звук | `sounds/NarutoSounds.java` + `assets/narutomod/sounds.json` (`clone_poof.ogg`) |
 
@@ -60,6 +60,7 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
 | Теневой клон | `C B B V` | 40 | 2–3 | 25 с | 2 | 0.3 | 3 с |
 | Чиби-клон | `C B V V` | 20 | 3–5 | 15 с | 1 | 0.35 | 2 с |
 | Мульти-клон | `C B B V B C` | 80 | 8–11 | 25 с | 2 | 0.3 | 10 с |
+| Медитация чакры | `C B B C` | 60 | 2 | 30 с | 0 | 0 | 90 с |
 
 ### Поведение (паритет с 1.7.10)
 
@@ -79,6 +80,15 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
   только на выбор цели: кастер может спокойно попать своего клона.
 * Имя над головой скрыто (`shouldShowName → false`), иначе клон выдаёт себя биркой.
 * Чиби-клон — `scale 0.5` и уменьшенный хитбокс (`CHIBI_DIMENSIONS`).
+* **Медитирующий клон** (флаг `Settings#meditating()`, синг `DATA_MEDITATING`): руки пустые, снаряжение и
+  эффекты **не** копируются, урон и скорость = 0 (атрибуты `applyVariantAttributes`), а
+  `CloneFollowOwnerGoal` / `CloneRangedAttackGoal` / `CloneUseShieldGoal` от него сами отказываются —
+  стоит где поставили. Садится через `MeditatingCloneModel` (ноги крестом) + сдвиг вниз в
+  `ShadowCloneRenderer#setupRotations`. Баф кастеру выдаёт не клон, а
+  `ChakraMeditationJutsuAbility#tickAura` (вызывается из `PlayerEvents#onEntityUpdate`): пока рядом
+  (8 блоков) есть медитирующий клон владельца — `+0.2` чакры за тик на каждого и лишний тик в
+  `INinjaData#getCooldownEvents()`, то есть КД техник идут вдвое быстрее. Второй тик снимается копией
+  ключей карты, иначе `ConcurrentModificationException`.
 
 ### «Плюшки»: клон наследует стиль боя кастера
 
@@ -144,6 +154,46 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
 `AbstractClientPlayer` (иначе `DefaultPlayerSkin` по UUID) и выставляет позы рук как `PlayerRenderer`:
 `ArmPose.BLOCK` для щита, `ArmPose.BOW_AND_ARROW` для натянутого лука, `ArmPose.THROW_SPEAR` для
 замаха трезубцем, `ArmPose.CROSSBOW_CHARGE`/`CROSSBOW_HOLD` для арбалета, иначе `ITEM`/`EMPTY`.
+
+## Техники вне клонов
+
+### Солдатские пилюли (`narutomod:military_pills`)
+
+`item/MilitaryPillItem.java` — еда (`FoodProperties`), а на `finishUsingItem` (только на сервере):
+`+35` чакры и стамины (`INinjaData#addChakra/addStamina`, оба клампят), Speed I + Haste I на 30 с и
+Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` — минута, дольше действия баффов.
+Текстура `textures/items/military_pills.png` лежала в моде неиспользованной ещё с 1.7.10 (там предмет
+звался `item.military_pills.name=Military Pills`), так что модель — одна ссылка `narutomod:items/military_pills`.
+Рецепт — рукописный `data/narutomod/recipes/military_pills.json` (в проекте датагена нет вообще, `data/`
+до этого не было): sugar + wheat + glowstone dust → 3 штуки. В креатив-таб «материалы» добавлено.
+
+### Бревно-метка (`narutomod:chakra_marker`)
+
+`abilities/jutsus/ChakraMarkerJutsuAbility.java` — CHANNELED, комбо `C B` (сосед техники подмены `C V`):
+
+* **Тап** (`MIN_ACTIVATE`, `ticksActive == -1`, `canActivateBelowMinCharge()` по умолчанию true) — обмен:
+  кастер встаёт туда, где бревно, бревно — туда, где стоял кастер (15 чакры). То есть возврат «домой»
+  и возврат «обратно» стоят по техники.
+* **Удержание** — поставить новое бревно под ноги (25 чакры), старое стирается.
+
+Логика:
+
+* Бревно — сущность `entity/ChakraMarkerEntity.java` (`Mob`, `MobCategory.MISC`): не двигается
+  (`setNoGravity`, `isPushable → false`, голов нет вовсе), неубиваемое, без деспавна
+  (`setPersistenceRequired` + переприменение в `readAdditionalSaveData`), светится портальными
+  частицами раз в 4 тика, знает своего владельца (`Owner` в NBT). Рендер — тем же
+  `SubstitutionLogModel` + `SubstitutionLogRenderer.SUBSTITUTION_LOG`, отдельный `ChakraMarkerRenderer`.
+* Координата и измерение бревна живут в `INinjaData#getMarkerLoc/getMarkerDimension/setMarkerLoc`
+  (`NinjaData`: поля + `serializeNBT`/`deserializeNBT`, **без** `@Sync`). В отличие от метки подмены
+  (только в памяти) бревно переживает выход из игры — это и есть смысл.
+* Стирание старого бревна — поиск `getEntitiesOfClass(ChakraMarkerEntity.class, AABB(координата).inflate(2),
+  e -> e.isOwnedBy(player))` в его измерении. Если чанк старого бревна не загружен, оно не найдётся и
+  останется стоять — известное и осознанное ограничение.
+* Обмен между измерениями запрещён (`jutsu.fail.wrongdimension`), в одном — на любой дистанции; в
+  сообщениях `jutsu.fail.nomarker` / `wrongdimension` (в RU-файле нашлись свои строки для них, но у
+  остальных ванильных `jutsu.fail.*` русских переводов как не было, так и нет).
+* `getTranslationKey(ninjaData, ticksActive)` добавляет `.mark` при удержании, ровно как у подмены:
+  «You cast Chakra Marker» / «... - Log Planted».
 
 ## Грабли, на которые уже наступали
 

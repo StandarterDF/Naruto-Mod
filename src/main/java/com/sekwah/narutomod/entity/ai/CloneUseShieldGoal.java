@@ -46,6 +46,9 @@ public class CloneUseShieldGoal extends Goal {
      * which is why this does not wait to be attacked first.</p>
      */
     private boolean wantsShieldUp() {
+        if (this.clone.isMeditating()) {
+            return false;
+        }
         if (!this.hasShield() || this.clone.isUsingRangedWeapon()) {
             return false;
         }

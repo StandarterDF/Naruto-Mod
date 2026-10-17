@@ -63,6 +63,15 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private ResourceLocation substitutionDimension;
 
     /**
+     * Where this player's chakra marker log stands. Kept server side only: nothing on the client
+     * needs to know, and unlike the substitution marker it is written to disk so a return marker
+     * survives logging out.
+     */
+    private Vec3 markerLocation;
+
+    private ResourceLocation markerDimension;
+
+    /**
      * If the player can double jump, will be updated by underlying values server side.
      *
      * Will be true if the player has enough chakra as well as
@@ -141,6 +150,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private static final String SAVE_TIME = "save_time";
     private static final String COOLDOWN_TAG = "cooldowns";
     private static final String SUBSTITUTION_TAG = "substitutions";
+    private static final String MARKER_TAG = "chakraMarker";
+    private static final String MARKER_DIMENSION_TAG = "chakraMarkerDimension";
 
     private final LazyOptional<INinjaData> holder = LazyOptional.of(() -> this);
 
@@ -230,6 +241,22 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     public void setSubstitutionLoc(Vec3 loc, ResourceLocation dimension) {
         this.substitutionLocation = loc;
         this.substitutionDimension = dimension;
+    }
+
+    @Override
+    public Vec3 getMarkerLoc() {
+        return this.markerLocation;
+    }
+
+    @Override
+    public ResourceLocation getMarkerDimension() {
+        return this.markerDimension;
+    }
+
+    @Override
+    public void setMarkerLoc(Vec3 loc, ResourceLocation dimension) {
+        this.markerLocation = loc;
+        this.markerDimension = dimension;
     }
 
     @Override
@@ -401,6 +428,16 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         }
         nbt.put(COOLDOWN_TAG, cooldownData);
         nbt.putFloat(SUBSTITUTION_TAG, this.substitutions);
+        if (this.markerLocation != null) {
+            CompoundTag marker = new CompoundTag();
+            marker.putDouble("x", this.markerLocation.x);
+            marker.putDouble("y", this.markerLocation.y);
+            marker.putDouble("z", this.markerLocation.z);
+            nbt.put(MARKER_TAG, marker);
+        }
+        if (this.markerDimension != null) {
+            nbt.putString(MARKER_DIMENSION_TAG, this.markerDimension.toString());
+        }
         return nbt;
     }
 
@@ -418,6 +455,14 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
                 this.cooldownTickEvents.put(key, new CooldownTickEvent(cooldownData.getInt(key) - ticksPassed));
             }
             this.substitutions = compoundTag.getFloat(SUBSTITUTION_TAG);
+            if (compoundTag.contains(MARKER_TAG)) {
+                CompoundTag marker = compoundTag.getCompound(MARKER_TAG);
+                this.markerLocation = new Vec3(marker.getDouble("x"), marker.getDouble("y"),
+                        marker.getDouble("z"));
+            }
+            if (compoundTag.contains(MARKER_DIMENSION_TAG)) {
+                this.markerDimension = new ResourceLocation(compoundTag.getString(MARKER_DIMENSION_TAG));
+            }
         }
     }
 

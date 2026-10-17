@@ -1,6 +1,7 @@
 package com.sekwah.narutomod.client.renderer.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.sekwah.narutomod.client.model.entity.MeditatingCloneModel;
 import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
@@ -35,10 +36,16 @@ public class ShadowCloneRenderer extends LivingEntityRenderer<ShadowCloneEntity,
     private final PlayerModel<ShadowCloneEntity> wideModel;
     private final PlayerModel<ShadowCloneEntity> slimModel;
 
+    /**
+     * How far a meditating clone is lowered so its folded legs rest on the ground instead of
+     * hovering at hip height.
+     */
+    private static final float MEDITATING_SINK = 0.55f;
+
     public ShadowCloneRenderer(EntityRendererProvider.Context context) {
-        super(context, new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER), false), 0.5f);
+        super(context, new MeditatingCloneModel(context.bakeLayer(ModelLayers.PLAYER), false), 0.5f);
         this.wideModel = this.model;
-        this.slimModel = new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER_SLIM), true);
+        this.slimModel = new MeditatingCloneModel(context.bakeLayer(ModelLayers.PLAYER_SLIM), true);
 
         HumanoidModel<ShadowCloneEntity> innerArmor =
                 new HumanoidModel<>(context.bakeLayer(ModelLayers.PLAYER_INNER_ARMOR));
@@ -84,6 +91,18 @@ public class ShadowCloneRenderer extends LivingEntityRenderer<ShadowCloneEntity,
             return HumanoidModel.ArmPose.CROSSBOW_HOLD;
         }
         return HumanoidModel.ArmPose.ITEM;
+    }
+
+    /**
+     * Sits a meditating clone down, otherwise the folded legs would float at standing hip height.
+     */
+    @Override
+    protected void setupRotations(ShadowCloneEntity entity, PoseStack poseStack, float ageInTicks,
+                                  float rotationYaw, float partialTicks) {
+        super.setupRotations(entity, poseStack, ageInTicks, rotationYaw, partialTicks);
+        if (entity.isMeditating()) {
+            poseStack.translate(0.0f, -MEDITATING_SINK, 0.0f);
+        }
     }
 
     @Override

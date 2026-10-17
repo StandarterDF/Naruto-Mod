@@ -8,6 +8,7 @@ import com.sekwah.narutomod.item.weapons.SenbonItem;
 import com.sekwah.narutomod.item.weapons.ShurikenItem;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.*;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -91,6 +92,13 @@ public class NarutoItems {
 
     public static final RegistryObject<Item> ARMOR_PLATE_GREEN = ITEMS.register("armor_plate_green", ()
             -> new Item(new Item.Properties()));
+
+    /**
+     * Field rations: chakra and stamina back instantly, plus a short burst of speed and haste.
+     */
+    public static final RegistryObject<Item> MILITARY_PILLS = ITEMS.register("military_pills",
+            () -> new MilitaryPillItem(new Item.Properties().stacksTo(16)
+                    .food(new FoodProperties.Builder().nutrition(6).saturationMod(0.6f).build())));
 
     public static final RegistryObject<Item> KATANA = ITEMS.register("katana", ()
             -> new SwordItem(NinjaTier.KATANA, 3, -1.95F, new Item.Properties()));

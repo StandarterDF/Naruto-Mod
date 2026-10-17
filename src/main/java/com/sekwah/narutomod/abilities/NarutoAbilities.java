@@ -5,6 +5,8 @@ import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.jutsus.FireballJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.SubstitutionJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.WaterBulletJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.ChakraMarkerJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.ChakraMeditationJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ShadowCloneJutsuAbility;
 import com.sekwah.narutomod.abilities.utility.ChakraChargeAbility;
 import com.sekwah.narutomod.abilities.utility.DoubleJumpAbility;
@@ -62,6 +64,20 @@ public class NarutoAbilities {
 
     public static final RegistryObject<ShadowCloneJutsuAbility> MULTI_SHADOW_CLONE = ABILITY.register("multi_shadow_clone",
             () -> new ShadowCloneJutsuAbility(ShadowCloneJutsuAbility.MULTI_SHADOW_CLONE_SETTINGS));
+
+    /**
+     * Leaves two clones behind to meditate, refilling the caster's chakra and cooling their jutsu
+     * down twice as fast while they last. See {@link ChakraMeditationJutsuAbility}.
+     */
+    public static final RegistryObject<ChakraMeditationJutsuAbility> CHAKRA_MEDITATION =
+            ABILITY.register("chakra_meditation", ChakraMeditationJutsuAbility::new);
+
+    /**
+     * Plants the one log a ninja gets to leave behind, and swaps places with it on a second cast.
+     * See {@link ChakraMarkerJutsuAbility}.
+     */
+    public static final RegistryObject<ChakraMarkerJutsuAbility> CHAKRA_MARKER =
+            ABILITY.register("chakra_marker", ChakraMarkerJutsuAbility::new);
 
     public static void register(IEventBus eventBus) {
         ABILITY.register(eventBus);

@@ -82,6 +82,7 @@ public class NarutoCreativeTabs {
                 output.accept(NarutoItems.FABRIC_REINFORCED_BLACK.get());
                 output.accept(NarutoItems.ARMOR_PLATE.get());
                 output.accept(NarutoItems.ARMOR_PLATE_GREEN.get());
+                output.accept(NarutoItems.MILITARY_PILLS.get());
             }).title(Component.translatable("narutomod_materials"))::build);
 
 

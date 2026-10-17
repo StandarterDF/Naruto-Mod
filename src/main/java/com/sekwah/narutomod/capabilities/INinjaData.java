@@ -33,6 +33,14 @@ public interface INinjaData extends INBTSerializable<Tag> {
     ResourceLocation getSubstitutionDimension();
     void setSubstitutionLoc(Vec3 loc, ResourceLocation dimension);
 
+    /**
+     * Where the player's chakra marker log currently stands, see {@code ChakraMarkerJutsuAbility}.
+     * Null until they have planted one.
+     */
+    Vec3 getMarkerLoc();
+    ResourceLocation getMarkerDimension();
+    void setMarkerLoc(Vec3 loc, ResourceLocation dimension);
+
     DoubleJumpData getDoubleJumpData();
 
     HashMap<String, CooldownTickEvent> getCooldownEvents();

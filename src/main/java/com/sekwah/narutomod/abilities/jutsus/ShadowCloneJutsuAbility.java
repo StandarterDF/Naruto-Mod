@@ -28,20 +28,29 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
      * mod: cbbv for the shadow clone, cbvv for the chibi version and cbbvbc for the multi version.</p>
      */
     public record Settings(long combo, float chakraCost, int minClones, int maxClones, int lifetime,
-                           boolean chibi, double attackDamage, double movementSpeed,
+                           boolean chibi, boolean meditating, double attackDamage, double movementSpeed,
                            int cooldown, int chakraRegenDelay) {}
 
     /** C B B V - a couple of copies of yourself. */
     public static final Settings SHADOW_CLONE_SETTINGS =
-            new Settings(1332L, 40f, 2, 3, 20 * 25, false, 2.0d, 0.3d, 20 * 3, 20 * 2);
+            new Settings(1332L, 40f, 2, 3, 20 * 25, false, false, 2.0d, 0.3d, 20 * 3, 20 * 2);
 
     /** C B V V - cheap, small and weak, but you get a handful of them. */
     public static final Settings CHIBI_SHADOW_CLONE_SETTINGS =
-            new Settings(1322L, 20f, 3, 5, 20 * 15, true, 1.0d, 0.35d, 20 * 2, 20);
+            new Settings(1322L, 20f, 3, 5, 20 * 15, true, false, 1.0d, 0.35d, 20 * 2, 20);
 
     /** C B B V B C - the expensive one, a small army. */
     public static final Settings MULTI_SHADOW_CLONE_SETTINGS =
-            new Settings(133231L, 80f, 8, 11, 20 * 25, false, 2.0d, 0.3d, 20 * 10, 20 * 5);
+            new Settings(133231L, 80f, 8, 11, 20 * 25, false, false, 2.0d, 0.3d, 20 * 10, 20 * 5);
+
+    /**
+     * C B B C - two clones left behind to meditate, see
+     * {@code ChakraMeditationJutsuAbility#tickAura(Player)}. They neither move nor fight (their
+     * speed and damage are zero and their goals are skipped), so all they do is sit there and feed
+     * the caster chakra while they last. The long cooldown is the price for the refill.
+     */
+    public static final Settings CHAKRA_MEDITATION_SETTINGS =
+            new Settings(1331L, 60f, 2, 2, 20 * 30, false, true, 0.0d, 0.0d, 20 * 90, 20 * 3);
 
     /** Radius of the ring the clones appear in. */
     private static final double SPAWN_RADIUS = 1.6d;
@@ -84,7 +93,7 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
 
         for (int i = 0; i < cloneCount; i++) {
             ShadowCloneEntity clone = new ShadowCloneEntity(level, player,
-                    this.settings.lifetime(), this.settings.chibi());
+                    this.settings.lifetime(), this.settings.chibi(), this.settings.meditating());
             clone.applyVariantAttributes(this.settings.attackDamage(), this.settings.movementSpeed());
             this.positionClone(clone, level, player, i, cloneCount);
             level.addFreshEntity(clone);

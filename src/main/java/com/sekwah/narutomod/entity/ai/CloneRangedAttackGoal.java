@@ -70,7 +70,7 @@ public class CloneRangedAttackGoal extends Goal {
      * two while it comes down.
      */
     private boolean canShoot() {
-        return this.clone.wantsToShoot() && !this.clone.isUsingShield();
+        return !this.clone.isMeditating() && this.clone.wantsToShoot() && !this.clone.isUsingShield();
     }
 
     @Override

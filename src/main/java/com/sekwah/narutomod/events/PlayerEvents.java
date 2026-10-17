@@ -1,6 +1,7 @@
 package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
+import com.sekwah.narutomod.abilities.jutsus.ChakraMeditationJutsuAbility;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -16,6 +17,12 @@ public class PlayerEvents {
     @SubscribeEvent
     public static void onEntityUpdate(LivingEvent.LivingTickEvent event) {
         // Do chakra updates and other stuff here unless handled in capabilities
+        if (!(event.getEntity() instanceof Player player) || player.level().isClientSide) {
+            return;
+        }
+        // Two clones sat down to meditate keep their caster topped up and their jutsu coming back
+        // twice as fast, see ChakraMeditationJutsuAbility.
+        ChakraMeditationJutsuAbility.tickAura(player);
     }
 
     // Handle if they have some agility perk or leaps.

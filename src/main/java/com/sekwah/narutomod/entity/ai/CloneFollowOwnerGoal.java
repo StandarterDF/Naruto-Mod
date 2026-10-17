@@ -46,6 +46,10 @@ public class CloneFollowOwnerGoal extends Goal {
         if (owner == null || owner.isSpectator() || owner.isDeadOrDying()) {
             return false;
         }
+        // A meditating clone is not the caster's escort, it stays where it was summoned.
+        if (this.clone.isMeditating()) {
+            return false;
+        }
         if (this.clone.distanceToSqr(owner) < (double) (this.startDistance * this.startDistance)) {
             return false;
         }

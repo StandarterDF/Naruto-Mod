@@ -76,6 +76,10 @@ import java.util.UUID;
  * pops it, it takes the charge with it, hurting everything around it but neither its caster (or
  * their other clones) nor a single block.</p>
  *
+ * <p>A clone can also be made to meditate instead of fight (see
+ * {@code ShadowCloneJutsuAbility.CHAKRA_MEDITATION_SETTINGS}): it sits itself down, keeps its hands
+ * free for a seal and stays put, feeding chakra back to its caster for as long as they stay close.</p>
+ *
  * <p>Ported from the 1.7.10 {@code EntityShadowClone} of the same mod.</p>
  */
 public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob {
@@ -85,6 +89,8 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     private static final EntityDataAccessor<String> DATA_OWNER_NAME =
             SynchedEntityData.defineId(ShadowCloneEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Boolean> DATA_CHIBI =
+            SynchedEntityData.defineId(ShadowCloneEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DATA_MEDITATING =
             SynchedEntityData.defineId(ShadowCloneEntity.class, EntityDataSerializers.BOOLEAN);
 
     /** How long a clone sticks around before it runs out of chakra, in ticks. */
@@ -129,14 +135,29 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     }
 
     public ShadowCloneEntity(Level level, Player owner, int lifetime, boolean chibi) {
+        this(level, owner, lifetime, chibi, false);
+    }
+
+    /**
+     * @param meditating a clone that stays put and channels chakra back to its caster instead of
+     *                   fighting, see {@code ShadowCloneJutsuAbility.CHAKRA_MEDITATION_SETTINGS}.
+     */
+    public ShadowCloneEntity(Level level, Player owner, int lifetime, boolean chibi, boolean meditating) {
         this(NarutoEntities.SHADOW_CLONE.get(), level);
         this.setOwner(owner);
         this.lifetime = lifetime;
         this.setChibi(chibi);
-        this.copyEquipment(owner);
-        this.copyAmmo(owner);
-        this.copyEffects(owner);
-        this.explosive = isHoldingPaperBomb(owner);
+        this.setMeditating(meditating);
+        if (meditating) {
+            // Hands meet in a seal, there is nothing to hold and nothing to copy.
+            this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+            this.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
+        } else {
+            this.copyEquipment(owner);
+            this.copyAmmo(owner);
+            this.copyEffects(owner);
+            this.explosive = isHoldingPaperBomb(owner);
+        }
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -153,6 +174,7 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.entityData.define(DATA_OWNER, Optional.empty());
         this.entityData.define(DATA_OWNER_NAME, "");
         this.entityData.define(DATA_CHIBI, false);
+        this.entityData.define(DATA_MEDITATING, false);
     }
 
     @Override
@@ -446,6 +468,15 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
 
         if (--this.lifetime <= 0) {
             this.dispel();
+            return;
+        }
+
+        if (this.isMeditating() && this.tickCount % 4 == 0
+                && this.level() instanceof ServerLevel serverLevel) {
+            // A trickle of chakra, so it is obvious which clones are feeding the caster.
+            serverLevel.sendParticles(ParticleTypes.ENCHANT, this.getX(),
+                    this.getY() + 1.0d, this.getZ(),
+                    3, 0.35d, 0.4d, 0.35d, 0.02d);
         }
     }
 
@@ -579,12 +610,24 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.refreshDimensions();
     }
 
+    /**
+     * A meditating clone sits still and hands chakra back to its caster instead of fighting.
+     */
+    public boolean isMeditating() {
+        return this.entityData.get(DATA_MEDITATING);
+    }
+
+    public void setMeditating(boolean meditating) {
+        this.entityData.set(DATA_MEDITATING, meditating);
+    }
+
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         this.getOwnerUUID().ifPresent(uuid -> tag.putUUID("Owner", uuid));
         tag.putString("OwnerName", this.getOwnerName());
         tag.putBoolean("Chibi", this.isChibi());
+        tag.putBoolean("Meditating", this.isMeditating());
         tag.putInt("Lifetime", this.lifetime);
         tag.put("Ammo", this.ammo.save(new CompoundTag()));
         tag.putBoolean("Explosive", this.explosive);
@@ -598,6 +641,7 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         }
         this.entityData.set(DATA_OWNER_NAME, tag.getString("OwnerName"));
         this.setChibi(tag.getBoolean("Chibi"));
+        this.setMeditating(tag.getBoolean("Meditating"));
         this.lifetime = tag.contains("Lifetime") ? tag.getInt("Lifetime") : DEFAULT_LIFETIME;
         this.ammo = tag.contains("Ammo") ? ItemStack.of(tag.getCompound("Ammo")) : ItemStack.EMPTY;
         this.explosive = tag.getBoolean("Explosive");
