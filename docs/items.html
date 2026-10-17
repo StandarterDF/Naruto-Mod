@@ -369,20 +369,185 @@
         и рецептов для них там нет — чтобы не написать лишнего, они здесь не выдуманы.
       </p>
 
-      <div class="table-wrap">
-        <table>
-          <caption>Рецепты предметов мода</caption>
-          <thead>
-            <tr><th scope="col">Предмет</th><th scope="col">Рецепт</th><th scope="col">Выход</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Чакра-печать</td><td>2 бумаги + чернильный мешок</td><td>3 печати</td></tr>
-            <tr><td>Печать рабочего</td><td>чакра-печать + 2 пшеницы + бумага</td><td>1 печать</td></tr>
-            <tr><td>Солдатские пилюли</td><td>сахар + пшеница + светопыль</td><td>3 пилюли</td></tr>
-            <tr><td>Рамен</td><td>миска + пшеница + 2 жареные свиные котлеты</td><td>1 рамен</td></tr>
-            <tr><td>Чакра-батарея</td><td>4 редстоуна крестом + чакра-печать в центре</td><td>1 батарея</td></tr>
-          </tbody>
-        </table>
+      <div class="recipe-list">
+
+        <!-- Чакра-печать -->
+        <article class="recipe-card">
+          <div class="recipe-head">
+            <h3>
+              <img src="assets/textures/chakra_seal.png" alt="" width="26" height="26" loading="lazy" decoding="async">
+              Чакра-печать
+            </h3>
+            <span class="recipe-kind">Бесформенный</span>
+          </div>
+          <div class="recipe-flow">
+            <div class="recipe-grid">
+              <span class="recipe-slot"><img src="assets/vanilla/paper.png" alt="Бумага" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/paper.png" alt="Бумага" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/ink_sac.png" alt="Чернильный мешок" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+            </div>
+            <span class="recipe-arrow" aria-hidden="true">→</span>
+            <div class="recipe-result">
+              <span class="recipe-slot"><img src="assets/textures/chakra_seal.png" alt="Чакра-печать" width="36" height="36" loading="lazy" decoding="async"></span>
+              <span class="recipe-count">×3</span>
+            </div>
+          </div>
+          <p class="recipe-source">
+            2 бумаги и чернильный мешок → <strong>3 чакра-печати</strong>. Расходник для призыва клонов:
+            одна печать за каст, сколько бы клонов ни вышло.
+          </p>
+        </article>
+
+        <!-- Печать рабочего -->
+        <article class="recipe-card">
+          <div class="recipe-head">
+            <h3>
+              <img src="assets/textures/worker_seal.png" alt="" width="26" height="26" loading="lazy" decoding="async">
+              Печать рабочего
+            </h3>
+            <span class="recipe-kind">Бесформенный</span>
+          </div>
+          <div class="recipe-flow">
+            <div class="recipe-grid">
+              <span class="recipe-slot"><img src="assets/textures/chakra_seal.png" alt="Чакра-печать" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/wheat.png" alt="Пшеница" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/wheat.png" alt="Пшеница" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/paper.png" alt="Бумага" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+            </div>
+            <span class="recipe-arrow" aria-hidden="true">→</span>
+            <div class="recipe-result">
+              <span class="recipe-slot"><img src="assets/textures/worker_seal.png" alt="Печать рабочего" width="36" height="36" loading="lazy" decoding="async"></span>
+              <span class="recipe-count">×1</span>
+            </div>
+          </div>
+          <p class="recipe-source">
+            Чакра-печать, 2 пшеницы и бумага → <strong>1 печать рабочего</strong>. Не расходуется:
+            печать держат в <strong>дополнительной (левой) руке</strong> как катализатор, а профессию
+            задаёт инструмент в <strong>основной руке</strong>, так что те же комбо клонов призывают
+            рабочих, а не бойцов.
+          </p>
+        </article>
+
+        <!-- Чакра-батарея -->
+        <article class="recipe-card">
+          <div class="recipe-head">
+            <h3>
+              <img src="assets/textures/chakra_battery.png" alt="" width="26" height="26" loading="lazy" decoding="async">
+              Чакра-батарея
+            </h3>
+            <span class="recipe-kind">По схеме</span>
+          </div>
+          <div class="recipe-flow">
+            <div class="recipe-grid">
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/redstone.png" alt="Редстоун" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/redstone.png" alt="Редстоун" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/textures/chakra_seal.png" alt="Чакра-печать" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/redstone.png" alt="Редстоун" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/redstone.png" alt="Редстоун" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+            </div>
+            <span class="recipe-arrow" aria-hidden="true">→</span>
+            <div class="recipe-result">
+              <span class="recipe-slot"><img src="assets/textures/chakra_battery.png" alt="Чакра-батарея" width="36" height="36" loading="lazy" decoding="async"></span>
+              <span class="recipe-count">×1</span>
+            </div>
+          </div>
+          <p class="recipe-source">
+            4 редстоуна крестом и чакра-печать в центре → <strong>1 чакра-батарея</strong>. Хранит до
+            500 чакры и привязывается к тому, кто использовал её первым.
+          </p>
+        </article>
+
+        <!-- Рамен -->
+        <article class="recipe-card">
+          <div class="recipe-head">
+            <h3>
+              <img src="assets/textures/ramen.png" alt="" width="26" height="26" loading="lazy" decoding="async">
+              Рамен
+            </h3>
+            <span class="recipe-kind">Бесформенный</span>
+          </div>
+          <div class="recipe-flow">
+            <div class="recipe-grid">
+              <span class="recipe-slot"><img src="assets/vanilla/bowl.png" alt="Миска" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/wheat.png" alt="Пшеница" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/cooked_porkchop.png" alt="Жареная свиная котлета" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/cooked_porkchop.png" alt="Жареная свиная котлета" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+            </div>
+            <span class="recipe-arrow" aria-hidden="true">→</span>
+            <div class="recipe-result">
+              <span class="recipe-slot"><img src="assets/textures/ramen.png" alt="Рамен" width="36" height="36" loading="lazy" decoding="async"></span>
+              <span class="recipe-count">×1</span>
+            </div>
+          </div>
+          <p class="recipe-source">
+            Миска, пшеница и 2 жареные свиные котлеты → <strong>1 рамен</strong>. Еда: 8 сытости и
+            1.2 насыщения.
+          </p>
+        </article>
+
+        <!-- Солдатские пилюли -->
+        <article class="recipe-card">
+          <div class="recipe-head">
+            <h3>
+              <img src="assets/textures/military_pills.png" alt="" width="26" height="26" loading="lazy" decoding="async">
+              Солдатские пилюли
+            </h3>
+            <span class="recipe-kind">Бесформенный</span>
+          </div>
+          <div class="recipe-flow">
+            <div class="recipe-grid">
+              <span class="recipe-slot"><img src="assets/vanilla/sugar.png" alt="Сахар" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/wheat.png" alt="Пшеница" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot"><img src="assets/vanilla/glowstone_dust.png" alt="Светопыль" width="30" height="30" loading="lazy" decoding="async"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+              <span class="recipe-slot recipe-slot--empty" aria-hidden="true"></span>
+            </div>
+            <span class="recipe-arrow" aria-hidden="true">→</span>
+            <div class="recipe-result">
+              <span class="recipe-slot"><img src="assets/textures/military_pills.png" alt="Солдатские пилюли" width="36" height="36" loading="lazy" decoding="async"></span>
+              <span class="recipe-count">×3</span>
+            </div>
+          </div>
+          <p class="recipe-source">
+            Сахар, пшеница и светопыль → <strong>3 солдатские пилюли</strong>. Еда: +35 чакры и +35
+            стамины, Speed I и Haste I на 30 с, Regeneration I на 8 с, откат 1 минута.
+          </p>
+        </article>
+
+      </div>
+
+      <div class="note">
+        <h3>Откуда взялись картинки</h3>
+        <p>
+          Иконки предметов мода — это его собственные текстуры из ресурсов
+          (<code>assets/narutomod/textures/items/</code>); ванильные ингредиенты взяты из текстур
+          Minecraft. Печать рабочего и чакра-батарея в моде рисуются как чакра-печать с дополнительным
+          слоем (пшеница и редстоун), поэтому здесь они показаны так же.
+        </p>
       </div>
     </section>
 
