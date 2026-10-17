@@ -5,7 +5,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * A nine wide, six tall window onto the caster's supply chest.
+ * A nine wide window onto the caster's supply chest, as tall as the window that was opened.
  *
  * <p>A slot's container index and its on-screen position are both fixed once it is built, so the only
  * way to scroll is to keep the window's slots put and move what they look at. This wrapper sits
@@ -13,6 +13,9 @@ import net.minecraft.world.item.ItemStack;
  * {@link #getOffset()}, which the menu raises and lowers as the caster scrolls. Local slot {@code i}
  * therefore always shows the real slot {@code offset + i}, on the server and on the client alike as
  * long as both are told the same offset.</p>
+ *
+ * <p>The chest itself can grow past what the window shows; the extra rows are simply out of sight
+ * until the caster scrolls down to them.</p>
  */
 public class SupplyChestWindow implements Container {
 

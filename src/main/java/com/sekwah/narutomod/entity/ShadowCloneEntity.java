@@ -7,6 +7,7 @@ import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.entity.ai.CloneFollowOwnerGoal;
 import com.sekwah.narutomod.entity.ai.CloneOwnerHurtByTargetGoal;
 import com.sekwah.narutomod.entity.ai.CloneOwnerHurtTargetGoal;
+import com.sekwah.narutomod.entity.ai.ClonePickupLootGoal;
 import com.sekwah.narutomod.entity.ai.CloneRangedAttackGoal;
 import com.sekwah.narutomod.entity.ai.CloneUseShieldGoal;
 import com.sekwah.narutomod.entity.ai.WorkerChopGoal;
@@ -229,10 +230,14 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.2d, false));
         this.goalSelector.addGoal(3, new CloneUseShieldGoal(this));
         this.goalSelector.addGoal(4, new CloneFollowOwnerGoal(this, 1.1d, 10.0f, 2.0f, 20.0f));
-        this.goalSelector.addGoal(5, new OpenDoorGoal(this, true));
-        this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 1.0d));
-        this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8.0f));
-        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+        // Below combat and following, so a clone never drops a fight or its caster to chase a
+        // dropped item, but above the idle stroll: anything lying around is picked up and sent to
+        // the caster's supply chest, whether the clone is a worker or one that was summoned to fight.
+        this.goalSelector.addGoal(5, new ClonePickupLootGoal(this));
+        this.goalSelector.addGoal(6, new OpenDoorGoal(this, true));
+        this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0d));
+        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0f));
+        this.goalSelector.addGoal(9, new RandomLookAroundGoal(this));
 
         // Targets are strictly reactive, the same as the 1.7.10 clone: a clone fights what hit its
         // caster, what its caster hit, or whatever hit the clone itself. It never picks a fight on

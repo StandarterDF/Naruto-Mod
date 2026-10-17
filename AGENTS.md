@@ -48,7 +48,7 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
 | --- | --- |
 | Сущность клона | `entity/ShadowCloneEntity.java` |
 | Четыре техники | `abilities/jutsus/ShadowCloneJutsuAbility.java` (один класс + `Settings`; медитация — `ChakraMeditationJutsuAbility`) |
-| ИИ | `entity/ai/CloneFollowOwnerGoal`, `CloneOwnerHurtByTargetGoal`, `CloneOwnerHurtTargetGoal`, `CloneRangedAttackGoal`, `CloneUseShieldGoal` |
+| ИИ | `entity/ai/CloneFollowOwnerGoal`, `CloneOwnerHurtByTargetGoal`, `CloneOwnerHurtTargetGoal`, `CloneRangedAttackGoal`, `CloneUseShieldGoal`, `ClonePickupLootGoal` |
 | Рендер | `client/renderer/entity/ShadowCloneRenderer.java` (`MeditatingCloneModel` + `ModelLayers.PLAYER(_SLIM)`) |
 | Регистрация/атрибуты | `entity/NarutoEntities.java` |
 | Звук | `sounds/NarutoSounds.java` + `assets/narutomod/sounds.json` (`clone_poof.ogg`) |
@@ -133,8 +133,9 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
     только игрокам.
   * **Трезубец**: бросается как у дроуна (`ThrownTrident` + `shoot`). Трезубец — оружие, а не боеприпас,
     поэтому **не расходуется** и бросать его можно сколько угодно. Зачарования снаряда (Impaling,
-    Channeling, Loyalty) сохраняются, но вернувшийся по Loyalty трезубец клон не поймает — мобы не
-    подбирают предметы. Riptide игнорируется (рывок есть только у игрока), бросок выполняется всегда.
+    Channeling, Loyalty) сохраняются, но вернувшийся по Loyalty трезубец клон не поймает — подхватить
+    снаряд на лету умеют только игроки (упавший на землю предмет клон подобрать уже может, см.
+    `ClonePickupLootGoal`). Riptide игнорируется (рывок есть только у игрока), бросок выполняется всегда.
 * **Стрелы**: тип — из первой стопки стрел в инвентаре владельца, количество — сумма **всех** стрел
   (`ArrowItem`). Это **копия**, инвентарь кастера не тратится. Каждый выстрел из лука или арбалета
   уменьшает запас; когда запас кончился — клон «попает» (`dispel()`), поэтому стрелять вечно он не может.
@@ -155,6 +156,14 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
     из `getAffectedEntities()`. Это работает, потому что Forge вызывает `onExplosionDetonate` **до**
     цикла урона и передаёт тот же самый список (проверено по `patches/.../Explosion.java.patch`).
   * Бомба у кастера **не тратится** — это только «метка» стиля клона.
+* **Подбор лута**: `entity/ai/ClonePickupLootGoal.java` — любой клон (не только рабочий) подбирает
+  валяющиеся на земле предметы в радиусе 8 блоков и отдаёт их тем же `collect` → походный сундук, а
+  если владельца нет рядом — в свой мешок. Приоритет 5: ниже боя (2) и следования за кастером (4), выше
+  прогулки (7), то есть клон никогда не бросает драку или кастера ради дропа, но и не проходит мимо.
+  Медитирующий клон и клиентская сторона гол отсекают сами. `ItemEntity#hasPickUpDelay()` уважается —
+  только что выброшенный предмет клон не выхватит. Дропы с убийства забираются мгновенно, ещё в
+  `ShadowCloneEvents#onLivingDrops` (для **любого** клона, включая боевого), так что гол добирает только
+  то, что осталось лежать.
 * **Координация оружие/щит**: единая точка правды — `ShadowCloneEntity#wantsToShoot()` (есть дальнобойное
   оружие, для лука/арбалета есть стрелы, цель дальше `MELEE_REACH`). Дальнобойное оружие берёт верх на
   дистанции, щит — в ближнем бою; оба гола спрашивают этот метод, поэтому они не дерутся за руки клона.
@@ -438,47 +447,75 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   всё равно доходит. Если владелец не в сети — лут выпадает на месте клона. Мешок у каждого клона
   **свой** (поле `bag`, не `static`).
 * **Походный сундук** (`StorageChestAbility`, INSTANT `B V C`) — **не блок и не привязан к клонам**:
-  это виртуальное хранилище на **81 слот** (9×9 — три ванильных сундука), которое целиком живёт в NBT
-  игрока и переживает выход из игры. Сундук **один** на игрока, его нельзя потерять или «забыть» в
-  незагруженном чанке. Техника только **открывает** его: `performServer` зовёт `ServerPlayer#openMenu`
-  с `SupplyChestMenu`, `handleCost` бесплатен, `logInChat` выключен (это взгляд внутрь, а не каст).
-  Меню регистрируется в `menu/NarutoMenus.java` (`DeferredRegister<MenuType<?>>`, `supply_chest`),
-  экран — `client/gui/SupplyChestScreen.java` (подключается через `client/NarutoClientScreens#register`
-  из `clientSetup`, т.к. в этой сборке Forge нет `RegisterMenuScreensEvent`).
+  это виртуальное хранилище, которое целиком живёт в NBT игрока и переживает выход из игры. Сундук
+  **один** на игрока, его нельзя потерять или «забыть» в незагруженном чанке. Техника только
+  **открывает** его: `performServer` зовёт `NetworkHooks#openScreen` с `SupplyChestMenu`, `handleCost`
+  бесплатен, `logInChat` выключен (это взгляд внутрь, а не каст).
+  Меню регистрируется в `menu/NarutoMenus.java` (`DeferredRegister<MenuType<?>>`, `supply_chest`) как
+  `IContainerFactory`: сервер пишет текущий размер сундука в extra-data окна (`buffer.writeVarInt`), а
+  клиент строит по нему пустой контейнер ровно того же размера — иначе клиент и сервер разошлись бы в
+  числе слотов. Экран — `client/gui/SupplyChestScreen.java` (подключается через
+  `client/NarutoClientScreens#register` из `clientSetup`, т.к. в этой сборке Forge нет
+  `RegisterMenuScreensEvent`).
   Рабочие пишут в контейнер **напрямую** — `ShadowCloneEntity#depositInSupplyChest` через
   `SupplyChestContainer#insert`, без координат, измерений и проверок загрузки чанка. Полный контейнер
   или офлайн-владелец → возврат в `bag`.
 
-  **Стаки по миллиону.** Ванильный `ItemStack` не может нести больше 127: `ItemStack.save` пишет размер
+  **Сундук только на выдачу.** Положить в него что-либо руками нельзя: `SupplyChestMenu#clicked`
+  обрабатывает клики по слотам сундука сам и знает только «взять» (`PICKUP` с пустой рукой, `QUICK_MOVE`,
+  `THROW`), а всё, что могло бы положить (`PICKUP` с предметом в руке, перетаскивание, обмен с хотбаром,
+  креативный клон, shift-клик из инвентаря) — просто игнорируется. `quickMoveStack` для слотов игрока
+  перекладывает предметы **внутри** инвентаря (`moveWithinInventory`), а не в сундук. Смысл: сундук — это
+  ящик доставки рабочих, кастер в него только смотрит и забирает.
+
+  **Размер динамический.** `SupplyChestContainer` начинается с `MIN_SIZE = 27` слотов (три ряда) и
+  растёт на ряд (9 слотов) в `insert`, пока не влезет всё, до потолка `MAX_SIZE = 243`; размер пишется
+  в NBT рядом с содержимым (`Size`), старые сейвы подтягиваются по максимальному слоту. Меню показывает
+  `visibleRows = clamp(размер / 9, 3, 6)` рядов: по умолчанию 3 (27 слотов), дальше больше, а всё, что
+  выше шестого ряда, достаётся прокруткой. `imageHeight`, позиция инвентаря игрока и высота фона
+  считаются от `visibleRows` (`SupplyChestMenu#imageHeight/playerInvY`), а `renderBg` режет
+  `generic_54.png` на две части, как это делает ванильный `ContainerScreen`: верх — область сундука
+  (`rows * 18 + 17`), низ — фиксированный блок инвентаря с source `y = 126`.
+
+  **Стаки по 256.** Ванильный `ItemStack` не может нести больше 127: `ItemStack.save` пишет размер
   байтом, а `FriendlyByteBuf#writeItem` шлёт теги только у damageable-предметов. Поэтому контейнер свой:
   `menu/SupplyChestContainer.java` хранит на слот **шаблон** предмета с count = 1 плюс отдельный
-  `int`-массив `amounts[]` (кап `MAX_AMOUNT = 1_000_000`). Ванильная синхронизация меню везёт
-  безопасные шаблоны, а реальные количества едут своим пакетом
-  `network/s2c/ClientboundSupplyChestPacket.java` (весь массив из 81 `int`), который шлётся из
-  `SupplyChestMenu#broadcastChanges`, когда снимок `snapshotAmounts()` разошёлся с последним отправленным
-  (ловит и трату игроком, и доклад рабочего). Клиент кладёт количества в `SupplyChestMenu#clientAmounts`
-  (`applyAmounts`), а бейдж рисует `SupplyChestScreen` из `getDisplayAmount`.
+  `int`-массив `amounts[]` (кап `MAX_AMOUNT = 256`). Ванильная синхронизация меню везёт безопасные
+  шаблоны, а реальные количества едут своим пакетом `network/s2c/ClientboundSupplyChestPacket.java`
+  (весь массив `int`, длина — по размеру сундука), который шлётся из `SupplyChestMenu#broadcastChanges`,
+  когда снимок `snapshotAmounts()` разошёлся с последним отправленным (ловит и трату игроком, и доклад
+  рабочего). Клиент кладёт количества в `SupplyChestMenu#clientAmounts` (`applyAmounts`), а бейдж рисует
+  `SupplyChestScreen` из `getDisplayAmount` — **в переопределённом `render` после `super.render`**, иначе
+  иконка предмета (z=100) закрывает цифры; тултип ваниль зовёт ещё позже, поэтому он остаётся сверху.
+  Из руки кастер берёт обычный ванильный стак (`CARRY_LIMIT = 64`), shift-клик высыпает в инвентарь
+  столько, сколько влезет.
   В NBT контейнер пишется целиком под `SUPPLY_CHEST_TAG` (`NinjaData`), старый формат-список из
   `SimpleContainer` подхватывается `loadLegacy` — предметы не теряются.
 
-  **Прокрутка.** Слот `Slot` имеет финальные `x`/`y`/`index`, поэтому сдвигать слоты нельзя. Вместо
-  этого меню держит ровно `VISIBLE_ROWS = 6` рядов (`SupplyChestMenu.SupplyChestSlot`) поверх
-  `menu/SupplyChestWindow.java` — обёртки над контейнером, которая прибавляет к локальному индексу
-  `offset` (кратный девяти). Прокрутка меняет только `offset`, а слоты остаются на месте. Клиент
-  сообщает новый ряд пакетом `network/c2s/ServerSupplyChestScrollPacket.java`, сервер выставляет тот же
-  `offset` (иначе клик по локальному слоту `i` попал бы в чужой слот) и пересинхронивает содержимое.
-  Экран рисует ванильную `textures/gui/container/generic_54.png`, полосу прокрутки и бейдж количества в
-  `renderLabels` (там уже переведённая поза и предметы нарисованы), а `renderBackground(GuiGraphics)`
-  переопределён в **no-op** — именно он затемнял мир серым при открытии любого контейнера.
+  **Прокрутка и рост на лету.** Слот `Slot` имеет финальные `x`/`y`/`index`, поэтому сдвигать слоты
+  нельзя: и позиция, и число слотов фиксируются при постройке меню. Меню держит `visibleRows` рядов
+  (`SupplyChestMenu.SupplyChestSlot`) поверх `menu/SupplyChestWindow.java` — обёртки над контейнером,
+  которая прибавляет к локальному индексу `offset` (кратный девяти). Прокрутка меняет только `offset`,
+  а слоты остаются на месте; клиент сообщает новый ряд пакетом
+  `network/c2s/ServerSupplyChestScrollPacket.java`, сервер выставляет тот же `offset` (иначе клик по
+  локальному слоту `i` попал бы в чужой слот) и пересинхронирует содержимое. Если сундук вырос, пока
+  окно открыто, меню замечает это в `broadcastChanges` и **переоткрывает себя** на следующий тик
+  (`NetworkHooks#openScreen` заново, с новым размером) — двигать слоты нельзя, а так окно просто
+  перестраивается; переоткрытие откладывается, пока в руке что-то есть, чтобы не выронить стак.
+  Экран рисует ванильную `textures/gui/container/generic_54.png`, полосу прокрутки и бейдж количества, а
+  `renderBackground(GuiGraphics)` переопределён в **no-op** — именно он затемнял мир серым при открытии
+  любого контейнера.
 
 * **XP и дропы клона — владельцу/в мешок.** `events/ShadowCloneEvents#onExperienceDrop`
   (`LivingExperienceDropEvent`): если `event.getEntity().getKillCredit()` — `ShadowCloneEntity`, а её
   владелец в сети, опыт обнуляется (`setDroppedExperience(0)`) и выдаётся владельцу
   (`Player#giveExperiencePoints`). Так опыт за убийство клоном не остаётся орбами за полкарты. Если
   владелец не в сети — орбы падают как обычно (не теряются). А `ShadowCloneEvents#onLivingDrops`
-  (`LivingDropsEvent`) для **охотника** (`isWorker() && getWorkerJob() == HUNT`) переносит дропы убитого
-  зверя в мешок клона и **очищает** `event.getDrops()` (иначе мясо сгнило бы в поле, пока рабочий
-  дойдёт до владельца). Прочие клоны (и не-охотники) дропы оставляют как есть.
+  (`LivingDropsEvent`) переносит дропы убитого **любым** клоном (`getKillCredit() instanceof
+  ShadowCloneEntity`) в тот же `collect` → походный сундук и **очищает** `event.getDrops()` (иначе мясо
+  сгнило бы в поле, пока клон дойдёт до владельца). Раньше это делал только охотник
+  (`isWorker() && getWorkerJob() == HUNT`), теперь — любой клон, включая боевого. Всё, что клон не
+  подобрал с убийства, лежит на земле: его доберёт `entity/ai/ClonePickupLootGoal.java`.
 * **Великие мечи** (`ComboSwordItem`) — цепочка ударов живёт **в NBT стека**
   (`narutomod:combo`, `narutomod:combo_time`): каждый удар, попавший в окно (4–5 с), добавляет звено,
   урон следующего удара растёт (`damagePerStep`; Самехада — 0.5, Кубикирибочо — 0.75, максимум 20

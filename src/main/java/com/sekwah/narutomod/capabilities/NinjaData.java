@@ -6,7 +6,6 @@ import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.menu.SupplyChestContainer;
-import com.sekwah.narutomod.menu.SupplyChestMenu;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import com.sekwah.sekclib.capabilitysync.capabilitysync.annotation.Sync;
 import net.minecraft.ChatFormatting;
@@ -127,7 +126,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
      * block: it lives right here in the caster's own data, so a worker can reach it from anywhere and
      * it survives a logout. There is always exactly one.
      */
-    private final SupplyChestContainer supplyChest = new SupplyChestContainer(SupplyChestMenu.SIZE);
+    private final SupplyChestContainer supplyChest = new SupplyChestContainer(SupplyChestContainer.MIN_SIZE);
 
     /**
      * Where a caster who walked into the Kamui pocket dimension is to come back out, see

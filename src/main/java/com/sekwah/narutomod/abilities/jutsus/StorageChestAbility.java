@@ -2,11 +2,13 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.menu.SupplyChestContainer;
 import com.sekwah.narutomod.menu.SupplyChestMenu;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.NetworkHooks;
 
 /**
  * Opens the caster's supply chest, the one place their worker clones bring a harvest.
@@ -15,6 +17,9 @@ import net.minecraft.world.entity.player.Player;
  * data, see {@code INinjaData#getSupplyChest}. That is exactly what lets a worker drop something
  * into it from anywhere, with no chunk to keep loaded; this technique is simply how the caster looks
  * inside. It costs nothing, since it is a look rather than a cast.</p>
+ *
+ * <p>The chest grows with its contents, so the size is written along with the request: the client
+ * builds a window that matches the grid the caster is about to see rather than guessing a size.</p>
  */
 public class StorageChestAbility extends Ability {
 
@@ -39,9 +44,11 @@ public class StorageChestAbility extends Ability {
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
         if (player instanceof ServerPlayer serverPlayer) {
-            serverPlayer.openMenu(new SimpleMenuProvider(
-                    (id, inventory, p) -> new SupplyChestMenu(id, inventory, ninjaData.getSupplyChest()),
-                    Component.translatable("narutomod:storage_chest")));
+            SupplyChestContainer chest = ninjaData.getSupplyChest();
+            NetworkHooks.openScreen(serverPlayer, new SimpleMenuProvider(
+                            (id, inventory, p) -> new SupplyChestMenu(id, inventory, chest),
+                            Component.translatable("narutomod:storage_chest")),
+                    buffer -> buffer.writeVarInt(chest.getContainerSize()));
         }
     }
 

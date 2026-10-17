@@ -13,25 +13,35 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 
 /**
- * Draws the supply chest: a vanilla double chest window over nine rows of slots.
+ * Draws the supply chest: a vanilla chest window over however many rows the chest currently holds.
  *
- * <p>Only {@link SupplyChestMenu#VISIBLE_ROWS} of the nine rows are shown at a time, so the window
- * keeps the size of an ordinary double chest instead of covering the whole screen; the mouse wheel
- * (or the little bar on the right) scrolls the rest into view. The sheet is vanilla's own double
- * chest texture, so nothing about the interface around it changes, and the world behind is not dimmed
- * the way it would be by the usual screen background.</p>
+ * <p>The window is built for the size the chest had when it was opened - three rows for a fresh
+ * chest, more once the workers have filled it - and never shows more than
+ * {@link SupplyChestMenu#MAX_VISIBLE_ROWS} rows at once, so it stays the size of an ordinary double
+ * chest instead of covering the whole screen; the mouse wheel (or the little bar on the right)
+ * scrolls the rest into view. The sheet is vanilla's own double chest texture, cut to the right
+ * height, so nothing about the interface around it changes, and the world behind is not dimmed the
+ * way it would be by the usual screen background.</p>
  */
 public class SupplyChestScreen extends AbstractContainerScreen<SupplyChestMenu> {
 
-    /** Vanilla's double chest sheet: six rows, exactly what is shown at once. */
+    /** Vanilla's double chest sheet, six rows tall, which is exactly what is shown at once. */
     private static final ResourceLocation TEXTURE =
             new ResourceLocation("textures/gui/container/generic_54.png");
 
+    /** Where the caster's inventory sits in the vanilla sheet, below the six chest rows. */
+    private static final int PLAYER_INV_SOURCE_Y = 126;
+    private static final int PLAYER_INV_SOURCE_HEIGHT = 96;
+
+    /** How many rows of the chest this window shows. */
+    private final int rows;
+
     public SupplyChestScreen(SupplyChestMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
+        this.rows = menu.getVisibleRows();
         this.imageWidth = SupplyChestMenu.IMAGE_WIDTH;
-        this.imageHeight = SupplyChestMenu.IMAGE_HEIGHT;
-        this.inventoryLabelY = SupplyChestMenu.PLAYER_INV_Y - 11;
+        this.imageHeight = SupplyChestMenu.imageHeight(this.rows);
+        this.inventoryLabelY = SupplyChestMenu.playerInvY(this.rows) - 11;
     }
 
     @Override
@@ -43,20 +53,26 @@ public class SupplyChestScreen extends AbstractContainerScreen<SupplyChestMenu> 
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        graphics.blit(TEXTURE, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
+        // The sheet is one tall double chest, but vanilla itself cuts it in two for a smaller chest:
+        // the top of the sheet is the chest area (a header plus one row per line of slots) and the
+        // caster's inventory is a fixed block at the bottom.
+        int chestHeight = this.rows * 18 + 17;
+        graphics.blit(TEXTURE, this.leftPos, this.topPos, 0, 0, this.imageWidth, chestHeight);
+        graphics.blit(TEXTURE, this.leftPos, this.topPos + chestHeight,
+                0, PLAYER_INV_SOURCE_Y, this.imageWidth, PLAYER_INV_SOURCE_HEIGHT);
         this.renderScrollbar(graphics);
     }
 
     private void renderScrollbar(GuiGraphics graphics) {
-        int maxScroll = SupplyChestMenu.ROWS - SupplyChestMenu.VISIBLE_ROWS;
+        int maxScroll = this.menu.getMaxScrollRow();
         if (maxScroll <= 0) {
             return;
         }
         int x = this.leftPos + this.imageWidth - 7;
         int top = this.topPos + SupplyChestMenu.CHEST_Y;
-        int height = SupplyChestMenu.VISIBLE_ROWS * 18;
+        int height = this.rows * 18;
         graphics.fill(x, top, x + 5, top + height, 0x66000000);
-        int thumbHeight = Math.max(10, height * SupplyChestMenu.VISIBLE_ROWS / SupplyChestMenu.ROWS);
+        int thumbHeight = Math.max(10, height * this.rows / this.menu.getTotalRows());
         int thumbY = top + (height - thumbHeight) * this.menu.getScrollRow() / maxScroll;
         graphics.fill(x, thumbY, x + 5, thumbY + thumbHeight, 0xFFC6C6C6);
         graphics.fill(x, thumbY, x + 1, thumbY + thumbHeight, 0xFFFFFFFF);
@@ -74,7 +90,7 @@ public class SupplyChestScreen extends AbstractContainerScreen<SupplyChestMenu> 
     private void renderAmountBadges(GuiGraphics graphics) {
         graphics.pose().pushPose();
         graphics.pose().translate(0.0F, 0.0F, 300.0F);
-        for (int i = 0; i < SupplyChestMenu.WINDOW_SIZE; i++) {
+        for (int i = 0; i < this.menu.getWindowSize(); i++) {
             int amount = this.menu.getDisplayAmount(i);
             if (amount <= 1) {
                 continue;
@@ -90,7 +106,7 @@ public class SupplyChestScreen extends AbstractContainerScreen<SupplyChestMenu> 
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        int maxScroll = SupplyChestMenu.ROWS - SupplyChestMenu.VISIBLE_ROWS;
+        int maxScroll = this.menu.getMaxScrollRow();
         if (maxScroll > 0 && delta != 0.0D) {
             int next = Mth.clamp(this.menu.getScrollRow() - (int) Math.signum(delta), 0, maxScroll);
             if (next != this.menu.getScrollRow()) {
