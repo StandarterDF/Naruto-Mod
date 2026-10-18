@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "narutomod:flak_jacket_new" },
+    { "item": "narutomod:armor_plate" },
+    { "item": "narutomod:armor_plate" }
+  ],
+  "result": {
+    "item": "narutomod:flak_jacket",
+    "count": 1
+  }
+}

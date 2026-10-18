@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "narutomod:fabric" },
+    { "item": "narutomod:armor_plate" },
+    { "item": "minecraft:magma_cream" }
+  ],
+  "result": {
+    "item": "narutomod:headband_lava",
+    "count": 1
+  }
+}

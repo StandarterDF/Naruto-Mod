@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "narutomod:headband_leaf" },
+    { "item": "minecraft:black_dye" }
+  ],
+  "result": {
+    "item": "narutomod:headband_leaf_black",
+    "count": 1
+  }
+}

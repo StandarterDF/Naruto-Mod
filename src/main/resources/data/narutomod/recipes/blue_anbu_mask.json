@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "narutomod:armor_plate" },
+    { "item": "narutomod:armor_plate" },
+    { "item": "narutomod:armor_plate" },
+    { "item": "minecraft:blue_dye" }
+  ],
+  "result": {
+    "item": "narutomod:blue_anbu_mask",
+    "count": 1
+  }
+}

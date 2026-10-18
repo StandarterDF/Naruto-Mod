@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "narutomod:armor_plate" },
+    { "item": "minecraft:green_dye" }
+  ],
+  "result": {
+    "item": "narutomod:armor_plate_green",
+    "count": 1
+  }
+}

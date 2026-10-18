@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "narutomod:headband_sand" },
+    { "item": "minecraft:flint" }
+  ],
+  "result": {
+    "item": "narutomod:headband_sand_scratched",
+    "count": 1
+  }
+}

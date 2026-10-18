@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "narutomod:fabric_reinforced_black" },
+    { "item": "narutomod:fabric_reinforced_black" },
+    { "item": "narutomod:fabric_reinforced_black" },
+    { "item": "narutomod:fabric_reinforced_black" },
+    { "item": "minecraft:red_dye" }
+  ],
+  "result": {
+    "item": "narutomod:akatsuki_cloak",
+    "count": 1
+  }
+}

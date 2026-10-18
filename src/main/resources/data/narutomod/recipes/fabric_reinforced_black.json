@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "narutomod:fabric_reinforced" },
+    { "item": "minecraft:black_dye" }
+  ],
+  "result": {
+    "item": "narutomod:fabric_reinforced_black",
+    "count": 1
+  }
+}

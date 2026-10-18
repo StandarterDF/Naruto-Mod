@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:flower_pot" },
+    { "item": "minecraft:oak_sapling" }
+  ],
+  "result": {
+    "item": "narutomod:bonsai_tree",
+    "count": 1
+  }
+}

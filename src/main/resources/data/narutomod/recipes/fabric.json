@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:string" },
+    { "item": "minecraft:string" },
+    { "item": "minecraft:string" }
+  ],
+  "result": {
+    "item": "narutomod:fabric",
+    "count": 1
+  }
+}

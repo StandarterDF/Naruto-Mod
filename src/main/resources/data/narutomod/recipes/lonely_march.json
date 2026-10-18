@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:paper" },
+    { "item": "minecraft:ink_sac" },
+    { "item": "minecraft:gold_ingot" }
+  ],
+  "result": {
+    "item": "narutomod:lonely_march",
+    "count": 1
+  }
+}

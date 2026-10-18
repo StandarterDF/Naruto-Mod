@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "narutomod:fabric" },
+    { "item": "narutomod:armor_plate" },
+    { "item": "minecraft:amethyst_shard" }
+  ],
+  "result": {
+    "item": "narutomod:headband_sound",
+    "count": 1
+  }
+}

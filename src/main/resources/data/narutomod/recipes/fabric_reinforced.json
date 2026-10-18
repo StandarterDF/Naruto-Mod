@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "narutomod:fabric" },
+    { "item": "minecraft:leather" },
+    { "item": "minecraft:iron_ingot" }
+  ],
+  "result": {
+    "item": "narutomod:fabric_reinforced",
+    "count": 1
+  }
+}

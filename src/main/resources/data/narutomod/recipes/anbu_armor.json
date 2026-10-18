@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "narutomod:flak_jacket_new" },
+    { "item": "narutomod:armor_plate" },
+    { "item": "narutomod:armor_plate" },
+    { "item": "narutomod:fabric_reinforced_black" }
+  ],
+  "result": {
+    "item": "narutomod:anbu_armor",
+    "count": 1
+  }
+}
