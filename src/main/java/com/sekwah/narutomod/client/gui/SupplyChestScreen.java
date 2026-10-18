@@ -15,21 +15,21 @@ import net.minecraft.world.inventory.Slot;
 /**
  * Draws the supply chest: a vanilla chest window over however many rows the chest currently holds.
  *
- * <p>The window is built for the size the chest had when it was opened - three rows for a fresh
- * chest, more once the workers have filled it - and never shows more than
- * {@link SupplyChestMenu#MAX_VISIBLE_ROWS} rows at once, so it stays the size of an ordinary double
- * chest instead of covering the whole screen; the mouse wheel (or the little bar on the right)
- * scrolls the rest into view. The sheet is vanilla's own double chest texture, cut to the right
+ * <p>The window is built at its full height for the size the chest had when it was opened and never
+ * changes shape, so a chest that keeps growing past the visible rows does not move anything on screen;
+ * the mouse wheel (or the little bar on the right) scrolls the rest into view, and the server keeps
+ * the client's idea of the chest's size up to date so newly filled rows are always reachable. The
+ * sheet is vanilla's own double chest texture, cut to the right
  * height, so nothing about the interface around it changes, and the world behind is not dimmed the
  * way it would be by the usual screen background.</p>
  */
 public class SupplyChestScreen extends AbstractContainerScreen<SupplyChestMenu> {
 
-    /** Vanilla's double chest sheet, six rows tall, which is exactly what is shown at once. */
+    /** Vanilla's double chest sheet, cut down to the rows actually shown. */
     private static final ResourceLocation TEXTURE =
             new ResourceLocation("textures/gui/container/generic_54.png");
 
-    /** Where the caster's inventory sits in the vanilla sheet, below the six chest rows. */
+    /** Where the caster's inventory sits in the vanilla sheet, below the chest rows. */
     private static final int PLAYER_INV_SOURCE_Y = 126;
     private static final int PLAYER_INV_SOURCE_HEIGHT = 96;
 

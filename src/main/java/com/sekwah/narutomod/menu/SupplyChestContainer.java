@@ -17,10 +17,10 @@ import java.util.Objects;
  * own data, so a worker can drop into it from any distance without a chunk being loaded.</p>
  *
  * <p>The chest has no fixed capacity. It starts at {@link #MIN_SIZE} slots - three rows, what the
- * window shows by default - and {@link #insert(ItemStack)} grows it a row at a time for as long as
- * there is something to store, up to {@link #MAX_SIZE}. The window onto it only ever shows
- * {@link SupplyChestMenu#MAX_VISIBLE_ROWS} rows, so the rest is reached by scrolling rather than by
- * covering the screen.</p>
+ * window shows at once - and {@link #insert(ItemStack)} grows it a row at a time for as long as there
+ * is something to store, up to {@link #MAX_SIZE}. The window onto it only ever shows
+ * {@link SupplyChestMenu#MAX_VISIBLE_ROWS} rows and was built at that height from the start, so the
+ * extra rows wait out of sight until the caster scrolls down to them.</p>
  *
  * <p>A slot does not hold a vanilla stack. Vanilla writes a stack's size as a single byte, so a slot
  * could never hold more than one hundred and twenty-seven of anything. Instead every slot keeps a
@@ -33,7 +33,11 @@ public class SupplyChestContainer implements Container {
     /** The chest is a nine wide grid; every row has nine slots. */
     public static final int COLUMNS = 9;
 
-    /** Three rows by default, the size the chest is born with. */
+    /**
+     * Three rows by default: exactly what the window shows at once, so an empty chest has no
+     * scrollbar. Every row a worker fills past these is reached by scrolling, which the window
+     * already does; see {@code SupplyChestMenu}.
+     */
     public static final int MIN_SIZE = COLUMNS * 3;
 
     /** A generous ceiling on the grid so a runaway deposit cannot balloon a save file. */
@@ -76,6 +80,17 @@ public class SupplyChestContainer implements Container {
         this.size = newSize;
         this.items = newItems;
         this.amounts = newAmounts;
+    }
+
+    /**
+     * Grows the grid to hold at least {@code size} slots. The client follows the server's chest with
+     * this as it fills up, so scrolling down to a freshly added row always lands on a slot that
+     * really exists on both ends rather than reading past the end of the grid.
+     */
+    public void ensureSize(int size) {
+        if (size > this.size) {
+            this.resize(roundUp(size));
+        }
     }
 
     /** Adds one row of empty slots, unless the chest is already at its ceiling. */

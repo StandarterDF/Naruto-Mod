@@ -197,6 +197,27 @@ public abstract class WorkerBlockGoal extends Goal {
         return false;
     }
 
+    /**
+     * Whether a target has to have somewhere to stand beside it before it is taken.
+     *
+     * <p>Most jobs walk up to their block, so a block with no reachable side is no use to them. A
+     * miner is the exception: it digs its way through the rock to the ore it can feel, so it is happy
+     * to take a target no path reaches - {@link #clearPath(ServerLevel, BlockPos)} then opens the
+     * way.</p>
+     */
+    protected boolean needsStand(BlockPos pos) {
+        return true;
+    }
+
+    /**
+     * What to do once a job has cleared a block out of the path to its target. By default the worker
+     * simply sets off for its standing spot again; a miner that has just opened a tunnel overrides
+     * this to step into it.
+     */
+    protected void afterClear(ServerLevel level, BlockPos target) {
+        this.walkToStand();
+    }
+
     @Override
     public boolean canUse() {
         if (!this.isMyJob()) {
@@ -298,7 +319,7 @@ public abstract class WorkerBlockGoal extends Goal {
                         && this.clearPath(level, this.target)) {
                     this.stuckTicks = 0;
                     this.clearCooldown = PATH_CLEAR_TICKS;
-                    this.walkToStand();
+                    this.afterClear(level, this.target);
                     this.repathTicks = REPATH_TICKS;
                     return;
                 }
@@ -551,7 +572,7 @@ public abstract class WorkerBlockGoal extends Goal {
                         here.getY() + this.scanOffsets[base + 1],
                         here.getZ() + this.scanOffsets[base + 2]);
                 if (this.isAbandoned(cursor) || this.claimedByOther(cursor)
-                        || !wanted.test(cursor) || !this.hasStand(cursor)) {
+                        || !wanted.test(cursor) || (this.needsStand(cursor) && !this.hasStand(cursor))) {
                     continue;
                 }
                 double distance = this.worker.distanceToSqr(Vec3.atCenterOf(cursor));
@@ -652,7 +673,7 @@ public abstract class WorkerBlockGoal extends Goal {
     }
 
     /** A block with room for the clone and solid ground underneath it. */
-    private boolean isStandable(BlockPos pos) {
+    protected boolean isStandable(BlockPos pos) {
         Level level = this.worker.level();
         return level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()
                 && level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP);

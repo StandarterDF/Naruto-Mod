@@ -25,10 +25,13 @@ import java.util.Arrays;
  * by {@code StorageChestAbility}. Because the container is not tied to the world, a worker can drop
  * into it from any distance without a chunk being loaded.</p>
  *
- * <p>The chest grows with its contents - {@link SupplyChestContainer#MIN_SIZE} slots by default,
- * more when a worker has more to put away - and this menu shows as many rows as the chest currently
- * holds, up to {@link #MAX_VISIBLE_ROWS}. Anything past the sixth row is reached by scrolling the
- * {@link SupplyChestWindow}, so the window never covers the whole screen. A slot can hold far more
+ * <p>The chest grows with its contents - {@link SupplyChestContainer#MIN_SIZE} slots to begin with,
+ * more when a worker has more to put away - and this menu always shows {@link #MAX_VISIBLE_ROWS} rows
+ * of it. The window is opened at that fixed height from the start, so its slot layout never has to
+ * change as the chest fills; anything past the third row is simply reached by scrolling the
+ * {@link SupplyChestWindow}, and the whole chest - however tall it grows - stays one screen. The
+ * server streams the chest's current size to the client with the amounts so the scroll can reach a
+ * row that was added after the window opened. A slot can hold far more
  * than a vanilla stack, so the click handling here is written by hand against
  * {@link SupplyChestContainer#getAmount(int)} rather than reusing the stack-size based vanilla
  * logic.</p>
@@ -47,13 +50,13 @@ public class SupplyChestMenu extends AbstractContainerMenu {
     public static final int MIN_ROWS = 3;
 
     /** How many rows fit on screen at once; anywhere past these is reached by scrolling. */
-    public static final int MAX_VISIBLE_ROWS = 6;
+    public static final int MAX_VISIBLE_ROWS = 3;
 
     /** Layout of the vanilla double chest sheet, taken straight from a six row chest. */
     public static final int CHEST_Y = 18;
     public static final int IMAGE_WIDTH = 176;
-    /** Where the caster's inventory starts on a full six row window, as the vanilla sheet has it. */
-    private static final int PLAYER_INV_BASE_Y = 139;
+    /** Where the caster's inventory starts on a full three row window. */
+    private static final int PLAYER_INV_BASE_Y = 85;
     private static final int PLAYER_INV_ROW_GAP = 18;
 
     /** The most of one item the caster may take at once, a plain vanilla stack. */
@@ -69,9 +72,6 @@ public class SupplyChestMenu extends AbstractContainerMenu {
     /** Number of chest slots actually in the menu, the visible window. */
     private final int windowSize;
 
-    /** The size the chest had when this window was built; if it changes the window is rebuilt. */
-    private int openedSize;
-
     /** Which row of the chest the window currently starts at. */
     private int scrollRow;
 
@@ -79,10 +79,17 @@ public class SupplyChestMenu extends AbstractContainerMenu {
     private boolean reopening;
 
     /** Amounts last handed to the client, or all -1 until the first update. */
-    private final int[] syncedAmounts;
+    private int[] syncedAmounts;
 
     /** Client side copy of the amounts, filled in by the sync packet. */
-    private final int[] clientAmounts;
+    private int[] clientAmounts;
+
+    /**
+     * The whole chest's slot count as last heard from the server. The window's own grid is fixed when
+     * it is built, but the chest behind it can keep growing, and the window has to scroll over the
+     * whole of it - not just the slice it happens to be showing.
+     */
+    private int syncedTotalSize;
 
     public SupplyChestMenu(int id, Inventory playerInventory, SupplyChestContainer container) {
         super(NarutoMenus.SUPPLY_CHEST.get(), id);
@@ -92,7 +99,6 @@ public class SupplyChestMenu extends AbstractContainerMenu {
         this.window = new SupplyChestWindow(container, this.windowSize);
         this.player = playerInventory.player;
         container.startOpen(playerInventory.player);
-        this.openedSize = container.getContainerSize();
 
         int playerInvY = playerInvY(this.visibleRows);
         for (int row = 0; row < this.visibleRows; row++) {
@@ -113,6 +119,7 @@ public class SupplyChestMenu extends AbstractContainerMenu {
         }
         this.syncedAmounts = new int[container.getContainerSize()];
         this.clientAmounts = new int[container.getContainerSize()];
+        this.syncedTotalSize = container.getContainerSize();
         Arrays.fill(this.syncedAmounts, -1);
     }
 
@@ -141,7 +148,8 @@ public class SupplyChestMenu extends AbstractContainerMenu {
 
     /** How many rows the chest currently has, whether or not the window shows them all. */
     public int getTotalRows() {
-        return (this.container.getContainerSize() + COLUMNS - 1) / COLUMNS;
+        int size = Math.max(this.container.getContainerSize(), this.syncedTotalSize);
+        return (size + COLUMNS - 1) / COLUMNS;
     }
 
     /** The furthest row the window may be scrolled to. */
@@ -164,11 +172,24 @@ public class SupplyChestMenu extends AbstractContainerMenu {
         return this.container.getAmount(real);
     }
 
-    /** Client side: drops in the amounts from the sync packet. */
+    /**
+     * Client side: drops in the amounts from the sync packet. The packet's array is the whole chest,
+     * so its length is also the current size of the chest - which is how the client keeps up with a
+     * chest that grew while the window was open. The container behind the window is stretched to
+     * match, since scrolling past the old end would otherwise read off the end of the grid.
+     */
     public void applyAmounts(int[] amounts) {
-        Arrays.fill(this.clientAmounts, 0);
-        System.arraycopy(amounts, 0, this.clientAmounts, 0,
-                Math.min(amounts.length, this.clientAmounts.length));
+        int total = amounts.length;
+        if (this.player.level().isClientSide) {
+            this.container.ensureSize(total);
+        }
+        this.syncedTotalSize = Math.max(this.syncedTotalSize, total);
+        if (this.clientAmounts.length < total) {
+            this.clientAmounts = new int[total];
+        } else {
+            Arrays.fill(this.clientAmounts, 0);
+        }
+        System.arraycopy(amounts, 0, this.clientAmounts, 0, Math.min(amounts.length, this.clientAmounts.length));
     }
 
     public int getScrollRow() {
@@ -197,13 +218,13 @@ public class SupplyChestMenu extends AbstractContainerMenu {
     @Override
     public void broadcastChanges() {
         if (this.player instanceof ServerPlayer serverPlayer
-                && this.container.getContainerSize() != this.openedSize
+                && visibleRows(this.container.getContainerSize()) != this.visibleRows
                 && this.getCarried().isEmpty()) {
-            // The slot layout is fixed once built, so a chest that grew under the open window is
-            // shown by opening it afresh rather than by trying to move slots around. The swap is held
-            // back a tick so it never happens in the middle of the container tick that noticed it,
-            // and while the caster is carrying something, since a window swap would put the carried
-            // stack back - until then the window keeps syncing as it is.
+            // The window's slot layout is fixed once built, so a chest that has outgrown the tallest
+            // shape a window can be given still has to be shown afresh rather than trying to move
+            // slots around. Held back a tick so it never happens in the middle of the container tick
+            // that noticed it, and while the caster is carrying something, since a window swap would
+            // put the carried stack back - until then the window keeps syncing as it is.
             if (this.reopening) {
                 this.reopen(serverPlayer);
                 return;
@@ -213,7 +234,13 @@ public class SupplyChestMenu extends AbstractContainerMenu {
         super.broadcastChanges();
         if (this.player instanceof ServerPlayer serverPlayer) {
             int[] amounts = this.container.snapshotAmounts();
-            if (amounts.length == this.syncedAmounts.length && !Arrays.equals(amounts, this.syncedAmounts)) {
+            if (amounts.length != this.syncedAmounts.length) {
+                // The chest grew (or was rebuilt): the array is the whole grid, so start the compare
+                // over, which also tells the client the new size along with the contents.
+                this.syncedAmounts = new int[amounts.length];
+                Arrays.fill(this.syncedAmounts, -1);
+            }
+            if (!Arrays.equals(amounts, this.syncedAmounts)) {
                 PacketHandler.sendToPlayer(
                         new ClientboundSupplyChestPacket(this.containerId, amounts), serverPlayer);
                 System.arraycopy(amounts, 0, this.syncedAmounts, 0, amounts.length);

@@ -87,7 +87,6 @@ public class NarutoCreativeTabs {
                 output.accept(NarutoItems.MILITARY_PILLS.get());
                 output.accept(NarutoItems.RAMEN.get());
                 output.accept(NarutoItems.CHAKRA_SEAL.get());
-                output.accept(NarutoItems.WORKER_SEAL.get());
                 output.accept(NarutoItems.CHAKRA_BATTERY.get());
             }).title(Component.translatable("narutomod_materials"))::build);
 

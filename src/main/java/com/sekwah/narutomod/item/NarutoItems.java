@@ -143,14 +143,6 @@ public class NarutoItems {
             () -> new Item(new Item.Properties()));
 
     /**
-     * The Worker's Seal: held in the main hand while casting a clone technique, it turns the clones
-     * into workers who farm, mine or chop with the tool from the caster's off hand, see
-     * {@link WorkerSealItem}.
-     */
-    public static final RegistryObject<Item> WORKER_SEAL = ITEMS.register("worker_seal",
-            () -> new WorkerSealItem(new Item.Properties().stacksTo(1)));
-
-    /**
      * A store of chakra that binds itself to the first ninja to use it, see
      * {@link ChakraBatteryItem}.
      */

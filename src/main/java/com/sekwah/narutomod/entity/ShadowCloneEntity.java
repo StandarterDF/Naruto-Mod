@@ -15,6 +15,7 @@ import com.sekwah.narutomod.entity.ai.WorkerChopGoal;
 import com.sekwah.narutomod.entity.ai.WorkerHarvestGoal;
 import com.sekwah.narutomod.entity.ai.WorkerHuntGoal;
 import com.sekwah.narutomod.entity.ai.WorkerMineGoal;
+import com.sekwah.narutomod.entity.ai.WorkerTorchGoal;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -62,6 +63,7 @@ import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.level.Level;
@@ -128,6 +130,13 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     public static final double WORKER_HEALTH = 4.0d;
 
     /**
+     * How far a clone can drop before its chakra gives out. A clone is chakra shaped like its
+     * caster, so a short fall costs it nothing - it lands the way a ninja does and walks on - but
+     * anything past this is a drop it cannot hold together through, and it pops on impact.
+     */
+    public static final float SAFE_FALL_DISTANCE = 10.0f;
+
+    /**
      * Anything closer than this is melee range. A clone stops shooting at it and starts swinging
      * (and blocking), the same distance the melee goal can actually reach.
      */
@@ -166,6 +175,13 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
 
     /** Crops a worker has reaped and is carrying home, see {@link #collect(ItemStack)}. */
     private final List<ItemStack> bag = new ArrayList<>();
+
+    /**
+     * Torches a worker still has to light the dark it works in, copied from its caster at summon
+     * time. The stack in its off hand is only the visible part of this count - the rest is the same
+     * trick the arrows use, a whole supply the caster keeps and the clone spends.
+     */
+    private int workerTorches;
 
     public ShadowCloneEntity(EntityType<ShadowCloneEntity> type, Level level) {
         super(type, level);
@@ -234,6 +250,9 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         this.goalSelector.addGoal(1, new WorkerMineGoal(this));
         this.goalSelector.addGoal(1, new WorkerChopGoal(this));
         this.goalSelector.addGoal(1, new WorkerHuntGoal(this));
+        // A worker lights its own way when it works in the dark. The goal holds no flags, so it runs
+        // alongside whatever shift is going on rather than competing for movement.
+        this.goalSelector.addGoal(1, new WorkerTorchGoal(this));
         // Both weapon goals are always registered and decide for themselves whether they apply, so
         // a clone that is handed a bow later (or loses one) does not need its goals rebuilt. The
         // ranged goal sits above melee and only runs while the target is too far away to hit with a
@@ -513,6 +532,12 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
             return;
         }
 
+        if (this.isMeditating()) {
+            // Keep the caster's link to this clone fresh, and its expiry honest, so a meditation
+            // reaches as far as its mastery allows without anyone scanning the world for it.
+            this.refreshMeditationLink();
+        }
+
         if (this.tickCount == 1) {
             // The puff of smoke every clone appears in.
             this.playSound(NarutoSounds.SHADOW_CLONE_POOF.get(), 0.35f, this.isChibi() ? 1.3f : 1.0f);
@@ -554,6 +579,9 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
             this.playSound(NarutoSounds.SHADOW_CLONE_POOF.get(), 0.6f, this.isChibi() ? 1.3f : 1.0f);
         }
         this.releaseLoot();
+        if (this.isMeditating()) {
+            this.dropMeditationLink();
+        }
         this.discard();
     }
 
@@ -587,6 +615,20 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
 
     public boolean isExplosive() {
         return this.explosive;
+    }
+
+    /**
+     * Clones land like their caster: a drop up to {@link #SAFE_FALL_DISTANCE} is shrugged off rather
+     * than taken on the chin, because these are chakra constructs with the ninja's own conditioning,
+     * not clumsy mobs. Past that the fall simply wins - the clone has no stamina left to soften it
+     * and pops on the ground, exactly as if it had been struck down.
+     */
+    @Override
+    public boolean causeFallDamage(float fallDistance, float multiplier, DamageSource source) {
+        if (fallDistance <= SAFE_FALL_DISTANCE) {
+            return false;
+        }
+        return super.causeFallDamage(fallDistance, multiplier, source);
     }
 
     /**
@@ -689,6 +731,32 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     }
 
     /**
+     * Writes this clone into its caster's list of standing meditations, refreshing the moment it is
+     * due to pop, so the caster can be fed from any distance without the world being scanned, see
+     * {@code MeditationData}.
+     */
+    private void refreshMeditationLink() {
+        Player owner = this.getOwner();
+        if (owner == null) {
+            return;
+        }
+        owner.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData ->
+                ninjaData.getMeditationData().register(this.getUUID(),
+                        this.level().dimension().location(), this.position(),
+                        this.level().getGameTime() + Math.max(1, this.lifetime)));
+    }
+
+    /** Takes this clone back out of its caster's list when it goes, so the link does not linger. */
+    private void dropMeditationLink() {
+        Player owner = this.getOwner();
+        if (owner == null) {
+            return;
+        }
+        owner.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData ->
+                ninjaData.getMeditationData().remove(this.getUUID()));
+    }
+
+    /**
      * A worker clone does not fight and does not follow: it works the ground around the spot it was
      * put down on, doing whatever its {@link WorkerJob} says, see
      * {@code com.sekwah.narutomod.entity.ai.WorkerBlockGoal}. (The one exception is a hunter, which
@@ -750,6 +818,52 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     public void setWorkerTool(ItemStack tool) {
         this.setItemSlot(EquipmentSlot.MAINHAND, tool.copy());
         this.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
+    }
+
+    /**
+     * Takes a copy of the caster's torches, so a worker can light the dark it works in. Like the
+     * arrows, this is a copy of everything the caster carries rather than a loan, and the caster's
+     * own stock is untouched.
+     */
+    public void copyWorkerTorches(Player owner) {
+        int total = 0;
+        for (int slot = 0; slot < owner.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = owner.getInventory().getItem(slot);
+            if (stack.is(Items.TORCH)) {
+                total += stack.getCount();
+            }
+        }
+        this.setWorkerTorches(total);
+    }
+
+    /** Sets the torch stock outright, keeping the off-hand display in step. */
+    public void setWorkerTorches(int torches) {
+        this.workerTorches = Math.max(0, torches);
+        this.updateTorchDisplay();
+    }
+
+    /** How many torches the worker has left to light its way with. */
+    public int getWorkerTorches() {
+        return this.workerTorches;
+    }
+
+    /** Burns one torch from the stock. @return whether there was one to burn. */
+    public boolean consumeTorch() {
+        if (this.workerTorches <= 0) {
+            return false;
+        }
+        this.workerTorches--;
+        this.updateTorchDisplay();
+        return true;
+    }
+
+    /**
+     * Keeps the off-hand stack showing as much of the torch stock as one stack holds. The stock
+     * itself can be larger than 64, so this is only the visible face of it.
+     */
+    private void updateTorchDisplay() {
+        int shown = Math.min(this.workerTorches, Items.TORCH.getMaxStackSize());
+        this.setItemSlot(EquipmentSlot.OFFHAND, shown > 0 ? new ItemStack(Items.TORCH, shown) : ItemStack.EMPTY);
     }
 
     /** The middle of a worker's field: where it was placed. */
@@ -844,6 +958,7 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         if (this.workerHome != null) {
             tag.putLong("WorkerHome", this.workerHome.asLong());
         }
+        tag.putInt("WorkerTorches", this.workerTorches);
         if (!this.bag.isEmpty()) {
             ListTag bagTag = new ListTag();
             for (ItemStack stack : this.bag) {
@@ -873,6 +988,7 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         if (tag.contains("WorkerHome")) {
             this.workerHome = BlockPos.of(tag.getLong("WorkerHome"));
         }
+        this.setWorkerTorches(tag.getInt("WorkerTorches"));
         this.bag.clear();
         ListTag bagTag = tag.getList("WorkerBag", 10);
         for (int i = 0; i < bagTag.size(); i++) {
