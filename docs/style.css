@@ -449,7 +449,12 @@ kbd {
 
 /* Таблицы ------------------------------------------------------------------ */
 
-.tbl-wrap { overflow-x: auto; margin: 0 0 16px; border: 1px solid var(--border); border-radius: var(--radius); }
+/* overflow-y: clip — не лишняя строка. С overflow-x: auto обёртка становится скролл-контейнером
+   и по вертикали (visible тогда вычисляется в auto), поэтому position: sticky у шапки таблицы
+   отсчитывался от верха обёртки, а не от страницы: шапка навсегда сдвигалась вниз на --head-h и
+   ложилась поверх первой строки. clip оставляет прокрутку только по горизонтали, и шапка снова
+   липнет к странице под фиксированным хедером сайта. */
+.tbl-wrap { overflow-x: auto; overflow-y: clip; margin: 0 0 16px; border: 1px solid var(--border); border-radius: var(--radius); }
 .tbl {
   width: 100%;
   border-collapse: collapse;
@@ -492,6 +497,12 @@ kbd {
 .tbl--compact th, .tbl--compact td { padding: 5px 8px; }
 .tbl__row-head { background: var(--panel-2); font-weight: 600; }
 .tbl__row-head td { border-top: 1px solid var(--border); }
+
+/* Старые браузеры без overflow: clip: липкую шапку лучше отключить совсем — прокрутка обёртки
+   по вертикали сдвинула бы её поверх первой строки (см. комментарий к .tbl-wrap выше). */
+@supports not (overflow: clip) {
+  .tbl thead th { position: static; }
+}
 
 /* Метки и чипы ------------------------------------------------------------- */
 
