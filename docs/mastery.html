@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Освоение техник: кривая кастов, скидки и откат после смерти — Naruto Mod</title>
+<meta name="description" content="Как работает освоение техник в Naruto Mod 1.20.1: кривая кастов, скидки до −40 % к цене и откату, особые бонусы клонов, щита, сенсорики и Режима Мудреца, рост медитации и откат прогресса после смерти.">
+<meta name="theme-color" content="#0d0e12">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">К содержимому</a>
+
+<header class="site-head">
+  <div class="site-head__inner">
+    <a class="brand" href="index.html">
+      <span class="brand__mark" aria-hidden="true">忍</span>
+      <span>Naruto Mod<span class="brand__sub">1.20.1 / Forge · вики форка</span></span>
+    </a>
+    <span class="site-head__spacer"></span>
+    <a class="head-link" href="techniques.html">Техники</a>
+    <a class="head-link" href="skills.html">Скилы</a>
+    <a class="head-link" href="faq.html">FAQ</a>
+    <div class="search" id="search">
+      <div class="search__field">
+        <span class="search__glyph" aria-hidden="true">⌕</span>
+        <input class="search__input" id="search-input" type="search" placeholder="Поиск: клоны, камуи, рецепт…" autocomplete="off" spellcheck="false" aria-label="Поиск по вики">
+        <span class="search__hint">Ctrl K</span>
+      </div>
+      <div class="search__panel" id="search-panel" role="listbox" aria-label="Результаты поиска"></div>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="side" aria-label="Разделы вики">
+    <nav>
+      <div class="side__group">
+        <div class="side__label">Начало</div>
+        <a class="side__link" href="index.html">Обзор</a>
+        <a class="side__link" href="install.html">Установка</a>
+      </div>
+      <div class="side__group">
+        <div class="side__label">Игра</div>
+        <a class="side__link" href="basics.html">Основы</a>
+        <a class="side__link" href="techniques.html">Техники</a>
+        <a class="side__link" href="clones.html">Клоны и рабочие</a>
+      </div>
+      <div class="side__group">
+        <div class="side__label">Развитие</div>
+        <a class="side__link" href="skills.html">Дерево скилов</a>
+        <a class="side__link" href="mastery.html">Освоение</a>
+      </div>
+      <div class="side__group">
+        <div class="side__label">Справочник</div>
+        <a class="side__link" href="items.html">Предметы и рецепты</a>
+        <a class="side__link" href="world.html">Мир и Камуи</a>
+        <a class="side__link" href="config.html">Настройки сервера</a>
+      </div>
+      <div class="side__group">
+        <div class="side__label">Ещё</div>
+        <a class="side__link" href="faq.html">Вопросы</a>
+      </div>
+    </nav>
+    <p class="side__note">Версия мода <strong>1.8.1</strong> · Minecraft 1.20.1 · Forge 47.1.62.<br>Числа на страницах — из кода, а не из старых версий.</p>
+  </aside>
+
+  <main class="doc" id="main">
+    <header class="doc__head">
+      <div class="doc__kicker">Развитие · касты и проценты</div>
+      <h1>Освоение техник</h1>
+      <p class="doc__lead">
+        Освоение — это «сколько техника пожила у вас в руках». У каждой техники свой счётчик
+        успешных кастов, и от него растут <strong>скидка на цену</strong>, <strong>сокращение
+        отката</strong> и собственные бонусы техники: число клонов, толщина щита, дальность
+        сенсорики, длительность Режима Мудреца. Прогресс не сгорает при смерти — каждая смерть
+        лишь откатывает его на несколько процентов.
+      </p>
+      <div class="doc__meta">
+        <span>Счётчик кастов у каждой техники свой</span>
+        <span>Дерево скилов и освоение складываются</span>
+        <span>Особые бонусы у клонов, щита, сенсорики</span>
+        <span>Смерть откатывает 3–20 %</span>
+      </div>
+    </header>
+
+    <nav class="page-toc" aria-label="На этой странице">
+      <div class="page-toc__title">На этой странице</div>
+      <ol>
+        <li class="toc-l2"><a href="#how">Как это работает</a></li>
+        <li class="toc-l2"><a href="#curve">Кривая: касты в проценты</a></li>
+        <li class="toc-l2"><a href="#discounts">Скидки цены и отката</a></li>
+        <li class="toc-l2"><a href="#special">Особые бонусы</a></li>
+        <li class="toc-l3"><a href="#clone-numbers">Клоны</a></li>
+        <li class="toc-l3"><a href="#shield-breath">Щит и второе дыхание</a></li>
+        <li class="toc-l3"><a href="#sensing-steps">Чувство чакры</a></li>
+        <li class="toc-l3"><a href="#sage-steps">Режим Мудреца</a></li>
+        <li class="toc-l2"><a href="#by-work">Освоение по работе</a></li>
+        <li class="toc-l2"><a href="#meditation">Медитация и радиус</a></li>
+        <li class="toc-l2"><a href="#death">Смерть: откат прогресса</a></li>
+      </ol>
+    </nav>
+
+    <section id="how">
+      <h2 id="s-how">Как это работает</h2>
+      <p>Освоение — не «уровни», а непрерывный процент от числа кастов. Счётчик хранится у каждой
+        техники отдельно, переживает смерть и выход из игры, а переводится в проценты одной кривой:
+        чем больше кастов, тем ближе к 100 %, но ровно сотни не бывает никогда. От процента линейно
+        считаются все эффекты — и общие, и особые.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Вопрос</th><th>Как на самом деле</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Где видно</td>
+              <td>В меню техник <kbd>J</kbd>: у каждой строки слева процент, справа — полоска освоения.
+                Проценты округляются, поэтому первые касты показывают <strong>0 %</strong>, а половина
+                полосы — только на 40-м касте.</td>
+            </tr>
+            <tr>
+              <td>Что даёт</td>
+              <td>Базово — <strong>−40 %</strong> к цене и <strong>−40 %</strong> к откату на верхушке
+                кривой. У части техник сверх этого растут собственные числа (клоны, щит, сенсорика,
+                Мудрец — раздел «Особые бонусы»). Техники, которые тратят «весь столб» чакры
+                (<a href="techniques.html#defence">щит</a>, второе дыхание), скидки цены не получают —
+                у них бонус качественный.</td>
+            </tr>
+            <tr>
+              <td>Что считается кастом</td>
+              <td>Мгновенная техника — каждый успешный каст. Стойка — <strong>включение</strong>
+                (выключение не даёт ничего). Канал — завершённое удержание; техника, которая умеет
+                работать тапом, получает каст и за разрешённый тап. <strong>По тикам счётчик
+                не крутится</strong> — иначе выгодно было бы просто держать клавишу.</td>
+            </tr>
+            <tr>
+              <td>Техники «по работе»</td>
+              <td>Часть техник нельзя наспамить: их счётчик двигают набранная чакра, время удержания
+                или вынутые блоки. Это <a href="#by-work">отдельный раздел ниже</a>.</td>
+            </tr>
+            <tr>
+              <td>Креатив</td>
+              <td>В креативе прогресс <strong>не растёт вообще</strong> — ни касты, ни работа. Проверить
+                прокачку «на креативе» не получится.</td>
+            </tr>
+            <tr>
+              <td>Смерть</td>
+              <td>Освоение не сгорает, но откатывается на 3–20 % — тем сильнее, чем ближе техника
+                была к финишу. <a href="#death">Подробнее</a>.</td>
+            </tr>
+            <tr>
+              <td>Сброс</td>
+              <td>Операторская команда <code>/jutsu reset</code> стирает освоение всех техник,
+                <code>/jutsu reset &lt;техника&gt;</code> — одной (id вида
+                <code>narutomod:shadow_clone</code>). Нужен уровень оператора 2.</td>
+            </tr>
+            <tr>
+              <td>Конфиг</td>
+              <td>Вся система включается, выключается и перетюнивается в
+                <a href="config.html#mastery">секции mastery</a> конфига сервера. Счётчики кастов при
+                этом не меняются — перетюнивание кривой действует и на старые сейвы.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout--tip">
+        <div class="callout__title">Кривая награждает специализацию</div>
+        <p>Экспонента придушивает первые касты: 40 кастов в одну технику — это половина её полосы,
+          а сорок разных техник по одному касту — меньше 0,1 % у каждой. Несколько любимых приёмов
+          доведут до скидки быстрее, чем «по одному разу везде».</p>
+      </div>
+    </section>
+
+    <section id="curve">
+      <h2 id="s-curve">Кривая: касты в проценты</h2>
+      <p>Процент считается формулой <code>m = касты² / (касты² + 40²)</code>. Двойка — конфиговая
+        экспонента (<code>exponent = 2</code>), сорок — конфиговое <code>halfwayCasts</code>: именно
+        на 40 кастах половина полосы при любой экспоненте. Ниже — как это выглядит на практике.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th class="num">Кастов</th><th class="num">Освоение</th><th class="num">Множитель цены и отката</th><th class="num">Мультиклон: 80 чакры</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="num">1</td><td class="num">0,06 %</td><td class="num">×0,9998</td><td class="num">80</td></tr>
+            <tr><td class="num">5</td><td class="num">1,5 %</td><td class="num">×0,994</td><td class="num">79,5</td></tr>
+            <tr><td class="num">10</td><td class="num">5,9 %</td><td class="num">×0,976</td><td class="num">78,1</td></tr>
+            <tr><td class="num">20</td><td class="num">20 %</td><td class="num">×0,92</td><td class="num">73,6</td></tr>
+            <tr><td class="num">40</td><td class="num">50 %</td><td class="num">×0,80</td><td class="num">64</td></tr>
+            <tr><td class="num">60</td><td class="num">69,2 %</td><td class="num">×0,723</td><td class="num">57,8</td></tr>
+            <tr><td class="num">80</td><td class="num">80 %</td><td class="num">×0,68</td><td class="num">54,4</td></tr>
+            <tr><td class="num">120</td><td class="num">90 %</td><td class="num">×0,64</td><td class="num">51,2</td></tr>
+            <tr><td class="num">200</td><td class="num">96,2 %</td><td class="num">×0,615</td><td class="num">49,2</td></tr>
+            <tr><td class="num">500</td><td class="num">99,4 %</td><td class="num">×0,603</td><td class="num">48,2</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">Дальше кривая ползёт к сотне асимптотически (1000 кастов — 99,8 %), а
+        скидка упирается в свои 40 %: даже на 500 кастах экономия — 39,7 %, а не 40. Числа в таблице
+        округлены; в игре считаются проценты, а цена берётся от базы.</p>
+    </section>
+
+    <section id="discounts">
+      <h2 id="s-discounts">Скидки цены и отката</h2>
+      <p>Обе общие скидки линейны от процента и применяются единой функцией — и при проверке
+        «хватает ли чакры», и при списании, так что расхождений между ценой в подсказке и реальным
+        списанием нет. Скидка работает и на цену удержания: каналы платят за каждый тик через ту же
+        функцию, поэтому на высоком освоении держать технику становится заметно дешевле.</p>
+      <pre><code>цена   = база × (1 − 0,4 × m)
+откат  = база × (1 − 0,4 × m)</code></pre>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th class="num">Освоение</th><th class="num">Цена и откат</th><th class="num">Пример: откат «Второго дыхания» (база 10 мин)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="num">0 %</td><td class="num">×1,00</td><td class="num">10:00</td></tr>
+            <tr><td class="num">20 %</td><td class="num">×0,92</td><td class="num">9:12</td></tr>
+            <tr><td class="num">50 %</td><td class="num">×0,80</td><td class="num">8:00</td></tr>
+            <tr><td class="num">80 %</td><td class="num">×0,68</td><td class="num">6:48</td></tr>
+            <tr><td class="num">90 %</td><td class="num">×0,64</td><td class="num">6:24</td></tr>
+            <tr><td class="num">99 %</td><td class="num">×0,60</td><td class="num">≈6:02</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout--note">
+        <div class="callout__title">Складывается с деревом скилов — и упирается в предел</div>
+        <p>Скидки <a href="skills.html">дерева скилов</a> и освоения складываются, но их сумма
+          обрезается на <strong>−90 %</strong>: дешевле десятой части базы или быстрее десятой части
+          отката техника не станет никогда. Призыв рабочих (75 чакры) тоже проходит через скидку —
+          он считается кастом той клоновой техники, которой кастуется.</p>
+      </div>
+    </section>
+
+    <section id="special">
+      <h2 id="s-special">Особые бонусы</h2>
+      <p>У части техник освоение двигает не только цену — оно меняет саму технику. Все эти бонусы
+        растут линейно от процента и складываются с общими скидками выше.</p>
+
+      <h3 id="clone-numbers">Клоны: сколько выходит из тени</h3>
+      <div class="tbl-wrap">
+        <table class="tbl tbl--compact">
+          <thead>
+            <tr><th>Техника</th><th class="num">Было → стало</th><th>Как растёт</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="techniques.html#clones">Теневой клон</a></td>
+              <td class="num">1 → 4</td>
+              <td>+1 клон на ≈17 %, 50 % и 83 % освоения</td>
+            </tr>
+            <tr>
+              <td><a href="techniques.html#clones">Чиби-клон</a></td>
+              <td class="num">1 → 5</td>
+              <td>+1 клон на ≈13 %, 38 %, 63 % и 88 % освоения</td>
+            </tr>
+            <tr>
+              <td><a href="techniques.html#clones">Мульти-клон</a></td>
+              <td class="num">4–5 → 10</td>
+              <td>диапазон растёт и сжимается: на низком освоении число выбирается случайно (4 или 5),
+                на максимуме всегда 10</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">Призыв рабочих берёт столько же клонов, сколько дал бы обычный каст этой
+        техники, — то есть «отряд» из мультиклона растёт вместе с его освоением.</p>
+
+      <h3 id="shield-breath">Щит и второе дыхание</h3>
+      <div class="tbl-wrap">
+        <table class="tbl tbl--compact">
+          <thead>
+            <tr><th>Техника</th><th>Что растёт</th><th class="num">На старте → на максимуме</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="techniques.html#defence">Чакра-щит</a></td>
+              <td>очки щита за единицу чакры: 100 % чакры превращается в щит</td>
+              <td class="num">0,15 → 1,0</td>
+            </tr>
+            <tr>
+              <td><a href="techniques.html#defence">Второе дыхание</a></td>
+              <td>слепота Darkness после спасения от смертельного удара</td>
+              <td class="num">60 с → 30 с</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">Щит съедает урон 1:1 до здоровья, поэтому новичок с полной полоской в
+        100 чакры получает всего 15 очков, а мастер — почти 100, то есть настоящую вторую полоску.
+        Платится при этом всегда вся чакра, так что раньше техника — дорогая и скромная.</p>
+
+      <h3 id="sensing-steps">Чувство чакры: что и когда начинает видно</h3>
+      <p>Удержание сенсорики имеет <strong>двойную</strong> скидку освоения: сверх общей его цена
+        умножается ещё на «−80 % на максимуме», так что апкип падает с 6 чакры в секунду до
+        ~0,7. Ночное зрение (тап) дешевеет почти так же: 1 /с → 0,1 /с. Радиус растёт линейно,
+        <strong>16 → 96 блоков</strong> (шесть чанков).</p>
+      <div class="tbl-wrap">
+        <table class="tbl tbl--compact">
+          <thead>
+            <tr><th>Кого видно</th><th class="num">Сначала — облако частиц</th><th class="num">Потом — полный силуэт сквозь стены</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Животные</td><td class="num">сразу</td><td class="num">15 %</td></tr>
+            <tr><td>Враждебные мобы</td><td class="num">30 %</td><td class="num">45 %</td></tr>
+            <tr><td>Игроки</td><td class="num">60 %</td><td class="num">80 %</td></tr>
+            <tr><td>Структуры (метки на HUD)</td><td class="num">90 %</td><td class="num muted">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">Сначала существо проступает редкими частицами, и лишь к порогу
+        «силуэта» становится полноценной моделью, видимой через породу. Радиус в 96 блоков — это
+        конфиговый потолок, он приходит только на высоком освоении.</p>
+
+      <h3 id="sage-steps">Режим Мудреца: расход и плюшки</h3>
+      <p>Расход сенин-маны начинает «жадным» и спадает к финишу: множитель расхода падает с
+        <strong>×12</strong> до <strong>×1</strong> от освоения. Поэтому полный пул в 100 держится
+        на старте ~20 секунд, а на максимуме — около четырёх минут. Приток чакры в режиме растёт с
+        <strong>0,15</strong> до <strong>0,5 за тик</strong>, а сами плюшки открываются порогами:
+      </p>
+      <div class="tbl-wrap">
+        <table class="tbl tbl--compact">
+          <thead>
+            <tr><th class="num">Освоение</th><th>Что открывается</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="num">15 %</td><td>Strength I</td></tr>
+            <tr><td class="num">35 %</td><td>Resistance I</td></tr>
+            <tr><td class="num">50 %</td><td>Jump Boost</td></tr>
+            <tr><td class="num">60 %</td><td>Speed I, Strength II — оба усиливаются</td></tr>
+            <tr><td class="num">70 %</td><td>Regeneration</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">Освоение режима растёт <em>за время в режиме</em>, а не за вход:
+        открыть и закрыть его много раз — не прокачка. Первые входы длятся считаные секунды именно
+        поэтому.</p>
+
+      <h3 id="adhesion">Сцепление чакрой</h3>
+      <p>Скорость подъёма по стене растёт с лёгкой руки мастера почти вдвое:
+        <strong>0,12 → 0,20 блока за тик</strong> (2,4 → 4 блока в секунду). Это та техника, где
+        освоение заметно именно в ощущении, а не в цифрах расхода.</p>
+
+      <div class="callout callout--note">
+        <div class="callout__title">Печать чакры тоже освобождается</div>
+        <p>С <strong>90 %</strong> освоения печать чакры перестаёт требоваться мультиклону и
+          медитации совсем — как если бы техника была куплена «под ключ». Обычные клоны и рабочие
+          бесплатны всегда, а вот рабочий призыв печати не требует вовсе — это режим каста, а не
+          отдельная техника.</p>
+      </div>
+    </section>
+
+    <section id="by-work">
+      <h2 id="s-by-work">Освоение по работе</h2>
+      <p>Техники, смысл которых в длительной работе, нельзя мастеровать щёлканьем клавиши. Их
+        счётчик двигают <strong>результат</strong> или <strong>время</strong>, измеренные в
+        «каст-эквивалентах»: что накопилось дробью — копится и не теряется, пока не сложится в
+        целый каст. Поэтому два коротких канала дадут ровно столько же, сколько один длинный.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Техника</th><th>Что двигает счётчик</th><th>Сколько это в кастах</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="techniques.html#basics">Заряд чакры</a></td>
+              <td>реально набранная чакра (не номинал: в полную полоску не влезет — не засчитается)</td>
+              <td>одна полная полоска = 1 каст</td>
+            </tr>
+            <tr>
+              <td><a href="techniques.html#senjutsu">Сбор природной энергии</a></td>
+              <td>набранная сенин-мана</td>
+              <td>полный пул = 1 каст</td>
+            </tr>
+            <tr>
+              <td><a href="techniques.html#mining">Широкий прокоп</a></td>
+              <td>каждый реально вынутый блок, а не время удержания</td>
+              <td>32 блока = 1 каст</td>
+            </tr>
+            <tr>
+              <td>Поддерживающие техники</td>
+              <td>каждый тик, пока техника действительно работает</td>
+              <td>15 секунд = 1 каст</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>По времени мастерятся: <strong>кулак чакры</strong>, <strong>регенерация чакрой</strong>,
+        <strong>хождение по воде</strong>, <strong>фазовое тело Камуи</strong>,
+        <strong>адаптация тела</strong>, <strong>подавление звука</strong>,
+        <strong>питание чакрой</strong>, <strong>Режим Мудреца</strong>, все четыре
+        <strong>дыхания</strong> и <strong>чувство чакры</strong> (и удержание, и ночное зрение).
+        У всех них выключение стойки или завершение канала сами по себе каста не дают — иначе
+        выгоднее всего было бы щёлкать тумблером.</p>
+      <div class="callout callout--tip">
+        <div class="callout__title">Стойка, которую держат впустую, не прокачивается</div>
+        <p>Кредит начисляется только за тики, в которых техника реально работала, и только за
+          фактический результат: заряд чакры в полную полоску даст копейки, а широкий прокоп в
+          пустом туннеле — ноль. Освоение здесь честно отражает время, проведённое «в технике».</p>
+      </div>
+    </section>
+
+    <section id="meditation">
+      <h2 id="s-meditation">Медитация и радиус</h2>
+      <p>Медитация — техника, в которой освоение меняет саму суть: радиус линка с клонами растёт
+        кубически, от восьми блоков до <strong>512 (32 чанка)</strong>, поэтому мастер может оставить
+        клонов работать и черпать из них издалека. Полный разбор техники — в
+        <a href="clones.html#meditation">разделе про клонов</a>, здесь — только освоение.</p>
+      <div class="tbl-wrap">
+        <table class="tbl tbl--compact">
+          <thead>
+            <tr><th>Что</th><th>Как растёт</th><th>Примеры</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Радиус линка</td>
+              <td><code>8 + 504 × m³</code></td>
+              <td class="small">50 % → 71 блок · 80 % → 266 · 95 % → 440 · 99 % → 497</td>
+            </tr>
+            <tr>
+              <td>Ёмкость чакры</td>
+              <td class="muted">не растёт</td>
+              <td class="small">+100 за каждого клона в радиусе</td>
+            </tr>
+            <tr>
+              <td>Приток чакры</td>
+              <td class="muted">не растёт</td>
+              <td class="small">+0,2 чакры за тик за клона (два клона — 8 в секунду); в Режиме Мудреца —
+                та же цифра в сенин-ману</td>
+            </tr>
+            <tr>
+              <td>Откаты техник</td>
+              <td class="muted">не растёт</td>
+              <td class="small">тикают вдвое быстрее: откат в 20 секунд — за 10</td>
+            </tr>
+            <tr>
+              <td>Пассив</td>
+              <td>с 95 % освоения</td>
+              <td class="small">каждый клон <em>вне</em> радиуса даёт +50 ёмкости чакры — клоны
+                полезны, даже если кастер ушёл за горизонт</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">Сам каст медитации стоит 60 чакры и до 90 % освоения требует
+        <a href="clones.html#meditation">печать чакры</a>. Радиус считается по клонам, которые сами
+        зарегистрировались у кастера, поэтому он работает и через незагруженные чанки.</p>
+    </section>
+
+    <section id="death">
+      <h2 id="s-death">Смерть: откат прогресса</h2>
+      <p>Настоящая смерть (телепорт между измерениями ею не считается) задевает каждую технику с
+        накопленным освоением: игра откатывает <strong>процент</strong>, а не счётчик кастов, и
+        пересчитывает счётчик обратно. Чем ближе техника к финишу, тем больнее потеря — на 50 %
+        это 3–5 %, к 95 % доходит до 10–20 %. Разброс выбирается заново для каждой техники и каждой
+        смерти, так что «не повезло» — это буквально про две смерти подряд.</p>
+      <pre><code>t      = (m − 0,5) / 0,45          (зажато в 0…1)
+откат  = случайное от (3 % + 7 %·t) до (5 % + 15 %·t)
+m′     = max(0, m − откат)</code></pre>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th class="num">Освоение перед смертью</th><th class="num">Откат уровня</th><th class="num">Кастов было → стало</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="num">50 % (40 кастов)</td><td class="num">3–5 %</td><td class="num">40 → 36–38</td></tr>
+            <tr><td class="num">70 % (~61 каст)</td><td class="num">6,1–11,7 %</td><td class="num">61 → 47–53</td></tr>
+            <tr><td class="num">80 % (80 кастов)</td><td class="num">7,7–15 %</td><td class="num">80 → 55–65</td></tr>
+            <tr><td class="num">90 % (120 кастов)</td><td class="num">9,2–18,3 %</td><td class="num">120 → 64–82</td></tr>
+            <tr><td class="num">95 % (~175 кастов)</td><td class="num">10–20 %</td><td class="num">175 → 69–95</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout--warn">
+        <div class="callout__title">В кастах потеря выглядит страшнее, чем в процентах</div>
+        <p>На верхушке кривой «175 → 69» в кастах — это те же 10–20 пунктов процента: счётчик
+          вторичен, важны проценты, и система бьёт именно по ним. Так умирать на высоком освоении
+          всё ещё больно, но не отбрасывает технику в начало.</p>
+      </div>
+      <div class="callout callout--tip">
+        <div class="callout__title">Что при смерти не теряется</div>
+        <p>Узлы дерева скилов, купленные за очки опыта, остаются на месте — у них своя, независимая
+          система. Освоение никогда не падает ниже нуля; вернуть технику в исходное состояние можно
+          только командой <code>/jutsu reset &lt;техника&gt;</code>.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer class="site-foot">
+  <div class="site-foot__inner">
+    <div class="site-foot__col">
+      <div class="site-foot__title">Вики</div>
+      <a href="index.html">Обзор</a>
+      <a href="install.html">Установка</a>
+      <a href="basics.html">Основы</a>
+      <a href="techniques.html">Техники</a>
+    </div>
+    <div class="site-foot__col">
+      <div class="site-foot__title">Развитие</div>
+      <a href="clones.html">Клоны и рабочие</a>
+      <a href="skills.html">Дерево скилов</a>
+      <a href="mastery.html">Освоение</a>
+    </div>
+    <div class="site-foot__col">
+      <div class="site-foot__title">Справочник</div>
+      <a href="items.html">Предметы и рецепты</a>
+      <a href="world.html">Мир и Камуи</a>
+      <a href="config.html">Настройки</a>
+      <a href="faq.html">Вопросы</a>
+    </div>
+    <div class="site-foot__col">
+      <div class="site-foot__title">Ссылки</div>
+      <a href="https://github.com/StandarterDF/Naruto-Mod" rel="noopener">Исходники форка</a>
+      <a href="https://github.com/sekwah41/Naruto-Mod" rel="noopener">Оригинал Sekwah</a>
+    </div>
+  </div>
+  <div class="site-foot__tail">
+    Naruto Mod 1.8.1 · Minecraft 1.20.1 · Forge 47.1.62. Вики собрана по коду мода; на серверах
+    с изменённым конфигом числа могут отличаться.
+  </div>
+</footer>
+</body>
+</html>

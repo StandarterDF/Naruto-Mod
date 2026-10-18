@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Основы: чакра, стамина, HUD и типы техник — Naruto Mod</title>
+<meta name="description" content="Чакра и стамина, сенин-мана, HUD, замещение, типы техник, смерть и команды мода Naruto Mod для 1.20.1.">
+<meta name="theme-color" content="#0d0e12">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">К содержимому</a>
+
+<header class="site-head">
+  <div class="site-head__inner">
+    <a class="brand" href="index.html">
+      <span class="brand__mark" aria-hidden="true">忍</span>
+      <span>Naruto Mod<span class="brand__sub">1.20.1 / Forge · вики форка</span></span>
+    </a>
+    <span class="site-head__spacer"></span>
+    <a class="head-link" href="techniques.html">Техники</a>
+    <a class="head-link" href="skills.html">Скилы</a>
+    <a class="head-link" href="faq.html">FAQ</a>
+    <div class="search" id="search">
+      <div class="search__field">
+        <span class="search__glyph" aria-hidden="true">⌕</span>
+        <input class="search__input" id="search-input" type="search" placeholder="Поиск: клоны, камуи, рецепт…" autocomplete="off" spellcheck="false" aria-label="Поиск по вики">
+        <span class="search__hint">Ctrl K</span>
+      </div>
+      <div class="search__panel" id="search-panel" role="listbox" aria-label="Результаты поиска"></div>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="side" aria-label="Разделы вики">
+    <nav>
+      <div class="side__group">
+        <div class="side__label">Начало</div>
+        <a class="side__link" href="index.html">Обзор</a>
+        <a class="side__link" href="install.html">Установка</a>
+      </div>
+      <div class="side__group">
+        <div class="side__label">Игра</div>
+        <a class="side__link" href="basics.html">Основы</a>
+        <a class="side__link" href="techniques.html">Техники</a>
+        <a class="side__link" href="clones.html">Клоны и рабочие</a>
+      </div>
+      <div class="side__group">
+        <div class="side__label">Развитие</div>
+        <a class="side__link" href="skills.html">Дерево скилов</a>
+        <a class="side__link" href="mastery.html">Освоение</a>
+      </div>
+      <div class="side__group">
+        <div class="side__label">Справочник</div>
+        <a class="side__link" href="items.html">Предметы и рецепты</a>
+        <a class="side__link" href="world.html">Мир и Камуи</a>
+        <a class="side__link" href="config.html">Настройки сервера</a>
+      </div>
+      <div class="side__group">
+        <div class="side__label">Ещё</div>
+        <a class="side__link" href="faq.html">Вопросы</a>
+      </div>
+    </nav>
+    <p class="side__note">Версия мода <strong>1.8.1</strong> · Minecraft 1.20.1 · Forge 47.1.62.<br>Числа на страницах — из кода, а не из старых версий.</p>
+  </aside>
+
+  <main class="doc" id="main">
+    <header class="doc__head">
+      <div class="doc__kicker">Игра</div>
+      <h1>Основы</h1>
+      <p class="doc__lead">
+        Чакра и стамина — два пула, которые тратит почти всё в моде. Удача в том, что оба видны на HUD
+        и оба восстанавливаются сами; сложность — в том, что запас по умолчанию маленький и его
+        приходится растить через дерево скилов и броню.
+      </p>
+      <div class="doc__meta">
+        <span>Чакра: 25 базово → до нескольких тысяч со скилами</span>
+        <span>Стамина: 100 базово</span>
+        <span>Замещение: 3 заряда по 60 с</span>
+      </div>
+    </header>
+
+    <nav class="page-toc" aria-label="На этой странице">
+      <div class="page-toc__title">На этой странице</div>
+      <ol>
+        <li class="toc-l2"><a href="#ninja">Ниндзя-режим</a></li>
+        <li class="toc-l2"><a href="#pools">Чакра и стамина</a></li>
+        <li class="toc-l3"><a href="#chakra">Чакра</a></li>
+        <li class="toc-l3"><a href="#stamina">Стамина</a></li>
+        <li class="toc-l3"><a href="#senin">Сенин-мана</a></li>
+        <li class="toc-l2"><a href="#hud">HUD</a></li>
+        <li class="toc-l2"><a href="#types">Типы техник</a></li>
+        <li class="toc-l2"><a href="#substitution">Замещение</a></li>
+        <li class="toc-l2"><a href="#death">Смерть</a></li>
+        <li class="toc-l2"><a href="#commands">Команды</a></li>
+      </ol>
+    </nav>
+
+    <section id="ninja">
+      <h2 id="s-ninja">Ниндзя-режим</h2>
+      <p>Мод не включает тебя в систему автоматически. Пока ты не ниндзя:</p>
+      <ul>
+        <li>техники не кастуются — на любую попытку приходит подсказка «Чтобы это сделать, нужно стать
+          ниндзя (нажми J)»;</li>
+        <li>HUD мода (полоски чакры и стамины, заряды замещения) не рисуется;</li>
+        <li>меню <kbd>J</kbd> вместо списка техник показывает одну строчку-подсказку.</li>
+      </ul>
+      <p>Включение: <kbd>J</kbd> → кнопка <strong>Become a ninja</strong>. Выключение — там же кнопкой
+        <strong>I change my mind</strong>. Состояние сохраняется в данных игрока и переживает смерть
+        и перезаход.</p>
+      <div class="callout callout--note">
+        <div class="callout__title">С этого момента меню J — твой справочник</div>
+        <p>Список техник сгруппирован по категориям, у каждой строки видны комбо, полоска освоения и
+        зелёный маркер <code>[+]</code> у включённых стоек. Кнопка снизу ведёт в
+        <a href="skills.html">дерево скилов</a>.</p>
+      </div>
+    </section>
+
+    <section id="pools">
+      <h2 id="s-pools">Чакра и стамина</h2>
+
+      <h3 id="chakra">Чакра</h3>
+      <p>Главный ресурс: платят почти все техники, а у некоторых (каналы) расход идёт за каждый тик.
+        База в конфиге — <strong>25</strong>, и это осознанно мало: первый же узел дерева скилов
+        «Основа синоби» добавляет +50.</p>
+      <div class="tbl-wrap">
+        <table class="tbl tbl--compact">
+          <thead>
+            <tr><th>Откуда максимум чакры</th><th class="num">Сколько</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>База (конфиг <code>maxChakra</code>)</td><td class="num">25</td></tr>
+            <tr><td>Корень дерева «Основа синоби»</td><td class="num">+50</td></tr>
+            <tr><td>Ветка «Чакра» целиком</td><td class="num">+900</td></tr>
+            <tr><td>Прочие узлы с бонусом (клоны, труд, тело)</td><td class="num">+660</td></tr>
+            <tr><td>Все узлы дерева вместе</td><td class="num">+1610</td></tr>
+            <tr><td>Маска АНБУ</td><td class="num">+75</td></tr>
+            <tr><td>Броня АНБУ (нагрудник)</td><td class="num">+40</td></tr>
+            <tr><td>Плащ Акацуки</td><td class="num">+120</td></tr>
+            <tr><td>Медитирующий клон в радиусе линка</td><td class="num">+100 за клона</td></tr>
+            <tr><td>Медитирующий клон вне радиуса (освоение ≥ 95 %)</td><td class="num">+50 за клона</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Регенерация по умолчанию — <strong>0,05 чакры за тик</strong> (1 в секунду). Узлы дерева дают
+        надбавку в секунду: от +0,2 до +0,45. Дополнительно чакру можно набрать техникой
+        <span class="combo"><kbd>C</kbd></span> «Заряд чакры»: стоя на месте — <strong>1 чакра
+        за тик</strong>, на бегу или в прыжке — в 5 раз медленнее.</p>
+      <div class="callout callout--warn">
+        <div class="callout__title">Регенерация «остывает» после траты</div>
+        <p>Каждая техника после списания чакры ставит задержку регенерации (обычно 10–20 тиков, у
+        рудокопа 40, у широкого прокопа — 20 тиков за каждый лишний блок). В это время чакра не
+        восстанавливается вообще. Так одна большая трата не «залечивается» мгновенно.</p>
+      </div>
+
+      <h3 id="stamina">Стамина</h3>
+      <p>База — <strong>100</strong>, регенерация <strong>0,4 за тик</strong> (8 в секунду). Тратится
+        реже, но именно она решает, сколько ты протянешь на вратах или рывках. Дерево скилов поднимает
+        и потолок стамины: вместе его узлы дают до <strong>+200 максимума</strong> и
+        <strong>+2,9/с</strong> — глубже всего в ветке «Тело», включая узлы после Восьми врат.</p>
+      <div class="tbl-wrap">
+        <table class="tbl tbl--compact">
+          <thead>
+            <tr><th>Расход стамины</th><th class="num">Сколько</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Рывок (<kbd>X</kbd>)</td><td class="num">10</td></tr>
+            <tr><td>Двойной прыжок (плюс 2 чакры)</td><td class="num">5</td></tr>
+            <tr><td>Открытие врат Восьми врат (плюс 25 чакры)</td><td class="num">15 за врата</td></tr>
+            <tr><td>Мягкая посадка при падении</td><td class="num">2 за единицу урона</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>Мягкая посадка</strong> включена всегда: при приземлении считается урон, который
+        падение всё равно отняло бы, и если стамины хватает — падение гасится полностью, а регенерация
+        стамины уходит на 3 секунды в задержку. Не хватает — падаешь как обычно, и стамина не тратится
+        вовсе.</p>
+
+      <h3 id="senin">Сенин-мана</h3>
+      <p>Третий пул — природная энергия. Максимум <strong>100</strong> (конфиг <code>maxSeninMana</code>).
+        Копится техникой <span class="combo"><kbd>V</kbd><kbd>B</kbd><kbd>C</kbd></span> «Сбор природной
+        энергии» — <strong>0,5 за тик</strong> и только пока стоишь на месте. Тратится на
+        <a href="techniques.html#sage">Режим Мудреца</a>; в Режиме Мудреца медитирующие клоны кормят
+        именно сенин-ману, а не чакру. Подробности — на странице техник.</p>
+    </section>
+
+    <section id="hud">
+      <h2 id="s-hud">HUD</h2>
+      <p>Все элементы мода рисуются только в ниндзя-режиме.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Элемент</th><th>Что показывает</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Полоска чакры и стамины</td>
+              <td>Две полоски по обе стороны от центра внизу экрана: слева чакра, справа стамина.
+                Восемь вариантов оформления выбираются клиентским ключом <code>chakraBarDesign</code>
+                (0–7): обычная, кунай, катана, кубикирибочо, свиток, лампа, скипетр, «безымянная».</td>
+            </tr>
+            <tr>
+              <td>Заряды замещения</td>
+              <td>Иконка бревна: видно, сколько зарядов осталось и как восстанавливается следующий.</td>
+            </tr>
+            <tr>
+              <td>Полоска сенин-маны</td>
+              <td>Зелёная полоска прямо над чакрой — и по той же текстуре. Появляется только когда есть
+                что показывать: накоплена энергия или идёт режим Мудреца.</td>
+            </tr>
+            <tr>
+              <td>Метка подмены</td>
+              <td>Маркер на экране, если ты оставил точку возврата удержанием замещения.</td>
+            </tr>
+            <tr>
+              <td>Чувство чакры</td>
+              <td>Частицы и силуэты живых сквозь стены, а по мере освоения — маркеры ближайших структур.</td>
+            </tr>
+            <tr>
+              <td>Чутьё руды</td>
+              <td>Кубы на блоках руды сквозь породу на 5 секунд после каста.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="types">
+      <h2 id="s-types">Типы техник</h2>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Тип</th><th>Как работает</th><th>Примеры</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tag tag--instant">Мгновенный</span></td>
+              <td>Срабатывает по завершении комбо: заплатил — получил эффект. Повторный каст — новое
+                срабатывание (если позволяет КД).</td>
+              <td>Огненный шар, костёр, клоны, гендзюцу, хенге</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag--channel">Канал</span></td>
+              <td>Работает, пока удерживаешь последнюю клавишу комбо; цена обычно идёт за каждый тик.
+                Короткое нажатие вместо удержания — «тап»: слабый эффект за минимальную цену.</td>
+              <td>Дыхания, расэнган, расэнсюрикен, чувство чакры, Камуи (удержание)</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag--toggle">Стойка</span></td>
+              <td>Включается комбо и держится сама; второй раз тот же комбо выключает. Многие стойки
+                жгут чакру за тик, пока включены.</td>
+              <td>Хождение по воде, кулак чакры, адаптация тела, подавление звука</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag--auto">Автоматически</span></td>
+              <td>Без комбо и клавиш: срабатывает на событии, если хватает ресурса.</td>
+              <td>Двойной прыжок (пробел в воздухе), мягкая посадка (падение)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Комбо-цифра техники — это её «подпись»: два одинаковых комбо не встречаются. Полный список с
+        ценой, типом и механикой — на странице <a href="techniques.html">Техники</a>.</p>
+    </section>
+
+    <section id="substitution">
+      <h2 id="s-substitution">Замещение</h2>
+      <p>Замещение (<span class="combo"><kbd>C</kbd><kbd>V</kbd></span>, комбо <code>12</code>) — способ
+        выйти из боя. Работает на <strong>зарядах</strong>: по умолчанию их <strong>3</strong>, каждый
+        восстанавливается за <strong>60 секунд</strong>.</p>
+      <div class="kv">
+        <dt>Тап</dt>
+        <dd>Телепорт: если есть оставленная метка ближе <strong>70 блоков</strong> в том же измерении —
+          к ней; если метки нет — случайный прыжок на <strong>10–25 блоков</strong> в сторону. Стоит
+          <strong>1 заряд</strong>. На месте остаётся бревно-обманка, а сам ты на 5 тиков становишься
+          невидимым.</dd>
+        <dt>Удержание</dt>
+        <dd>Поставить метку в текущей точке (на пару блоков выше головы). Метка существует только в
+          памяти и до следующего замещения; заряда не тратит.</dd>
+      </div>
+      <p class="small muted">Это не то же самое, что техника
+        <a href="techniques.html#marker">«Бревно-метка»</a>: та ставит постоянное бревно в мире и
+        сохраняется в данных игрока, а метка замещения живёт до следующего тапа.</p>
+    </section>
+
+    <section id="death">
+      <h2 id="s-death">Смерть</h2>
+      <p>Смерть в моде — не только дроп инвентаря. Что именно происходит:</p>
+      <ul>
+        <li><strong>Освоение всех техник откатывается</strong> — тем сильнее, чем более освоена техника
+          (3–5 % на средних уровнях, 10–20 % у почти освоенных). Купленные узлы дерева скилов при этом
+          <em>не</em> теряются. Точная формула — на странице <a href="mastery.html#death">Освоение</a>.</li>
+        <li><strong>Режим Мудреца гаснет</strong> — флаг не сохраняется в NBT, выход из игры тоже его
+          закрывает.</li>
+        <li><strong>Восемь врат закрываются</strong>, и счётчик открытых врат сбрасывается.</li>
+        <li><strong>Чакра-щит исчезает</strong> — пул щита не переживает смерть, как и любую смену
+          измерения (само измерение модификатор атрибута не переносит).</li>
+        <li>Клоны, рабочие и поставленные бревна остаются в мире: смерть кастера их не стирает (рабочие
+          продолжают смену, а собранное ими дойдёт до тебя в походный сундук).</li>
+      </ul>
+    </section>
+
+    <section id="commands">
+      <h2 id="s-commands">Команды</h2>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Команда</th><th>Что делает</th><th>Права</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">/jutsu list</td>
+              <td>Печатает в чат все техники с их комбо (клавишами). В игре удобнее меню <kbd>J</kbd>.</td>
+              <td>любые</td>
+            </tr>
+            <tr>
+              <td class="mono">/jutsu reset</td>
+              <td>Сбрасывает освоение <strong>всех</strong> техник. Отладочная команда.</td>
+              <td>оператор (2)</td>
+            </tr>
+            <tr>
+              <td class="mono">/jutsu reset &lt;техника&gt;</td>
+              <td>Сбрасывает освоение одной техники, например
+                <code>/jutsu reset narutomod:rasengan</code>.</td>
+              <td>оператор (2)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">Полное имя техники — её id в реестре мода (<code>narutomod:...</code>);
+        подсказка по нему работает прямо в команде.</p>
+    </section>
+  </main>
+</div>
+
+<footer class="site-foot">
+  <div class="site-foot__inner">
+    <div class="site-foot__col">
+      <div class="site-foot__title">Вики</div>
+      <a href="index.html">Обзор</a>
+      <a href="install.html">Установка</a>
+      <a href="basics.html">Основы</a>
+      <a href="techniques.html">Техники</a>
+    </div>
+    <div class="site-foot__col">
+      <div class="site-foot__title">Развитие</div>
+      <a href="clones.html">Клоны и рабочие</a>
+      <a href="skills.html">Дерево скилов</a>
+      <a href="mastery.html">Освоение</a>
+    </div>
+    <div class="site-foot__col">
+      <div class="site-foot__title">Справочник</div>
+      <a href="items.html">Предметы и рецепты</a>
+      <a href="world.html">Мир и Камуи</a>
+      <a href="config.html">Настройки</a>
+      <a href="faq.html">Вопросы</a>
+    </div>
+    <div class="site-foot__col">
+      <div class="site-foot__title">Ссылки</div>
+      <a href="https://github.com/StandarterDF/Naruto-Mod" rel="noopener">Исходники форка</a>
+      <a href="https://github.com/sekwah41/Naruto-Mod" rel="noopener">Оригинал Sekwah</a>
+    </div>
+  </div>
+  <div class="site-foot__tail">
+    Naruto Mod 1.8.1 · Minecraft 1.20.1 · Forge 47.1.62. Вики собрана по коду мода; на серверах
+    с изменённым конфигом числа могут отличаться.
+  </div>
+</footer>
+</body>
+</html>

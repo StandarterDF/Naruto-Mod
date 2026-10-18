@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мир и Камуи: карманное измерение — Naruto Mod</title>
+<meta name="description" content="Единственное измерение Naruto Mod для Minecraft 1.20.1 — пустота Камуи: поле каменных столбов 5×5 в шахматном порядке, свойства измерения, таймер изгнания, команды и настройки.">
+<meta name="theme-color" content="#0d0e12">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">К содержимому</a>
+
+<header class="site-head">
+  <div class="site-head__inner">
+    <a class="brand" href="index.html">
+      <span class="brand__mark" aria-hidden="true">忍</span>
+      <span>Naruto Mod<span class="brand__sub">1.20.1 / Forge · вики форка</span></span>
+    </a>
+    <span class="site-head__spacer"></span>
+    <a class="head-link" href="techniques.html">Техники</a>
+    <a class="head-link" href="skills.html">Скилы</a>
+    <a class="head-link" href="faq.html">FAQ</a>
+    <div class="search" id="search">
+      <div class="search__field">
+        <span class="search__glyph" aria-hidden="true">⌕</span>
+        <input class="search__input" id="search-input" type="search" placeholder="Поиск: Камуи, столбы, таймер…" autocomplete="off" spellcheck="false" aria-label="Поиск по вики">
+        <span class="search__hint">Ctrl K</span>
+      </div>
+      <div class="search__panel" id="search-panel" role="listbox" aria-label="Результаты поиска"></div>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="side" aria-label="Разделы вики">
+    <nav>
+      <div class="side__group">
+        <div class="side__label">Начало</div>
+        <a class="side__link" href="index.html">Обзор</a>
+        <a class="side__link" href="install.html">Установка</a>
+      </div>
+      <div class="side__group">
+        <div class="side__label">Игра</div>
+        <a class="side__link" href="basics.html">Основы</a>
+        <a class="side__link" href="techniques.html">Техники</a>
+        <a class="side__link" href="clones.html">Клоны и рабочие</a>
+      </div>
+      <div class="side__group">
+        <div class="side__label">Развитие</div>
+        <a class="side__link" href="skills.html">Дерево скилов</a>
+        <a class="side__link" href="mastery.html">Освоение</a>
+      </div>
+      <div class="side__group">
+        <div class="side__label">Справочник</div>
+        <a class="side__link" href="items.html">Предметы и рецепты</a>
+        <a class="side__link" href="world.html">Мир и Камуи</a>
+        <a class="side__link" href="config.html">Настройки сервера</a>
+      </div>
+      <div class="side__group">
+        <div class="side__label">Ещё</div>
+        <a class="side__link" href="faq.html">Вопросы</a>
+      </div>
+    </nav>
+    <p class="side__note">Версия мода <strong>1.8.1</strong> · Minecraft 1.20.1 · Forge 47.1.62.<br>Числа на страницах — из кода, а не из старых версий.</p>
+  </aside>
+
+  <main class="doc" id="main">
+    <header class="doc__head">
+      <div class="doc__kicker">Справочник · мир</div>
+      <h1>Мир и Камуи</h1>
+      <p class="doc__lead">
+        В обычный мир мод не добавляет почти ничего: ни руды, ни биомов, ни новых мобов на спавне.
+        Зато у него есть собственное <strong>измерение</strong> — пустота Камуи, поле каменных
+        столбов в темноте. Сюда затягивают противников, отсюда сбегают, и у всего этого есть
+        точные числа, разложенные ниже.
+      </p>
+      <div class="doc__meta">
+        <span>1 новое измерение</span>
+        <span>Столбы 5×5 каждые 7 блоков</span>
+        <span>Высота 7–8, шахматкой</span>
+        <span>Изгнание: 30 с</span>
+      </div>
+    </header>
+
+    <nav class="page-toc" aria-label="На этой странице">
+      <div class="page-toc__title">На этой странице</div>
+      <ol>
+        <li class="toc-l2"><a href="#world">Что мод добавляет в мир</a></li>
+        <li class="toc-l2"><a href="#kamui">Пустота Камуи</a></li>
+        <li class="toc-l3"><a href="#pillars">Поле столбов</a></li>
+        <li class="toc-l3"><a href="#rules">Свойства измерения</a></li>
+        <li class="toc-l3"><a href="#mobs">Спавн и обитатели</a></li>
+        <li class="toc-l2"><a href="#transfer">Изгнание и выход</a></li>
+        <li class="toc-l2"><a href="#admin">Команды и настройки</a></li>
+      </ol>
+    </nav>
+
+    <section id="world">
+      <h2 id="s-world">Что мод добавляет в мир</h2>
+      <p>Ответ для тех, кто ставит мод на давно живущий мир: <strong>ничего не ломается и ничего не
+        регенерируется</strong>. Генерация оверворлда не тронута — в папке данных мода
+        (<code>data/narutomod/</code>) лежат только типы урона, рецепты и описание измерения.
+        Ни одного своего биома, структуры, руды или правила спавна мобов в обычном мире мод не
+        объявляет.</p>
+      <div class="tbl-wrap">
+        <table class="tbl tbl--compact">
+          <thead>
+            <tr><th>Что</th><th>Где появляется</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Генерация оверворлда</strong></td>
+              <td>Ничего: ни руды, ни биомов, ни структур. Чанки уже существующего мира не меняются.</td>
+            </tr>
+            <tr>
+              <td><strong>Мобы мода</strong></td>
+              <td>Только от игроков: клоны призываются техниками, бревно-метка ставится, дымовая
+                завеса создаётся, снаряды летят от каста. На спавне ничего не добавляется.</td>
+            </tr>
+            <tr>
+              <td><strong>Измерения</strong></td>
+              <td>Одно: <code>narutomod:kamui</code>. Попасть туда можно только техникой Камуи —
+                порталов и рамок у измерения нет.</td>
+            </tr>
+            <tr>
+              <td><strong>Датапак мода</strong></td>
+              <td>Типы урона (<span class="mono small">damage_type</span>), измерение
+                (<span class="mono small">dimension</span> и <span class="mono small">dimension_type</span>)
+                и рецепты (<span class="mono small">recipes</span>) — больше ничего.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout--note">
+        <div class="callout__title">Мод совместим с существующими мирами</div>
+        <p>Поскольку нового ворлдгена нет, установка мода на старый мир безопасна: ни одна
+          существующая постройка не пострадает, а все числа и рецепты на этой вики — из текущего кода.</p>
+      </div>
+    </section>
+
+    <section id="kamui">
+      <h2 id="s-kamui">Пустота Камуи</h2>
+      <p>Карманное измерение, которое открывает техника <a href="techniques.html#kamui">Камуи</a>.
+        Это не «свой уголок», а именно пустота: поле каменных столбов под небом Края, где нет ни
+        руды, ни еды, ни мобов — только то, что принесли с собой. Здесь описан сам мир; как кастовать,
+        сколько это стоит и как выглядит затяг — на странице <a href="techniques.html#space">техник</a>.</p>
+
+      <h3 id="pillars">Поле столбов</h3>
+      <p>Рельеф измерения — регулярная сетка квадратных столбов: каждый столб <strong>5×5 блока</strong>,
+        между столбами <strong>2 блока пустоты</strong> (шаг сетки — 7), высота столбов
+        <strong>7 или 8 блоков</strong> в шахматном порядке, соседние столбы отличаются ровно на один
+        блок. Дно мира — <strong>бедрок</strong>, поэтому поле нельзя вырыть из-под ног; всё выше
+        бедрока — обычный камень. Ниже <code>y = 0</code> блоков нет вовсе.</p>
+      <pre>            x: 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
+               ┌─ столб ─┐  ┌─  ─┐  ┌─ столб ─┐  ┌─  ─┐  ┌
+        z  0     н  н  н  н  н  ·  ·  в  в  в  в  в  ·  ·  н
+        z  1     н  н  н  н  н  ·  ·  в  в  в  в  в  ·  ·  н
+        z  2     н  н  н  н  н  ·  ·  в  в  в  в  в  ·  ·  н
+        z  3     н  н  н  н  н  ·  ·  в  в  в  в  в  ·  ·  н
+        z  4     н  н  н  н  н  ·  ·  в  в  в  в  в  ·  ·  н
+        z  5     ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·
+        z  6     ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·
+        z  7     в  в  в  в  в  ·  ·  н  н  н  н  н  ·  ·  в
+        z  8     в  в  в  в  в  ·  ·  н  н  н  н  н  ·  ·  в
+        z  9     в  в  в  в  в  ·  ·  н  н  н  н  н  ·  ·  в
+        z 10     в  в  в  в  в  ·  ·  н  н  н  н  н  ·  ·  в
+        z 11     в  в  в  в  в  ·  ·  н  н  н  н  н  ·  ·  в
+        z 12     ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·
+        z 13     ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·
+        z 14     н  н  н  н  н  ·  ·  в  в  в  в  в  ·  ·  н
+
+        н — столб высотой 7, стоять на y = 7     · — пустота во всю высоту измерения
+        в — столб высотой 8, стоять на y = 8     (каждый символ — один столбец блоков)</pre>
+      <div class="kv">
+        <dt>Формула</dt><dd>столб есть там, где <code>(x mod 7) &lt; 5</code> и
+          <code>(z mod 7) &lt; 5</code>. Остаток берётся «математический» (floorMod), поэтому сетка
+          одинаково продолжается и в отрицательные координаты — сориентироваться можно с любого угла.</dd>
+        <dt>Высоты</dt><dd>чётность задаёт сумма номеров столба по осям:
+          <code>(x div 7 + z div 7) mod 2</code> — чётная даёт высоту 7, нечётная — 8. Перепад между
+          соседями в один блок, а двухблочные промежутки перепрыгиваются.</dd>
+        <dt>Точка прибытия</dt><dd>кастер появляется на первом столбе — <code>0.5 / 7 / 0.5</code>,
+          затянутая цель — на том же столбе, но в стороне: <code>3.5 / 7 / 0.5</code>.</dd>
+        <dt>Внизу</dt><dd>самый нижний слой каждого столба — бедрок, остальное камень. Ни руды, ни
+          пещер, ни воды здесь не генерируется, и даже биомные «украшения» отключены — ванильная
+          стартовая площадка в пустоте над точкой прибытия больше не появляется.</dd>
+        <dt>Провал</dt><dd>промежутки между столбами — воздух до самого низа мира. Упавший в щель
+          летит мимо мира и погибает в пустоте.</dd>
+      </div>
+
+      <h3 id="rules">Свойства измерения</h3>
+      <p>Числа ниже — из <code>data/narutomod/dimension_type/kamui.json</code>, то есть это свойства
+        самого измерения, а не настройка мода.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Свойство</th><th>Значение</th><th>Что видит игрок</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Небо</strong></td>
+              <td class="mono">effects: the_end</td>
+              <td>Небо Края: тёмное, со звёздами, без солнца и луны.</td>
+            </tr>
+            <tr>
+              <td><strong>Время</strong></td>
+              <td class="mono">fixed_time: 18000</td>
+              <td>Вечная полночь: цикла дня и ночи нет, время никуда не идёт.</td>
+            </tr>
+            <tr>
+              <td><strong>Свет</strong></td>
+              <td class="mono">ambient_light: 0.25, has_skylight: false</td>
+              <td>Столбы освещены ровным полумраком даже без факелов; обычный свет работает как везде.</td>
+            </tr>
+            <tr>
+              <td><strong>Погода</strong></td>
+              <td class="mono">has_ceiling: true, has_raids: false</td>
+              <td>Неба «над головой» нет: ни дождя, ни грозы, ни рейдов.</td>
+            </tr>
+            <tr>
+              <td><strong>Высота</strong></td>
+              <td class="mono">min_y: 0, height: 256</td>
+              <td>Мир от бедрока поля до y = 256. Ниже нуля — пустота.</td>
+            </tr>
+            <tr>
+              <td><strong>Масштаб</strong></td>
+              <td class="mono">coordinate_scale: 1.0</td>
+              <td>Координаты совпадают с оверворлдом один к одному (не как в Нижнем мире).</td>
+            </tr>
+            <tr>
+              <td><strong>Жар</strong></td>
+              <td class="mono">ultrawarm: false</td>
+              <td>Измерение не «нижнее»: вода из ведра не испаряется.</td>
+            </tr>
+            <tr>
+              <td><strong>Кровать</strong></td>
+              <td class="mono">bed_works: false</td>
+              <td>Лечь нельзя — кровать взрывается, как в Нижнем мире и Краю.</td>
+            </tr>
+            <tr>
+              <td><strong>Якорь возрождения</strong></td>
+              <td class="mono">respawn_anchor_works: false</td>
+              <td>Не работает: точку возрождения в пустоте поставить нельзя.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">Остальные поля файла (<span class="mono">piglin_safe</span>,
+        <span class="mono">infiniburn</span>, <span class="mono">logical_height</span>,
+        <span class="mono">monster_spawn_block_light_limit</span>) на игру в пустоте не влияют: здесь
+        нет ни пиглинов, ни лавы, ни огня, а спавн мобов запрещён кодом — см. ниже.</p>
+      <div class="callout callout--tip">
+        <div class="callout__title">Пустоту можно обжить</div>
+        <p>Ставить и ломать блоки здесь никто не запрещает: столбы — обычный камень, координаты
+          1:1 с оверворлдом, вода не испаряется, а мобы не спавнятся вовсе. Из принесённых блоков
+          тут получается тихая база — с той оговоркой, что любой другой кастер Камуи может наведаться
+          тем же тапом.</p>
+      </div>
+
+      <h3 id="mobs">Спавн и обитатели</h3>
+      <ul>
+        <li><strong>Естественного спавна нет.</strong> Мод отказывает любому появлению мобов в
+          измерении на этапе проверки позиции, поэтому ни в темноте, ни на свету, ни на столбах
+          никто не заводится сам.</li>
+        <li><strong>Затянутый моб не деспавнится</strong>, пока идёт его срок: даже если в пустоте
+          больше никого нет и чанк никто не смотрит, он дождётся таймера и вернётся.</li>
+        <li><strong>Яйцо призыва работает.</strong> Моб, призванный прямо в пустоте, своего «места,
+          откуда его взяли», не имеет — вытащить его можно только выбросом через дверь кастера
+          (см. ниже). Так в пустоте и появляются «зоопарки».</li>
+        <li><strong>Лута здесь нет:</strong> ни руды в столбах, ни сундуков. Всё мало-мальски ценное
+          в пустоту приносят с собой.</li>
+      </ul>
+    </section>
+
+    <section id="transfer">
+      <h2 id="s-transfer">Изгнание и выход</h2>
+      <p>Пустота задумана как <strong>временная</strong> тюрьма, а не способ стереть чужое: всё, что
+        сюда затянули, рано или поздно возвращается на то самое место, откуда его взяли. Срок и
+        правила выхода у всех разные.</p>
+      <div class="kv">
+        <dt>Таймер изгнания</dt><dd>каждая затянутая сущность несёт собственный счётчик
+          (<code>kamuiTransferSeconds</code>, по умолчанию <strong>30 секунд</strong>, настраивается
+          от 1 до 600). Отсчёт идёт, только пока сущность в пустоте; когда он кончается, её
+          выбрасывает <strong>ровно туда и в то измерение, откуда взяли</strong>. Счётчик живёт в
+          данных самой сущности, поэтому переживает и сохранение мира, и перезапуск сервера.</dd>
+        <dt>Кастер — без срока</dt><dd>на себя таймер не ставится: сколько сидеть в пустоте, решает
+          сам кастер. Обратно — повторным тапом (40 чакры). Точка возврата
+          (<code>kamuiReturn</code> и <code>kamuiReturnDimension</code> в данных игрока) переживает
+          выход из игры, так что выйти можно «на следующий день». Если записанное измерение
+          недоступно, выпуск идёт на мировой спавн оверворлда.</dd>
+        <dt>Затянутый игрок</dt><dd>выходит тем же тапом, что и кастер, но ведут его не к чужой
+          точке, а к его собственной — туда, откуда его выдернули.</dd>
+        <dt>Выброс</dt><dd>тот же удержанный каст, наведённый на того, кто <em>уже</em> внутри:
+          за 30 чакры цель выбрасывает наружу. Затянутую отправляет по её собственному адресу
+          возврата, а родившуюся в пустоте — «в дверь» кастера: туда, откуда кастер шагнул сам
+          (или на мировой спавн, если и того нет).</dd>
+        <dt>Смерть внутри</dt><dd>обычная смерть по обычным правилам: точку возрождения в пустоте
+          не поставить (кровать взрывается, якорь не работает), поэтому игрок возрождается в своём
+          обычном месте. Мод с тела ничего не «возвращает».</dd>
+      </div>
+      <div class="callout callout--warn">
+        <div class="callout__title">Выход — это техника, а не портал</div>
+        <p>Другого выхода из измерения нет: ни порталов, ни рамок. Если Камуи выключен на сервере
+          или не хватает чакры на шаг — выбраться можно только смертью (или телепортом от админа).
+          Подробнее — в <a href="#admin">настройках</a>.</p>
+      </div>
+    </section>
+
+    <section id="admin">
+      <h2 id="s-admin">Команды и настройки</h2>
+      <p>Мод добавляет всего две команды, и обе про техники, а не про измерение: попасть в пустоту
+        «через консоль» штатными средствами нельзя.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Команда</th><th>Права</th><th>Что делает</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="nowrap"><code>/jutsu list</code></td>
+              <td>все</td>
+              <td>Печатает в чат список техник с их комбо (id + клавиши). Тот же список удобнее
+                смотреть в меню <kbd>J</kbd> — команда просто выводит строки.</td>
+            </tr>
+            <tr>
+              <td class="nowrap"><code>/jutsu reset</code></td>
+              <td>OP (2)</td>
+              <td>Обнуляет освоение всех техник у игрока, выполнившего команду. Отладочный
+                инструмент: вернуть прогресс обратно нельзя.</td>
+            </tr>
+            <tr>
+              <td class="nowrap"><code>/jutsu reset &lt;техника&gt;</code></td>
+              <td>OP (2)</td>
+              <td>Обнуляет освоение одной техники, id подсказываются по <kbd>Tab</kbd>
+                (например <code>narutomod:kamui</code>).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Настройки измерения живут в общем файле <code>config/naruto-mod.toml</code>, в секции
+        <code>[server.kamui]</code>:</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Ключ</th><th class="num">По умолчанию</th><th>Значение</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">kamuiEnabled</td>
+              <td class="num">true</td>
+              <td>Разрешает технику Камуи целиком — и шаг в пустоту, и затяг. При
+                <code>false</code> каст отказывает с сообщением «отключён на этом сервере»; на
+                фазовое тело это не влияет — оно отдельная техника.</td>
+            </tr>
+            <tr>
+              <td class="mono">kamuiTransferSeconds</td>
+              <td class="num">30</td>
+              <td>Сколько секунд затянутая сущность (кто угодно, кроме кастера) проводит в пустоте
+                до возврата. Допустимо от 1 до 600.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout--warn">
+        <div class="callout__title">Админам: не выключайте Камуи, пока кто-то внутри</div>
+        <p>Выход из пустоты — это тот же каст Камуи, а при <code>kamuiEnabled = false</code> он
+          отказывает у всех, включая того, кто уже в пустоте: выбраться будет нечем, пока настройку
+          не вернут. Выключение на пустом измерении безопасно.</p>
+      </div>
+      <div class="callout callout--note">
+        <div class="callout__title">Если измерения нет</div>
+        <p>Измерение — обычный датапак (<code>dimension_type/kamui.json</code> и
+          <code>dimension/kamui.json</code>), и сервер может переопределить его своим. Если файлы
+          битые или отсутствуют, мод не падает: на каст приходит сообщение «пустоту открыть не
+          получается», и техника просто ничего не делает.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer class="site-foot">
+  <div class="site-foot__inner">
+    <div class="site-foot__col">
+      <div class="site-foot__title">Вики</div>
+      <a href="index.html">Обзор</a>
+      <a href="install.html">Установка</a>
+      <a href="basics.html">Основы</a>
+      <a href="techniques.html">Техники</a>
+    </div>
+    <div class="site-foot__col">
+      <div class="site-foot__title">Развитие</div>
+      <a href="clones.html">Клоны и рабочие</a>
+      <a href="skills.html">Дерево скилов</a>
+      <a href="mastery.html">Освоение</a>
+    </div>
+    <div class="site-foot__col">
+      <div class="site-foot__title">Справочник</div>
+      <a href="items.html">Предметы и рецепты</a>
+      <a href="world.html">Мир и Камуи</a>
+      <a href="config.html">Настройки</a>
+      <a href="faq.html">Вопросы</a>
+    </div>
+    <div class="site-foot__col">
+      <div class="site-foot__title">Ссылки</div>
+      <a href="https://github.com/StandarterDF/Naruto-Mod" rel="noopener">Исходники форка</a>
+      <a href="https://github.com/sekwah41/Naruto-Mod" rel="noopener">Оригинал Sekwah</a>
+    </div>
+  </div>
+  <div class="site-foot__tail">
+    Naruto Mod 1.8.1 · Minecraft 1.20.1 · Forge 47.1.62. Вики собрана по коду мода; на серверах
+    с изменённым конфигом числа могут отличаться.
+  </div>
+</footer>
+</body>
+</html>

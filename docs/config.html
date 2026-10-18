@@ -3,378 +3,649 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Настройки мода — Naruto Mod (Minecraft 1.20.1 / Forge)</title>
-<meta name="description" content="Что можно настроить в конфиге Naruto Mod для Minecraft 1.20.1 / Forge: чакра и стамина, замены, радиусы взрывов, порог удержания клавиши, Камуи, сенин-мана, хенге и дизайн полоски чакры.">
-<meta name="theme-color" content="#0e0f13">
+<title>Настройки сервера: config/naruto-mod.toml — Naruto Mod</title>
+<meta name="description" content="Все 41 опция Naruto Mod для Minecraft 1.20.1 в одном файле config/naruto-mod.toml: чакра и стамина, освоение, чувство чакры, копание, взрывы, Камуи и восемь дизайнов полоски — с точными значениями по умолчанию.">
+<meta name="theme-color" content="#0d0e12">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/favicon.png">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Настройки мода — Naruto Mod (Minecraft 1.20.1 / Forge)">
-<meta property="og:description" content="Опции конфига: ресурсы, оружие, Камуи, сенин-мана, хенге и восемь дизайнов полоски чакры.">
-<meta property="og:image" content="assets/narutologo.png">
 <link rel="stylesheet" href="style.css">
 <script src="app.js" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#main">К содержимому</a>
 
-<header class="site-header">
-  <div class="wrap header-inner">
+<header class="site-head">
+  <div class="site-head__inner">
     <a class="brand" href="index.html">
-      <span class="brand-mark" aria-hidden="true">忍</span>
-      <span>Naruto Mod
-        <span class="brand-sub">1.20.1 / Forge</span>
-      </span>
+      <span class="brand__mark" aria-hidden="true">忍</span>
+      <span>Naruto Mod<span class="brand__sub">1.20.1 / Forge · вики форка</span></span>
     </a>
-    <nav class="site-nav" aria-label="Основная навигация">
-      <a href="index.html">Главная</a>
-      <a href="install.html">Установка</a>
-      <a href="techniques.html">Техники</a>
-      <a href="items.html">Предметы</a>
-      <a href="secrets.html">Секреты</a>
-      <a href="config.html" aria-current="page">Настройки</a>
-      <a href="faq.html">FAQ</a>
-    </nav>
+    <span class="site-head__spacer"></span>
+    <a class="head-link" href="techniques.html">Техники</a>
+    <a class="head-link" href="skills.html">Скилы</a>
+    <a class="head-link" href="faq.html">FAQ</a>
+    <div class="search" id="search">
+      <div class="search__field">
+        <span class="search__glyph" aria-hidden="true">⌕</span>
+        <input class="search__input" id="search-input" type="search" placeholder="Поиск: mastery, чакра, Камуи…" autocomplete="off" spellcheck="false" aria-label="Поиск по вики">
+        <span class="search__hint">Ctrl K</span>
+      </div>
+      <div class="search__panel" id="search-panel" role="listbox" aria-label="Результаты поиска"></div>
+    </div>
   </div>
 </header>
 
-<main id="main">
-  <div class="wrap">
-
-    <section class="section page-hero" id="top">
-      <p class="eyebrow"><img src="assets/vanilla/clock.png" alt="" width="20" height="20" loading="lazy" decoding="async">Тонкая настройка</p>
-      <h1>Настройки мода</h1>
-      <p>
-        Все опции конфига лежат в одном файле <code>config/naruto-mod.toml</code> и разбиты на четыре
-        раздела: <code>[server.player.energy_bars]</code>, <code>[server.weapons]</code>,
-        <code>[server.kamui]</code> и <code>[client.ui]</code>. Ниже — опции, их значения по умолчанию
-        и то, на что они влияют.
-      </p>
-      <div class="hero-meta">
-        <span class="pill pill--accent"><img src="assets/vanilla/clock.png" alt="" width="16" height="16" loading="lazy" decoding="async">config/naruto-mod.toml</span>
-        <span class="pill">Общий (common) конфиг</span>
-        <span class="pill">Перечитывается при перезагрузке</span>
+<div class="layout">
+  <aside class="side" aria-label="Разделы вики">
+    <nav>
+      <div class="side__group">
+        <div class="side__label">Начало</div>
+        <a class="side__link" href="index.html">Обзор</a>
+        <a class="side__link" href="install.html">Установка</a>
       </div>
-
-      <nav class="toc gap-top-lg" aria-label="Оглавление страницы">
-        <h2>Оглавление</h2>
-        <p>Разделы идут в том же порядке, что и в файле конфига.</p>
-        <ul class="toc-list">
-          <li><a href="#file">Файл конфига</a></li>
-          <li><a href="#energy">Ресурсы <span class="toc-count">6</span></a></li>
-          <li><a href="#weapons">Оружие</a></li>
-          <li><a href="#kamui">Камуи <span class="toc-count">2</span></a></li>
-          <li><a href="#client">Интерфейс</a></li>
-          <li><a href="#bars">Полоски чакры <span class="toc-count">8</span></a></li>
-        </ul>
-      </nav>
-    </section>
-
-    <!-- ======================= ФАЙЛ ======================= -->
-    <section class="section" id="file">
-      <h2 class="group-title">Файл конфига</h2>
-      <p class="group-lead">
-        Мод регистрирует один <strong>общий</strong> (<code>common</code>) конфиг — то есть значения
-        видны и клиенту, и серверу. Значения перечитываются при перезагрузке конфига: обработчик
-        <code>ModConfigEvent.Reloading</code> заново заполняет переменные мода.
-      </p>
-
-      <div class="table-wrap">
-        <table class="config-table">
-          <caption>Где что лежит</caption>
-          <thead>
-            <tr><th scope="col">Раздел в файле</th><th scope="col">О чём</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>[server.player.energy_bars]</code></td><td>Чакра, стамина, замены, сенин-мана и режимы, которые на них работают.</td></tr>
-            <tr><td><code>[server.weapons]</code></td><td>Радиусы взрывов и удержание клавиш для техник.</td></tr>
-            <tr><td><code>[server.kamui]</code></td><td>Карманное измерение Камуи.</td></tr>
-            <tr><td><code>[client.ui]</code></td><td>Внешний вид полоски чакры.</td></tr>
-          </tbody>
-        </table>
+      <div class="side__group">
+        <div class="side__label">Игра</div>
+        <a class="side__link" href="basics.html">Основы</a>
+        <a class="side__link" href="techniques.html">Техники</a>
+        <a class="side__link" href="clones.html">Клоны и рабочие</a>
       </div>
-    </section>
-
-    <!-- ======================= РЕСУРСЫ ======================= -->
-    <section class="section" id="energy">
-      <h2 class="group-title">Ресурсы: чакра, стамина и замены</h2>
-      <p class="group-lead">
-        Раздел <code>[server.player.energy_bars]</code>. Здесь же живут переключатели сенин-маны и хенге.
-      </p>
-
-      <div class="table-wrap">
-        <table class="config-table">
-          <caption>Опции раздела energy_bars</caption>
-          <thead>
-            <tr><th scope="col">Опция</th><th scope="col">По умолчанию</th><th scope="col">Что делает</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>maxChakra</code></td>
-              <td><code>100</code></td>
-              <td>Максимум чакры. Бонусы от медитирующих клонов и от брони прибавляются уже к этому значению.</td>
-            </tr>
-            <tr>
-              <td><code>chakraRegen</code></td>
-              <td><code>0.05</code></td>
-              <td>Сколько чакры восстанавливается за тик (по умолчанию 1 в секунду) после задержки регенерации.</td>
-            </tr>
-            <tr>
-              <td><code>maxStamina</code></td>
-              <td><code>100</code></td>
-              <td>Максимум стамины. Стамину тратят прыжок, восемь врат, двойной прыжок и мягкая посадка.</td>
-            </tr>
-            <tr>
-              <td><code>staminaRegen</code></td>
-              <td><code>0.4</code></td>
-              <td>Сколько стамины восстанавливается за тик (8 в секунду).</td>
-            </tr>
-            <tr>
-              <td><code>maxSubstitutions</code></td>
-              <td><code>3</code></td>
-              <td>Сколько «замен» доступно технике «Подмена» (в креативе замена бесплатна).</td>
-            </tr>
-            <tr>
-              <td><code>substitutionRegenTime</code></td>
-              <td><code>60</code></td>
-              <td>Время (по комментарию в коде — <strong>в секундах</strong>) на восстановление одной замены. Значение умножается на 20, то есть по умолчанию это одна замена в минуту.</td>
-            </tr>
-            <tr>
-              <td><code>maxSeninMana</code></td>
-              <td><code>100</code></td>
-              <td>Максимум природной энергии (сенин-маны) — того пула, который копит «Сбор природной энергии» и который тратит Режим Мудреца.</td>
-            </tr>
-            <tr>
-              <td><code>sageModeEnabled</code></td>
-              <td><code>true</code></td>
-              <td>Разрешает сбор природной энергии и вход в Режим Мудреца. Полный запрет ветки сендзюцу.</td>
-            </tr>
-            <tr>
-              <td><code>hengeEnabled</code></td>
-              <td><code>true</code></td>
-              <td>Разрешает технике Хенге копировать скин и имя другого игрока.</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="side__group">
+        <div class="side__label">Развитие</div>
+        <a class="side__link" href="skills.html">Дерево скилов</a>
+        <a class="side__link" href="mastery.html">Освоение</a>
       </div>
-
-      <div class="note">
-        <h3>Про замены: у README и конфига разные числа</h3>
-        <p>
-          В README ресурсы описаны как «замены: максимум 3, +1 каждые 60 тиков (3 секунды)», а в конфиге
-          опция <code>substitutionRegenTime</code> подписана как секунды и умножается на 20. Пока
-          расхождение не разрешено в коде, ориентируйтесь на своё значение в конфиге: <code>60</code> —
-          это одна замена в минуту, <code>3</code> — раз в три секунды.
-        </p>
+      <div class="side__group">
+        <div class="side__label">Справочник</div>
+        <a class="side__link" href="items.html">Предметы и рецепты</a>
+        <a class="side__link" href="world.html">Мир и Камуи</a>
+        <a class="side__link" href="config.html">Настройки сервера</a>
       </div>
-
-      <div class="note">
-        <h3>Что влияет на максимум чакры, кроме <code>maxChakra</code></h3>
-        <p>
-          Итоговый максимум — это <code>maxChakra</code> плюс бонусы: по <strong>+100</strong> за каждого
-          медитирующего клона в радиусе 8 блоков и прибавки от надетой брони мода (маска АНБУ, плащ
-          Акацуки и прочее). Бонусы складываются между собой.
-        </p>
+      <div class="side__group">
+        <div class="side__label">Ещё</div>
+        <a class="side__link" href="faq.html">Вопросы</a>
       </div>
-    </section>
-
-    <!-- ======================= ОРУЖИЕ ======================= -->
-    <section class="section" id="weapons">
-      <h2 class="group-title">Оружие и каст техник</h2>
-      <p class="group-lead">
-        Раздел <code>[server.weapons]</code>: радиусы взрывов и то, как долго нужно держать клавишу,
-        чтобы техника «зарядилась».
-      </p>
-
-      <div class="table-wrap">
-        <table class="config-table">
-          <caption>Опции раздела weapons</caption>
-          <thead>
-            <tr><th scope="col">Опция</th><th scope="col">По умолчанию</th><th scope="col">Что делает</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>kunaiExplosionRadius</code></td>
-              <td><code>3</code></td>
-              <td>Радиус взрыва «Взрывного куная».</td>
-            </tr>
-            <tr>
-              <td><code>kunaiExplosionBreakBlocks</code></td>
-              <td><code>true</code></td>
-              <td>Ломает ли взрыв куная блоки.</td>
-            </tr>
-            <tr>
-              <td><code>paperBombExplosionRadius</code></td>
-              <td><code>4</code></td>
-              <td>Радиус взрыва бумажной бомбы. Тем же радиусом пользуются клоны-«взрывники», если кастер держал бомбу при призыве.</td>
-            </tr>
-            <tr>
-              <td><code>paperBombExplosionBreakBlocks</code></td>
-              <td><code>true</code></td>
-              <td>Ломает ли блоки взрыв самой бумажной бомбы. Взрыв клона, помеченного бомбой, блоки <strong>не</strong> ломает никогда — это жёстко зашито в код клона.</td>
-            </tr>
-            <tr>
-              <td><code>jutsuKeyHoldThreshold</code></td>
-              <td><code>15</code></td>
-              <td>Сколько тиков (20 в секунду) нужно держать последнюю клавишу, чтобы техника считалась «заряженной», а не тапнутой.</td>
-            </tr>
-            <tr>
-              <td><code>jutsuActivateDelay</code></td>
-              <td><code>15</code></td>
-              <td>Задержка активации техники после набора комбо — то самое «подожди полсекунды» для мгновенных техник.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ======================= КАМУИ ======================= -->
-    <section class="section" id="kamui">
-      <h2 class="group-title">Камуи</h2>
-      <p class="group-lead">Раздел <code>[server.kamui]</code>: карманное измерение целиком.</p>
-
-      <div class="table-wrap">
-        <table class="config-table">
-          <caption>Опции раздела kamui</caption>
-          <thead>
-            <tr><th scope="col">Опция</th><th scope="col">По умолчанию</th><th scope="col">Что делает</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>kamuiEnabled</code></td>
-              <td><code>true</code></td>
-              <td>Разрешает шагать в измерение <code>narutomod:kamui</code> и затягивать туда цели. <code>false</code> полностью выключает обе части техники.</td>
-            </tr>
-            <tr>
-              <td><code>kamuiTransferSeconds</code></td>
-              <td><code>30</code></td>
-              <td>Сколько секунд всё затянутое (кроме самого кастера) проводит в пустоте, прежде чем его выбросит обратно туда, откуда взяли. Допустимый диапазон — от 1 до 600 секунд.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="note note--warn">
-        <h3>Если измерение не открывается</h3>
-        <p>
-          Само измерение задаётся датапаком мода, а не кодом. Если файлы измерения битые или отсутствуют,
-          сервер не падает — просто измерение не регистрируется, и техника сообщает об ошибке вместо
-          телепорта «в никуда».
-        </p>
-      </div>
-    </section>
-
-    <!-- ======================= КЛИЕНТ ======================= -->
-    <section class="section" id="client">
-      <h2 class="group-title">Интерфейс</h2>
-      <p class="group-lead">Раздел <code>[client.ui]</code> — вид полоски чакры.</p>
-
-      <div class="table-wrap">
-        <table class="config-table">
-          <caption>Опции раздела ui</caption>
-          <thead>
-            <tr><th scope="col">Опция</th><th scope="col">По умолчанию</th><th scope="col">Что делает</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>chakraBarDesign</code></td>
-              <td><code>0</code></td>
-              <td>Номер дизайна полоски чакры и стамины: от <code>0</code> до <code>7</code>. Меняет только внешний вид интерфейса.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="note">
-        <h3>Полоска сенин-маны</h3>
-        <p>
-          Сенин-мана рисуется <strong>той же текстурой и геометрией, что и полоска чакры</strong>
-          (то есть тоже зависит от <code>chakraBarDesign</code>), прямо над ней. Отличается только
-          заливка — зелёная, в цвет частиц сенина. Плашка появляется лишь тогда, когда есть что
-          показывать: накоплена мана или идёт Режим Мудреца.
-        </p>
-      </div>
-    </section>
-
-    <!-- ======================= ПОЛОСКИ ======================= -->
-    <section class="section" id="bars">
-      <h2 class="group-title">Восемь дизайнов полоски</h2>
-      <p class="group-lead">
-        Значение <code>chakraBarDesign</code> — это индекс в списке дизайнов мода. Ниже — все восемь
-        текстур в том порядке, в котором их выбирает конфиг.
-      </p>
-
-      <div class="gallery">
-        <figure class="gallery-item">
-          <img src="assets/textures/bar_default.png" alt="Полоска «Default»" loading="lazy" decoding="async">
-          <figcaption class="gallery-cap"><b>0 · Default</b>базовая полоска</figcaption>
-        </figure>
-        <figure class="gallery-item">
-          <img src="assets/textures/bar_katana.png" alt="Полоска «Katana»" loading="lazy" decoding="async">
-          <figcaption class="gallery-cap"><b>1 · Katana</b>в форме катаны</figcaption>
-        </figure>
-        <figure class="gallery-item">
-          <img src="assets/textures/bar_kubi.png" alt="Полоска «Kubi»" loading="lazy" decoding="async">
-          <figcaption class="gallery-cap"><b>2 · Kubi</b>вариант «Kubi»</figcaption>
-        </figure>
-        <figure class="gallery-item">
-          <img src="assets/textures/bar_kunai.png" alt="Полоска «Kunai»" loading="lazy" decoding="async">
-          <figcaption class="gallery-cap"><b>3 · Kunai</b>в форме куная</figcaption>
-        </figure>
-        <figure class="gallery-item">
-          <img src="assets/textures/bar_lampshade.png" alt="Полоска «Lamp»" loading="lazy" decoding="async">
-          <figcaption class="gallery-cap"><b>4 · Lamp</b>вариант «Lamp»</figcaption>
-        </figure>
-        <figure class="gallery-item">
-          <img src="assets/textures/bar_scepter.png" alt="Полоска «Scepter»" loading="lazy" decoding="async">
-          <figcaption class="gallery-cap"><b>5 · Scepter</b>вариант «Scepter»</figcaption>
-        </figure>
-        <figure class="gallery-item">
-          <img src="assets/textures/bar_scroll.png" alt="Полоска «Scroll»" loading="lazy" decoding="async">
-          <figcaption class="gallery-cap"><b>6 · Scroll</b>свиток</figcaption>
-        </figure>
-        <figure class="gallery-item">
-          <img src="assets/textures/bar_unnamed.png" alt="Полоска «Unnamed»" loading="lazy" decoding="async">
-          <figcaption class="gallery-cap"><b>7 · Unnamed</b>вариант «Unnamed»</figcaption>
-        </figure>
-      </div>
-
-      <div class="note gap-top">
-        <h3>Чего в конфиге нет</h3>
-        <p>
-          Цены и длительности самих техник в конфиг не выведены: расход чакры, время жизни клонов,
-          длительность Восьми врат, радиус рудокопа и прочие числа — это константы кода. В файле
-          настраиваются только ресурсы, взрывы, задержки каста, Камуи, сенин-мана, хенге и вид полоски.
-        </p>
-      </div>
-    </section>
-
-  </div>
-</main>
-
-<footer class="site-footer">
-  <div class="wrap footer-inner">
-    <div>
-      <p>
-        Фан-документация по форку <strong>Sekwah's Naruto Mod</strong> под Minecraft 1.20.1 / Forge.
-        Числа и механики взяты из описания мода к этой сборке.
-      </p>
-      <p>
-        Оригинальный мод:
-        <a href="https://github.com/sekwah41/Naruto-Mod" target="_blank" rel="noopener">sekwah41/Naruto-Mod</a>.
-      </p>
-    </div>
-    <nav class="footer-nav" aria-label="Навигация в подвале">
-      <a href="index.html">Главная</a>
-      <a href="install.html">Установка</a>
-      <a href="techniques.html">Техники</a>
-      <a href="items.html">Предметы</a>
-      <a href="secrets.html">Секреты</a>
-      <a href="config.html">Настройки</a>
-      <a href="faq.html">FAQ</a>
     </nav>
+    <p class="side__note">Версия мода <strong>1.8.1</strong> · Minecraft 1.20.1 · Forge 47.1.62.<br>Числа на страницах — из кода, а не из старых версий.</p>
+  </aside>
+
+  <main class="doc" id="main">
+    <header class="doc__head">
+      <div class="doc__kicker">Справочник · конфиг</div>
+      <h1>Настройки</h1>
+      <p class="doc__lead">
+        Весь мод настраивается <strong>одним файлом</strong> <code>config/naruto-mod.toml</code> —
+        в нём 41 опция. Здесь перечислены все, по разделам, с точными значениями по умолчанию.
+        Цены и длительности самих техник в конфиг не выведены: это константы кода, их правят только
+        в сборке.
+      </p>
+      <div class="doc__meta">
+        <span>1 файл · 41 опция</span>
+        <span>8 разделов</span>
+        <span>Правки — без перезапуска</span>
+        <span>Ключи: C / V / B / X / J</span>
+      </div>
+    </header>
+
+    <nav class="page-toc" aria-label="На этой странице">
+      <div class="page-toc__title">На этой странице</div>
+      <ol>
+        <li class="toc-l2"><a href="#file">Файл и разделы</a></li>
+        <li class="toc-l2"><a href="#keys">Клавиши и каст техник</a></li>
+        <li class="toc-l2"><a href="#energy">Ресурсы</a></li>
+        <li class="toc-l2"><a href="#mastery">Освоение</a></li>
+        <li class="toc-l2"><a href="#sensing">Чувство чакры</a></li>
+        <li class="toc-l2"><a href="#mining">Копание</a></li>
+        <li class="toc-l2"><a href="#stances">Стойки и уловки</a></li>
+        <li class="toc-l2"><a href="#weapons">Оружие и взрывы</a></li>
+        <li class="toc-l2"><a href="#kamui">Камуи</a></li>
+        <li class="toc-l2"><a href="#client">Интерфейс</a></li>
+        <li class="toc-l3"><a href="#bars">Восемь дизайнов полоски</a></li>
+      </ol>
+    </nav>
+
+    <section id="file">
+      <h2 id="s-file">Файл и разделы</h2>
+      <p>Мод регистрирует <strong>один общий</strong> (common) конфиг с жёстким именем
+        <code>config/naruto-mod.toml</code>. Общий он по типу, а не по месту: на выделенном сервере
+        каждый читает <em>свой</em> файл, по сети значения не передаются. На практике это значит,
+        что игровые числа (чакра, освоение, Камуи) определяет серверный файл, а клиентские мелочи —
+        вид полоски и пороги удержания клавиш — клиентский.</p>
+      <p>Forge следит за файлом: сохранённые правки подхватываются на ходу, перезапуск не нужен —
+        мод перечитывает значения по событию перезагрузки конфига.</p>
+      <div class="tbl-wrap">
+        <table class="tbl tbl--compact">
+          <thead>
+            <tr><th>Раздел в файле</th><th class="nowrap">Опций</th><th>О чём</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">[server.player.energy_bars]</td><td class="num">9</td>
+              <td>Чакра, стамина, замены, сенин-мана, хенге.</td></tr>
+            <tr><td class="mono">[server.player.mastery]</td><td class="num">14</td>
+              <td>Кривая освоения, скидки, штраф за смерть, медитация.</td></tr>
+            <tr><td class="mono">[server.player.sensing]</td><td class="num">2</td>
+              <td>Радиус сенсорики и цена ночного зрения.</td></tr>
+            <tr><td class="mono">[server.player.mining]</td><td class="num">2</td>
+              <td>Широкий прокоп и чутьё руды.</td></tr>
+            <tr><td class="mono">[server.player.techniques]</td><td class="num">5</td>
+              <td>Сцепление, адаптация, дым, тишина.</td></tr>
+            <tr><td class="mono">[server.weapons]</td><td class="num">6</td>
+              <td>Радиусы взрывов и пороги клавиш каста.</td></tr>
+            <tr><td class="mono">[server.kamui]</td><td class="num">2</td>
+              <td>Карманное измерение.</td></tr>
+            <tr><td class="mono">[client.ui]</td><td class="num">1</td>
+              <td>Дизайн полоски чакры.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout--note">
+        <div class="callout__title">Чего в конфиге нет</div>
+        <p>Расход чакры и КД техник, время жизни клонов, слив здоровья у Восьми врат, радиусы
+          рудокопа и дыханий — всё это константы кода. В файле живут только ресурсы игрока, освоение,
+          взрывы, пороги клавиш, Камуи и интерфейс.</p>
+      </div>
+    </section>
+
+    <section id="keys">
+      <h2 id="s-keys">Клавиши и каст техник</h2>
+      <p>Сами клавиши мода в TOML не лежат — они обычные назначения, их меняют в
+        <strong>Настройки → Управление</strong>. Мод регистрирует пять:</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Назначение</th><th>По умолчанию</th><th>Имя в переводе</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Клавиша техник 1</strong></td>
+              <td><span class="combo"><kbd>C</kbd></span></td>
+              <td class="small">Такт комбо с кодом <code>1</code>: в записях вида <code>13321</code>
+                каждая цифра — это C, V или B.</td>
+            </tr>
+            <tr>
+              <td><strong>Клавиша техник 2</strong></td>
+              <td><span class="combo"><kbd>V</kbd></span></td>
+              <td class="small">Код <code>2</code>.</td>
+            </tr>
+            <tr>
+              <td><strong>Клавиша техник 3</strong></td>
+              <td><span class="combo"><kbd>B</kbd></span></td>
+              <td class="small">Код <code>3</code>.</td>
+            </tr>
+            <tr>
+              <td><strong>Leap</strong> — рывок вперёд</td>
+              <td><span class="combo"><kbd>X</kbd></span></td>
+              <td class="small">Отдельная клавиша, не комбо. В русском переводе её строки нет —
+                в списке управления она подписана английским «Leap».</td>
+            </tr>
+            <tr>
+              <td><strong>Меню техник</strong></td>
+              <td><span class="combo"><kbd>J</kbd></span></td>
+              <td class="small">Список всех техник с комбо, освоением и меткой активных стоек —
+                «Меню Техник».</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Как из комбо получается каст — решают два порога в <code>[server.weapons]</code>, оба
+        считаются в <strong>тиках</strong> (20 тиков = 1 секунда):</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Опция</th><th class="num">По умолчанию</th><th>Что делает</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">jutsuKeyHoldThreshold</td>
+              <td class="num">15 <span class="muted small">(0,75 с)</span></td>
+              <td>Удержание последней клавиши комбо превращает каст в <strong>канал</strong>: техника
+                начинается, пока клавиша зажата, и отпускание — это её завершение. Такое «удержание»
+                понимают только техники-каналы.</td>
+            </tr>
+            <tr>
+              <td class="mono">jutsuActivateDelay</td>
+              <td class="num">15 <span class="muted small">(0,75 с)</span></td>
+              <td>Пауза после последней клавиши комбо: если её не удержали, техника срабатывает —
+                мгновенная сразу, стойка переключается. Меньше значение — каст «нервнее», больше —
+                ввод медленнее.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">Оба порога читает клиент: на выделенном сервере они берутся из файла
+        клиента, а не сервера.</p>
+    </section>
+
+    <section id="energy">
+      <h2 id="s-energy">Ресурсы</h2>
+      <p>Раздел <code>[server.player.energy_bars]</code> — фундамент: сколько у игрока чакры, стамины
+        и замен, и какие ветки вообще разрешены.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Опция</th><th class="num">По умолчанию</th><th>Что делает</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">maxChakra</td>
+              <td class="num">25</td>
+              <td>База максимальной чакры. К ней прибавляются бонусы: <strong>+50</strong> от корня
+                <a href="skills.html">дерева скилов</a>, прибавки ветвей, броня и медитирующие клоны,
+                поэтому «настоящий» максимум в игре заметно выше. Итог считает
+                <code>getMaxChakra()</code>.</td>
+            </tr>
+            <tr>
+              <td class="mono">chakraRegen</td>
+              <td class="num">0.05 <span class="muted small">(1/с)</span></td>
+              <td>Сколько чакры восстанавливается за тик после задержки регенерации (любой расход её
+                сбрасывает или обновляет).</td>
+            </tr>
+            <tr>
+              <td class="mono">maxStamina</td>
+              <td class="num">100</td>
+              <td>База максимума стамины. Как и чакра, к ней прибавляются бонусы дерева скилов
+                (до +200 на всех узлах). Тратят стамину рывок, двойной прыжок, Восемь врат и мягкая
+                посадка.</td>
+            </tr>
+            <tr>
+              <td class="mono">staminaRegen</td>
+              <td class="num">0.4 <span class="muted small">(8/с)</span></td>
+              <td>Восстановление стамины за тик.</td>
+            </tr>
+            <tr>
+              <td class="mono">maxSubstitutions</td>
+              <td class="num">3</td>
+              <td>Сколько зарядов у техники «Замещение». В креативе замена бесплатна.</td>
+            </tr>
+            <tr>
+              <td class="mono">substitutionRegenTime</td>
+              <td class="num">60 <span class="muted small">(с)</span></td>
+              <td>Время восстановления одного заряда <strong>в секундах</strong> — по умолчанию одна
+                замена в минуту. В коде значение умножается на 20, то есть трактуется именно как
+                секунды.</td>
+            </tr>
+            <tr>
+              <td class="mono">maxSeninMana</td>
+              <td class="num">100</td>
+              <td>Максимум природной энергии (сенин-маны): её копит сбор энергии, ею живёт
+                <a href="techniques.html#sage">Режим Мудреца</a>.</td>
+            </tr>
+            <tr>
+              <td class="mono">sageModeEnabled</td>
+              <td class="num">true</td>
+              <td>Выключает всю ветку сендзюцу разом: ни собрать ману, ни войти в режим.</td>
+            </tr>
+            <tr>
+              <td class="mono">hengeEnabled</td>
+              <td class="num">true</td>
+              <td>Разрешает <a href="techniques.html#illusion">Хенге</a> копировать чужой облик.
+                При <code>false</code> техника отказывает целиком.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="mastery">
+      <h2 id="s-mastery">Освоение</h2>
+      <p>Раздел <code>[server.player.mastery]</code> — вся прогрессия техник. Как кривая и штрафы
+        складываются в игре, разобрано на странице <a href="mastery.html">Освоение</a>; здесь — сами
+        ручки.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Опция</th><th class="num">По умолчанию</th><th>Что делает</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">masteryEnabled</td>
+              <td class="num">true</td>
+              <td>Общий выключатель освоения: при <code>false</code> техники не дешевеют, КД не
+                сокращаются, печать не становится бесплатной, а смерть ничего не отнимает.</td>
+            </tr>
+            <tr>
+              <td class="mono">halfwayCasts</td>
+              <td class="num">40</td>
+              <td>Сколько кастов техники нужно, чтобы её освоение дошло до половины.</td>
+            </tr>
+            <tr>
+              <td class="mono">exponent</td>
+              <td class="num">2.0</td>
+              <td>Насколько медленно освоение «разгоняется». При <code>1</code> первые касты уже
+                дают заметный эффект, при <code>2</code> — почти ничего, но половина кривой всё
+                равно приходится на <code>halfwayCasts</code>.</td>
+            </tr>
+            <tr>
+              <td class="mono">costReduction</td>
+              <td class="num">0.4</td>
+              <td>Насколько дешевле становится полностью освоенная техника (0,4 = на 40 %).</td>
+            </tr>
+            <tr>
+              <td class="mono">cooldownReduction</td>
+              <td class="num">0.4</td>
+              <td>Насколько короче становится её перезарядка (0,4 = на 40 %).</td>
+            </tr>
+            <tr>
+              <td class="mono">sealFreeAt</td>
+              <td class="num">0.9</td>
+              <td>Освоение, с которого <a href="items.html#consumables">чакра-печать</a> не нужна
+                вообще — даже для мульти-клона.</td>
+            </tr>
+            <tr>
+              <td class="mono">deathPenaltyLowMin</td>
+              <td class="num">0.03</td>
+              <td>Минимальная доля прогресса, которую отнимает смерть, пока освоение не выше
+                половины.</td>
+            </tr>
+            <tr>
+              <td class="mono">deathPenaltyLowMax</td>
+              <td class="num">0.05</td>
+              <td>Максимальная доля на том же участке кривой.</td>
+            </tr>
+            <tr>
+              <td class="mono">deathPenaltyHighMin</td>
+              <td class="num">0.10</td>
+              <td>Минимальный штраф за смерть ближе к полному освоению.</td>
+            </tr>
+            <tr>
+              <td class="mono">deathPenaltyHighMax</td>
+              <td class="num">0.20</td>
+              <td>Максимальный штраф наверху кривой.</td>
+            </tr>
+            <tr>
+              <td class="mono">meditationRadiusMax</td>
+              <td class="num">512</td>
+              <td>Дальность связи медитирующих клонов на полном освоении, в блоках (по умолчанию —
+                почти 32 чанка). Растёт по кубу освоения, начиная с 8 блоков.</td>
+            </tr>
+            <tr>
+              <td class="mono">meditationPassiveAt</td>
+              <td class="num">0.95</td>
+              <td>Освоение медитации, после которого каждый медитирующий клон даёт бонус ёмкости даже
+                вне радиуса.</td>
+            </tr>
+            <tr>
+              <td class="mono">meditationPassiveCapacity</td>
+              <td class="num">50</td>
+              <td>Сколько чакры ёмкости добавляет такой «дальний» клон.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout--note">
+        <div class="callout__title">Штраф считается по уровню, а не по счётчику</div>
+        <p>Смерть отнимает долю <em>освоения</em> (от 3–5 % у середины до 10–20 % у верха), а затем
+          пересчитывает счётчик кастов назад — поэтому на высоком освоении пара смертей заметно
+          откатывает технику. Точная формула — на странице <a href="mastery.html#death">Освоение</a>.</p>
+      </div>
+    </section>
+
+    <section id="sensing">
+      <h2 id="s-sensing">Чувство чакры</h2>
+      <p>Раздел <code>[server.player.sensing]</code>.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Опция</th><th class="num">По умолчанию</th><th>Что делает</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">radiusMax</td>
+              <td class="num">96</td>
+              <td>Радиус сенсорики на полном освоении, в блоках (96 — шесть чанков). Необученное
+                чувство всегда видит на 16 блоков, дальше радиус растёт линейно.</td>
+            </tr>
+            <tr>
+              <td class="mono">nightVisionChakraPerSecond</td>
+              <td class="num">1.0</td>
+              <td>Сколько чакры в секунду съедает ночное зрение (тап по тому же комбо). Гаснет само
+                на нуле чакры.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="mining">
+      <h2 id="s-mining">Копание</h2>
+      <p>Раздел <code>[server.player.mining]</code> — две техники, которые работают с породой.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Опция</th><th class="num">По умолчанию</th><th>Что делает</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">wideDigEnabled</td>
+              <td class="num">true</td>
+              <td>Разрешает <a href="techniques.html#mining">широкий прокоп</a>: каждый удар киркой
+                превращается в плоскость 3×3.</td>
+            </tr>
+            <tr>
+              <td class="mono">oreSenseEnabled</td>
+              <td class="num">true</td>
+              <td>Разрешает <a href="techniques.html#oresense">чутьё руды</a> — импульс, который
+                подсвечивает руду сквозь породу. На публичном сервере это по сути краткий x-ray,
+                поэтому его и вынесли в конфиг.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="stances">
+      <h2 id="s-stances">Стойки и уловки</h2>
+      <p>Раздел <code>[server.player.techniques]</code> — всё, что не про землю: лазание, выживание
+        в агрессивной среде, дым и тишина.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Опция</th><th class="num">По умолчанию</th><th>Что делает</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">adhesionEnabled</td>
+              <td class="num">true</td>
+              <td>Разрешает стойку <a href="techniques.html#body">сцепления чакрой</a> — медленное
+                лазание по стене, к которой прижался кастер.</td>
+            </tr>
+            <tr>
+              <td class="mono">adaptationEnabled</td>
+              <td class="num">true</td>
+              <td>Разрешает <a href="techniques.html#body">адаптацию тела</a>: дыхание под водой,
+                огнеупорность в лаве, защита от обморожения.</td>
+            </tr>
+            <tr>
+              <td class="mono">smokeEnabled</td>
+              <td class="num">true</td>
+              <td>Разрешает <a href="techniques.html#illusion">дымовую завесу</a>.</td>
+            </tr>
+            <tr>
+              <td class="mono">smokeBlindPlayers</td>
+              <td class="num">true</td>
+              <td>Слепит ли дым попавших в него <strong>игроков</strong>, а не только мобов. На
+                PvP-сервере это можно выключить, оставив дым убежищем от мобов.</td>
+            </tr>
+            <tr>
+              <td class="mono">silenceEnabled</td>
+              <td class="num">true</td>
+              <td>Разрешает <a href="techniques.html#illusion">подавление звука</a>: шаги и удары
+                кастера перестают слышать скалк-сенсоры, шрикеры, Хранитель и мобы.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="weapons">
+      <h2 id="s-weapons">Оружие и взрывы</h2>
+      <p>Раздел <code>[server.weapons]</code>: сила взрывов у бомбового арсенала. Два порога каста из
+        этого же раздела описаны выше, в <a href="#keys">клавишах</a>.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Опция</th><th class="num">По умолчанию</th><th>Что делает</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">kunaiExplosionRadius</td>
+              <td class="num">3</td>
+              <td>Радиус взрыва взрывного куная, в блоках.</td>
+            </tr>
+            <tr>
+              <td class="mono">kunaiExplosionBreakBlocks</td>
+              <td class="num">true</td>
+              <td>Ломает ли взрыв куная блоки. Сам кунай и его поведение — на странице
+                <a href="items.html#thrown">предметов</a>.</td>
+            </tr>
+            <tr>
+              <td class="mono">paperBombExplosionRadius</td>
+              <td class="num">4</td>
+              <td>Радиус взрыва бумажной бомбы. Тем же числом пользуются клоны, призванные с бомбой
+                в руке.</td>
+            </tr>
+            <tr>
+              <td class="mono">paperBombExplosionBreakBlocks</td>
+              <td class="num">true</td>
+              <td>Ломает ли блоки взрыв самой бомбы. Клон-взрывник исключение: его взрыв блоки не
+                трогает никогда, это жёстко зашито в код.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout--warn">
+        <div class="callout__title">Бомбы бьют и по своим</div>
+        <p>Взрыв бумажной бомбы (и взрывного куная) фильтра союзников не имеет — в радиусе достаётся
+          и кастеру, и его клонам. Союзников щадит только взрыв клона-взрывника и серия расэнсюрикена.</p>
+      </div>
+    </section>
+
+    <section id="kamui">
+      <h2 id="s-kamui">Камуи</h2>
+      <p>Раздел <code>[server.kamui]</code> — карманное измерение целиком. Устройство самого мира —
+        на странице <a href="world.html#kamui">Мир и Камуи</a>.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Опция</th><th class="num">По умолчанию</th><th>Что делает</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">kamuiEnabled</td>
+              <td class="num">true</td>
+              <td>Разрешает технику Камуи целиком: и шаг в измерение <code>narutomod:kamui</code>,
+                и затяг цели. При <code>false</code> каст отказывает с сообщением «отключён на этом
+                сервере»; фазовое тело — отдельная техника, его это не выключает.</td>
+            </tr>
+            <tr>
+              <td class="mono">kamuiTransferSeconds</td>
+              <td class="num">30 <span class="muted small">(1–600)</span></td>
+              <td>Сколько секунд всё затянутое (кто угодно, кроме кастера) проводит в пустоте, прежде
+                чем его выбросит точно туда, откуда взяли.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout--warn">
+        <div class="callout__title">Не выключайте Камуи, пока кто-то внутри</div>
+        <p>Выход из пустоты — это тот же каст, поэтому при <code>kamuiEnabled = false</code>
+          выбраться из измерения нечем: игрок внутри окажется заперт, пока настройку не вернут.</p>
+      </div>
+    </section>
+
+    <section id="client">
+      <h2 id="s-client">Интерфейс</h2>
+      <p>Раздел <code>[client.ui]</code> — только вид полоски, на игровые числа не влияет.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Опция</th><th class="num">По умолчанию</th><th>Что делает</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">chakraBarDesign</td>
+              <td class="num">0 <span class="muted small">(0–7)</span></td>
+              <td>Номер дизайна полоски чакры и стамины. Сенин-мана рисуется <strong>той же</strong>
+                текстурой и геометрией, просто выше и с зелёной заливкой, и появляется, только когда
+                есть что показывать.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="bars">Восемь дизайнов полоски</h3>
+      <p>Значение <code>chakraBarDesign</code> — это индекс в списке ниже, в порядке кода:</p>
+      <div class="gallery">
+        <figure>
+          <img src="assets/textures/bar_default.png" alt="Полоска чакры, дизайн 0 — Default" loading="lazy" decoding="async">
+          <figcaption><b>0 · Default</b>базовая полоска</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/textures/bar_katana.png" alt="Полоска чакры, дизайн 1 — Katana" loading="lazy" decoding="async">
+          <figcaption><b>1 · Katana</b>в форме катаны</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/textures/bar_kubi.png" alt="Полоска чакры, дизайн 2 — Kubi" loading="lazy" decoding="async">
+          <figcaption><b>2 · Kubi</b>вариант «Куби»</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/textures/bar_kunai.png" alt="Полоска чакры, дизайн 3 — Kunai" loading="lazy" decoding="async">
+          <figcaption><b>3 · Kunai</b>в форме куная</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/textures/bar_lampshade.png" alt="Полоска чакры, дизайн 4 — Lamp" loading="lazy" decoding="async">
+          <figcaption><b>4 · Lamp</b>вариант «Lamp»</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/textures/bar_scepter.png" alt="Полоска чакры, дизайн 5 — Scepter" loading="lazy" decoding="async">
+          <figcaption><b>5 · Scepter</b>вариант «Scepter»</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/textures/bar_scroll.png" alt="Полоска чакры, дизайн 6 — Scroll" loading="lazy" decoding="async">
+          <figcaption><b>6 · Scroll</b>свиток</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/textures/bar_unnamed.png" alt="Полоска чакры, дизайн 7 — Unnamed" loading="lazy" decoding="async">
+          <figcaption><b>7 · Unnamed</b>вариант «Unnamed»</figcaption>
+        </figure>
+      </div>
+      <p class="small muted">Скриншоты полосок сняты с текстур мода; в игре полоска рисуется поверх
+        HUD в правом верхнем углу, рядом с ней — полоска стамины.</p>
+    </section>
+  </main>
+</div>
+
+<footer class="site-foot">
+  <div class="site-foot__inner">
+    <div class="site-foot__col">
+      <div class="site-foot__title">Вики</div>
+      <a href="index.html">Обзор</a>
+      <a href="install.html">Установка</a>
+      <a href="basics.html">Основы</a>
+      <a href="techniques.html">Техники</a>
+    </div>
+    <div class="site-foot__col">
+      <div class="site-foot__title">Развитие</div>
+      <a href="clones.html">Клоны и рабочие</a>
+      <a href="skills.html">Дерево скилов</a>
+      <a href="mastery.html">Освоение</a>
+    </div>
+    <div class="site-foot__col">
+      <div class="site-foot__title">Справочник</div>
+      <a href="items.html">Предметы и рецепты</a>
+      <a href="world.html">Мир и Камуи</a>
+      <a href="config.html">Настройки</a>
+      <a href="faq.html">Вопросы</a>
+    </div>
+    <div class="site-foot__col">
+      <div class="site-foot__title">Ссылки</div>
+      <a href="https://github.com/StandarterDF/Naruto-Mod" rel="noopener">Исходники форка</a>
+      <a href="https://github.com/sekwah41/Naruto-Mod" rel="noopener">Оригинал Sekwah</a>
+    </div>
+  </div>
+  <div class="site-foot__tail">
+    Naruto Mod 1.8.1 · Minecraft 1.20.1 · Forge 47.1.62. Вики собрана по коду мода; на серверах
+    с изменённым конфигом числа могут отличаться.
   </div>
 </footer>
-
 </body>
 </html>

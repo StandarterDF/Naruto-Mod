@@ -3,278 +3,247 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Установка и запуск — Naruto Mod (Minecraft 1.20.1 / Forge)</title>
-<meta name="description" content="Как установить Naruto Mod на Minecraft 1.20.1 / Forge: сборка jar, папка mods, требования и первые шаги.">
-<meta name="theme-color" content="#0e0f13">
+<title>Установка — Naruto Mod 1.20.1 / Forge</title>
+<meta name="description" content="Как установить Naruto Mod на Minecraft 1.20.1 / Forge 47.1.62: клиент, сервер, сборка из исходников и файл настроек.">
+<meta name="theme-color" content="#0d0e12">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/favicon.png">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Установка и запуск — Naruto Mod (Minecraft 1.20.1 / Forge)">
-<meta property="og:description" content="Forge 1.20.1, папка mods и дев-запуск на JDK 17.">
-<meta property="og:image" content="assets/narutologo.png">
 <link rel="stylesheet" href="style.css">
 <script src="app.js" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#main">К содержимому</a>
 
-<header class="site-header">
-  <div class="wrap header-inner">
+<header class="site-head">
+  <div class="site-head__inner">
     <a class="brand" href="index.html">
-      <span class="brand-mark" aria-hidden="true">忍</span>
-      <span>Naruto Mod
-        <span class="brand-sub">1.20.1 / Forge</span>
-      </span>
+      <span class="brand__mark" aria-hidden="true">忍</span>
+      <span>Naruto Mod<span class="brand__sub">1.20.1 / Forge · вики форка</span></span>
     </a>
-    <nav class="site-nav" aria-label="Основная навигация">
-      <a href="index.html">Главная</a>
-      <a href="install.html" aria-current="page">Установка</a>
-      <a href="techniques.html">Техники</a>
-      <a href="items.html">Предметы</a>
-      <a href="secrets.html">Секреты</a>
-      <a href="config.html">Настройки</a>
-      <a href="faq.html">FAQ</a>
-    </nav>
+    <span class="site-head__spacer"></span>
+    <a class="head-link" href="techniques.html">Техники</a>
+    <a class="head-link" href="skills.html">Скилы</a>
+    <a class="head-link" href="faq.html">FAQ</a>
+    <div class="search" id="search">
+      <div class="search__field">
+        <span class="search__glyph" aria-hidden="true">⌕</span>
+        <input class="search__input" id="search-input" type="search" placeholder="Поиск: клоны, камуи, рецепт…" autocomplete="off" spellcheck="false" aria-label="Поиск по вики">
+        <span class="search__hint">Ctrl K</span>
+      </div>
+      <div class="search__panel" id="search-panel" role="listbox" aria-label="Результаты поиска"></div>
+    </div>
   </div>
 </header>
 
-<main id="main">
-  <div class="wrap">
-
-    <section class="section page-hero" id="top">
-      <p class="eyebrow"><img src="assets/textures/bar_default.png" alt="" width="20" height="20" loading="lazy" decoding="async">Начало игры</p>
-      <h1>Установка и запуск</h1>
-      <p>
-        Мод ставится как обычный Forge-мод для <strong>Minecraft 1.20.1</strong>. Ниже — что нужно,
-        откуда взять jar, куда его положить и что сделать в первые минуты в игре, чтобы получить
-        первую технику. Рецепты новых предметов — на странице <a href="items.html#recipes">«Предметы»</a>.
-      </p>
-      <div class="hero-meta">
-        <span class="pill pill--accent">Minecraft 1.20.1</span>
-        <span class="pill">Forge 47.1.62</span>
-        <span class="pill">Версия форка 1.8.1-SNAPSHOT</span>
-        <span class="pill">JDK 17 для дев-запуска</span>
+<div class="layout">
+  <aside class="side" aria-label="Разделы вики">
+    <nav>
+      <div class="side__group">
+        <div class="side__label">Начало</div>
+        <a class="side__link" href="index.html">Обзор</a>
+        <a class="side__link" href="install.html">Установка</a>
       </div>
+      <div class="side__group">
+        <div class="side__label">Игра</div>
+        <a class="side__link" href="basics.html">Основы</a>
+        <a class="side__link" href="techniques.html">Техники</a>
+        <a class="side__link" href="clones.html">Клоны и рабочие</a>
+      </div>
+      <div class="side__group">
+        <div class="side__label">Развитие</div>
+        <a class="side__link" href="skills.html">Дерево скилов</a>
+        <a class="side__link" href="mastery.html">Освоение</a>
+      </div>
+      <div class="side__group">
+        <div class="side__label">Справочник</div>
+        <a class="side__link" href="items.html">Предметы и рецепты</a>
+        <a class="side__link" href="world.html">Мир и Камуи</a>
+        <a class="side__link" href="config.html">Настройки сервера</a>
+      </div>
+      <div class="side__group">
+        <div class="side__label">Ещё</div>
+        <a class="side__link" href="faq.html">Вопросы</a>
+      </div>
+    </nav>
+    <p class="side__note">Версия мода <strong>1.8.1</strong> · Minecraft 1.20.1 · Forge 47.1.62.<br>Числа на страницах — из кода, а не из старых версий.</p>
+  </aside>
 
-      <nav class="toc gap-top-lg" aria-label="Оглавление страницы">
-        <h2>Оглавление</h2>
-        <p>От требований до первых техник — по порядку.</p>
-        <ul class="toc-list">
-          <li><a href="#requirements">Что нужно</a></li>
-          <li><a href="#install">Установка</a></li>
-          <li><a href="#first-steps">Первые шаги</a></li>
-          <li><a href="#next">Что дальше</a></li>
-        </ul>
-      </nav>
-    </section>
+  <main class="doc" id="main">
+    <header class="doc__head">
+      <div class="doc__kicker">Начало</div>
+      <h1>Установка</h1>
+      <p class="doc__lead">
+        Мод ставится как обычный Forge-мод: Minecraft <strong>1.20.1</strong>, Forge
+        <strong>47.1.62</strong>, готовый <code>jar</code> — в папку <code>mods</code>. Сборка из
+        исходников нужна только если ты правишь код или хочешь собрать последний снимок.
+      </p>
+      <div class="doc__meta">
+        <span>Minecraft 1.20.1</span>
+        <span>Forge 47.1.62</span>
+        <span>Java 17</span>
+        <span>Файл: <code>NarutoMod-1.20-1.8.1-SNAPSHOT-universal.jar</code></span>
+      </div>
+    </header>
 
-    <!-- ======================= ТРЕБОВАНИЯ ======================= -->
-    <section class="section" id="requirements">
-      <h2 class="group-title">Что нужно</h2>
-      <p class="group-lead">Три вещи: правильная версия игры, Forge и сам файл мода.</p>
+    <nav class="page-toc" aria-label="На этой странице">
+      <div class="page-toc__title">На этой странице</div>
+      <ol>
+        <li class="toc-l2"><a href="#req">Что нужно</a></li>
+        <li class="toc-l2"><a href="#client">Установка на клиент</a></li>
+        <li class="toc-l2"><a href="#server">Установка на сервер</a></li>
+        <li class="toc-l2"><a href="#build">Сборка из исходников</a></li>
+        <li class="toc-l2"><a href="#config">Файл настроек</a></li>
+        <li class="toc-l2"><a href="#check">Если что-то не работает</a></li>
+      </ol>
+    </nav>
 
-      <div class="table-wrap">
-        <table>
-          <caption>Требования и версии</caption>
+    <section id="req">
+      <h2 id="s-req">Что нужно</h2>
+      <div class="tbl-wrap">
+        <table class="tbl">
           <thead>
-            <tr><th scope="col">Что</th><th scope="col">Версия / значение</th><th scope="col">Зачем</th></tr>
+            <tr><th>Компонент</th><th>Версия</th><th>Зачем</th></tr>
           </thead>
           <tbody>
-            <tr><td>Minecraft</td><td>1.20.1</td><td>Мод собран под 1.20.1; в <code>mods.toml</code> заявлено <code>minecraft [1.20,)</code>, а зависимости Forge — <code>[46,48)</code>.</td></tr>
-            <tr><td>Forge</td><td>47.1.62</td><td>Проверенная сборка для этого форка. Ветка <code>master</code>, версия мода <code>1.8.1-SNAPSHOT</code>.</td></tr>
-            <tr><td>Java для игры</td><td>JRE 17+</td><td>Игре нужен запуск Forge-профиля; на клиенте это делает лаунчер.</td></tr>
-            <tr><td>JDK 17 для дев-запуска</td><td>JDK 17</td><td>Только если запускаете мод из исходников: Gradle 8.1.1 из враппера проекта <strong>не работает</strong> на Java 18+.</td></tr>
+            <tr><td>Minecraft</td><td><strong>1.20.1</strong></td><td>Мод собран строго под эту версию.</td></tr>
+            <tr><td>Forge</td><td><strong>47.1.62</strong> (или совместимый 47.x)</td><td>Загрузчик мода.</td></tr>
+            <tr><td>Java</td><td><strong>17</strong></td><td>Требование Minecraft 1.20.1 и мода. Для игры Forge обычно ставит её сам.</td></tr>
+            <tr><td>Файл мода</td><td><code>NarutoMod-1.20-1.8.1-SNAPSHOT-universal.jar</code></td><td>Готовый jar из релиза или сборки.</td></tr>
           </tbody>
         </table>
       </div>
-
-      <div class="note">
-        <h3>О зависимостях</h3>
-        <p>
-          В <code>mods.toml</code> мод объявляет обязательную зависимость <code>sekclib</code> с
-          диапазоном <code>[1.0.0,2)</code> (в <code>build.gradle</code> она подключена как обычная
-          библиотека, а не вшита в jar). При этом ни README мода, ни эта документация о ней не
-          упоминают. Если лаунчер всё-таки жалуется на отсутствие <code>sekclib</code> — это
-          расхождение между манифестом и описанием, а не ваша ошибка установки.
-        </p>
+      <div class="callout callout--note">
+        <div class="callout__title">Java 25 не подойдёт для сборки</div>
+        <p>Если собираешь сам, Gradle 8.1.1 работает только на <strong>JDK 17</strong>. Запуск игры
+          через официальный лаунчер для 1.20.1 тоже идёт на Java 17.</p>
       </div>
     </section>
 
-    <!-- ======================= УСТАНОВКА ======================= -->
-    <section class="section" id="install">
-      <h2 class="group-title">Установка</h2>
-      <p class="group-lead">
-        Для обычной игры всё сводится к трём шагам: поставить Forge, положить jar в <code>mods</code>,
-        запустить профиль Forge.
-      </p>
-
+    <section id="client">
+      <h2 id="s-client">Установка на клиент</h2>
       <ol class="steps">
-        <li>
-          Установите <strong>Forge 47.1.62</strong> для Minecraft 1.20.1 и запустите игру хотя бы раз —
-          чтобы появился профиль Forge и папка <code>.minecraft</code>.
-        </li>
-        <li>
-          Возьмите файл мода (<code>.jar</code>). Готовые сборки публикуются в релизах форка:
-          <a href="https://github.com/StandarterDF/Naruto-Mod/releases" target="_blank" rel="noopener">github.com/StandarterDF/Naruto-Mod/releases</a>.
-          Если в релизе нет прикреплённого jar — соберите его сами (см. «Сборка из исходников» ниже).
-        </li>
-        <li>
-          Положите jar в папку <code>mods</code> рядом с игрой. Путь по умолчанию на Windows:
-          <code>%appdata%\.minecraft\mods</code>. Папку можно создать вручную.
-        </li>
-        <li>
-          Запустите игру <strong>профилем Forge 1.20.1</strong>. Если мод загрузился, в игре появятся
-          его предметы и механика техник.
-        </li>
+        <li>Поставь профиль Forge 1.20.1 (установщик Forge → клиент). Запусти игру один раз, чтобы
+          появилась папка <code>.minecraft</code> для этого профиля.</li>
+        <li>Открой <code>%appdata%\.minecraft\mods</code> (Windows) или папку <code>mods</code>
+          своего лончера.</li>
+        <li>Положи туда <code>NarutoMod-…-universal.jar</code>. Больше ничего не нужно: мод
+          самодостаточен.</li>
+        <li>Запусти игру. В списке модов должна появиться запись <strong>Naruto Mod</strong>, а в
+          управлении — категория <strong>Naruto Mod</strong> с клавишами техник.</li>
       </ol>
+      <p>Для рецептов удобно поставить <strong>JEI</strong> (Just Enough Items) — в дев-сборке мода он
+        подключён как удобство для разработки. Это не требование мода: все 56 рецептов есть на странице
+        <a href="items.html#craft">Предметы и рецепты</a>.</p>
+      <div class="callout callout--tip">
+        <div class="callout__title">Играешь не первый раз?</div>
+        <p>Загляни в <a href="index.html#start">«С чего начать»</a>: без нажатия <kbd>J</kbd> и кнопки
+          <em>Become a ninja</em> техники не кастуются, и это самая частая причина «мод не работает».</p>
+      </div>
+    </section>
 
-      <div class="note">
-        <h3>Сборка из исходников</h3>
-        <p>
-          Нужен <strong>JDK 17</strong>: враппер проекта (Gradle 8.1.1) не запускается на более новых
-          JVM. Сборка — обычной командой Gradle, готовый файл появится в <code>build/libs/</code>.
-        </p>
-        <pre class="code-block"><code>$env:JAVA_HOME='C:\Program Files\Java\jdk-17'
+    <section id="server">
+      <h2 id="s-server">Установка на сервер</h2>
+      <ol class="steps">
+        <li>Серверный Forge 1.20.1 версии 47.1.62 (или другой 47.x), Java 17.</li>
+        <li>Тот же jar положить в серверную папку <code>mods</code>.</li>
+        <li>Первый запуск создаст <code>config/naruto-mod.toml</code> — это общий (common) конфиг:
+          его читают и клиент, и сервер.</li>
+        <li>Настроить конфиг под свой сервер (например, выключить чутьё руды на публичном сервере —
+          это фактически краткий x-ray) и перезапустить сервер.</li>
+      </ol>
+      <p>Клиенту для подключения нужен только сам мод. Конфиг клиента имеет приоритет для клиентских
+        ключей (например, вид полоски чакры), серверные ключи раздаются с сервера при входе.</p>
+    </section>
+
+    <section id="build">
+      <h2 id="s-build">Сборка из исходников</h2>
+      <p>Репозиторий — <a href="https://github.com/StandarterDF/Naruto-Mod" rel="noopener">StandarterDF/Naruto-Mod</a>
+        (форк), оригинал — <a href="https://github.com/sekwah41/Naruto-Mod" rel="noopener">sekwah41/Naruto-Mod</a>.
+        Сборка требует <strong>JDK 17</strong>:</p>
+<pre><code>$env:JAVA_HOME='C:\Program Files\Java\jdk-17'
 .\gradlew.bat build</code></pre>
-        <p>
-          Для запуска из исходников в репозитории есть готовые скрипты: они сами находят JDK 17.
-        </p>
-        <pre class="code-block"><code>.\run-dev-client.bat      # дев-клиент, мир и логи лежат в .\run
-.\run-dev-server.bat      # дев-сервер, нужен run/eula.txt</code></pre>
+      <p>Готовые файлы появятся в <code>build/libs/</code>:</p>
+      <div class="tbl-wrap">
+        <table class="tbl tbl--compact">
+          <thead>
+            <tr><th>Файл</th><th>Что это</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">NarutoMod-1.20-1.8.1-SNAPSHOT-universal.jar</td><td>Рабочий мод — этот файл ставится в <code>mods</code>.</td></tr>
+            <tr><td class="mono">NarutoMod-1.20-1.8.1-SNAPSHOT-sources.jar</td><td>Исходники для чтения.</td></tr>
+            <tr><td class="mono">NarutoMod-1.20-1.8.1-SNAPSHOT-deobf.jar</td><td>Промежуточный артефакт сборки, в игру не ставится.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Дев-клиент и дев-сервер (для тестов в игре, с JEI в клиенте) запускаются скриптами
+        <code>run-dev-client.bat</code> и <code>run-dev-server.bat</code> — они сами находят JDK 17.</p>
+    </section>
+
+    <section id="config">
+      <h2 id="s-config">Файл настроек</h2>
+      <p>Конфиг создаётся при первом запуске по пути <code>config/naruto-mod.toml</code>. Все ключи
+        сгруппированы по разделам: <code>server.player.energy_bars</code>, <code>server.player.mastery</code>,
+        <code>server.weapons</code>, <code>server.kamui</code>, <code>client.ui</code> и другие.
+        Полный список с комментариями — на странице <a href="config.html">Настройки сервера</a>.</p>
+      <div class="callout callout--warn">
+        <div class="callout__title">Старый конфиг перекрывает новые значения</div>
+        <p>Если ты обновился с прошлой версии, уже существующий <code>naruto-mod.toml</code> остаётся
+          как есть: например, в новых версиях базовая чакра снижена до 25, но в старом файле останется
+          прежнее число. Чтобы увидеть новые значения по умолчанию — удали файл или поправь ключ
+          вручную.</p>
       </div>
     </section>
 
-    <!-- ======================= ПЕРВЫЕ ШАГИ ======================= -->
-    <section class="section" id="first-steps">
-      <h2 class="group-title">Первые шаги</h2>
-      <p class="group-lead">
-        Прежде чем кастовать, нужно стать ниндзя — это делается прямо из меню техник, без команд и
-        предметов.
-      </p>
-
-      <div class="grid">
-        <article class="card">
-          <span class="feature-icon" aria-hidden="true"><img src="assets/vanilla/book.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
-          <span class="card-kicker">Шаг 1</span>
-          <h3>Посвящение в ниндзя</h3>
-          <ol class="steps">
-            <li>Нажми <kbd>J</kbd> — откроется меню техник.</li>
-            <li>
-              Нажми «Стать ниндзя» (<code>naruto.gui.jutsu.enable</code>). Обратно — кнопкой
-              «Я передумал» (<code>naruto.gui.jutsu.disable</code>).
-            </li>
-            <li>Пока ты не ниндзя, список техник в меню не показывается — вместо него подсказка.</li>
-            <li>После посвящения меню показывает весь список, разбитый по группам и страницам.</li>
-          </ol>
-        </article>
-
-        <article class="card">
-          <span class="feature-icon" aria-hidden="true"><img src="assets/vanilla/experience_bottle.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
-          <span class="card-kicker">Шаг 2</span>
-          <h3>Первый каст чакры</h3>
-          <ul class="plain">
-            <li>Набери <kbd>C</kbd> и <strong>зажми</strong> последнюю клавишу — это канальный «Чакра-заряд».</li>
-            <li>Стоя на земле, пока держишь комбо, чакра набирается по <strong>+1 за тик</strong>. На бегу и в воздухе — только <strong>+0.2</strong>.</li>
-            <li>Мгновенные техники, наоборот, не зажимаются: набери комбо и просто подожди полсекунды.</li>
-            <li>Переключатели включаются тем же комбо, которым и выключаются.</li>
-          </ul>
-          <p><a class="more" href="techniques.html#basics">Раздел «Основы» →</a></p>
-        </article>
-
-        <article class="card">
-          <span class="feature-icon" aria-hidden="true"><span class="feature-glyph">印</span></span>
-          <span class="card-kicker">Шаг 3</span>
-          <h3>Клавиши по умолчанию</h3>
-          <ul class="plain">
-            <li><kbd>X</kbd> — Прыжок (Leap). Работает только с земли и стоит 10 стамины.</li>
-            <li><kbd>C</kbd> / <kbd>V</kbd> / <kbd>B</kbd> — «1», «2» и «3» в последовательности комбо.</li>
-            <li><kbd>J</kbd> — меню дзюцу и включение режима ниндзя.</li>
-            <li>Прыжок в воздухе — двойной прыжок, сам по себе, без комбо.</li>
-          </ul>
-          <p>
-            Клавиши можно переназначить; в меню они рисуются латинскими буквами по коду клавиши, поэтому
-            на русской раскладке комбо не превращается в кириллицу.
-          </p>
-        </article>
-
-        <article class="card">
-          <span class="feature-icon" aria-hidden="true"><img src="assets/textures/bar_katana.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
-          <span class="card-kicker">Шаг 4</span>
-          <h3>На что смотреть в интерфейсе</h3>
-          <ul class="plain">
-            <li><strong>Чакра</strong> — 100 максимум, +0.05 за тик после задержки регенерации.</li>
-            <li><strong>Стамина</strong> — 100 максимум, +0.4 за тик; её едят прыжок, врата и мягкая посадка.</li>
-            <li><strong>Замены</strong> — всего 3, восстанавливаются по одной за время, которое задаёт опция <code>substitutionRegenTime</code>; их тратит «Подмена».</li>
-            <li><strong>Сенин-мана</strong> — отдельная зелёная полоска над чакрой, появляется, когда есть что показывать.</li>
-          </ul>
-          <p><a class="more" href="index.html#systems">Как устроены ресурсы →</a></p>
-        </article>
-      </div>
-
-      <div class="note gap-top">
-        <h3>Три правила, которые объясняют половину «неудачных» кастов</h3>
-        <ul class="plain">
-          <li>Клоны требуют <strong>чакра-печать</strong> в инвентаре: одна печать за каст, независимо от числа клонов. В креативе печать не нужна.</li>
-          <li>После каждого каста ресурс не восстанавливается какое-то время — это и есть «настоящая» цена техники.</li>
-          <li>Набор техник читается при запуске игры, поэтому изменения подхватываются только полным перезапуском.</li>
-        </ul>
-      </div>
+    <section id="check">
+      <h2 id="s-check">Если что-то не работает</h2>
+      <ul>
+        <li><strong>Игра падает при запуске.</strong> Проверь версии: 1.20.1 + Forge 47.x + Java 17.
+          Другой Forge (не 47.x) или 1.20.4 — самая частая причина.</li>
+        <li><strong>Мод не появился в списке.</strong> Убедись, что положил именно
+          <code>universal.jar</code>, а не <code>deobf</code> или <code>sources</code>.</li>
+        <li><strong>Каст не срабатывает.</strong> Сначала <kbd>J</kbd> → <em>Become a ninja</em>, потом
+          нужный узел в дереве скилов. Проверь задержки комбо и зажми последнюю клавишу для каналов.</li>
+        <li><strong>Сервер упал при первом снаряде.</strong> Это признак того, что в сборке не оказалось
+          JSON типа урона мода — сообщи об этом в issues, это баг сборки, а не настройка.</li>
+      </ul>
+      <p class="small muted">Дальше — <a href="basics.html">Основы</a>: как устроены чакра, стамина
+        и HUD.</p>
     </section>
+  </main>
+</div>
 
-    <!-- ======================= ДАЛЬШЕ ======================= -->
-    <section class="section" id="next">
-      <h2 class="group-title">Что дальше</h2>
-      <div class="grid">
-        <article class="card">
-          <span class="feature-icon" aria-hidden="true"><img src="assets/textures/jutsu_substitution.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
-          <span class="card-kicker">Техники</span>
-          <h3>Полный список с фильтром</h3>
-          <p>28 техник, 8 групп, поиск по названию и комбо, фильтр по способу применения.</p>
-          <p><a class="btn" href="techniques.html">Открыть техники</a></p>
-        </article>
-        <article class="card">
-          <span class="feature-icon" aria-hidden="true"><img src="assets/vanilla/clock.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
-          <span class="card-kicker">Настройки</span>
-          <h3>Что можно поменять в конфиге</h3>
-          <p>Радиусы взрывов, порог удержания клавиши, дизайн полоски чакры, Камуи, сенин-мана и хенге.</p>
-          <p><a class="btn" href="config.html">Открыть настройки</a></p>
-        </article>
-        <article class="card">
-          <span class="feature-icon" aria-hidden="true"><img src="assets/vanilla/book.png" alt="" width="32" height="32" loading="lazy" decoding="async"></span>
-          <span class="card-kicker">Помощь</span>
-          <h3>Если что-то не работает</h3>
-          <p>Частые вопросы: печати, чакра, цели техник, перезапуск игры и карманное измерение.</p>
-          <p><a class="btn" href="faq.html">Открыть FAQ</a></p>
-        </article>
-      </div>
-    </section>
-
-  </div>
-</main>
-
-<footer class="site-footer">
-  <div class="wrap footer-inner">
-    <div>
-      <p>
-        Фан-документация по форку <strong>Sekwah's Naruto Mod</strong> под Minecraft 1.20.1 / Forge.
-        Числа и механики взяты из описания мода к этой сборке.
-      </p>
-      <p>
-        Оригинальный мод:
-        <a href="https://github.com/sekwah41/Naruto-Mod" target="_blank" rel="noopener">sekwah41/Naruto-Mod</a>.
-      </p>
-    </div>
-    <nav class="footer-nav" aria-label="Навигация в подвале">
-      <a href="index.html">Главная</a>
+<footer class="site-foot">
+  <div class="site-foot__inner">
+    <div class="site-foot__col">
+      <div class="site-foot__title">Вики</div>
+      <a href="index.html">Обзор</a>
       <a href="install.html">Установка</a>
+      <a href="basics.html">Основы</a>
       <a href="techniques.html">Техники</a>
-      <a href="items.html">Предметы</a>
-      <a href="secrets.html">Секреты</a>
+    </div>
+    <div class="site-foot__col">
+      <div class="site-foot__title">Развитие</div>
+      <a href="clones.html">Клоны и рабочие</a>
+      <a href="skills.html">Дерево скилов</a>
+      <a href="mastery.html">Освоение</a>
+    </div>
+    <div class="site-foot__col">
+      <div class="site-foot__title">Справочник</div>
+      <a href="items.html">Предметы и рецепты</a>
+      <a href="world.html">Мир и Камуи</a>
       <a href="config.html">Настройки</a>
-      <a href="faq.html">FAQ</a>
-    </nav>
+      <a href="faq.html">Вопросы</a>
+    </div>
+    <div class="site-foot__col">
+      <div class="site-foot__title">Ссылки</div>
+      <a href="https://github.com/StandarterDF/Naruto-Mod" rel="noopener">Исходники форка</a>
+      <a href="https://github.com/sekwah41/Naruto-Mod" rel="noopener">Оригинал Sekwah</a>
+    </div>
+  </div>
+  <div class="site-foot__tail">
+    Naruto Mod 1.8.1 · Minecraft 1.20.1 · Forge 47.1.62. Вики собрана по коду мода; на серверах
+    с изменённым конфигом числа могут отличаться.
   </div>
 </footer>
-
 </body>
 </html>
