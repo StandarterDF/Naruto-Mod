@@ -1192,7 +1192,12 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 * секция — `<section id="slug">`, её заголовок — `<h2 id="s-slug">` (якорь для оглавления и ссылок);
 * спойлер — `<details class="deep" id="...">`; `app.js#openAnchored` раскрывает его при переходе по
   якорю (и на загрузке, и по `hashchange`), поэтому такими спойлерами сделаны ответы FAQ;
-* комбо рисуются `.combo`/`<kbd>`, таблицы — `.tbl`, врезки — `.callout--note|tip|warn`.
+* комбо рисуются `.combo`/`<kbd>`, таблицы — `.tbl`, врезки — `.callout--note|tip|warn`;
+* ссылка на общий CSS — `style.css?v=<дата>` (сейчас `style.css?v=2026-10-19`). GitHub Pages отдаёт
+  `style.css` с `Cache-Control: max-age=600`, поэтому после правки CSS у читателя ещё десять минут
+  живёт старая версия (именно так «пережил» деплой баг с шапкой таблиц). Дата бампается на всех
+  страницах вместе с правкой `style.css`; `build_docs_search.py` query в ссылке срезает, проверка
+  ссылок от метки не страдает.
 
 Инструменты (оба — stdlib-питон, без зависимостей; гонять `python tools\...`, как и `skilltree_preview`):
 
