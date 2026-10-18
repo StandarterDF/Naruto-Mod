@@ -32,6 +32,13 @@ public class NarutoDamageTypes {
      */
     public static final ResourceKey<DamageType> GATE_BACKLASH = create("gate_backlash");
 
+    /**
+     * What the fire breath burns with. Deliberately not tagged as fire: the technique is a jet of hot
+     * chakra, so it hurts but never sets a target alight and never spreads, see
+     * {@code FireBreathJutsuAbility}.
+     */
+    public static final ResourceKey<DamageType> FIRE_BREATH = create("fire_breath");
+
     public static ResourceKey<DamageType> create(String name) {
         return ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation(NarutoMod.MOD_ID, name));
     }
@@ -65,5 +72,6 @@ public class NarutoDamageTypes {
         register(context, WATER_BULLET);
         register(context, WIND_RELEASE);
         register(context, GATE_BACKLASH);
+        register(context, FIRE_BREATH);
     }
 }

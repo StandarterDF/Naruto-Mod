@@ -3,6 +3,8 @@ package com.sekwah.narutomod.network;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.network.c2s.*;
 import com.sekwah.narutomod.network.s2c.ClientTestPacket;
+import com.sekwah.narutomod.network.s2c.ClientboundOreSensePacket;
+import com.sekwah.narutomod.network.s2c.ClientboundSensingPacket;
 import com.sekwah.narutomod.network.s2c.ClientboundSupplyChestPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -47,6 +49,8 @@ public class PacketHandler {
         // Server to client packs
         NARUTO_CHANNEL.registerMessage(getPacketID(), ClientTestPacket.class, ClientTestPacket::encode, ClientTestPacket::decode, ClientTestPacket.Handler::handle);
         NARUTO_CHANNEL.registerMessage(getPacketID(), ClientboundSupplyChestPacket.class, ClientboundSupplyChestPacket::encode, ClientboundSupplyChestPacket::decode, ClientboundSupplyChestPacket.Handler::handle);
+        NARUTO_CHANNEL.registerMessage(getPacketID(), ClientboundSensingPacket.class, ClientboundSensingPacket::encode, ClientboundSensingPacket::decode, ClientboundSensingPacket.Handler::handle);
+        NARUTO_CHANNEL.registerMessage(getPacketID(), ClientboundOreSensePacket.class, ClientboundOreSensePacket::encode, ClientboundOreSensePacket::decode, ClientboundOreSensePacket.Handler::handle);
 
         // Client to server packets
         NARUTO_CHANNEL.registerMessage(getPacketID(), ServerJutsuCastingPacket.class, ServerJutsuCastingPacket::encode, ServerJutsuCastingPacket::decode, ServerJutsuCastingPacket.Handler::handle);
@@ -54,6 +58,7 @@ public class PacketHandler {
         NARUTO_CHANNEL.registerMessage(getPacketID(), ServerAbilityChannelPacket.class, ServerAbilityChannelPacket::encode, ServerAbilityChannelPacket::decode, ServerAbilityChannelPacket.Handler::handle);
         NARUTO_CHANNEL.registerMessage(getPacketID(), ServerToggleNinjaPacket.class, ServerToggleNinjaPacket::encode, ServerToggleNinjaPacket::decode, ServerToggleNinjaPacket.Handler::handle);
         NARUTO_CHANNEL.registerMessage(getPacketID(), ServerSupplyChestScrollPacket.class, ServerSupplyChestScrollPacket::encode, ServerSupplyChestScrollPacket::decode, ServerSupplyChestScrollPacket.Handler::handle);
+        NARUTO_CHANNEL.registerMessage(getPacketID(), ServerUnlockSkillPacket.class, ServerUnlockSkillPacket::encode, ServerUnlockSkillPacket::decode, ServerUnlockSkillPacket.Handler::handle);
     }
 
     private static int packetId = 0;

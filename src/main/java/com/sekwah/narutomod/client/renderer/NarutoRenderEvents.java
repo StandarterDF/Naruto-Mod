@@ -47,6 +47,8 @@ public class NarutoRenderEvents {
 
         event.registerEntityRenderer(NarutoEntities.CHAKRA_MARKER.get(), ChakraMarkerRenderer::new);
 
+        event.registerEntityRenderer(NarutoEntities.SMOKE_CLOUD.get(), SmokeCloudRenderer::new);
+
         event.registerEntityRenderer(NarutoEntities.SHADOW_CLONE.get(), ShadowCloneRenderer::new);
 
     }

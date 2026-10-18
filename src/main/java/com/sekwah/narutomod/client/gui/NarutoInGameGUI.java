@@ -4,6 +4,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 import org.joml.Matrix4f;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
+import com.sekwah.narutomod.client.ClientOreSenseData;
+import com.sekwah.narutomod.client.ClientSensingData;
+import com.sekwah.narutomod.client.renderer.OreSenseRenderer;
+import com.sekwah.narutomod.client.renderer.SensingEspRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
@@ -22,6 +26,7 @@ public class NarutoInGameGUI {
     private final SubstitutionGUI substitutionOverlay;
     private final WorldMarkerGUI worldMarkerOverlay;
     private final SeninGUI seninOverlay;
+    private final SensingGUI sensingOverlay;
     private final Minecraft minecraft;
 
     private final PlayerGUI[] overlays;
@@ -40,12 +45,15 @@ public class NarutoInGameGUI {
         this.substitutionOverlay = new SubstitutionGUI(this.minecraft);
         this.worldMarkerOverlay = new WorldMarkerGUI(this.minecraft);
         this.seninOverlay = new SeninGUI(this.minecraft);
+        this.sensingOverlay = new SensingGUI(this.minecraft);
 
-        this.overlays = new PlayerGUI[]{this.worldMarkerOverlay, this.substitutionOverlay, this.chakraOverlay, this.seninOverlay};
+        this.overlays = new PlayerGUI[]{this.worldMarkerOverlay, this.substitutionOverlay, this.chakraOverlay, this.seninOverlay, this.sensingOverlay};
 
         MinecraftForge.EVENT_BUS.addListener(this::renderGameOverlay);
         MinecraftForge.EVENT_BUS.addListener(this::clientTickEvent);
         MinecraftForge.EVENT_BUS.addListener(this::renderLevelLast);
+        MinecraftForge.EVENT_BUS.addListener(SensingEspRenderer::renderLevel);
+        MinecraftForge.EVENT_BUS.addListener(OreSenseRenderer::renderLevel);
     }
 
     // TODO switch over to new renderer
@@ -62,6 +70,10 @@ public class NarutoInGameGUI {
 
     @SubscribeEvent
     public void clientTickEvent(TickEvent.ClientTickEvent event) {
+        // The chakra sense is a picture drawn on the caster's own client, refreshed before anything
+        // is rendered from it. It only needs the caster, the player branch below covers it.
+        ClientSensingData.tick(this.minecraft);
+        ClientOreSenseData.tick(this.minecraft);
         if(this.minecraft.getCameraEntity() instanceof Player player) {
             player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
                 shouldRender = ninjaData.isNinjaModeEnabled();

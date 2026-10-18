@@ -2,6 +2,7 @@ package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.jutsus.ChakraMeditationJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.ChakraSensingAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraShieldAbility;
 import com.sekwah.narutomod.abilities.jutsus.EightGatesAbility;
 import com.sekwah.narutomod.abilities.jutsus.HengeJutsuAbility;
@@ -50,6 +51,9 @@ public class PlayerEvents {
             SageModeAbility.maintain(player, ninjaData);
             // A disguise is on a plain countdown, see HengeJutsuAbility.
             HengeJutsuAbility.maintain(player, ninjaData);
+            // Night vision is fed from the chakra bar and closes itself when it runs dry, see
+            // ChakraSensingAbility.
+            ChakraSensingAbility.maintain(player, ninjaData);
         });
     }
 

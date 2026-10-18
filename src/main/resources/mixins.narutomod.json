@@ -5,6 +5,9 @@
   "package": "com.sekwah.narutomod.mixin",
   "refmap": "mixins.narutomod.refmap.json",
   "mixins": [
+    "common.AbstractFurnaceAccessor",
+    "common.CampfireAccessor",
+    "common.GameEventDispatcherMixin",
     "common.TripWireBlockMixin"
   ],
   "client": [

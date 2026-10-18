@@ -66,6 +66,13 @@ public class NarutoEntities {
     public static final RegistryObject<EntityType<ChakraMarkerEntity>> CHAKRA_MARKER = register("chakra_marker",
             EntityType.Builder.<ChakraMarkerEntity>of(ChakraMarkerEntity::new, MobCategory.MISC).fireImmune().sized(0.5F, 1.0F).clientTrackingRange(10));
 
+    /**
+     * The bank of smoke left by the smoke screen technique. It carries no model and is never summoned,
+     * only created by the technique, so it only needs a box wide enough to hold the area it hides.
+     */
+    public static final RegistryObject<EntityType<SmokeCloudEntity>> SMOKE_CLOUD = register("smoke_cloud",
+            EntityType.Builder.<SmokeCloudEntity>of(SmokeCloudEntity::new, MobCategory.MISC).fireImmune().sized(4.5F, 3.0F).clientTrackingRange(10).updateInterval(5));
+
     private static <T extends Entity> RegistryObject<EntityType<T>> register(String key, EntityType.Builder<T> builder) {
         return ENTITIES.register(key, () -> builder.build(key));
     }

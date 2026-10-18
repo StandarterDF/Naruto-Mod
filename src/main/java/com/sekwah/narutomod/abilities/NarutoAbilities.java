@@ -3,7 +3,19 @@ package com.sekwah.narutomod.abilities;
 import com.mojang.logging.LogUtils;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.jutsus.FireballJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.FireBreathJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.WaterBreathAbility;
+import com.sekwah.narutomod.abilities.jutsus.WindBreathAbility;
+import com.sekwah.narutomod.abilities.jutsus.WoodBreathAbility;
 import com.sekwah.narutomod.abilities.jutsus.SubstitutionJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.ChakraSensingAbility;
+import com.sekwah.narutomod.abilities.jutsus.ChakraThreadAbility;
+import com.sekwah.narutomod.abilities.jutsus.ChakraAdhesionAbility;
+import com.sekwah.narutomod.abilities.jutsus.BodyAdaptationAbility;
+import com.sekwah.narutomod.abilities.jutsus.ChakraFeedingAbility;
+import com.sekwah.narutomod.abilities.jutsus.SmokeScreenAbility;
+import com.sekwah.narutomod.abilities.jutsus.SilenceAbility;
+import com.sekwah.narutomod.abilities.jutsus.CloneRecallAbility;
 import com.sekwah.narutomod.abilities.jutsus.WaterBulletJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraMarkerJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraMeditationJutsuAbility;
@@ -12,10 +24,11 @@ import com.sekwah.narutomod.abilities.jutsus.ChakraRegenerationAbility;
 import com.sekwah.narutomod.abilities.jutsus.CampfireJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraShieldAbility;
 import com.sekwah.narutomod.abilities.jutsus.EightGatesAbility;
-import com.sekwah.narutomod.abilities.jutsus.GateReleaseAbility;
 import com.sekwah.narutomod.abilities.jutsus.KamuiJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.KamuiPhaseAbility;
 import com.sekwah.narutomod.abilities.jutsus.OreExcavationJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.OreSenseAbility;
+import com.sekwah.narutomod.abilities.jutsus.WideDigAbility;
 import com.sekwah.narutomod.abilities.jutsus.RasenganJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.RasenshurikenJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.SecondBreathAbility;
@@ -129,6 +142,19 @@ public class NarutoAbilities {
             ABILITY.register("ore_excavation", OreExcavationJutsuAbility::new);
 
     /**
+     * Widens every swing into a three by three plane of blocks while the stance is held. See
+     * {@link WideDigAbility} and {@code WideDigEvents}.
+     */
+    public static final RegistryObject<WideDigAbility> WIDE_DIG =
+            ABILITY.register("wide_dig", WideDigAbility::new);
+
+    /**
+     * A short pulse that shows ore through the rock. See {@link OreSenseAbility}.
+     */
+    public static final RegistryObject<OreSenseAbility> ORE_SENSE =
+            ABILITY.register("ore_sense", OreSenseAbility::new);
+
+    /**
      * Sets the log the caster is looking at alight, leaving a campfire in its place. See
      * {@link CampfireJutsuAbility}.
      */
@@ -148,17 +174,11 @@ public class NarutoAbilities {
             ABILITY.register("rasenshuriken", RasenshurikenJutsuAbility::new);
 
     /**
-     * The eight inner gates, opened one at a time. See {@link EightGatesAbility}.
+     * The eight inner gates, opened one at a time and sealed again by holding the last key of the
+     * same combo. See {@link EightGatesAbility}.
      */
     public static final RegistryObject<EightGatesAbility> EIGHT_GATES =
             ABILITY.register("eight_gates", EightGatesAbility::new);
-
-    /**
-     * Seals the gates that are open again, any number short of all eight. See
-     * {@link GateReleaseAbility}.
-     */
-    public static final RegistryObject<GateReleaseAbility> GATE_RELEASE =
-            ABILITY.register("gate_release", GateReleaseAbility::new);
 
     /**
      * The eye of the void: a pocket dimension the caster can step into, and a hand that drags
@@ -207,6 +227,90 @@ public class NarutoAbilities {
      */
     public static final RegistryObject<StorageChestAbility> STORAGE_CHEST =
             ABILITY.register("storage_chest", StorageChestAbility::new);
+
+    /**
+     * The held sense of what is around the caster, and the tapped night vision trick it shares a combo
+     * with. See {@link ChakraSensingAbility}.
+     */
+    public static final RegistryObject<ChakraSensingAbility> CHAKRA_SENSING =
+            ABILITY.register("chakra_sensing", ChakraSensingAbility::new);
+
+    /**
+     * Calls every clone the caster can still reach back to their side, so workers left at a worksite
+     * are not lost track of. See {@link CloneRecallAbility}.
+     */
+    public static final RegistryObject<CloneRecallAbility> CLONE_RECALL =
+            ABILITY.register("clone_recall", CloneRecallAbility::new);
+
+    /**
+     * A line of chakra that reels the caster towards a block, or a caught creature towards the
+     * caster. See {@link ChakraThreadAbility}.
+     */
+    public static final RegistryObject<ChakraThreadAbility> CHAKRA_THREAD =
+            ABILITY.register("chakra_thread", ChakraThreadAbility::new);
+
+    /**
+     * A held jet of burning chakra: it hurts whatever is caught in the cone but sets nothing alight,
+     * and to the world it dries wet sponges and stokes furnaces. See {@link FireBreathJutsuAbility}.
+     */
+    public static final RegistryObject<FireBreathJutsuAbility> FIRE_BREATH =
+            ABILITY.register("fire_breath", FireBreathJutsuAbility::new);
+
+    /**
+     * The opposite breath: a cold jet that snuffs out fire, soaks dry sponges into wet ones and
+     * presses creatures back. See {@link WaterBreathAbility}.
+     */
+    public static final RegistryObject<WaterBreathAbility> WATER_BREATH =
+            ABILITY.register("water_breath", WaterBreathAbility::new);
+
+    /**
+     * The breath that opens a way: no harm done, but creatures are shoved and cobwebs, vines and
+     * tripwires are blown away. See {@link WindBreathAbility}.
+     */
+    public static final RegistryObject<WindBreathAbility> WIND_BREATH =
+            ABILITY.register("wind_breath", WindBreathAbility::new);
+
+    /**
+     * The breath that feeds the ground: a spread of bonemeal in front of the caster, growing crops,
+     * saplings and grass. See {@link WoodBreathAbility}.
+     */
+    public static final RegistryObject<WoodBreathAbility> WOOD_BREATH =
+            ABILITY.register("wood_breath", WoodBreathAbility::new);
+
+    /**
+     * Chakra spread under the hands and feet to walk up a wall. The slow, always-available cousin of
+     * the chakra thread. See {@link ChakraAdhesionAbility}.
+     */
+    public static final RegistryObject<ChakraAdhesionAbility> CHAKRA_ADHESION =
+            ABILITY.register("chakra_adhesion", ChakraAdhesionAbility::new);
+
+    /**
+     * A survival stance that fits the caster to the place they are standing: breathing water,
+     * ignoring lava and powder snow. See {@link BodyAdaptationAbility}.
+     */
+    public static final RegistryObject<BodyAdaptationAbility> BODY_ADAPTATION =
+            ABILITY.register("body_adaptation", BodyAdaptationAbility::new);
+
+    /**
+     * A bank of smoke that hides everyone inside, mobs and players alike, and holds lost targets
+     * gone. See {@link SmokeScreenAbility}.
+     */
+    public static final RegistryObject<SmokeScreenAbility> SMOKE_SCREEN =
+            ABILITY.register("smoke_screen", SmokeScreenAbility::new);
+
+    /**
+     * Turns chakra into food slowly, to keep a ninja on their feet between meals. See
+     * {@link ChakraFeedingAbility}.
+     */
+    public static final RegistryObject<ChakraFeedingAbility> CHAKRA_FEEDING =
+            ABILITY.register("chakra_feeding", ChakraFeedingAbility::new);
+
+    /**
+     * A shell of chakra that swallows the caster's noise, so sculk sensors, shriekers and the warden
+     * hear nothing and mob ears are dulled. See {@link SilenceAbility}.
+     */
+    public static final RegistryObject<SilenceAbility> SILENCE =
+            ABILITY.register("silence", SilenceAbility::new);
 
     public static void register(IEventBus eventBus) {
         ABILITY.register(eventBus);
