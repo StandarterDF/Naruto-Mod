@@ -17,14 +17,22 @@ The link check walks every ``href`` / ``src`` on every page: local pages and ima
 ``#anchor`` must have a matching ``id`` on the target page, and duplicate ids are reported because
 they silently break anchors. External links and "mailto:" are skipped.
 
+The stylesheet link every page carries is stamped with a hash of ``style.css`` itself
+(``style.css?v=<sha1>``), because GitHub Pages caches the file for ten minutes and a reload
+revalidates only the page, not its subresources - an unstamped link can therefore keep the previous
+stylesheet on screen after a deploy. A normal run rewrites the stamp in every page; ``--check``
+reports a stale stamp as an error.
+
 Usage:
     python tools/build_docs_search.py            # rewrite docs/search-index.js and report problems
-    python tools/build_docs_search.py --check    # fail (exit 1) if the index is stale or links are broken
+    python tools/build_docs_search.py --check    # fail (exit 1) if the index or the stamps are stale
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
+import io
 import json
 import re
 import sys
@@ -34,6 +42,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 OUT = DOCS / "search-index.js"
+STYLE = DOCS / "style.css"
+# The stylesheet link every page carries; the version query is rewritten to the current stamp.
+STYLE_LINK = re.compile(r'(href="style\.css)(?:\?v=[^"]*)?(")')
 
 # The order pages appear in the sidebar, plus the short name the search results show for them.
 PAGE_NAMES = {
@@ -345,6 +356,45 @@ def check_links(paths: list[Path], ids: dict[str, set[str]]) -> list[str]:
     return errors
 
 
+def style_stamp() -> str:
+    """Short content hash of ``style.css``: the cache-busting version stamped into every page."""
+    return hashlib.sha1(STYLE.read_bytes()).hexdigest()[:8]
+
+
+def stamp_style(
+    paths: list[Path], check: bool, errors: list[str], warnings: list[str]
+) -> tuple[str, int]:
+    """Point every page at the current ``style.css?v=<hash>``. Returns ``(stamp, pages)``.
+
+    GitHub Pages serves ``style.css`` with ``Cache-Control: max-age=600``, and a reload revalidates
+    only the page itself, so a page that keeps the bare URL can show the previous stylesheet for ten
+    minutes after a deploy. The stamp is derived from the file, so it is always in step with it:
+    a normal run rewrites the pages, ``--check`` reports a stale stamp as an error.
+    """
+    stamp = style_stamp()
+    touched = 0
+    for page in paths:
+        # newline="" keeps the file's own EOLs (the checkout is CRLF on Windows).
+        text = io.open(page, encoding="utf-8", newline="").read()
+        if "style.css" not in text:
+            warnings.append("%s: no style.css link" % page.relative_to(DOCS).as_posix())
+            continue
+        fixed = STYLE_LINK.sub(
+            lambda match: "%s?v=%s%s" % (match.group(1), stamp, match.group(2)), text
+        )
+        if fixed == text:
+            continue
+        touched += 1
+        if check:
+            errors.append(
+                "%s: style.css stamp is stale (expected ?v=%s)"
+                % (page.relative_to(DOCS).as_posix(), stamp)
+            )
+        else:
+            io.open(page, "w", encoding="utf-8", newline="").write(fixed)
+    return stamp, touched
+
+
 def check_sidebar(paths: list[Path], warnings: list[str]) -> None:
     expected = {page.name for page in paths if page.name in PAGE_NAMES}
     for page in paths:
@@ -394,6 +444,7 @@ def main() -> int:
 
     errors += check_links(sorted(DOCS.rglob("*.html")), ids)
     check_sidebar(known, warnings)
+    stamp, stamped = stamp_style(known + extra, args.check, errors, warnings)
 
     generated = encode(pages, items)
     existing = read(OUT) if OUT.exists() else ""
@@ -410,6 +461,15 @@ def main() -> int:
     print(
         "index: "
         + ("OUT OF DATE - run tools/build_docs_search.py" if stale else "up to date")
+    )
+    print(
+        "css: style.css?v=%s   %s"
+        % (
+            stamp,
+            "%d page(s) OUT OF DATE - run tools/build_docs_search.py" % stamped
+            if args.check
+            else ("%d page(s) restamped" % stamped if stamped else "in step"),
+        )
     )
     print("links: " + ("%d problem(s)" % len(errors) if errors else "ok"))
 
