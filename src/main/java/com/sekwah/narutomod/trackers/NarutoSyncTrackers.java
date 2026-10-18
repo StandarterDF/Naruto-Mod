@@ -2,6 +2,8 @@ package com.sekwah.narutomod.trackers;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.capabilities.DoubleJumpData;
+import com.sekwah.narutomod.capabilities.mastery.MasteryData;
+import com.sekwah.narutomod.capabilities.skills.SkillData;
 import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
 import com.sekwah.sekclib.capabilitysync.capabilitysync.RegisterSyncTrackerTypeEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -13,5 +15,7 @@ public class NarutoSyncTrackers {
     public static void registerSyncTrackerEvent(RegisterSyncTrackerTypeEvent event) {
         event.registerSyncTracker(ToggleAbilityData.class, new ToggleAbilityDataSyncTracker());
         event.registerSyncTracker(DoubleJumpData.class, new DoubleJumpDataSyncTracker());
+        event.registerSyncTracker(MasteryData.class, new MasteryDataSyncTracker());
+        event.registerSyncTracker(SkillData.class, new SkillDataSyncTracker());
     }
 }

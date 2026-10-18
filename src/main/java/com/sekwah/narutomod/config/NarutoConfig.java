@@ -79,6 +79,74 @@ public class NarutoConfig {
     private static final ForgeConfigSpec.BooleanValue CONFIG_HENGE_ENABLED;
     public static boolean hengeEnabled;
 
+    // Mastery: the more a technique is used, the cheaper it becomes.
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_MASTERY_ENABLED;
+    public static boolean masteryEnabled;
+
+    private static final ForgeConfigSpec.IntValue CONFIG_MASTERY_HALFWAY_CASTS;
+    public static int masteryHalfwayCasts;
+
+    private static final ForgeConfigSpec.DoubleValue CONFIG_MASTERY_EXPONENT;
+    public static double masteryExponent;
+
+    private static final ForgeConfigSpec.DoubleValue CONFIG_MASTERY_COST_REDUCTION;
+    public static double masteryCostReduction;
+
+    private static final ForgeConfigSpec.DoubleValue CONFIG_MASTERY_COOLDOWN_REDUCTION;
+    public static double masteryCooldownReduction;
+
+    private static final ForgeConfigSpec.DoubleValue CONFIG_MASTERY_SEAL_FREE;
+    public static double masterySealFree;
+
+    private static final ForgeConfigSpec.DoubleValue CONFIG_MASTERY_DEATH_LOW_MIN;
+    public static double masteryDeathLowMin;
+
+    private static final ForgeConfigSpec.DoubleValue CONFIG_MASTERY_DEATH_LOW_MAX;
+    public static double masteryDeathLowMax;
+
+    private static final ForgeConfigSpec.DoubleValue CONFIG_MASTERY_DEATH_HIGH_MIN;
+    public static double masteryDeathHighMin;
+
+    private static final ForgeConfigSpec.DoubleValue CONFIG_MASTERY_DEATH_HIGH_MAX;
+    public static double masteryDeathHighMax;
+
+    private static final ForgeConfigSpec.DoubleValue CONFIG_MEDITATION_RADIUS_MAX;
+    public static double meditationRadiusMax;
+
+    private static final ForgeConfigSpec.DoubleValue CONFIG_MEDITATION_PASSIVE_THRESHOLD;
+    public static double meditationPassiveThreshold;
+
+    private static final ForgeConfigSpec.DoubleValue CONFIG_MEDITATION_PASSIVE_CAPACITY;
+    public static double meditationPassiveCapacity;
+
+    private static final ForgeConfigSpec.DoubleValue CONFIG_SENSING_RADIUS_MAX;
+    public static double sensingRadiusMax;
+
+    private static final ForgeConfigSpec.DoubleValue CONFIG_SENSING_NIGHT_VISION_COST;
+    public static double sensingNightVisionChakraPerSecond;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_WIDE_DIG_ENABLED;
+    public static boolean wideDigEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_ORE_SENSE_ENABLED;
+    public static boolean oreSenseEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_ADHESION_ENABLED;
+    public static boolean adhesionEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_ADAPTATION_ENABLED;
+    public static boolean adaptationEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_SMOKE_ENABLED;
+    public static boolean smokeEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_SMOKE_BLIND_PLAYERS;
+    public static boolean smokeBlindPlayers;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_SILENCE_ENABLED;
+    public static boolean silenceEnabled;
+
     //private static final ForgeConfigSpec.BooleanValue CONFIG_STARTS_AS_NINJA;
     //public static boolean startsAsNinja;
 
@@ -98,7 +166,7 @@ public class NarutoConfig {
         configBuilder.comment("Stuff such as regen rates and maximum (will likely change with updates, e.g. stats system)").push(ENERGY_BARS);
 
         CONFIG_MAX_CHAKRA = configBuilder.comment("Max Chakra")
-                .defineInRange("maxChakra",  100F ,  0d, Double.MAX_VALUE);
+                .defineInRange("maxChakra",  25F ,  0d, Double.MAX_VALUE);
 
         CONFIG_CHAKRA_REGEN = configBuilder.comment("Chakra Regen")
                 .defineInRange("chakraRegen",  0.05d ,  0d, Double.MAX_VALUE);
@@ -123,6 +191,100 @@ public class NarutoConfig {
 
         CONFIG_HENGE_ENABLED = configBuilder.comment("Can players copy another player's skin and name with henge?")
                 .define("hengeEnabled", true);
+
+        configBuilder.comment("Technique mastery: every cast makes a technique a little cheaper, and a"
+                + " death sets that progress back, the harder the closer it was to finished").push("mastery");
+
+        CONFIG_MASTERY_ENABLED = configBuilder.comment("Should techniques get cheaper and faster the more they are used?")
+                .define("masteryEnabled", true);
+
+        CONFIG_MASTERY_HALFWAY_CASTS = configBuilder.comment("How many casts of a technique it takes to reach half of its mastery")
+                .defineInRange("halfwayCasts", 40, 1, Integer.MAX_VALUE);
+
+        CONFIG_MASTERY_EXPONENT = configBuilder.comment("How slow a technique's mastery is to get going: at 1 the first casts"
+                        + " already pay off, higher values make the early casts worth almost nothing while keeping the"
+                        + " halfway point at halfwayCasts (2 is the intended default)")
+                .defineInRange("exponent", 2.0d, 0.1d, 10.0d);
+
+        CONFIG_MASTERY_COST_REDUCTION = configBuilder.comment("How much cheaper a fully mastered technique gets (0.4 = 40% cheaper)")
+                .defineInRange("costReduction", 0.4d, 0d, 0.95d);
+
+        CONFIG_MASTERY_COOLDOWN_REDUCTION = configBuilder.comment("How much shorter a fully mastered technique's cooldown gets (0.4 = 40% shorter)")
+                .defineInRange("cooldownReduction", 0.4d, 0d, 0.95d);
+
+        CONFIG_MASTERY_SEAL_FREE = configBuilder.comment("Mastery at which the chakra seal is no longer needed at all, even for the multi shadow clone")
+                .defineInRange("sealFreeAt", 0.9d, 0d, 1d);
+
+        CONFIG_MASTERY_DEATH_LOW_MIN = configBuilder.comment("Smallest share of progress lost to a death while mastery is at or below half")
+                .defineInRange("deathPenaltyLowMin", 0.03d, 0d, 1d);
+
+        CONFIG_MASTERY_DEATH_LOW_MAX = configBuilder.comment("Largest share of progress lost to a death while mastery is at or below half")
+                .defineInRange("deathPenaltyLowMax", 0.05d, 0d, 1d);
+
+        CONFIG_MASTERY_DEATH_HIGH_MIN = configBuilder.comment("Smallest share of progress lost to a death when mastery is near finished")
+                .defineInRange("deathPenaltyHighMin", 0.10d, 0d, 1d);
+
+        CONFIG_MASTERY_DEATH_HIGH_MAX = configBuilder.comment("Largest share of progress lost to a death when mastery is near finished")
+                .defineInRange("deathPenaltyHighMax", 0.20d, 0d, 1d);
+
+        CONFIG_MEDITATION_RADIUS_MAX = configBuilder.comment("How far, in blocks, a fully mastered chakra meditation reaches at most")
+                .defineInRange("meditationRadiusMax", 512d, 8d, 100000d);
+
+        CONFIG_MEDITATION_PASSIVE_THRESHOLD = configBuilder.comment("Meditation mastery past which every meditating clone feeds its caster even out of range")
+                .defineInRange("meditationPassiveAt", 0.95d, 0d, 1d);
+
+        CONFIG_MEDITATION_PASSIVE_CAPACITY = configBuilder.comment("Chakra capacity each meditating clone adds while out of range past the threshold")
+                .defineInRange("meditationPassiveCapacity", 50d, 0d, Double.MAX_VALUE);
+
+        configBuilder.pop();
+
+        configBuilder.comment("Chakra sensing: the held sense that shows what is around the caster, and the"
+                + " tapped night vision trick").push("sensing");
+
+        CONFIG_SENSING_RADIUS_MAX = configBuilder.comment("How far, in blocks, a fully mastered chakra sense reaches"
+                        + " (an untrained sense always reaches 16). 96 is six chunks.")
+                .defineInRange("radiusMax", 96d, 16d, 100000d);
+
+        CONFIG_SENSING_NIGHT_VISION_COST = configBuilder.comment("Chakra burnt per second while the night vision trick is up")
+                .defineInRange("nightVisionChakraPerSecond", 1.0d, 0d, 100d);
+
+        configBuilder.pop();
+
+        configBuilder.comment("Techniques that work the ground: the wide pick swing, and the ore sense"
+                + " that reads the rock for a moment").push("mining");
+
+        CONFIG_WIDE_DIG_ENABLED = configBuilder.comment("Can players hold the wide dig stance and break a"
+                        + " 3x3 plane of blocks with every swing?")
+                .define("wideDigEnabled", true);
+
+        CONFIG_ORE_SENSE_ENABLED = configBuilder.comment("Can players cast the ore sense pulse? On a public"
+                        + " server this is effectively a short-lived x-ray, so it can be turned off here.")
+                .define("oreSenseEnabled", true);
+
+        configBuilder.pop();
+
+        configBuilder.comment("Stances and tricks that are not about the ground: sticking to a wall,"
+                + " living in places the body should not, hiding in smoke, and running on chakra"
+                + " instead of food").push("techniques");
+
+        CONFIG_ADHESION_ENABLED = configBuilder.comment("Can players hold the chakra adhesion stance and"
+                        + " climb along a wall they are pressed against?")
+                .define("adhesionEnabled", true);
+
+        CONFIG_ADAPTATION_ENABLED = configBuilder.comment("Can players hold the body adaptation stance,"
+                        + " breathing water and shrugging off lava and powder snow?")
+                .define("adaptationEnabled", true);
+
+        CONFIG_SMOKE_ENABLED = configBuilder.comment("Can players cast the smoke screen?")
+                .define("smokeEnabled", true);
+
+        CONFIG_SMOKE_BLIND_PLAYERS = configBuilder.comment("Does the smoke screen also blind players caught"
+                        + " in it? Turn this off to keep it a mob-only escape on a PvP server.")
+                .define("smokeBlindPlayers", true);
+
+        CONFIG_SILENCE_ENABLED = configBuilder.comment("Can players hold the silence stance, hiding their"
+                        + " footsteps and blows from sculk sensors, shriekers, the warden and mob ears?")
+                .define("silenceEnabled", true);
 
         configBuilder.pop();
 
@@ -199,6 +361,28 @@ public class NarutoConfig {
         maxSeninMana = CONFIG_MAX_SENIN_MANA.get().floatValue();
         sageModeEnabled = CONFIG_SAGE_MODE_ENABLED.get();
         hengeEnabled = CONFIG_HENGE_ENABLED.get();
+        masteryEnabled = CONFIG_MASTERY_ENABLED.get();
+        masteryHalfwayCasts = CONFIG_MASTERY_HALFWAY_CASTS.get();
+        masteryExponent = CONFIG_MASTERY_EXPONENT.get();
+        masteryCostReduction = CONFIG_MASTERY_COST_REDUCTION.get();
+        masteryCooldownReduction = CONFIG_MASTERY_COOLDOWN_REDUCTION.get();
+        masterySealFree = CONFIG_MASTERY_SEAL_FREE.get();
+        masteryDeathLowMin = CONFIG_MASTERY_DEATH_LOW_MIN.get();
+        masteryDeathLowMax = CONFIG_MASTERY_DEATH_LOW_MAX.get();
+        masteryDeathHighMin = CONFIG_MASTERY_DEATH_HIGH_MIN.get();
+        masteryDeathHighMax = CONFIG_MASTERY_DEATH_HIGH_MAX.get();
+        meditationRadiusMax = CONFIG_MEDITATION_RADIUS_MAX.get();
+        meditationPassiveThreshold = CONFIG_MEDITATION_PASSIVE_THRESHOLD.get();
+        meditationPassiveCapacity = CONFIG_MEDITATION_PASSIVE_CAPACITY.get();
+        sensingRadiusMax = CONFIG_SENSING_RADIUS_MAX.get();
+        sensingNightVisionChakraPerSecond = CONFIG_SENSING_NIGHT_VISION_COST.get();
+        wideDigEnabled = CONFIG_WIDE_DIG_ENABLED.get();
+        oreSenseEnabled = CONFIG_ORE_SENSE_ENABLED.get();
+        adhesionEnabled = CONFIG_ADHESION_ENABLED.get();
+        adaptationEnabled = CONFIG_ADAPTATION_ENABLED.get();
+        smokeEnabled = CONFIG_SMOKE_ENABLED.get();
+        smokeBlindPlayers = CONFIG_SMOKE_BLIND_PLAYERS.get();
+        silenceEnabled = CONFIG_SILENCE_ENABLED.get();
         //startsAsNinja = CONFIG_STARTS_AS_NINJA.get();
     }
 

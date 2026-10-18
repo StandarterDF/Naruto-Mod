@@ -27,11 +27,12 @@ public class WaterBulletJutsuAbility extends Ability implements Ability.Cooldown
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        if(ninjaData.getChakra() < 30) {
+        float cost = this.masteryCost(ninjaData, 30f);
+        if(ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra", Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
             return false;
         }
-        ninjaData.useChakra(30, 30);
+        ninjaData.useChakra(cost, 30);
         return true;
     }
 

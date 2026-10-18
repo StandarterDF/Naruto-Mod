@@ -116,7 +116,7 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }
-        float cost = chargeAmount == -1 ? STEP_COST : CHAKRA_PER_TICK;
+        float cost = this.masteryCost(ninjaData, chargeAmount == -1 ? STEP_COST : CHAKRA_PER_TICK);
         if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
@@ -262,7 +262,8 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
                     .withStyle(ChatFormatting.RED), true);
             return;
         }
-        if (ninjaData.getChakra() < PULL_COST) {
+        float pullCost = this.masteryCost(ninjaData, PULL_COST);
+        if (ninjaData.getChakra() < pullCost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
             return;
@@ -271,7 +272,7 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
         if (kamui == null) {
             return;
         }
-        ninjaData.useChakra(PULL_COST, CHAKRA_REGEN_DELAY);
+        ninjaData.useChakra(pullCost, CHAKRA_REGEN_DELAY);
 
         // Where it is now, before the swirl takes it away. It goes back there on its own.
         banish(living, living.position(), level.dimension().location(),
@@ -299,7 +300,8 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
      * animals kept in the void into something a caster can actually get out again.</p>
      */
     private void eject(Player player, INinjaData ninjaData, ServerLevel level, LivingEntity living) {
-        if (ninjaData.getChakra() < PULL_COST) {
+        float pullCost = this.masteryCost(ninjaData, PULL_COST);
+        if (ninjaData.getChakra() < pullCost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
             return;
@@ -318,7 +320,7 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
             return;
         }
 
-        ninjaData.useChakra(PULL_COST, CHAKRA_REGEN_DELAY);
+        ninjaData.useChakra(pullCost, CHAKRA_REGEN_DELAY);
         clearBanish(living);
         player.displayClientMessage(Component.translatable("jutsu.kamui.push", living.getDisplayName())
                 .withStyle(ChatFormatting.AQUA), true);

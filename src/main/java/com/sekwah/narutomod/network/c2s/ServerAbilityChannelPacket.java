@@ -2,6 +2,7 @@ package com.sekwah.narutomod.network.c2s;
 
 import com.mojang.logging.LogUtils;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.AbilityUnlocks;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.registries.NarutoRegistries;
@@ -66,14 +67,27 @@ public class ServerAbilityChannelPacket {
                         LOGGER.error("Ability doesnt exist {}", msg.abilityResource);
                         return;
                     }
+                    if (!AbilityUnlocks.isUnlocked(ninjaData, msg.abilityResource)) {
+                        player.displayClientMessage(Component.translatable("jutsu.fail.notunlocked",
+                                Component.translatable(ability.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                                .withStyle(ChatFormatting.RED), true);
+                        return;
+                    }
                     // Just check if its
                     if (ability.activationType() == Ability.ActivationType.CHANNELED) {
                         if (msg.status == ChannelStatus.START) {
                             ninjaData.setCurrentlyChanneledAbility(player, ability);
                         } else if (msg.status == ChannelStatus.STOP) {
                             NarutoRegistries.ABILITIES.getResourceKey(ability).ifPresent(resourceKey -> {
-                                if(ninjaData.getCurrentlyChanneledAbility().equals(resourceKey.location())) {
+                                // Compared the safe way round: a hold can end on the server before
+                                // the keys come up (a thread that snapped, chakra that ran out), so
+                                // there may be nothing channeled by the time the stop packet lands.
+                                if(resourceKey.location().equals(ninjaData.getCurrentlyChanneledAbility())) {
                                     ability.performServer(player, ninjaData, ninjaData.getCurrentlyChanneledTicks());
+                                    // A tap that never held the channel is not a cast worth mastering.
+                                    if (ninjaData.getCurrentlyChanneledTicks() > 0) {
+                                        ability.recordMastery(player, ninjaData);
+                                    }
                                     ninjaData.setCurrentlyChanneledAbility(player, null);
                                 }
                             });
@@ -87,6 +101,7 @@ public class ServerAbilityChannelPacket {
                                     }
                                     player.displayClientMessage(Component.translatable("jutsu.cast", Component.translatable(ability.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)).withStyle(ChatFormatting.GREEN), true);
                                     ability.performServer(player, ninjaData, -1);
+                                    ability.recordMastery(player, ninjaData);
                                 }
                             } else {
                                 player.displayClientMessage(Component.translatable("jutsu.channel.needed", Component.translatable(ability.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)).withStyle(ChatFormatting.RED), true);

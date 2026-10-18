@@ -75,7 +75,12 @@ public class SenjutsuChargingAbility extends Ability implements Ability.Channele
             }
             return;
         }
+        // Mastery is earned by the nature energy that actually landed in the pool, one full pool to
+        // a cast, so a tap gathers nothing worth counting and a long sit is real practice.
+        float before = ninjaData.getSeninMana();
         ninjaData.addSeninMana(CHARGE_PER_TICK);
+        float gathered = ninjaData.getSeninMana() - before;
+        this.recordMasteryCredit(player, ninjaData, gathered / Math.max(1f, ninjaData.getMaxSeninMana()));
 
         if (player.level() instanceof ServerLevel level) {
             // Nature energy crawling into the caster, so it is obvious the technique is working.
@@ -100,6 +105,15 @@ public class SenjutsuChargingAbility extends Ability implements Ability.Channele
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
                     .withStyle(ChatFormatting.RED), true);
         }
+    }
+
+    /**
+     * A channelled gathering technique is not mastered by how often it is cast but by the nature
+     * energy it gathered, which {@link #handleChannelling} already paid in - so the end-of-cast
+     * credit every other technique gets is deliberately left empty here.
+     */
+    @Override
+    public void recordMastery(Player player, INinjaData ninjaData) {
     }
 
     /** The progress read out is the message, the channel start/stop lines would just be noise. */

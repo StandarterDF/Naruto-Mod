@@ -2,6 +2,7 @@ package com.sekwah.narutomod.mixin.client;
 
 import com.mojang.authlib.GameProfile;
 import com.sekwah.narutomod.abilities.NarutoAbilities;
+import com.sekwah.narutomod.abilities.AbilityUnlocks;
 import com.sekwah.narutomod.abilities.utility.DoubleJumpAbility;
 import com.sekwah.narutomod.capabilities.DoubleJumpData;
 import net.minecraft.ChatFormatting;
@@ -37,6 +38,9 @@ public class LocalPlayerMixin extends AbstractClientPlayer {
         if (!itemstack.canElytraFly(this) && !this.onGround() && !this.isFallFlying() && !this.isInWater() && !this.hasEffect(MobEffects.LEVITATION)) {
             this.getCapability(NINJA_DATA).ifPresent(ninjaData -> {
                 if(!ninjaData.isNinjaModeEnabled()) {
+                    return;
+                }
+                if (!AbilityUnlocks.isUnlocked(ninjaData, NarutoAbilities.DOUBLE_JUMP.getId())) {
                     return;
                 }
                 DoubleJumpData doubleJumpData = ninjaData.getDoubleJumpData();

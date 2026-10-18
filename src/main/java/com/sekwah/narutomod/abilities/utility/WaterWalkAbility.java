@@ -44,6 +44,7 @@ public class WaterWalkAbility extends Ability implements Ability.Toggled {
         } else if (checks.steadyCheck) {
             fullCost += 0.12F;
         }
+        fullCost = this.masteryCost(ninjaData, fullCost);
         if(ninjaData.getChakra() < fullCost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra", Component.translatable("jutsu.waterwalk").withStyle(ChatFormatting.YELLOW)), true);
             return false;
@@ -132,7 +133,17 @@ public class WaterWalkAbility extends Ability implements Ability.Toggled {
 
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
+        // Mastery is paid for the time the water is actually walked, not for switching it on.
+        this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
         updatePlayerMovement(player, ninjaData);
+    }
+
+    /**
+     * A stance is mastered by holding it, not by switching it on, so the credit is paid per active
+     * tick from {@link #performServer} and this records nothing.
+     */
+    @Override
+    public void recordMastery(Player player, INinjaData ninjaData) {
     }
 
     @Override

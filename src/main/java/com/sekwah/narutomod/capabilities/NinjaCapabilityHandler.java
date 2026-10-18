@@ -2,9 +2,13 @@ package com.sekwah.narutomod.capabilities;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
+import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import com.sekwah.narutomod.item.ChakraBatteryItem;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.capabilities.Capability;
@@ -15,6 +19,9 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+
+import java.util.ArrayList;
+import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = NarutoMod.MOD_ID)
 public class NinjaCapabilityHandler {
@@ -47,14 +54,22 @@ public class NinjaCapabilityHandler {
                         if(!data.getToggleAbilityData().getAbilitiesHashSet().isEmpty()) {
                             ChakraBatteryItem.fuelUpkeep(player, data);
                         }
-                        data.getToggleAbilityData().getAbilitiesHashSet().forEach(abilityName -> {
+                        // Walk a snapshot: an ability that can no longer pay is removed right here, and
+                        // removing from the live set while walking it would throw
+                        // ConcurrentModificationException. Anything that has gone missing from the
+                        // registry is dropped from the set rather than crashing on a null.
+                        for (ResourceLocation abilityName : new ArrayList<>(data.getToggleAbilityData().getAbilitiesHashSet())) {
                             Ability ability = NarutoRegistries.ABILITIES.getValue(abilityName);
+                            if (ability == null) {
+                                data.getToggleAbilityData().removeAbility(abilityName);
+                                continue;
+                            }
                             if(ability.handleCost(player, data)) {
                                 ability.performServer(player, data);
                             } else {
                                 data.getToggleAbilityData().removeAbilityEnded(player, data, ability);
                             }
-                        });
+                        }
                     }
                 } else {
                     data.updateDataClient(player);
@@ -76,8 +91,36 @@ public class NinjaCapabilityHandler {
         event.getOriginal().getCapability(NINJA_DATA).ifPresent(original -> {
             event.getEntity().getCapability(NINJA_DATA).ifPresent(future -> {
                 future.deserializeNBT(original.serializeNBT());
+                if (event.isWasDeath()) {
+                    // Dying costs a slice of every technique's mastery, the deeper the closer it was
+                    // to finished, and takes all of the caster's meditations with it.
+                    Mastery.applyDeathPenalty(event.getEntity(), future);
+                    dispelMeditationClones(event.getEntity(), original);
+                    future.getMeditationData().clear();
+                    future.setChakraCapacityBonus(0f);
+                }
             });
         });
+    }
+
+    /**
+     * Pops whatever meditating clones of a dead caster can still be reached, so nothing keeps
+     * feeding them from the grave. Their links go with them; the rest is cleared by the caller.
+     */
+    private static void dispelMeditationClones(Player caster, INinjaData original) {
+        MinecraftServer server = caster.getServer();
+        if (server == null) {
+            return;
+        }
+        for (UUID cloneId : new ArrayList<>(original.getMeditationData().getLinks().keySet())) {
+            for (ServerLevel level : server.getAllLevels()) {
+                Entity clone = level.getEntity(cloneId);
+                if (clone instanceof ShadowCloneEntity shadowClone) {
+                    shadowClone.dispel();
+                    break;
+                }
+            }
+        }
     }
 
     //public static final EntitySize STANDING_SIZE = EntitySize.flexible(0.1F, 0.1F);

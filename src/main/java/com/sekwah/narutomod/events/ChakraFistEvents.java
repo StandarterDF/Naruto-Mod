@@ -1,6 +1,8 @@
 package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
+import com.sekwah.narutomod.abilities.NarutoAbilities;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.abilities.utility.ChakraFistAbility;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import net.minecraft.world.entity.player.Player;
@@ -53,8 +55,10 @@ public class ChakraFistEvents {
             if (!ChakraFistAbility.isActive(ninjaData)) {
                 return;
             }
-            if (ninjaData.getChakra() >= ChakraFistAbility.CHAKRA_PER_BLOCK) {
-                ninjaData.useChakra(ChakraFistAbility.CHAKRA_PER_BLOCK,
+            float perBlock = Mastery.cost(ninjaData, NarutoAbilities.CHAKRA_FIST.get(),
+                    ChakraFistAbility.CHAKRA_PER_BLOCK);
+            if (ninjaData.getChakra() >= perBlock) {
+                ninjaData.useChakra(perBlock,
                         ChakraFistAbility.REGEN_DELAY_PER_BLOCK);
             } else {
                 // Punch itself out rather than run into negative chakra; the stance ends on the next
@@ -80,11 +84,13 @@ public class ChakraFistEvents {
             return;
         }
         player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
+            float perHit = Mastery.cost(ninjaData, NarutoAbilities.CHAKRA_FIST.get(),
+                    ChakraFistAbility.CHAKRA_PER_HIT);
             if (!ChakraFistAbility.isActive(ninjaData)
-                    || ninjaData.getChakra() < ChakraFistAbility.CHAKRA_PER_HIT) {
+                    || ninjaData.getChakra() < perHit) {
                 return;
             }
-            ninjaData.useChakra(ChakraFistAbility.CHAKRA_PER_HIT, ChakraFistAbility.REGEN_DELAY_PER_HIT);
+            ninjaData.useChakra(perHit, ChakraFistAbility.REGEN_DELAY_PER_HIT);
             event.setAmount(event.getAmount() + ChakraFistAbility.BONUS_MELEE_DAMAGE);
         });
     }

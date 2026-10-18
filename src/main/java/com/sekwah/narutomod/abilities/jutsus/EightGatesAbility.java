@@ -14,36 +14,47 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 
 /**
- * The eight inner gates, opened one at a time.
+ * The eight inner gates, opened one at a time and sealed again with the same bind.
  *
- * <p>Every cast opens the next gate, and by the time all eight are open the caster is fast, strong
- * and hard to hurt in a way nothing else in the mod can match. The catch is that the body is not
- * built for it: the gates grind the caster down the whole time they are open, and the drain grows
- * with the square of how many are open, so two gates are something a caster can keep up for ten
- * minutes while the last two are a countdown.</p>
+ * <p>Every tap opens the next gate, and by the time all eight are open the caster is fast, strong
+ * and hard to hurt in a way nothing else in the mod can match. Keeping the last key of the combo
+ * held instead seals every gate the caster still can, which is why the two halves share one
+ * technique rather than two combos to remember: the bind only ever does the thing the caster means
+ * by how long they press it.</p>
  *
- * <p><b>The eighth gate cannot be closed.</b> Up to the seventh the caster can still seal them again
- * with {@link GateReleaseAbility}, but once the last gate is open no cast shuts it and eight gates
- * drain a full health bar in a little over half a minute. Death is the only way out, which is the
- * point: the eighth gate is meant to be spent, not used. The gates fall away with death and are gone
- * when the caster comes back.</p>
+ * <p>The catch is that the body is not built for it: the gates grind the caster down the whole time
+ * they are open, and the drain grows with the square of how many are open, so two gates are
+ * something a caster can keep up for ten minutes while the last two are a countdown.</p>
+ *
+ * <p><b>The eighth gate cannot be sealed.</b> Up to the seventh the caster can still close them with
+ * a hold, but once the last gate is open no hold shuts it and eight gates drain a full health bar in
+ * a little over half a minute. Death is the only way out, which is the point: the eighth gate is
+ * meant to be spent, not used. The gates fall away with death and are gone when the caster comes
+ * back.</p>
  *
  * <p>The effects are kept alive from {@code PlayerEvents}, not here, since they have to be refreshed
  * every tick while the gates are open.</p>
  */
-public class EightGatesAbility extends Ability {
+public class EightGatesAbility extends Ability implements Ability.Channeled {
 
-    /** V B B B */
+    /** V B B B - tap to open the next gate, hold the last key to seal them again. */
     public static final long COMBO = 2333L;
 
     public static final int MAX_GATES = 8;
 
-    /** Chakra and stamina each gate costs to force open. */
+    /** Chakra and stamina each gate costs to force open. Sealing is free. */
     private static final float CHAKRA_PER_GATE = 25.0f;
     private static final float STAMINA_PER_GATE = 15.0f;
 
     /** How often, in ticks, the open gates take their toll on the caster. */
     private static final int DRAIN_INTERVAL = 20;
+
+    /**
+     * How long the last key has to stay down, counted from the moment the channel starts, before the
+     * hold is read as "seal" rather than "open". The client only starts the channel after its own
+     * hold threshold, so this is the extra bit that separates a quick tap from a deliberate hold.
+     */
+    private static final int RELEASE_HOLD_TICKS = 10;
 
     /**
      * Health lost each tick of drain, multiplied by the square of the open gates.
@@ -60,7 +71,7 @@ public class EightGatesAbility extends Ability {
 
     @Override
     public ActivationType activationType() {
-        return ActivationType.INSTANT;
+        return ActivationType.CHANNELED;
     }
 
     @Override
@@ -68,22 +79,44 @@ public class EightGatesAbility extends Ability {
         return COMBO;
     }
 
+    /**
+     * The opening and sealing messages are written by hand; the generic channel chatter ("channel
+     * started", "channel stopped") would only repeat them, so it is turned off.
+     */
+    @Override
+    public boolean logInChat() {
+        return false;
+    }
+
+    @Override
+    public boolean hideChannelMessages() {
+        return true;
+    }
+
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        // There is no way back from the eighth gate: the cast that would close them fails instead.
-        if (ninjaData.getGateCount() >= MAX_GATES) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.gates_open",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
-            return false;
+        // A tap is unambiguously an attempt to open the next gate, so it is checked and priced up
+        // front. A held key may still turn into a seal, which costs nothing, so the channel itself
+        // is allowed through and performServer decides what the hold meant.
+        if (chargeAmount == -1) {
+            if (ninjaData.getGateCount() >= MAX_GATES) {
+                fail(player, "jutsu.fail.gates_open");
+                return false;
+            }
+            return canPay(player, ninjaData);
         }
-        if (ninjaData.getChakra() < CHAKRA_PER_GATE || ninjaData.getStamina() < STAMINA_PER_GATE) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
-            return false;
-        }
-        ninjaData.useChakra(CHAKRA_PER_GATE, 20 * 3);
-        ninjaData.useStamina(STAMINA_PER_GATE, 20 * 3);
         return true;
+    }
+
+    @Override
+    public void handleChannelling(Player player, INinjaData ninjaData, int ticksChanneled) {
+        if (ticksChanneled < RELEASE_HOLD_TICKS) {
+            return;
+        }
+        // Held long enough: seal whatever is open. The channel is ended here rather than waited out
+        // so the effects drop the moment the hold is recognised, not when the key finally comes up.
+        seal(player, ninjaData);
+        ninjaData.setCurrentlyChanneledAbility(player, null);
     }
 
     @Override
@@ -91,6 +124,25 @@ public class EightGatesAbility extends Ability {
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
+
+        // A channel that got at least as far as the release threshold is a seal. Anything shorter -
+        // including the -1 a tap arrives with - opens the next gate.
+        if (ticksActive >= RELEASE_HOLD_TICKS) {
+            seal(player, ninjaData);
+            return;
+        }
+
+        if (ninjaData.getGateCount() >= MAX_GATES) {
+            fail(player, "jutsu.fail.gates_open");
+            return;
+        }
+        if (!canPay(player, ninjaData)) {
+            return;
+        }
+
+        float chakraCost = this.masteryCost(ninjaData, CHAKRA_PER_GATE);
+        ninjaData.useChakra(chakraCost, 20 * 3);
+        ninjaData.useStamina(STAMINA_PER_GATE, 20 * 3);
 
         int gates = ninjaData.getGateCount() + 1;
         ninjaData.setGateCount(gates);
@@ -104,6 +156,49 @@ public class EightGatesAbility extends Ability {
         player.displayClientMessage(Component.translatable("jutsu.eight_gates.open",
                 Component.literal(String.valueOf(gates)).withStyle(ChatFormatting.GOLD))
                 .withStyle(ChatFormatting.RED), true);
+    }
+
+    /**
+     * Shuts every gate the caster can still shut and says why when they cannot. Sealing costs
+     * nothing; the only price was opening them in the first place.
+     */
+    private static void seal(Player player, INinjaData ninjaData) {
+        int gates = ninjaData.getGateCount();
+        if (gates <= 0) {
+            fail(player, "jutsu.fail.gates_none");
+            return;
+        }
+        if (gates >= MAX_GATES) {
+            fail(player, "jutsu.fail.gates_open");
+            return;
+        }
+        if (!(player.level() instanceof ServerLevel level)) {
+            return;
+        }
+
+        close(player, ninjaData);
+
+        level.sendParticles(ParticleTypes.CLOUD, player.getX(),
+                player.getY() + player.getBbHeight() / 2.0d, player.getZ(),
+                20 + gates * 4, 0.4d, 0.6d, 0.4d, 0.02d);
+        level.playSound(null, player, SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.8f, 0.7f);
+        player.displayClientMessage(Component.translatable("jutsu.eight_gates.close",
+                Component.literal(String.valueOf(gates)).withStyle(ChatFormatting.GOLD))
+                .withStyle(ChatFormatting.GRAY), true);
+    }
+
+    private boolean canPay(Player player, INinjaData ninjaData) {
+        float chakraCost = this.masteryCost(ninjaData, CHAKRA_PER_GATE);
+        if (ninjaData.getChakra() < chakraCost || ninjaData.getStamina() < STAMINA_PER_GATE) {
+            fail(player, "jutsu.fail.notenoughchakra");
+            return false;
+        }
+        return true;
+    }
+
+    private static void fail(Player player, String key) {
+        player.displayClientMessage(Component.translatable(key,
+                Component.translatable("narutomod:eight_gates").withStyle(ChatFormatting.YELLOW)), true);
     }
 
     /**
@@ -168,7 +263,7 @@ public class EightGatesAbility extends Ability {
     }
 
     /**
-     * Shuts every gate: no effects, no drain. Only death gets to do this now, the caster cannot.
+     * Shuts every gate: no effects, no drain. Called by the hold, and by death.
      */
     public static void close(Player player, INinjaData ninjaData) {
         ninjaData.setGateCount(0);

@@ -1,6 +1,9 @@
 package com.sekwah.narutomod.capabilities;
 
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.capabilities.mastery.MasteryData;
+import com.sekwah.narutomod.capabilities.skills.SkillData;
+import com.sekwah.narutomod.capabilities.mastery.MeditationData;
 import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
 import com.sekwah.narutomod.menu.SupplyChestContainer;
 import net.minecraft.nbt.Tag;
@@ -120,6 +123,21 @@ public interface INinjaData extends INBTSerializable<Tag> {
     void setSageMode(boolean sage);
 
     /**
+     * How far the caster's chakra sense reaches, or zero when it is not up. Synced, because the whole
+     * technique is a picture drawn on the client: the glow around creatures and the structure markers
+     * are rendered from this, see {@code ChakraSensingAbility}.
+     */
+    float getSensingRadius();
+    void setSensingRadius(float radius);
+
+    /**
+     * Ticks of chakra funded night vision left, or zero when it is off. Server side only: the client
+     * sees the ordinary vanilla effect. See {@code ChakraSensingAbility#maintain}.
+     */
+    int getNightVisionTicks();
+    void setNightVisionTicks(int ticks);
+
+    /**
      * UUID of the player whose form is currently worn as a disguise, or an empty string when the
      * caster is wearing their own face or the form of a mob. Synced, because the only thing that uses
      * it is the client side renderer, see {@code HengeRenderEvents}.
@@ -154,6 +172,24 @@ public interface INinjaData extends INBTSerializable<Tag> {
     void setCurrentlyChanneledAbility(Player player, Ability ability);
 
     ToggleAbilityData getToggleAbilityData();
+
+    /**
+     * How many times each technique has been cast by this player, which is what mastery is worked
+     * out from. Synced, because the jutsu menu draws a progress bar per technique from it.
+     */
+    MasteryData getMasteryData();
+
+    /**
+     * The skill tree nodes bought with experience levels. Synced, because the skill screen draws the
+     * tree from it, and saved, because levels spent are permanent.
+     */
+    SkillData getSkillData();
+
+    /**
+     * The standing meditating clones of this caster, used to feed them chakra at a distance without
+     * scanning the world. Server side only. See {@code ChakraMeditationJutsuAbility}.
+     */
+    MeditationData getMeditationData();
 
     void updateDataServer(Player player);
 

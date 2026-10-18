@@ -64,24 +64,35 @@ public class KamuiPhaseAbility extends Ability implements Ability.Toggled, Abili
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        if (ninjaData.getChakra() < CHAKRA_PER_TICK) {
+        float cost = this.masteryCost(ninjaData, CHAKRA_PER_TICK);
+        if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
             return false;
         }
-        ninjaData.useChakra(CHAKRA_PER_TICK, CHAKRA_REGEN_DELAY);
+        ninjaData.useChakra(cost, CHAKRA_REGEN_DELAY);
         return true;
     }
 
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
+        // Mastery is paid for the time the body stays smoke, not for switching the stance on.
+        this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
         // The body is being kept out of the way by KamuiEvents#onLivingHurt, so there is nothing to
         // look after here beyond the odd wisp so the caster can see the stance is up.
-        if (player.level() instanceof ServerLevel level && ticksActive % 4 == 0) {
+        if (player.level() instanceof ServerLevel level && player.tickCount % 4 == 0) {
             level.sendParticles(ParticleTypes.PORTAL, player.getX(),
                     player.getY() + player.getBbHeight() * 0.5d, player.getZ(),
                     3, 0.3d, 0.5d, 0.3d, 0.05d);
         }
+    }
+
+    /**
+     * A stance is mastered by holding it, not by switching it on, so the credit is paid per active
+     * tick from {@link #performServer} and this records nothing.
+     */
+    @Override
+    public void recordMastery(Player player, INinjaData ninjaData) {
     }
 
     @Override

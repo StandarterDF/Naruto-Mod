@@ -1,6 +1,8 @@
 package com.sekwah.narutomod.abilities.utility;
 
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.AbilityUnlocks;
+import com.sekwah.narutomod.abilities.NarutoAbilities;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.sounds.NarutoSounds;
@@ -37,12 +39,15 @@ public class DoubleJumpAbility extends Ability {
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
+        if (!AbilityUnlocks.isUnlocked(ninjaData, NarutoAbilities.DOUBLE_JUMP.getId())) {
+            return false;
+        }
         return ninjaData.getDoubleJumpData().canDoubleJumpServer;
     }
 
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
-        ninjaData.useChakra(CHAKRA_COST, 30);
+        ninjaData.useChakra(this.masteryCost(ninjaData, CHAKRA_COST), 30);
         ninjaData.useStamina(STAMINA_COST, 40);
 
         if(player.level() instanceof ServerLevel serverLevel) {

@@ -1,10 +1,12 @@
 package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import com.sekwah.narutomod.entity.WorkerJob;
 import com.sekwah.narutomod.item.NarutoItems;
+import com.sekwah.narutomod.skills.SkillTree;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -25,10 +27,10 @@ import net.minecraft.world.phys.Vec3;
  * <p>The same class backs all three versions of the technique (normal, chibi and multi shadow
  * clone), they only differ in their {@link Settings}.</p>
  *
- * <p>With the Worker's Seal ({@code narutomod:worker_seal}) in the off hand, the very same
- * techniques summon workers instead of fighters: the clones come out in the usual numbers but walk
- * off to farm, mine or chop around themselves, and their tool - the item in the caster's main hand,
- * which has to be a tool at all for the summon to be allowed - decides which of the four it is. See
+ * <p>Casting any of these while sneaking summons workers instead of fighters: no talisman to craft,
+ * just hold the shift key as you make the seal. The clones come out ready to work rather than fight
+ * and walk off to farm, mine or chop around themselves. The item in the caster's main hand - which
+ * has to be a tool at all for the summon to be allowed - decides which of the four it is, see
  * {@link WorkerJob}.</p>
  */
 public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown {
@@ -39,22 +41,39 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
      * <p>{@code combo} uses the same hand seal encoding as the rest of the mod, where the digits
      * match the jutsu keys (1 = key 1, 2 = key 2, 3 = key 3). These are the combos from the 1.7.10
      * mod: cbbv for the shadow clone, cbvv for the chibi version and cbbvbc for the multi version.</p>
+     *
+     * <p>{@code masteryMaxClones} is the number of clones the technique grows to at full mastery. A
+     * technique whose base spread is a single clone ({@code minClones == maxClones == 1}) hands that
+     * one clone out at the start and adds another as it is mastered, all the way to
+     * {@code masteryMaxClones}; if {@code masteryMaxClones} is no larger than {@code maxClones} the
+     * count does not scale at all. {@code requiresSeal} marks the techniques that burn a chakra seal
+     * unless the caster has mastered the technique enough that it is free.</p>
      */
-    public record Settings(long combo, float chakraCost, int minClones, int maxClones, int lifetime,
-                           boolean chibi, boolean meditating, double attackDamage, double movementSpeed,
-                           int cooldown, int chakraRegenDelay) {}
+    public record Settings(long combo, float chakraCost, int minClones, int maxClones, int masteryMaxClones,
+                           int lifetime, boolean chibi, boolean meditating, boolean requiresSeal,
+                           double attackDamage, double movementSpeed, int cooldown, int chakraRegenDelay) {}
 
-    /** C B B V - a couple of copies of yourself. */
+    /**
+     * C B B V - the plain Kage Bunshin. It makes one clone, as the technique does in the stories, and
+     * earns the right to a second, third and fourth as it is mastered; a low mastery ninja does not
+     * get a squad for free.
+     */
     public static final Settings SHADOW_CLONE_SETTINGS =
-            new Settings(1332L, 40f, 2, 3, 20 * 25, false, false, 2.0d, 0.3d, 20 * 3, 20 * 2);
+            new Settings(1332L, 40f, 1, 1, 4, 20 * 25, false, false, false, 2.0d, 0.3d, 20 * 3, 20 * 2);
 
-    /** C B V V - cheap, small and weak, but you get a handful of them. */
+    /**
+     * C B V V - cheap, small and weak. Also a single clone at the start, growing into a handful of
+     * little ones as it is practised.
+     */
     public static final Settings CHIBI_SHADOW_CLONE_SETTINGS =
-            new Settings(1322L, 20f, 3, 5, 20 * 15, true, false, 1.0d, 0.35d, 20 * 2, 20);
+            new Settings(1322L, 20f, 1, 1, 5, 20 * 15, true, false, false, 1.0d, 0.35d, 20 * 2, 20);
 
-    /** C B B V B C - the expensive one, a small army. */
+    /**
+     * C B B V B C - the expensive one, a small army. It starts as a handful and grows to a full ten
+     * as the caster masters it, and it burns a chakra seal until then.
+     */
     public static final Settings MULTI_SHADOW_CLONE_SETTINGS =
-            new Settings(133231L, 80f, 8, 11, 20 * 25, false, false, 2.0d, 0.3d, 20 * 10, 20 * 5);
+            new Settings(133231L, 80f, 4, 5, 10, 20 * 25, false, false, true, 2.0d, 0.3d, 20 * 10, 20 * 5);
 
     /**
      * C B B C - two clones left behind to meditate, see
@@ -64,10 +83,29 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
      * investment, so they outlive every other version of the technique by a wide margin.
      */
     public static final Settings CHAKRA_MEDITATION_SETTINGS =
-            new Settings(1331L, 60f, 2, 2, 20 * 180, false, true, 0.0d, 0.0d, 20 * 60, 20 * 3);
+            new Settings(1331L, 60f, 2, 2, 0, 20 * 180, false, true, true, 0.0d, 0.0d, 20 * 60, 20 * 3);
 
     /** Radius of the ring the clones appear in. */
     private static final double SPAWN_RADIUS = 1.6d;
+
+    /**
+     * What a worker summon costs, whichever clone combo was pressed to make it. Workers are a heavier
+     * technique than a fighting clone - they are the closest thing to the multi shadow clone a ninja
+     * can lean on for real work - so they are priced above a plain clone. How many come out is the
+     * technique's own business: the shadow clone raises one worker, the multi raises a squad.
+     */
+    private static final float WORKER_COST = 75f;
+
+    /**
+     * How far a clone is looked for when a summon is checked against the ones already out. Fighters
+     * follow their caster, so this only needs to cover a scuffle; workers are left behind where they
+     * were summoned, so it is wide enough to keep finding a squad that has been posted a distance
+     * away.
+     */
+    private static final double CLONE_SCAN = 128.0d;
+
+    /** How long a combat summon is shown as on cooldown while its clones are still on the field. */
+    public static final int COMBAT_CLONE_HOLD_SECONDS = 300;
 
     private final Settings settings;
 
@@ -87,27 +125,44 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        // Every version of the technique burns one seal talisman. It is taken in performServer,
+        // Sneaking turns the cast into a worker summon, which needs no talisman at all - the only
+        // thing that decides whether the summon is allowed is a tool in the main hand.
+        boolean summoningWorkers = summoningWorkers(player);
+
+        // Only the heavier versions of the technique burn a seal talisman, and even those stop
+        // needing one once the caster has mastered the technique. It is taken in performServer,
         // here we only make sure there is one to take so the caster is not charged for nothing.
-        if (!hasSeal(player)) {
+        boolean needsSeal = this.settings.requiresSeal() && !Mastery.sealFree(ninjaData, this)
+                && !summoningWorkers;
+        if (needsSeal && !hasSeal(player)) {
             player.displayClientMessage(Component.translatable("jutsu.fail.noseal",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
             return false;
         }
-        // A worker is defined by the tool it was summoned with, so the seal in the off hand without
-        // a tool in the main hand is not a technique at all: refusing it here costs the caster
-        // nothing - no seal, no chakra - rather than leaving them with clones and no shift to do.
-        if (summoningWorkers(player) && workerJob(player) == null) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.workertool",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
-            return false;
+        // A worker is defined by the tool it was summoned with, so sneaking without a tool in the
+        // main hand is not a technique at all: refusing it here costs the caster nothing - no chakra
+        // - rather than leaving them with clones and no shift to do. A tool that reads as a trade the
+        // caster has not bought in the skill tree is refused the same way.
+        if (summoningWorkers) {
+            WorkerJob job = workerJob(player);
+            if (job == null) {
+                player.displayClientMessage(Component.translatable("jutsu.fail.workertool",
+                        Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
+                return false;
+            }
+            if (!SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), job.unlockKey())) {
+                player.displayClientMessage(Component.translatable("jutsu.fail.workerlocked",
+                        Component.translatable(job.labelKey()).withStyle(ChatFormatting.YELLOW)).withStyle(ChatFormatting.RED), true);
+                return false;
+            }
         }
-        if (ninjaData.getChakra() < this.settings.chakraCost()) {
+        float cost = this.masteryCost(ninjaData, summoningWorkers ? WORKER_COST : this.settings.chakraCost());
+        if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
             return false;
         }
-        ninjaData.useChakra(this.settings.chakraCost(), this.settings.chakraRegenDelay());
+        ninjaData.useChakra(cost, this.settings.chakraRegenDelay());
         return true;
     }
 
@@ -155,15 +210,16 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
             return;
         }
 
-        consumeSeal(player);
-
-        // Meditation is always just meditation: the seal in hand does not turn a clone that is meant
-        // to sit still into one that walks off to work. Every other technique follows the seal, and
+        // Meditation is always just meditation: sneaking does not turn a clone that is meant to sit
+        // still into one that walks off to work. Every other technique follows the sneak, and
         // handleCost has already made sure a worker's tool is in hand by the time we get here.
         boolean summoningWorkers = summoningWorkers(player);
 
-        int cloneCount = this.settings.minClones()
-                + player.getRandom().nextInt(this.settings.maxClones() - this.settings.minClones() + 1);
+        if (this.settings.requiresSeal() && !Mastery.sealFree(ninjaData, this) && !summoningWorkers) {
+            consumeSeal(player);
+        }
+
+        int cloneCount = this.cloneCount(player, ninjaData);
 
         for (int i = 0; i < cloneCount; i++) {
             int lifetime = summoningWorkers ? ShadowCloneEntity.WORKER_LIFETIME : this.settings.lifetime();
@@ -175,6 +231,7 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
                 clone.setWorkerHome(player.blockPosition());
                 clone.setWorkerJob(workerJob(player));
                 clone.setWorkerTool(player.getMainHandItem());
+                clone.copyWorkerTorches(player);
             }
             this.positionClone(clone, level, player, i, cloneCount);
             level.addFreshEntity(clone);
@@ -184,11 +241,6 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
                 player.getY() + player.getBbHeight() / 2.0d, player.getZ(),
                 60, 0.6d, 0.8d, 0.6d, 0.02d);
         level.playSound(null, player, NarutoSounds.SHADOW_CLONE_POOF.get(), SoundSource.PLAYERS, 0.8f, 1.0f);
-    }
-
-    /** Whether the caster is holding the Worker's Seal in their off hand, which turns clones into workers. */
-    private static boolean isHoldingWorkerSeal(Player player) {
-        return player.getOffhandItem().is(NarutoItems.WORKER_SEAL.get());
     }
 
     /**
@@ -215,9 +267,13 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
         return null;
     }
 
-    /** Workers are summoned by the seal in the off hand, except for the meditation, which never works. */
+    /**
+     * Sneaking turns a clone summon into a worker summon - no talisman to hold, no item to craft,
+     * just the shift key held as the seal is made. The meditation is never a worker, it only ever
+     * sits still.
+     */
     private boolean summoningWorkers(Player player) {
-        return !this.settings.meditating() && isHoldingWorkerSeal(player);
+        return !this.settings.meditating() && player.isShiftKeyDown();
     }
 
     /**
@@ -242,5 +298,80 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
     @Override
     public int getCooldown() {
         return this.settings.cooldown();
+    }
+
+    /**
+     * How many clones this cast produces. A worker summon raises the technique's own number - the
+     * shadow clone posts one worker, the multi posts a squad - and a fighter summon scales with
+     * mastery: the single clone techniques hand out one clone at the start and add another as they
+     * are mastered, up to {@link Settings#masteryMaxClones()}, and the multi version starts as a
+     * handful and grows to a small army.
+     */
+    private int cloneCount(Player player, INinjaData ninjaData) {
+        int low = this.settings.minClones();
+        int high = this.settings.maxClones();
+        int mastered = this.settings.masteryMaxClones();
+        if (mastered > high) {
+            float mastery = Mastery.level(ninjaData, this);
+            low += Math.round((mastered - low) * mastery);
+            high += Math.round((mastered - high) * mastery);
+        }
+        if (high < low) {
+            high = low;
+        }
+        return low + player.getRandom().nextInt(high - low + 1);
+    }
+
+    /**
+     * A clone summon is not held back by a timer but by the clones it already put on the field:
+     * while even one of the caster's clones of that kind is still alive the technique reads as
+     * though it were on a long cooldown, and the moment the last one is gone it can be cast again
+     * for free. That way a ninja either has clones out or can make more, never both - a squad is
+     * never stacked on top of another squad, whether they were summoned to fight or to work.
+     *
+     * <p>Only the meditation is timed as usual: it is a long lived state rather than a summon, and a
+     * caster is meant to raise a fresh pair once the old ones have emptied out.</p>
+     */
+    @Override
+    public boolean checkCooldown(Player player, INinjaData ninjaData, String translationKey) {
+        if (this.settings.meditating()) {
+            return Ability.Cooldown.super.checkCooldown(player, ninjaData, translationKey);
+        }
+        boolean alreadyOut = summoningWorkers(player)
+                ? hasLivingClones(player, true)
+                : hasLivingClones(player, false);
+        if (alreadyOut) {
+            int seconds = Math.max(1,
+                    Mastery.reduceCooldown(ninjaData, translationKey, COMBAT_CLONE_HOLD_SECONDS * 20) / 20);
+            player.displayClientMessage(Component.translatable("jutsu.fail.cooldown",
+                    Component.translatable(translationKey).withStyle(ChatFormatting.YELLOW),
+                    Component.literal(String.valueOf(seconds)).withStyle(ChatFormatting.YELLOW)
+            ), true);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * A clone summon deliberately leaves no timer behind: the presence of its clones is the whole
+     * cooldown, see {@link #checkCooldown}. Only the meditation is timed as usual.
+     */
+    @Override
+    public void registerCooldown(Player player, INinjaData ninjaData, String translationKey) {
+        if (this.settings.meditating()) {
+            Ability.Cooldown.super.registerCooldown(player, ninjaData, translationKey);
+        }
+    }
+
+    /**
+     * Whether any clone this caster summoned of the given kind is still standing. Workers are left
+     * where they were posted, so the search has to be wide enough to find one that has been left
+     * behind at a worksite; fighters follow their caster and are always close at hand.
+     */
+    private static boolean hasLivingClones(Player player, boolean workers) {
+        return !player.level().getEntitiesOfClass(ShadowCloneEntity.class,
+                player.getBoundingBox().inflate(CLONE_SCAN),
+                clone -> clone.isOwnedBy(player) && clone.isWorker() == workers
+                        && !clone.isMeditating()).isEmpty();
     }
 }

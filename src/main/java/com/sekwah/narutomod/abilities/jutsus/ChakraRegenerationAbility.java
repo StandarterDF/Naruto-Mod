@@ -67,7 +67,7 @@ public class ChakraRegenerationAbility extends Ability implements Ability.Toggle
      */
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        if (ninjaData.getChakra() < CHAKRA_PER_HEAL) {
+        if (ninjaData.getChakra() < this.masteryCost(ninjaData, CHAKRA_PER_HEAL)) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
             return false;
@@ -77,13 +77,15 @@ public class ChakraRegenerationAbility extends Ability implements Ability.Toggle
 
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
+        // Mastery is paid for the time the stance is up, not for switching it on.
+        this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
         if (player.tickCount % HEAL_INTERVAL != 0 || player.getHealth() >= player.getMaxHealth()) {
             return;
         }
 
         FoodData food = player.getFoodData();
         boolean fed = food.getFoodLevel() > 0;
-        float cost = fed ? CHAKRA_PER_HEAL : CHAKRA_PER_HEAL_STARVING;
+        float cost = this.masteryCost(ninjaData, fed ? CHAKRA_PER_HEAL : CHAKRA_PER_HEAL_STARVING);
         if (ninjaData.getChakra() < cost) {
             return;
         }
@@ -99,6 +101,14 @@ public class ChakraRegenerationAbility extends Ability implements Ability.Toggle
                     player.getY() + player.getBbHeight() * 0.6d, player.getZ(),
                     6, 0.35d, 0.35d, 0.35d, 0.01d);
         }
+    }
+
+    /**
+     * A healing stance is mastered by the time it is up, not by switching it on, so the credit is
+     * paid per active tick from {@link #performServer} and this records nothing.
+     */
+    @Override
+    public void recordMastery(Player player, INinjaData ninjaData) {
     }
 
     @Override

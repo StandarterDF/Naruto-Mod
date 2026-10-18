@@ -57,7 +57,8 @@ public class CampfireJutsuAbility extends Ability {
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        if (ninjaData.getChakra() < CHAKRA_COST) {
+        float cost = this.masteryCost(ninjaData, CHAKRA_COST);
+        if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
             return false;
@@ -67,7 +68,7 @@ public class CampfireJutsuAbility extends Ability {
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)).withStyle(ChatFormatting.RED), true);
             return false;
         }
-        ninjaData.useChakra(CHAKRA_COST, CHAKRA_REGEN_DELAY);
+        ninjaData.useChakra(cost, CHAKRA_REGEN_DELAY);
         return true;
     }
 

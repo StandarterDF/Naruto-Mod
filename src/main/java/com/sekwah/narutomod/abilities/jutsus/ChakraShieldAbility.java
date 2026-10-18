@@ -25,6 +25,12 @@ import java.util.UUID;
  * reaches the caster at all, and the armour attribute is there so the caster can see how much is
  * left without any new interface. It cannot be stacked, one shield has to be used up before another
  * can be shaped, which is what stops it from being a free top-up between fights.</p>
+ *
+ * <p>How much protection the bar is worth is what mastery buys here: a freshly learned shield turns
+ * chakra into a thin film that barely blunts a couple of blows, and only a shield that has been
+ * thrown up many times turns a full bar into a full second health bar. The technique is still paid
+ * for in full every time - the whole bar goes into it - so early on it is a costly, modest trick
+ * rather than the panic button it becomes later.</p>
  */
 public class ChakraShieldAbility extends Ability {
 
@@ -36,8 +42,20 @@ public class ChakraShieldAbility extends Ability {
     /** Below this there is not enough chakra to be worth shaping at all. */
     public static final float MIN_CHAKRA = 20.0f;
 
-    /** Armour points bought by one point of chakra. */
-    public static final float ARMOUR_PER_CHAKRA = 1.0f;
+    /**
+     * Armour points (the shield pool) bought by one point of chakra before the technique has been
+     * mastered. An untrained shield is deliberately thin - a bar's worth of chakra buys only a
+     * fraction of a health bar's worth of protection - so that shaping one is a last resort rather
+     * than an answer to every fight.
+     */
+    public static final float ARMOUR_PER_CHAKRA_BASE = 0.15f;
+
+    /**
+     * The same rate once the technique is fully mastered: a finished shield turns the whole bar into
+     * about a health bar's worth of protection. The growth is a plain ramp between the two, so every
+     * cast of the technique thickens it a little.
+     */
+    public static final float ARMOUR_PER_CHAKRA_MASTER = 1.0f;
 
     /**
      * Fixed id for the armour modifier, so the shield can be replaced or taken off again reliably
@@ -78,7 +96,9 @@ public class ChakraShieldAbility extends Ability {
             return;
         }
 
-        float points = ninjaData.getChakra() * ARMOUR_PER_CHAKRA;
+        float rate = ARMOUR_PER_CHAKRA_BASE
+                + (ARMOUR_PER_CHAKRA_MASTER - ARMOUR_PER_CHAKRA_BASE) * this.masteryLevel(ninjaData);
+        float points = ninjaData.getChakra() * rate;
         ninjaData.setChakra(0.0f);
         ninjaData.setShieldPoints(points);
         applyShield(player, points);

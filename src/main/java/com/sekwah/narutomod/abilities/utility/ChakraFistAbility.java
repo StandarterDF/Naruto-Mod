@@ -66,18 +66,29 @@ public class ChakraFistAbility extends Ability implements Ability.Toggled, Abili
      */
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        if (ninjaData.getChakra() < DRAIN_PER_TICK) {
+        float cost = this.masteryCost(ninjaData, DRAIN_PER_TICK);
+        if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
             return false;
         }
-        ninjaData.useChakra(DRAIN_PER_TICK, REGEN_DELAY);
+        ninjaData.useChakra(cost, REGEN_DELAY);
         return true;
     }
 
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
-        // All of the work happens in the break and hit events, there is nothing to do per tick.
+        // The work happens in the break and hit events; the only thing to do here is pay mastery for
+        // the time the stance is actually held, rather than for flicking it on and off.
+        this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
+    }
+
+    /**
+     * A stance is mastered by holding it, not by switching it on, so the credit is paid per active
+     * tick from {@link #performServer} and this records nothing.
+     */
+    @Override
+    public void recordMastery(Player player, INinjaData ninjaData) {
     }
 
     @Override

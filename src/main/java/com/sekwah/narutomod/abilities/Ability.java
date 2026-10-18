@@ -2,6 +2,7 @@ package com.sekwah.narutomod.abilities;
 
 import com.sekwah.narutomod.capabilities.CooldownTickEvent;
 import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.ChatFormatting;
@@ -126,6 +127,49 @@ public abstract class Ability {
         this.performServer(player, ninjaData, 0);
     }
 
+    /**
+     * The price of this technique after mastery, for the affordability check and the payment alike,
+     * so the two can never disagree about what fits in the bar. See
+     * {@link Mastery#cost(INinjaData, Ability, float)}.
+     */
+    protected float masteryCost(INinjaData ninjaData, float baseCost) {
+        return Mastery.cost(ninjaData, this, baseCost);
+    }
+
+    /** How far this technique has been mastered, from zero to just under one. */
+    public float masteryLevel(INinjaData ninjaData) {
+        return Mastery.level(ninjaData, this);
+    }
+
+    /**
+     * Records one successful cast of this technique, which is the only thing that moves mastery
+     * forward. Called from the cast sites once a cast has actually gone through, never per tick.
+     */
+    public void recordMastery(Player player, INinjaData ninjaData) {
+        Mastery.recordCast(player, ninjaData, this);
+    }
+
+    /**
+     * Records mastery that is earned by what a technique does rather than by the act of casting it,
+     * measured in cast-equivalents. Used by the channelled techniques that gather a resource: they
+     * call it as they work with the resource they actually produced, and leave
+     * {@link #recordMastery(Player, INinjaData)} empty so a tap is not a cast. See
+     * {@link Mastery#recordCredit(Player, INinjaData, Ability, float)}.
+     */
+    protected void recordMasteryCredit(Player player, INinjaData ninjaData, float credit) {
+        Mastery.recordCredit(player, ninjaData, this, credit);
+    }
+
+    /**
+     * Cast-equivalents a sustained technique earns for every tick it is actually up, so fifteen
+     * seconds of it running is worth one cast. A stance, a channel or a mode is lived in rather than
+     * cast in a moment, and paying mastery per bare activation would reward flicking it on and off
+     * instead of using it; these techniques call
+     * {@link #recordMasteryCredit(Player, INinjaData, float)} with this amount each active tick and
+     * leave {@link #recordMastery(Player, INinjaData)} empty.
+     */
+    public static final float MASTERY_CREDIT_PER_TICK = 1.0f / (15.0f * 20.0f);
+
     public interface Toggled {
 
         /**
@@ -231,12 +275,14 @@ public abstract class Ability {
 
         /**
          * Registers that a cooldown should exist for this jutus and sets a cooldown timer in the NinjaData
+         * @param player - the player the jutsu is being cast by.
          * @param ninjaData - the ninjaData capability attached to the player.
          * @param translationKey - the translation key for the jutsu / unique name.
          */
-        default void registerCooldown(INinjaData ninjaData, String translationKey) {
-            if (getCooldown() > 0)  {
-                ninjaData.getCooldownEvents().put(translationKey, new CooldownTickEvent(getCooldown()));
+        default void registerCooldown(Player player, INinjaData ninjaData, String translationKey) {
+            int cooldown = Mastery.reduceCooldown(ninjaData, translationKey, getCooldown());
+            if (cooldown > 0)  {
+                ninjaData.getCooldownEvents().put(translationKey, new CooldownTickEvent(cooldown));
             }
         }
     }

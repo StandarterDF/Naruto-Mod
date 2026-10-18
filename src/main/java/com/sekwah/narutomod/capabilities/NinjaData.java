@@ -2,12 +2,17 @@ package com.sekwah.narutomod.capabilities;
 
 import com.mojang.logging.LogUtils;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.capabilities.mastery.MasteryData;
+import com.sekwah.narutomod.capabilities.mastery.MeditationData;
+import com.sekwah.narutomod.capabilities.skills.SkillData;
 import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.item.ChakraBatteryItem;
 import com.sekwah.narutomod.menu.SupplyChestContainer;
 import com.sekwah.narutomod.registries.NarutoRegistries;
+import com.sekwah.narutomod.skills.SkillEffect;
+import com.sekwah.narutomod.skills.SkillTree;
 import com.sekwah.sekclib.capabilitysync.capabilitysync.annotation.Sync;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Direction;
@@ -153,6 +158,20 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private boolean sageMode;
 
     /**
+     * Reach of the held chakra sense, or zero while it is not up. Synced because the client is what
+     * draws the sense - the glow on creatures and the structure markers - and never written to disk:
+     * it is a held state, gone the moment the keys are let go. See {@code ChakraSensingAbility}.
+     */
+    @Sync(minTicks = 1)
+    private float sensingRadius;
+
+    /**
+     * Chakra funded night vision left, in ticks. Server side only and not written to disk, exactly
+     * like {@link #sageMode}: the client sees the vanilla effect the server keeps refreshed.
+     */
+    private int nightVisionTicks;
+
+    /**
      * UUID of the player whose form the caster is wearing, or an empty string. Synced because the
      * client renderer is what turns it into a copied skin and name tag, and deliberately not written
      * to disk: logging out drops the disguise.
@@ -200,6 +219,27 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     @Sync
     private ToggleAbilityData toggleAbilityData;
 
+    /**
+     * Per-technique cast counts, the raw material mastery is worked out from, see
+     * {@code abilities/mastery/Mastery}. Synced, because the jutsu menu draws a progress bar for
+     * every technique from it.
+     */
+    @Sync(minTicks = 1)
+    private MasteryData masteryData = new MasteryData();
+
+    /**
+     * The skill tree nodes this caster has bought with experience levels. Synced because the skill
+     * screen and the HUD both read it, and saved so the levels spent are never lost.
+     */
+    @Sync(minTicks = 1)
+    private SkillData skillData = new SkillData();
+
+    /**
+     * The standing meditating clones of this caster, see {@code MeditationData}. Server side only,
+     * deliberately neither synced nor saved: a caster who dies or logs out keeps no meditations.
+     */
+    private final MeditationData meditationData = new MeditationData();
+
 
     /**
      * Depending on what's going might want to swap to a potion effect.
@@ -218,8 +258,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     public NinjaData(boolean isServer) {
         if (isServer) {
             this.getConfigData();
-            this.stamina = this.maxChakra;
-            this.chakra = this.maxStamina;
+            this.stamina = this.maxStamina;
+            this.chakra = this.maxChakra;
         }
         this.toggleAbilityData = new ToggleAbilityData();
         this.doubleJumpData = new DoubleJumpData(false);
@@ -260,6 +300,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private static final String KAMUI_RETURN_TAG = "kamuiReturn";
     private static final String KAMUI_RETURN_DIMENSION_TAG = "kamuiReturnDimension";
     private static final String SENIN_MANA_TAG = "seninMana";
+    private static final String MASTERY_TAG = "mastery";
+    private static final String SKILLS_TAG = "skills";
 
     private final LazyOptional<INinjaData> holder = LazyOptional.of(() -> this);
 
@@ -270,7 +312,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
     @Override
     public float getMaxChakra() {
-        return this.maxChakra + this.chakraCapacityBonus + this.armorChakraBonus;
+        return this.maxChakra + this.chakraCapacityBonus + this.armorChakraBonus
+                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.MAX_CHAKRA);
     }
 
     @Override
@@ -355,7 +398,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
     @Override
     public float getMaxStamina() {
-        return this.maxStamina;
+        return this.maxStamina
+                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.MAX_STAMINA);
     }
 
     @Override
@@ -392,7 +436,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
     @Override
     public void addStamina(float amount) {
-        this.stamina = Math.min(Math.max(this.stamina + amount, 0), maxStamina);
+        this.stamina = Math.min(Math.max(this.stamina + amount, 0), this.getMaxStamina());
     }
 
     @Override
@@ -486,6 +530,26 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     @Override
     public void setSageMode(boolean sage) {
         this.sageMode = sage;
+    }
+
+    @Override
+    public float getSensingRadius() {
+        return this.sensingRadius;
+    }
+
+    @Override
+    public void setSensingRadius(float radius) {
+        this.sensingRadius = Math.max(radius, 0f);
+    }
+
+    @Override
+    public int getNightVisionTicks() {
+        return this.nightVisionTicks;
+    }
+
+    @Override
+    public void setNightVisionTicks(int ticks) {
+        this.nightVisionTicks = Math.max(ticks, 0);
     }
 
     @Override
@@ -590,6 +654,21 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     }
 
     @Override
+    public MasteryData getMasteryData() {
+        return this.masteryData;
+    }
+
+    @Override
+    public SkillData getSkillData() {
+        return this.skillData;
+    }
+
+    @Override
+    public MeditationData getMeditationData() {
+        return this.meditationData;
+    }
+
+    @Override
     public void updateDataServer(Player player) {
 
         if(this.invisibleTicks > 0) {
@@ -626,14 +705,16 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         }
 
         if (this.staminaRegenInfo.canRegen()) {
-            this.stamina += NarutoConfig.staminaRegen;
+            this.stamina += NarutoConfig.staminaRegen
+                    + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.STAMINA_REGEN) / 20.0f;
         }
         if (this.chakraRegenInfo.canRegen()) {
-            this.chakra += NarutoConfig.chakraRegen;
+            this.chakra += NarutoConfig.chakraRegen
+                    + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.CHAKRA_REGEN) / 20.0f;
         }
         this.substitutions += NarutoConfig.substitutionRegenRate;
         this.substitutions = Math.min(Math.max(this.substitutions, 0), this.maxSubstitutions);
-        this.stamina = Math.min(Math.max(this.stamina, 0), this.maxStamina);
+        this.stamina = Math.min(Math.max(this.stamina, 0), this.getMaxStamina());
         this.chakra = Math.min(Math.max(this.chakra, 0), this.getMaxChakra());
 
         if (this.currentlyChanneled != null) {
@@ -729,6 +810,14 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
             nbt.putString(KAMUI_RETURN_DIMENSION_TAG, this.kamuiReturnDimension.toString());
         }
         nbt.putFloat(SENIN_MANA_TAG, this.seninMana);
+        CompoundTag masteryTag = new CompoundTag();
+        this.masteryData.getCasts().forEach((ability, casts) -> masteryTag.putInt(ability.toString(), casts));
+        nbt.put(MASTERY_TAG, masteryTag);
+        CompoundTag skillTag = new CompoundTag();
+        for (ResourceLocation skill : this.skillData.getUnlocked()) {
+            skillTag.putBoolean(skill.toString(), true);
+        }
+        nbt.put(SKILLS_TAG, skillTag);
         return nbt;
     }
 
@@ -770,6 +859,24 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
                 this.kamuiReturnDimension = new ResourceLocation(compoundTag.getString(KAMUI_RETURN_DIMENSION_TAG));
             }
             this.seninMana = compoundTag.getFloat(SENIN_MANA_TAG);
+            CompoundTag masteryTag = compoundTag.getCompound(MASTERY_TAG);
+            // Counts are authoritative, so a load replaces whatever was there rather than adding to it.
+            this.masteryData.getCasts().clear();
+            for (String key : masteryTag.getAllKeys()) {
+                ResourceLocation ability = ResourceLocation.tryParse(key);
+                if (ability != null) {
+                    this.masteryData.setCasts(ability, masteryTag.getInt(key));
+                }
+            }
+            CompoundTag skillTag = compoundTag.getCompound(SKILLS_TAG);
+            // Learned nodes are authoritative too, so a load replaces the set.
+            this.skillData.reset();
+            for (String key : skillTag.getAllKeys()) {
+                ResourceLocation skill = ResourceLocation.tryParse(key);
+                if (skill != null) {
+                    this.skillData.unlock(skill);
+                }
+            }
         }
     }
 

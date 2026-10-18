@@ -37,3 +37,8 @@ yarn-error.log*
 
 # playwright MCP scratch
 .playwright-mcp/
+
+# python tooling caches
+__pycache__/
+*.pyc
+.ruff_cache/

@@ -2,6 +2,8 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.NarutoAbilities;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -84,7 +86,11 @@ public class SecondBreathAbility extends Ability implements Ability.Cooldown {
      */
     public static void spendSecondLife(Player player, INinjaData ninjaData) {
         ninjaData.setSecondBreathArmed(false);
-        player.addEffect(new MobEffectInstance(MobEffects.DARKNESS, DARKNESS_DURATION, 0));
+        // Mastery dulls the price: a seasoned caster comes back with their sight mostly intact
+        // rather than half blind for a full minute, down to half that at the top of the curve.
+        float mastery = Mastery.level(ninjaData, NarutoAbilities.SECOND_BREATH.get());
+        int darkness = Math.round(DARKNESS_DURATION * (1.0f - 0.5f * mastery));
+        player.addEffect(new MobEffectInstance(MobEffects.DARKNESS, darkness, 0));
     }
 
     @Override

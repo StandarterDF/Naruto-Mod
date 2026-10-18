@@ -67,12 +67,13 @@ public class RasenshurikenJutsuAbility extends Ability implements Ability.Channe
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        if (ninjaData.getChakra() < CHAKRA_PER_TICK) {
+        float cost = this.masteryCost(ninjaData, CHAKRA_PER_TICK);
+        if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
             return false;
         }
-        ninjaData.useChakra(CHAKRA_PER_TICK, 20);
+        ninjaData.useChakra(cost, 20);
         return true;
     }
 
@@ -108,12 +109,13 @@ public class RasenshurikenJutsuAbility extends Ability implements Ability.Channe
             level.playSound(null, player, SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.5f, 1.4f);
             return;
         }
-        if (ninjaData.getChakra() < RELEASE_COST) {
+        float releaseCost = this.masteryCost(ninjaData, RELEASE_COST);
+        if (ninjaData.getChakra() < releaseCost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
             return;
         }
-        ninjaData.useChakra(RELEASE_COST, 20 * 2);
+        ninjaData.useChakra(releaseCost, 20 * 2);
 
         float power = Mth.clamp((ticksActive - MIN_CHARGE) / (float) (FULL_CHARGE - MIN_CHARGE), 0.0f, 1.0f);
         double speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * power;

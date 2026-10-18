@@ -75,13 +75,14 @@ public class HengeJutsuAbility extends Ability implements Ability.Cooldown {
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }
-        if (ninjaData.getChakra() < CHAKRA_COST) {
+        float cost = this.masteryCost(ninjaData, CHAKRA_COST);
+        if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }
-        ninjaData.useChakra(CHAKRA_COST, 20);
+        ninjaData.useChakra(cost, 20);
         return true;
     }
 

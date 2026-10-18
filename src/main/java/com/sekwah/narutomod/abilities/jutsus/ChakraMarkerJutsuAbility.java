@@ -61,7 +61,7 @@ public class ChakraMarkerJutsuAbility extends Ability implements Ability.Channel
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        float cost = chargeAmount == -1 ? SWAP_COST : PLANT_COST;
+        float cost = this.masteryCost(ninjaData, chargeAmount == -1 ? SWAP_COST : PLANT_COST);
         if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
@@ -104,11 +104,12 @@ public class ChakraMarkerJutsuAbility extends Ability implements Ability.Channel
                     .withStyle(ChatFormatting.RED), true);
             return;
         }
-        if (ninjaData.getChakra() < SWAP_COST) {
+        float swapCost = this.masteryCost(ninjaData, SWAP_COST);
+        if (ninjaData.getChakra() < swapCost) {
             return;
         }
 
-        ninjaData.addChakra(-SWAP_COST);
+        ninjaData.addChakra(-swapCost);
         Vec3 from = player.position();
         this.removeMarker(player, dimension, marker);
         this.spawnLog(player, from);
@@ -123,10 +124,11 @@ public class ChakraMarkerJutsuAbility extends Ability implements Ability.Channel
      * A held cast: plants a fresh log underfoot and erases the previous one.
      */
     private void plantMarker(Player player, INinjaData ninjaData) {
-        if (ninjaData.getChakra() < PLANT_COST) {
+        float plantCost = this.masteryCost(ninjaData, PLANT_COST);
+        if (ninjaData.getChakra() < plantCost) {
             return;
         }
-        ninjaData.addChakra(-PLANT_COST);
+        ninjaData.addChakra(-plantCost);
 
         ResourceLocation dimension = player.level().dimension().location();
         Vec3 marker = ninjaData.getMarkerLoc();

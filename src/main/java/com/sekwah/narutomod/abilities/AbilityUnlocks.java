@@ -1,0 +1,47 @@
+package com.sekwah.narutomod.abilities;
+
+import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.skills.SkillTree;
+import net.minecraft.resources.ResourceLocation;
+
+import java.util.Set;
+
+/**
+ * Which techniques a caster is actually allowed to use.
+ *
+ * <p>A fresh ninja only gets the handful of basics that keep them moving and refilling - everything
+ * else is bought in the skill tree, so the tree is the way the mod teaches its own mechanics rather
+ * than a purely numeric board. The set of learned nodes is the single source of truth: the client
+ * asks the same question to grey a row out in the jutsu menu, and the server asks it again before it
+ * runs a technique, so a hacked client cannot skip the tree.</p>
+ */
+public final class AbilityUnlocks {
+
+    /**
+     * Paths of the techniques every ninja has from the start. Kept deliberately tiny: enough to
+     * charge chakra and to get out of trouble, nothing that gives a direction in a fight.
+     */
+    private static final Set<String> BASIC = Set.of(
+            "chakra_charge",
+            "substitution",
+            "leap");
+
+    private AbilityUnlocks() {
+    }
+
+    /** The skill-tree key a technique is gated behind. */
+    public static String unlockKey(ResourceLocation abilityId) {
+        return "ability:" + abilityId.getPath();
+    }
+
+    /** Whether the caster may use this technique right now. */
+    public static boolean isUnlocked(INinjaData ninjaData, ResourceLocation abilityId) {
+        if (abilityId == null || ninjaData == null) {
+            return true;
+        }
+        if (BASIC.contains(abilityId.getPath())) {
+            return true;
+        }
+        return SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), unlockKey(abilityId));
+    }
+}

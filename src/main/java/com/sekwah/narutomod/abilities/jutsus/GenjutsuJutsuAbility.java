@@ -11,6 +11,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.player.Player;
 
 /**
@@ -66,13 +67,14 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Cooldown {
                     target.getDisplayName().copy().withStyle(ChatFormatting.YELLOW)).withStyle(ChatFormatting.RED), true);
             return false;
         }
-        if (ninjaData.getChakra() < CHAKRA_COST) {
+        float cost = this.masteryCost(ninjaData, CHAKRA_COST);
+        if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }
-        ninjaData.useChakra(CHAKRA_COST, 20);
+        ninjaData.useChakra(cost, 20);
         return true;
     }
 
@@ -85,6 +87,8 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Cooldown {
             return;
         }
         GenjutsuEvents.apply(player, target, DURATION);
+        // A mind that is already held can be led: a beast comes out of the illusion as the ninja's own.
+        tryTame(player, target);
 
         player.displayClientMessage(Component.translatable("jutsu.genjutsu.cast",
                 target.getDisplayName().copy().withStyle(ChatFormatting.LIGHT_PURPLE))
@@ -111,5 +115,30 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Cooldown {
             return mob;
         }
         return null;
+    }
+
+    /**
+     * Takes an animal that is nobody's pet as the caster's own.
+     *
+     * <p>A beast whose mind has just been taken over is a beast that comes out of the illusion as the
+     * ninja's own: it is tamed to the caster, so it follows (and can be told to sit, like any tamed
+     * animal) once the illusion itself has worn off. It is deliberately <em>not</em> put on a lead -
+     * a lead is a carried object, not a part of taming, and hanging one on the animal was never
+     * asked for. The genjutsu stays on it as it was - the whole technique still happens, this only
+     * makes the result the ninja's. Pets that already belong to somebody else are left alone: this is
+     * a claiming, not a theft.</p>
+     */
+    private static void tryTame(Player player, Mob target) {
+        if (!(target instanceof TamableAnimal animal)) {
+            return;
+        }
+        if (animal.isTame() && !player.getUUID().equals(animal.getOwnerUUID())) {
+            return;
+        }
+        animal.tame(player);
+        animal.setOrderedToSit(false);
+        player.displayClientMessage(Component.translatable("jutsu.genjutsu.tame",
+                animal.getDisplayName().copy().withStyle(ChatFormatting.LIGHT_PURPLE))
+                .withStyle(ChatFormatting.DARK_PURPLE), true);
     }
 }

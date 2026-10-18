@@ -1,6 +1,7 @@
 package com.sekwah.narutomod.network.c2s;
 
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.AbilityUnlocks;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
@@ -8,6 +9,7 @@ import com.sekwah.narutomod.registries.NarutoRegistries;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
@@ -54,6 +56,17 @@ public class ServerAbilityActivatePacket {
                         return;
                     }
                     Ability ability = NarutoRegistries.ABILITIES.getValue(msg.abilityId);
+                    if (ability == null) {
+                        return;
+                    }
+                    ResourceLocation abilityId = NarutoRegistries.ABILITIES.getResourceKey(ability)
+                            .map(ResourceKey::location).orElse(null);
+                    if (!AbilityUnlocks.isUnlocked(ninjaData, abilityId)) {
+                        player.displayClientMessage(Component.translatable("jutsu.fail.notunlocked",
+                                Component.translatable(ability.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                                .withStyle(ChatFormatting.RED), true);
+                        return;
+                    }
                     if (ability.activationType() == Ability.ActivationType.INSTANT) {
 
                         boolean canTriggerJutsu = true;
@@ -71,9 +84,10 @@ public class ServerAbilityActivatePacket {
                                 player.level().gameEvent(player, NarutoGameEvents.JUTSU_CASTING.get(), player.position().add(0, player.getEyeHeight() * 0.7, 0));
                             }
                             ability.performServer(player, ninjaData);
+                            ability.recordMastery(player, ninjaData);
 
                             if (ability  instanceof Ability.Cooldown) {
-                               ((Ability.Cooldown) ability).registerCooldown(ninjaData, ability.getTranslationKey(ninjaData));
+                               ((Ability.Cooldown) ability).registerCooldown(player, ninjaData, ability.getTranslationKey(ninjaData));
                             }
                         } else if(ability.castingFailSound() != null) {
                             player.playNotifySound( ability.castingFailSound(), SoundSource.PLAYERS, 0.5f, 1.0f);
@@ -89,6 +103,7 @@ public class ServerAbilityActivatePacket {
                             } else {
                                 // Toggle ability on
                                 abilityTracker.addAbilityStarted(player, ninjaData, ability);
+                                ability.recordMastery(player, ninjaData);
                             }
                         });
                     }
