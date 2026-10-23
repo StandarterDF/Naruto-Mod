@@ -30,6 +30,14 @@ import net.minecraft.world.phys.Vec3;
  * on the next movement packet.</p>
  */
 public class ChakraAdhesionAbility extends Ability implements Ability.Channeled {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** C C V. */
     public static final long COMBO = 113L;

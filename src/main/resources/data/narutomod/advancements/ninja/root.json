@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "item": "narutomod:headband_blue"
+    },
+    "title": {
+      "translate": "advancements.narutomod.ninja.root.title"
+    },
+    "description": {
+      "translate": "advancements.narutomod.ninja.root.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false,
+    "background": "minecraft:textures/block/dirt.png"
+  },
+  "criteria": {
+    "awakened": {
+      "trigger": "narutomod:ninja_awakened"
+    }
+  }
+}

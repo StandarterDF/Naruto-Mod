@@ -1,5 +1,6 @@
 package com.sekwah.narutomod.client;
 
+import com.sekwah.narutomod.abilities.jutsus.ByakuganAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraSensingAbility;
 import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
@@ -105,6 +106,13 @@ public final class ClientSensingData {
         }
         INinjaData data = self.getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
         radius = data == null ? 0f : data.getSensingRadius();
+        // The Byakugan is a sense of its own: it does not go through the chakra sense's mastery or
+        // its staged resolution, it simply shows every body in its bubble as itself. While it is
+        // open it takes over the picture, and the shared renderer draws it.
+        boolean byakugan = data != null && ByakuganAbility.isActive(data);
+        if (byakugan) {
+            radius = Math.max(radius, ByakuganAbility.VISION_RADIUS);
+        }
         active = radius > 0f;
         if (data != null) {
             mastery = Mastery.level(data, ChakraSensingAbility.ID);
@@ -127,7 +135,7 @@ public final class ClientSensingData {
             if (living.distanceToSqr(self) > radiusSqr) {
                 continue;
             }
-            float intensity = intensityOf(living);
+            float intensity = byakugan ? 1f : intensityOf(living);
             if (intensity > 0f) {
                 next.put(living, intensity);
             }

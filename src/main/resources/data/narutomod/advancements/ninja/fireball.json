@@ -1,0 +1,26 @@
+{
+  "display": {
+    "icon": {
+      "item": "narutomod:military_pills"
+    },
+    "title": {
+      "translate": "advancements.narutomod.ninja.fireball.title"
+    },
+    "description": {
+      "translate": "advancements.narutomod.ninja.fireball.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "cast": {
+      "trigger": "narutomod:jutsu_cast",
+      "conditions": {
+        "ability": "narutomod:fireball"
+      }
+    }
+  },
+  "parent": "narutomod:ninja/first_jutsu"
+}

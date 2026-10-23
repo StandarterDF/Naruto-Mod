@@ -4,7 +4,6 @@ import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.skills.Skill;
 import com.sekwah.narutomod.skills.SkillTree;
-import com.sekwah.narutomod.util.ExperienceUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -16,7 +15,7 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 /**
- * Buy one node of the skill tree with experience points. The server is the only one that ever spends
+ * Buy one node of the skill tree with skill points. The server is the only one that ever spends
  * points or writes a node down; the screen just asks, and a node it should not have asked for is
  * simply refused here.
  */
@@ -61,9 +60,14 @@ public class ServerUnlockSkillPacket {
                                 Component.translatable(skill.nameKey())).withStyle(ChatFormatting.RED), true);
                         return;
                     }
-                    int held = ExperienceUtils.currentPoints(player);
+                    if (skill.requiresScroll() && !ninjaData.getSkillData().hasScroll(skill.scrollKnowledge())) {
+                        player.displayClientMessage(Component.translatable("naruto.skill.fail.scroll",
+                                Component.translatable(skill.nameKey())).withStyle(ChatFormatting.RED), true);
+                        return;
+                    }
+                    int held = ninjaData.getSkillData().getPoints();
                     if (held < skill.cost()) {
-                        player.displayClientMessage(Component.translatable("naruto.skill.fail.levels",
+                        player.displayClientMessage(Component.translatable("naruto.skill.fail.points",
                                 Component.literal(String.format("%,d", skill.cost() - held))
                                         .withStyle(ChatFormatting.GOLD)).withStyle(ChatFormatting.RED), true);
                         return;
@@ -75,7 +79,9 @@ public class ServerUnlockSkillPacket {
         }
 
         private static void buy(ServerPlayer player, INinjaData ninjaData, Skill skill) {
-            player.giveExperiencePoints(-skill.cost());
+            if (!ninjaData.getSkillData().spendPoints(skill.cost())) {
+                return;
+            }
             ninjaData.getSkillData().unlock(skill.id());
             player.level().playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.6f, 1.4f);
             player.displayClientMessage(Component.translatable("naruto.skill.unlocked",

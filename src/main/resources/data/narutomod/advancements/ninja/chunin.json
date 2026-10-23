@@ -1,0 +1,26 @@
+{
+  "display": {
+    "icon": {
+      "item": "narutomod:flak_jacket"
+    },
+    "title": {
+      "translate": "advancements.narutomod.ninja.chunin.title"
+    },
+    "description": {
+      "translate": "advancements.narutomod.ninja.chunin.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "chunin": {
+      "trigger": "narutomod:ninja_rank",
+      "conditions": {
+        "rank": "chunin"
+      }
+    }
+  },
+  "parent": "narutomod:ninja/root"
+}

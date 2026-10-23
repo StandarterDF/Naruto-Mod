@@ -15,6 +15,12 @@ public class NarutoGameEvents {
 
     public static final RegistryObject<GameEvent> JUTSU_CASTING = GAME_EVENTS.register("jutsu_casting", () -> wardenAlert("jutsu_casting"));
 
+    /** A radius at or above this is treated as a blast rather than an ordinary cast. */
+    public static final int BOOM_RADIUS = 32;
+
+    /** The big techniques (rasengan, gates, kamui) carry much further than an ordinary cast. */
+    public static final RegistryObject<GameEvent> JUTSU_BOOM = GAME_EVENTS.register("jutsu_boom", () -> wardenAlert("jutsu_boom"));
+
     public static final RegistryObject<GameEvent> LEAP = GAME_EVENTS.register("leap", () -> wardenAlert("leap"));
 
     public static final RegistryObject<GameEvent> DOUBLE_JUMP = GAME_EVENTS.register("double_jump", () -> wardenAlert("double_jump"));

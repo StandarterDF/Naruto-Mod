@@ -34,6 +34,14 @@ import net.minecraft.world.phys.Vec3;
  * (an admin wiping entities, say) still gets the caster home.</p>
  */
 public class ChakraMarkerJutsuAbility extends Ability implements Ability.Channeled {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** C B B V C - a deliberately long string of seals for a two way trip between two places. */
     public static final long COMBO = 13321L;

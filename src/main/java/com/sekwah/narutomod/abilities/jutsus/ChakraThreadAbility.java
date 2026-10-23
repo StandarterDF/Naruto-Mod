@@ -1,5 +1,6 @@
 package com.sekwah.narutomod.abilities.jutsus;
 
+import com.sekwah.narutomod.friends.Friends;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.JutsuEffects;
 import com.sekwah.narutomod.capabilities.INinjaData;
@@ -38,6 +39,14 @@ import java.util.UUID;
  * caused is forgotten, so a hard landing after a pull is not a death sentence.</p>
  */
 public class ChakraThreadAbility extends Ability implements Ability.Channeled {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** V V C */
     public static final long COMBO = 331L;
@@ -219,7 +228,8 @@ public class ChakraThreadAbility extends Ability implements Ability.Channeled {
 
     /** Anything alive is fair game except the caster, their allies and untouchable players. */
     private static boolean canCatch(Player caster, LivingEntity target) {
-        if (target == caster || target.isRemoved() || target.isSpectator() || target.isAlliedTo(caster)) {
+        if (target == caster || target.isRemoved() || target.isSpectator() || target.isAlliedTo(caster)
+                || Friends.areFriends(caster, target)) {
             return false;
         }
         return !(target instanceof Player player) || (!player.isCreative() && !player.isSpectator());

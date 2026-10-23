@@ -42,6 +42,12 @@ public class DoubleJumpAbility extends Ability {
         if (!AbilityUnlocks.isUnlocked(ninjaData, NarutoAbilities.DOUBLE_JUMP.getId())) {
             return false;
         }
+        // The client refuses the jump on an empty bar, but this is the server's copy of the same
+        // rule: a leap has to be paid for, not borrowed.
+        if (ninjaData.getChakra() < this.masteryCost(ninjaData, CHAKRA_COST)
+                || ninjaData.getStamina() < STAMINA_COST) {
+            return false;
+        }
         return ninjaData.getDoubleJumpData().canDoubleJumpServer;
     }
 

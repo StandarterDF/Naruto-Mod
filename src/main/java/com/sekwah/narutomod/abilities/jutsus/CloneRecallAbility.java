@@ -28,6 +28,14 @@ import java.util.List;
  * than that answers at once.</p>
  */
 public class CloneRecallAbility extends Ability implements Ability.Cooldown {
+    /**
+     * How far a cast of this technique carries as a game event. An ordinary cast.
+     */
+    @Override
+    public int noiseRadius() {
+        return 24;
+    }
+
 
     /** V C C */
     public static final long COMBO = 211L;
@@ -61,6 +69,13 @@ public class CloneRecallAbility extends Ability implements Ability.Cooldown {
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
         float cost = this.masteryCost(ninjaData, CHAKRA_COST);
+        // Nothing to call home: the cast is refused here so the caster is not charged for a shout
+        // that no clone hears.
+        if (!hasClones(player)) {
+            player.displayClientMessage(Component.translatable("jutsu.recall.none")
+                    .withStyle(ChatFormatting.GRAY), true);
+            return false;
+        }
         if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
@@ -74,9 +89,7 @@ public class CloneRecallAbility extends Ability implements Ability.Cooldown {
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
         Level level = player.level();
-        List<ShadowCloneEntity> clones = level.getEntitiesOfClass(ShadowCloneEntity.class,
-                player.getBoundingBox().inflate(CALL_RANGE),
-                clone -> clone.isOwnedBy(player) && !clone.isMeditating());
+        List<ShadowCloneEntity> clones = findClones(player);
         if (clones.isEmpty()) {
             player.displayClientMessage(Component.translatable("jutsu.recall.none")
                     .withStyle(ChatFormatting.GRAY), true);
@@ -98,6 +111,20 @@ public class CloneRecallAbility extends Ability implements Ability.Cooldown {
         }
         player.displayClientMessage(Component.translatable("jutsu.recall.count", clones.size())
                 .withStyle(ChatFormatting.AQUA), true);
+    }
+
+    /**
+     * The clones a call would actually reach: own, awake and inside the shout's range. Chunks that
+     * are not loaded have no entity to move, so they cannot answer either.
+     */
+    private static List<ShadowCloneEntity> findClones(Player player) {
+        return player.level().getEntitiesOfClass(ShadowCloneEntity.class,
+                player.getBoundingBox().inflate(CALL_RANGE),
+                clone -> clone.isOwnedBy(player) && !clone.isMeditating());
+    }
+
+    private static boolean hasClones(Player player) {
+        return !findClones(player).isEmpty();
     }
 
     /**

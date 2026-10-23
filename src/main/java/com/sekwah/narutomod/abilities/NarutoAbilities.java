@@ -24,11 +24,13 @@ import com.sekwah.narutomod.abilities.jutsus.ChakraRegenerationAbility;
 import com.sekwah.narutomod.abilities.jutsus.CampfireJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraShieldAbility;
 import com.sekwah.narutomod.abilities.jutsus.EightGatesAbility;
+import com.sekwah.narutomod.abilities.jutsus.EarthWallJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.KamuiJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.KamuiPhaseAbility;
 import com.sekwah.narutomod.abilities.jutsus.OreExcavationJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.OreSenseAbility;
 import com.sekwah.narutomod.abilities.jutsus.WideDigAbility;
+import com.sekwah.narutomod.abilities.jutsus.KirinAbility;
 import com.sekwah.narutomod.abilities.jutsus.RasenganJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.RasenshurikenJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.SecondBreathAbility;
@@ -36,6 +38,21 @@ import com.sekwah.narutomod.abilities.jutsus.SageModeAbility;
 import com.sekwah.narutomod.abilities.jutsus.SenjutsuChargingAbility;
 import com.sekwah.narutomod.abilities.jutsus.GenjutsuJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.HengeJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.RinneganAbility;
+import com.sekwah.narutomod.abilities.jutsus.UniversalForceAbility;
+import com.sekwah.narutomod.abilities.jutsus.ChibakuTenseiAbility;
+import com.sekwah.narutomod.abilities.jutsus.SharinganAbility;
+import com.sekwah.narutomod.abilities.jutsus.AmaterasuAbility;
+import com.sekwah.narutomod.abilities.jutsus.KagutsuchiAbility;
+import com.sekwah.narutomod.abilities.jutsus.ByakuganAbility;
+import com.sekwah.narutomod.abilities.jutsus.RotationAbility;
+import com.sekwah.narutomod.abilities.jutsus.JouganAbility;
+import com.sekwah.narutomod.abilities.jutsus.DimensionStepAbility;
+import com.sekwah.narutomod.abilities.jutsus.ChakraSeverAbility;
+import com.sekwah.narutomod.abilities.jutsus.SenriganAbility;
+import com.sekwah.narutomod.abilities.jutsus.SenriganFlightAbility;
+import com.sekwah.narutomod.abilities.jutsus.SenriganSightAbility;
+import com.sekwah.narutomod.abilities.jutsus.MomoshikiAbsorptionAbility;
 import com.sekwah.narutomod.abilities.jutsus.StorageChestAbility;
 import com.sekwah.narutomod.abilities.utility.ChakraChargeAbility;
 import com.sekwah.narutomod.abilities.utility.ChakraFistAbility;
@@ -311,6 +328,128 @@ public class NarutoAbilities {
      */
     public static final RegistryObject<SilenceAbility> SILENCE =
             ABILITY.register("silence", SilenceAbility::new);
+
+    /**
+     * A real lightning bolt called down in a storm, stronger against soaked targets and able to run
+     * on to other wet creatures nearby. See {@link KirinAbility}.
+     */
+    public static final RegistryObject<KirinAbility> KIRIN =
+            ABILITY.register("kirin", KirinAbility::new);
+
+    /**
+     * A barrier of real blocks raised out of the ground, which sinks back after a while. See
+     * {@link EarthWallJutsuAbility}.
+     */
+    public static final RegistryObject<EarthWallJutsuAbility> EARTH_WALL =
+            ABILITY.register("earth_wall", EarthWallJutsuAbility::new);
+
+    /**
+     * The eye of the sage of six paths, opened as a stance: it adds chakra and nature energy
+     * capacity while it is held, which is what pays for the powers built on it. See
+     * {@link RinneganAbility}.
+     */
+    public static final RegistryObject<RinneganAbility> RINNEGAN =
+            ABILITY.register("rinnegan", RinneganAbility::new);
+
+    /**
+     * One hand pulls, the other pushes: the Rinnegan's plainest power, tapped to drag a looked-at
+     * creature in and sneaked to throw everything around the caster out. See
+     * {@link UniversalForceAbility}.
+     */
+    public static final RegistryObject<UniversalForceAbility> UNIVERSAL_FORCE =
+            ABILITY.register("universal_force", UniversalForceAbility::new);
+
+    /**
+     * The ball of a battlefield's own ground, lifted into the sky and dropped. See
+     * {@link ChibakuTenseiAbility}.
+     */
+    public static final RegistryObject<ChibakuTenseiAbility> CHIBAKU_TENSEI =
+            ABILITY.register("chibaku_tensei", ChibakuTenseiAbility::new);
+
+    /**
+     * The palm Rinnegan: a stance that swallows an incoming technique whole and hands its nature back
+     * through the caster's own next technique of that nature. See
+     * {@link MomoshikiAbsorptionAbility} and {@code AbsorptionEvents}.
+     */
+    public static final RegistryObject<MomoshikiAbsorptionAbility> MOMOSHIKI_ABSORPTION =
+            ABILITY.register("momoshiki_absorption", MomoshikiAbsorptionAbility::new);
+
+    /**
+     * The copy wheel, opened as a stance: it reads whoever the caster looks at and shrugs off the
+     * blind of an illusion, but hands out no capacity. See {@link SharinganAbility}.
+     */
+    public static final RegistryObject<SharinganAbility> SHARINGAN =
+            ABILITY.register("sharingan", SharinganAbility::new);
+
+    /**
+     * The black flame willed onto a looked-at target, cast through an open Sharingan. See
+     * {@link AmaterasuAbility}.
+     */
+    public static final RegistryObject<AmaterasuAbility> AMATERASU =
+            ABILITY.register("amaterasu", AmaterasuAbility::new);
+
+    /**
+     * The shaping hand of the black flame: gather scattered Amaterasu onto one target, or snuff it
+     * out. Cast through an open Sharingan. See {@link KagutsuchiAbility}.
+     */
+    public static final RegistryObject<KagutsuchiAbility> KAGUTSUCHI =
+            ABILITY.register("kagutsuchi", KagutsuchiAbility::new);
+
+    /**
+     * The all-seeing eye, opened as a stance: every living body in a short bubble is shown through
+     * the walls. See {@link ByakuganAbility}.
+     */
+    public static final RegistryObject<ByakuganAbility> BYAKUGAN =
+            ABILITY.register("byakugan", ByakuganAbility::new);
+
+    /**
+     * The spinning defence of the Byakugan: projectiles are torn apart and bodies thrown out. See
+     * {@link RotationAbility}.
+     */
+    public static final RegistryObject<RotationAbility> ROTATION =
+            ABILITY.register("rotation", RotationAbility::new);
+
+    /**
+     * The pure eye, opened as a stance: hostile chakra is lit up and the caster's reserves grow
+     * while it is held. See {@link JouganAbility}.
+     */
+    /**
+     * The far eye: the cheapest stance in the mod, worth nothing in a fight and everything for
+     * looking over a shoulder. See {@link SenriganAbility}.
+     */
+    public static final RegistryObject<SenriganAbility> SENRIGAN =
+            ABILITY.register("senrigan", SenriganAbility::new);
+
+    /**
+     * Steps the caster's viewpoint through their own shadow clones, one cast per clone. See
+     * {@link SenriganSightAbility}.
+     */
+    public static final RegistryObject<SenriganSightAbility> SENRIGAN_SIGHT =
+            ABILITY.register("senrigan_sight", SenriganSightAbility::new);
+
+    /**
+     * Holds the caster in the air on chakra while any eye is open: the one piece of movement the
+     * Doujutsu branches were missing. See {@link SenriganFlightAbility}.
+     */
+    public static final RegistryObject<SenriganFlightAbility> SENRIGAN_FLIGHT =
+            ABILITY.register("senrigan_flight", SenriganFlightAbility::new);
+
+    public static final RegistryObject<JouganAbility> JOUGAN =
+            ABILITY.register("jougan", JouganAbility::new);
+
+    /**
+     * A step along the look ray that ignores whatever stands in between, see
+     * {@link DimensionStepAbility}.
+     */
+    public static final RegistryObject<DimensionStepAbility> DIMENSION_STEP =
+            ABILITY.register("dimension_step", DimensionStepAbility::new);
+
+    /**
+     * A look that strips a target's boons, drains a ninja's chakra and leaves the body weak. See
+     * {@link ChakraSeverAbility}.
+     */
+    public static final RegistryObject<ChakraSeverAbility> CHAKRA_SEVER =
+            ABILITY.register("chakra_sever", ChakraSeverAbility::new);
 
     public static void register(IEventBus eventBus) {
         ABILITY.register(eventBus);

@@ -24,6 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 SKILL_JAVA = ROOT / "src/main/java/com/sekwah/narutomod/skills/Skill.java"
 BRANCH_JAVA = ROOT / "src/main/java/com/sekwah/narutomod/skills/SkillBranch.java"
+SECTION_JAVA = ROOT / "src/main/java/com/sekwah/narutomod/skills/SkillSection.java"
 LANG_EN = ROOT / "src/main/resources/assets/narutomod/lang/en_us.json"
 LANG_RU = ROOT / "src/main/resources/assets/narutomod/lang/ru_ru.json"
 PAGE = ROOT / "docs/skills.html"
@@ -32,12 +33,15 @@ MARK_START = "<!-- SKILLS:START -->"
 MARK_END = "<!-- SKILLS:END -->"
 
 DECL = re.compile(
-    r'(?s)(node|unlock)\(\s*"([a-z_]+)"\s*,\s*SkillBranch\.([A-Z_]+)\s*,\s*'
+    r'(?s)(node|unlock)\(\s*"([a-z0-9_]+)"\s*,\s*SkillBranch\.([A-Z_]+)\s*,\s*'
     r"(-?\d+)\s*,\s*(-?\d+)\s*,\s*(\d+)\s*,(.*?)\)\s*;"
 )
 DECL_EFFECT = re.compile(r"SkillEffect\.([A-Z_]+)\s*,\s*(-?\d+(?:\.\d+)?)f")
 QUOTED = re.compile(r'"([^"]+)"')
-BRANCH = re.compile(r'([A-Z_]+)\("([^"]+)",\s*(0x[0-9A-Fa-f]+)\)')
+BRANCH = re.compile(
+    r'([A-Z_]+)\(\s*(?:SkillSection\.([A-Z_]+)\s*,\s*)?"([^"]+)"\s*,\s*(0x[0-9A-Fa-f]+)\)'
+)
+SECTION = re.compile(r'([A-Z_]+)\(\s*"([^"]+)"\s*,\s*(0x[0-9A-Fa-f]+)\s*\)')
 
 # The order effects are listed in, both per branch and in the totals table.
 EFFECT_ORDER = [
@@ -51,27 +55,68 @@ EFFECT_ORDER = [
     "MOVEMENT_SPEED",
     "COST_REDUCTION",
     "COOLDOWN_REDUCTION",
+    "MAX_SUBSTITUTIONS",
+    "ALL_ROUNDED",
+    "CHAKRA_CHARGE_RATE",
+    "SUBSTITUTION_REGEN",
+    "SUBSTITUTION_INVISIBILITY",
+    "DOUBLE_JUMP_POWER",
+    "CLONE_LIFETIME",
+    "WORKER_LIFETIME",
+    "SOFT_LANDING",
+    "SENIN_MANA",
+    "SENIN_MANA_REGEN",
+    "SAGE_ENTRY",
 ]
 
-# What each branch is, in one line. Kept here so the generated block stays self-contained.
+# What each tab is, in one line. Kept here so the generated block stays self-contained.
 FLAVOUR = {
-    "ROOT": "Центр доски: отсюда растут все ветки, и покупать его принято первым — при базе 25 чакры "
-    "корень заметно расширяет запас.",
-    "CHAKRA": "Север: больше чакры и быстрее её восстановление. Это топливо, на которое опирается "
-    "всё остальное дерево.",
-    "BODY": "Юг: здоровье и броня, а за ними телесные техники — кулак чакры, регенерация, второе "
-    "дыхание, восемь врат и режим Мудреца.",
-    "CONTROL": "Восток: ни одной техники — только экономика. Скидки к цене и откату работают на все "
-    "техники сразу.",
-    "AGILITY": "Запад: скорость и урон, стамина и свобода движения — двойной прыжок, рывок, "
-    "сцепление чакрой и хождение по воде.",
-    "CLONES": "Северо-восток: все виды клонов, медитация чакры, возврат клонов и походный сундук.",
-    "ELEMENTAL": "Юго-восток: стихии и дыхания, копание (рудокоп, прокоп, чутьё руды) и "
-    "расэн-семейство.",
-    "LABOUR": "Северо-восток, сразу за походным сундуком: рабочие смены — земледелец, шахтёр, "
-    "лесоруб и охотник.",
-    "SPACE": "Юго-запад: бревно-метка, чакра-нить, адаптация тела и Камуи с фазовым телом.",
-    "MIND": "Северо-запад: чувство чакры, гендзюцу, хенге, дымовая завеса и подавление звука.",
+    "CORE": "Ядро: сырые запасы и статы. Входной узел даёт понемногу всего — чакры, стамины, "
+    "здоровья, — а дальше каждая цепочка тянет ровно один стат: здоровье, броню, запас чакры, "
+    "регенерацию, скорость, урон, цену и откат. Вся «арифметика» билда живёт здесь.",
+    "ATHLETICS": "Атлетика: скорость, стамина, подмена, двойной прыжок, мягкая посадка, хождение "
+    "по воде и сцепление чакрой. Сюда же относятся заряды подмены — без этой ветки их не поднять "
+    "выше одного.",
+    "TAIJUTSU": "Тайдзюцу: урон рукой, кулак чакры и Восемь врат. Жизнь за врата платится "
+    "здоровьем, поэтому глубина ветки — это сколько врат кастер выдерживает.",
+    "MEDICINE": "Медицина: регенерация чакрой, питание чакрой, чакра-щит и второе дыхание. Центр "
+    "ветки даёт немного регенерации чакры, дальше — способы пережить то, что не переживается "
+    "обычным здоровьем.",
+    "FIRE": "Огонь: костёр, огненный шар и огненное дыхание. Ветка учит жечь — и предметы, и печку, "
+    "и живую цель.",
+    "WATER": "Вода: водяная пуля и водяное дыхание. Тушит огонь, мочит губку и отталкивает цель.",
+    "EARTH": "Земля: рудокоп, широкий прокоп и чутьё руды. Вся ветка — про то, чтобы видеть и "
+    "вынимать породу.",
+    "WIND": "Ветер: ветряное дыхание и расенган с расенсюрикеном. Сдувает, режет и не оставляет "
+    "огня.",
+    "WOOD": "Дерево: дыхание роста и всё, что прорастает. Костная мука в конусе вместо урона.",
+    "CLONES": "Клоны: теневой, чиби, мультиклон, медитация, возврат клонов, походный сундук и "
+    "рабочие смены. Между техниками всегда стоит тренировочная пассивка, поэтому путь читается как "
+    "«техника → практика → техника».",
+    "SPACE": "Пространство: метка-бревно, чакра-нить, адаптация тела и Камуи. Центр ветки — "
+    "якорь, без него не открывается ни один пространственный трюк.",
+    "MIND": "Разум: чувство чакры и ночное зрение, гендзюцу, хенге, дымовая завеса и подавление "
+    "звука.",
+    "SAGE": "Сендзюцу: запас природной энергии, её сбор и вход в Режим Мудреца. Сначала копится "
+    "энергия, потом открывается сам режим.",
+    "SHARINGAN": "Шаринган: каркас ветки. Узлов пока нет — вкладка стоит пустой и ждёт своего "
+    "набора техник.",
+    "BYAKUGAN": "Бьякуган: каркас ветки. Узлов пока нет — вкладка стоит пустой и ждёт своего "
+    "набора техник.",
+    "RINNEGAN": "Риннеган: глаз мудреца, его запас чакры и сенин-маны, притяжение с отталкиванием "
+    "и Чибаку Тенсэй. Техники висят на пассивках-подводках, а не друг на друге.",
+}
+
+# One line per section (the first row of tabs); a section is only a grouping of branches.
+SECTION_FLAVOUR = {
+    "PHYSICAL": "Физический путь: тело, движение, рукопашный бой и медицинское ниндзюцу. Всё, что "
+    "растёт из самого кастера.",
+    "NINJUTSU": "Ниндзюцу и стихии: по отдельной доске на каждую природу чакры, чтобы ветки не "
+    "толкались на одной доске.",
+    "SPECIAL": "Особые техники: клоны, пространство, разум и сендзюцу. То, что не сводится к одной "
+    "стихии.",
+    "DOJUTSU": "Додзюцу: глазные кланы. Риннеган открыт и покупается как стойка; Шаринган и "
+    "Бьякуган пока размечены как каркас на будущее.",
 }
 
 # Bases the notes in the totals table refer to; the config defaults they mirror are checked by eye.
@@ -79,6 +124,7 @@ BASE_CHAKRA = 25
 BASE_STAMINA = 100
 BASE_HEALTH = 20
 BASE_SPEED = 0.1
+BASE_SUBSTITUTIONS = 1
 
 
 def read(path: Path) -> str:
@@ -149,15 +195,30 @@ def parse_skills() -> list[dict]:
 def parse_branches() -> list[dict]:
     branches = []
     for match in BRANCH.finditer(read(BRANCH_JAVA)):
-        name, key, colour = match.groups()
+        name, section, key, colour = match.groups()
         branches.append(
+            {
+                "name": name,
+                "section": section,
+                "lang": key,
+                "colour": "#%06x" % (int(colour, 16) & 0xFFFFFF),
+            }
+        )
+    return branches
+
+
+def parse_sections() -> list[dict]:
+    sections = []
+    for match in SECTION.finditer(read(SECTION_JAVA)):
+        name, key, colour = match.groups()
+        sections.append(
             {
                 "name": name,
                 "lang": key,
                 "colour": "#%06x" % (int(colour, 16) & 0xFFFFFF),
             }
         )
-    return branches
+    return sections
 
 
 def load_lang(nodes: list[dict], stats: list[str]) -> tuple[dict, dict]:
@@ -194,6 +255,30 @@ def amount_text(effect: str, amount: float) -> str:
         return "−%s %% к цене техник" % clean(amount * 100)
     if effect == "COOLDOWN_REDUCTION":
         return "−%s %% к откату техник" % clean(amount * 100)
+    if effect == "MAX_SUBSTITUTIONS":
+        return "+%s к максимуму зарядов подмены" % whole(amount)
+    if effect == "ALL_ROUNDED":
+        return "+%s чакры, стамины и здоровья" % whole(amount)
+    if effect == "CHAKRA_CHARGE_RATE":
+        return "+%s %% к накоплению чакры за тик" % clean(amount * 100)
+    if effect == "SUBSTITUTION_REGEN":
+        return "+%s %% к возврату зарядов подмены" % clean(amount * 100)
+    if effect == "SUBSTITUTION_INVISIBILITY":
+        return "+%s тиков невидимости после подмены" % whole(amount)
+    if effect == "DOUBLE_JUMP_POWER":
+        return "+%s %% к высоте двойного прыжка" % clean(amount * 100)
+    if effect == "CLONE_LIFETIME":
+        return "+%s %% к времени жизни боевых клонов" % clean(amount * 100)
+    if effect == "WORKER_LIFETIME":
+        return "+%s %% к времени жизни рабочих" % clean(amount * 100)
+    if effect == "SOFT_LANDING":
+        return "−%s %% стамины при мягкой посадке" % clean(amount * 100)
+    if effect == "SENIN_MANA":
+        return "+%s к максимуму сенин-маны" % whole(amount)
+    if effect == "SENIN_MANA_REGEN":
+        return "+%s %% к сбору природной энергии" % clean(amount * 100)
+    if effect == "SAGE_ENTRY":
+        return "−%s %% к порогу входа в Режим Мудреца" % clean(amount * 100)
     return esc(amount)
 
 
@@ -219,6 +304,30 @@ def short_text(effect: str, amount: float) -> str:
         return "−%s %% цены" % clean(amount * 100)
     if effect == "COOLDOWN_REDUCTION":
         return "−%s %% отката" % clean(amount * 100)
+    if effect == "MAX_SUBSTITUTIONS":
+        return "+%s заряда подмены" % whole(amount)
+    if effect == "ALL_ROUNDED":
+        return "+%s ко всему" % whole(amount)
+    if effect == "CHAKRA_CHARGE_RATE":
+        return "+%s %% к накоплению" % clean(amount * 100)
+    if effect == "SUBSTITUTION_REGEN":
+        return "+%s %% возврата подмены" % clean(amount * 100)
+    if effect == "SUBSTITUTION_INVISIBILITY":
+        return "+%s тиков невидимости" % whole(amount)
+    if effect == "DOUBLE_JUMP_POWER":
+        return "+%s %% высоты прыжка" % clean(amount * 100)
+    if effect == "CLONE_LIFETIME":
+        return "+%s %% жизни клонов" % clean(amount * 100)
+    if effect == "WORKER_LIFETIME":
+        return "+%s %% жизни рабочих" % clean(amount * 100)
+    if effect == "SOFT_LANDING":
+        return "−%s %% стамины посадки" % clean(amount * 100)
+    if effect == "SENIN_MANA":
+        return "+%s сенин-маны" % whole(amount)
+    if effect == "SENIN_MANA_REGEN":
+        return "+%s %% сбора сенина" % clean(amount * 100)
+    if effect == "SAGE_ENTRY":
+        return "−%s %% порога входа" % clean(amount * 100)
     return esc(amount)
 
 
@@ -226,20 +335,40 @@ def bare_text(effect: str, amount: float) -> str:
     """Just the number, for the "where does it come from" column."""
     if effect in ("CHAKRA_REGEN", "STAMINA_REGEN"):
         return "+%s" % clean(amount)
-    if effect in ("COST_REDUCTION", "COOLDOWN_REDUCTION"):
+    if effect in ("COST_REDUCTION", "COOLDOWN_REDUCTION", "SAGE_ENTRY"):
         return "−%s %%" % clean(amount * 100)
     if effect == "MOVEMENT_SPEED":
         return "+%s %%" % clean(amount / BASE_SPEED * 100)
+    if effect in (
+        "CHAKRA_CHARGE_RATE",
+        "SUBSTITUTION_REGEN",
+        "DOUBLE_JUMP_POWER",
+        "CLONE_LIFETIME",
+        "WORKER_LIFETIME",
+        "SOFT_LANDING",
+        "SENIN_MANA_REGEN",
+    ):
+        return "+%s %%" % clean(amount * 100)
     return "+%s" % whole(amount)
 
 
 def totals_value(effect: str, total: float) -> str:
     if effect in ("CHAKRA_REGEN", "STAMINA_REGEN"):
         return "+%s/с" % clean(total)
-    if effect in ("COST_REDUCTION", "COOLDOWN_REDUCTION"):
+    if effect in ("COST_REDUCTION", "COOLDOWN_REDUCTION", "SAGE_ENTRY"):
         return "−%s %%" % clean(total * 100)
     if effect == "MOVEMENT_SPEED":
         return "+%s %%" % clean(total / BASE_SPEED * 100)
+    if effect in (
+        "CHAKRA_CHARGE_RATE",
+        "SUBSTITUTION_REGEN",
+        "DOUBLE_JUMP_POWER",
+        "CLONE_LIFETIME",
+        "WORKER_LIFETIME",
+        "SOFT_LANDING",
+        "SENIN_MANA_REGEN",
+    ):
+        return "+%s %%" % clean(total * 100)
     if effect == "MAX_HEALTH":
         return "+%s HP" % whole(total)
     return "+%s" % whole(total)
@@ -274,12 +403,41 @@ def totals_note(effect: str, total: float) -> str:
         return "складывается с освоением, общий предел −90 %"
     if effect == "COOLDOWN_REDUCTION":
         return "складывается с освоением, общий предел −90 %"
+    if effect == "MAX_SUBSTITUTIONS":
+        return "базовый %s заряд + %s с деревом = %s" % (
+            whole(BASE_SUBSTITUTIONS),
+            whole(total),
+            whole(BASE_SUBSTITUTIONS + total),
+        )
+    if effect == "ALL_ROUNDED":
+        return "входной узел; прибавляется к чакре, стамине и здоровью сразу"
+    if effect == "CHAKRA_CHARGE_RATE":
+        return "только техника накопления чакры"
+    if effect == "SUBSTITUTION_REGEN":
+        return "скорость возврата зарядов подмены"
+    if effect == "SUBSTITUTION_INVISIBILITY":
+        return "сверх базовой невидимости после подмены"
+    if effect == "DOUBLE_JUMP_POWER":
+        return "только двойной прыжок"
+    if effect == "CLONE_LIFETIME":
+        return "боевые клоны (теневой, чиби, мульти)"
+    if effect == "WORKER_LIFETIME":
+        return "рабочие клоны"
+    if effect == "SOFT_LANDING":
+        return "скидка к цене мягкой посадки"
+    if effect == "SENIN_MANA":
+        return "максимум природной энергии, задаётся конфигом"
+    if effect == "SENIN_MANA_REGEN":
+        return "скорость сбора природной энергии"
+    if effect == "SAGE_ENTRY":
+        return "порог входа в Режим Мудреца"
     return ""
 
 
-def build_block(nodes, branches, lang_ru, lang_en, stats) -> str:
+def build_block(nodes, branches, sections, lang_ru, lang_en, stats) -> str:
     by_path = {node["path"]: node for node in nodes}
     branch_names = {b["name"]: lang_ru.get(b["lang"], b["name"]) for b in branches}
+    section_names = {s["name"]: lang_ru.get(s["lang"], s["name"]) for s in sections}
 
     # Per-branch aggregates.
     per_branch: dict[str, dict] = {
@@ -333,7 +491,7 @@ def build_block(nodes, branches, lang_ru, lang_en, stats) -> str:
             whole(total_passives),
             plural(total_passives, "пассивка", "пассивки", "пассивок"),
             whole(total_cost),
-            plural(total_cost, "очко опыта", "очка опыта", "очков опыта"),
+            plural(total_cost, "очко навыка", "очка навыка", "очков навыка"),
         )
     )
     line('  <div class="tbl-wrap">')
@@ -371,28 +529,55 @@ def build_block(nodes, branches, lang_ru, lang_en, stats) -> str:
         "<kbd>J</kbd></td>"
         % (whole(worker_unlocks), plural(worker_unlocks, "смена", "смены", "смен"))
     )
-    line('          <td class="small">%s</td>' % esc("корень и все 9 веток"))
+    line('          <td class="small">%s</td>' % esc("центры всех веток"))
     line("        </tr>")
     line("      </tbody>")
     line("    </table>")
     line("  </div>")
     line(
-        '  <p class="small muted">Скидки цены и отката складываются с освоением техник и вместе '
-        "упираются в −90 %: дешевле или быстрее порога техника не станет. Стоимость узла в опыте от "
-        "порядка покупки не зависит — сумма одинаковая при любом маршруте.</p>"
+        '  <p class="small muted">Очки навыка покупаются за опыт: <strong>10 опыта = 1 очко</strong> '
+        "(кнопки <em>+1</em>, <em>+10</em> и <em>Все</em> внизу доски). Цены узлов — это прежние "
+        "цены в опыте, поделённые на тот же курс, поэтому выкуп всего дерева стоит столько же "
+        "опыта, сколько и раньше. Скидки цены и отката складываются с освоением техник и вместе "
+        "упираются в −90 %: дешевле или быстрее порога техника не станет. Стоимость узла "
+        "от порядка покупки не зависит — сумма одинаковая при любом маршруте.</p>"
     )
     line("</section>")
     line()
 
-    # --- Branches ---------------------------------------------------------------------------
+    # --- Branches, grouped by section --------------------------------------------------------
+    current_section = None
     for b in branches:
         name = b["name"]
         entry = per_branch[name]
-        title = (
-            "Корень «%s»" % branch_names[name]
-            if name == "ROOT"
-            else "Ветка «%s»" % branch_names[name]
-        )
+        if b["section"] != current_section:
+            current_section = b["section"]
+            meta = next((s for s in sections if s["name"] == current_section), None)
+            if meta is not None:
+                line('<section id="sec-%s">' % current_section.lower())
+                line(
+                    '  <h2 id="s-sec-%s"><span class="bcol" style="background:%s"></span>%s</h2>'
+                    % (
+                        current_section.lower(),
+                        meta["colour"],
+                        esc(section_names[current_section]),
+                    )
+                )
+                line("  <p>%s</p>" % esc(SECTION_FLAVOUR.get(current_section, "")))
+                line(
+                    '  <p class="branch-meta">%s</p>'
+                    % esc(
+                        " · ".join(
+                            branch_names[x["name"]]
+                            for x in branches
+                            if x["section"] == current_section
+                        )
+                    )
+                )
+                line("</section>")
+                line()
+
+        title = "Ветка «%s»" % branch_names[name]
         facts = [
             "%s %s"
             % (
@@ -402,7 +587,7 @@ def build_block(nodes, branches, lang_ru, lang_en, stats) -> str:
             "%s %s"
             % (
                 whole(entry["cost"]),
-                plural(entry["cost"], "очко опыта", "очка опыта", "очков опыта"),
+                plural(entry["cost"], "очко навыка", "очка навыка", "очков навыка"),
             ),
         ]
         short = [
@@ -419,6 +604,16 @@ def build_block(nodes, branches, lang_ru, lang_en, stats) -> str:
         )
         line('  <p class="branch-meta">%s</p>' % esc(" · ".join(facts)))
         line("  <p>%s</p>" % esc(FLAVOUR.get(name, "")))
+        if not entry["nodes"]:
+            line(
+                '  <div class="callout callout--note"><div class="callout__title">Ветка в '
+                "разработке</div><p>Узлов здесь пока нет: вкладка существует как каркас, покупок "
+                "в ней не делается. Как только у ветки появится свой набор техник, таблица "
+                "заполнится сама.</p></div>"
+            )
+            line("</section>")
+            line()
+            continue
         line('  <div class="tbl-wrap">')
         line('    <table class="tbl tbl--compact">')
         line("      <thead>")
@@ -483,6 +678,18 @@ EFFECT_TITLES = {
     "MOVEMENT_SPEED": "Скорость передвижения",
     "COST_REDUCTION": "Цена техник",
     "COOLDOWN_REDUCTION": "Откат техник",
+    "MAX_SUBSTITUTIONS": "Заряды подмены",
+    "ALL_ROUNDED": "Понемногу всего",
+    "CHAKRA_CHARGE_RATE": "Накопление чакры",
+    "SUBSTITUTION_REGEN": "Возврат подмены",
+    "SUBSTITUTION_INVISIBILITY": "Невидимость подмены",
+    "DOUBLE_JUMP_POWER": "Высота двойного прыжка",
+    "CLONE_LIFETIME": "Время жизни клонов",
+    "WORKER_LIFETIME": "Время жизни рабочих",
+    "SOFT_LANDING": "Мягкая посадка",
+    "SENIN_MANA": "Сенин-мана",
+    "SENIN_MANA_REGEN": "Сбор природной энергии",
+    "SAGE_ENTRY": "Порог Режима Мудреца",
     "UNLOCK": "Техники и механики",
 }
 
@@ -497,8 +704,9 @@ def main() -> int:
     stats: list[str] = []
     nodes = parse_skills()
     branches = parse_branches()
+    sections = parse_sections()
     lang_ru, lang_en = load_lang(nodes, stats)
-    block = build_block(nodes, branches, lang_ru, lang_en, stats)
+    block = build_block(nodes, branches, sections, lang_ru, lang_en, stats)
 
     page = read(PAGE)
     if MARK_START not in page or MARK_END not in page:
@@ -527,7 +735,7 @@ def main() -> int:
     for b in branches:
         subset = [n for n in nodes if n["branch"] == b["name"]]
         print(
-            "  %-10s %3d nodes  %6d xp   %s"
+            "  %-10s %3d nodes  %6d очк.   %s"
             % (
                 b["name"],
                 len(subset),
@@ -535,7 +743,7 @@ def main() -> int:
                 lang_ru.get(b["lang"], ""),
             )
         )
-    print("total: %d xp" % sum(n["cost"] for n in nodes))
+    print("total: %d очк." % sum(n["cost"] for n in nodes))
     for problem in stats:
         print("  warning: " + problem)
 

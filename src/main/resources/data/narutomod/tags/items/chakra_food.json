@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "narutomod:ramen",
+    "narutomod:ramen_miso",
+    "narutomod:ramen_pork",
+    "narutomod:ramen_seafood",
+    "narutomod:onigiri",
+    "narutomod:dango",
+    "narutomod:curry"
+  ]
+}

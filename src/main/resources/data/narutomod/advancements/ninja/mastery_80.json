@@ -1,0 +1,26 @@
+{
+  "display": {
+    "icon": {
+      "item": "narutomod:chakra_crystal"
+    },
+    "title": {
+      "translate": "advancements.narutomod.ninja.mastery_80.title"
+    },
+    "description": {
+      "translate": "advancements.narutomod.ninja.mastery_80.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "mastered": {
+      "trigger": "narutomod:mastery",
+      "conditions": {
+        "level": 80
+      }
+    }
+  },
+  "parent": "narutomod:ninja/mastery_25"
+}

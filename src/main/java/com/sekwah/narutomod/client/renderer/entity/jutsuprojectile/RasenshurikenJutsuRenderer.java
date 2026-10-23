@@ -52,6 +52,11 @@ public class RasenshurikenJutsuRenderer extends EntityRenderer<RasenshurikenJuts
         poseStack.pushPose();
         poseStack.mulPose(Axis.YP.rotationDegrees(Mth.lerp(partialTicks, entity.yRotO, entity.getYRot()) - 90.0F));
         poseStack.mulPose(Axis.ZP.rotationDegrees(Mth.lerp(partialTicks, entity.xRotO, entity.getXRot())));
+        // The item model is a flat sprite in its local XY plane. Laying it down first turns that plane
+        // horizontal; without this the disc flies standing on edge like a wheel. The spin is applied
+        // before the lay-down so it turns around the disc's own axis (the normal), which is what makes
+        // it look thrown rather than tumbling.
+        poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
         poseStack.mulPose(Axis.ZP.rotationDegrees(
                 Mth.lerp(partialTicks, entity.getPrevSpinTicks(), entity.getSpinTicks()) * SPIN_SPEED));
         poseStack.scale(SCALE, SCALE, SCALE);

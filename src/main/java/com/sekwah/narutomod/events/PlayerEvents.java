@@ -1,6 +1,7 @@
 package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
+import com.sekwah.narutomod.abilities.jutsus.BodyAdaptationAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraMeditationJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraSensingAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraShieldAbility;
@@ -9,17 +10,32 @@ import com.sekwah.narutomod.abilities.jutsus.HengeJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.KamuiPhaseAbility;
 import com.sekwah.narutomod.abilities.jutsus.SageModeAbility;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
+import com.sekwah.narutomod.config.NarutoConfig;
+import com.sekwah.narutomod.ranks.NinjaRanks;
+import com.sekwah.narutomod.skills.SkillEffect;
+import com.sekwah.narutomod.skills.SkillTree;
+import com.sekwah.sekclib.capabilitysync.capabilitysync.broadcaster.CapabilityBroadcaster;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -33,6 +49,13 @@ public class PlayerEvents {
     private static final float SOFT_LANDING_STAMINA_PER_DAMAGE = 2.0f;
 
     private static final int SOFT_LANDING_STAMINA_REGEN_DELAY = 20 * 3;
+
+    /** Chakra every meal in the {@code narutomod:chakra_food} tag gives on top of its own effects. */
+    private static final float TAG_CHAKRA = 5.0f;
+
+    /** The tag that marks any food as ninja rations, for datapacks as much as for the mod's own dishes. */
+    public static final TagKey<Item> CHAKRA_FOOD = TagKey.create(Registries.ITEM,
+            new ResourceLocation(NarutoMod.MOD_ID, "chakra_food"));
 
     @SubscribeEvent
     public static void onEntityUpdate(LivingEvent.LivingTickEvent event) {
@@ -54,6 +77,96 @@ public class PlayerEvents {
             // Night vision is fed from the chakra bar and closes itself when it runs dry, see
             // ChakraSensingAbility.
             ChakraSensingAbility.maintain(player, ninjaData);
+            // Ranks are milestones worked out from skill nodes and boss kills, see NinjaRanks.
+            if (player instanceof ServerPlayer serverPlayer) {
+                NinjaRanks.tick(serverPlayer, ninjaData);
+            }
+        });
+    }
+
+    /**
+     * A proper night's sleep is the one way to fill the pool for free, once a day.
+     *
+     * <p>Only a natural morning wake-up counts: being shaken awake by damage or waking in the middle
+     * of the night gives nothing, so a bed cannot be pumped for chakra in the middle of a fight. On
+     * the morning the body is rested, so both chakra and nature energy come back full - it is the
+     * answer to "I have no clones to sit with and no pills left".</p>
+     */
+    @SubscribeEvent
+    public static void onWakeUp(PlayerWakeUpEvent event) {
+        Player player = event.getEntity();
+        if (player.level().isClientSide || event.wakeImmediately() || !player.level().isDay()
+                || !NarutoConfig.sleepRestoresChakra) {
+            return;
+        }
+        player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
+            if (!ninjaData.isNinjaModeEnabled()) {
+                return;
+            }
+            ninjaData.setChakra(ninjaData.getMaxChakra());
+            ninjaData.setSeninMana(ninjaData.getMaxSeninMana());
+        });
+    }
+
+    /**
+     * Any food in the {@code narutomod:chakra_food} tag gives a small amount of chakra on the last
+     * bite, on top of whatever the dish itself does.
+     *
+     * <p>The tag is the extension point: a datapack can list another mod's meal and it will feed a
+     * ninja's chakra without any code. The mod's own dishes add their own larger amounts through
+     * {@link com.sekwah.narutomod.item.ChakraFoodItem}, so the tag amount is deliberately modest.</p>
+     *
+     * <p>An adapted body also digests what a normal stomach would reject: rotten flesh no longer
+     * leaves the caster hungry. The effect is applied by the item itself while the food is being
+     * finished, which is before this event, so it is simply taken back off - the stance is what
+     * makes the meal sit well, not a change to the item.</p>
+     */
+    @SubscribeEvent
+    public static void onItemUseFinish(LivingEntityUseItemEvent.Finish event) {
+        if (!(event.getEntity() instanceof Player player) || player.level().isClientSide) {
+            return;
+        }
+        player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
+            if (event.getItem().is(Items.ROTTEN_FLESH)
+                    && BodyAdaptationAbility.isActive(ninjaData)) {
+                player.removeEffect(MobEffects.HUNGER);
+            }
+            if (event.getItem().is(CHAKRA_FOOD) && ninjaData.isNinjaModeEnabled()) {
+                ninjaData.addChakra(TAG_CHAKRA);
+            }
+        });
+    }
+
+    /**
+     * A ninja with nowhere to respawn and a chakra marker standing comes back at the marker.
+     *
+     * <p>Beds and respawn anchors always win: their position is set on the player before this
+     * event fires, and the marker is only used when the player has no respawn point at all. The
+     * marker is a log standing in the world (see {@code ChakraMarkerJutsuAbility}), so this is the
+     * one respawn in the mod that is bought with a technique rather than a block.</p>
+     */
+    @SubscribeEvent
+    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player) || event.isEndConquered()
+                || !NarutoConfig.markerRespawnEnabled) {
+            return;
+        }
+        if (player.getRespawnPosition() != null) {
+            return;
+        }
+        player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
+            Vec3 marker = ninjaData.getMarkerLoc();
+            ResourceLocation dimension = ninjaData.getMarkerDimension();
+            if (!ninjaData.isNinjaModeEnabled() || marker == null || dimension == null) {
+                return;
+            }
+            ServerLevel target = player.getServer() == null ? null
+                    : player.getServer().getLevel(ResourceKey.create(Registries.DIMENSION, dimension));
+            if (target == null) {
+                return;
+            }
+            player.teleportTo(target, marker.x, marker.y, marker.z, player.getYRot(), player.getXRot());
+            player.resetFallDistance();
         });
     }
 
@@ -81,6 +194,44 @@ public class PlayerEvents {
                 ChakraShieldAbility.applyShield(player, ninjaData.getShieldPoints());
             }
         });
+    }
+
+    /**
+     * Puts the shield's armour modifier back after a relogin.
+     *
+     * <p>The pool itself is saved with the player data, but the modifier that shows it on the armour
+     * bar is added as a <em>transient</em> modifier, and transient modifiers are not part of the
+     * player's saved attributes. A caster who bought a shield, logged out and came back would keep
+     * the points and lose the bar - and the damage would still be taken out of the pool, which reads
+     * as damage vanishing into nothing. Death still clears the pool, so this only ever restores a
+     * shield that was paid for and not yet broken.</p>
+     */
+    @SubscribeEvent
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+        player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
+            if (ninjaData.getShieldPoints() > 0.0f) {
+                ChakraShieldAbility.applyShield(player, ninjaData.getShieldPoints());
+            }
+        });
+    }
+
+    /**
+     * Brings a newly tracked player up to date on the globally synced state of another player.
+     *
+     * <p>sekclib only sends a field when it changes, and its "started tracking" hook is a no-op, so a
+     * player who comes into view of somebody already wearing a henge disguise sees the plain skin
+     * until the disguise happens to change. Replaying the current globally synced values to that one
+     * viewer fixes the disguise, and any other globally synced state, for late arrivals.</p>
+     */
+    @SubscribeEvent
+    public static void onStartTracking(PlayerEvent.StartTracking event) {
+        if (event.getTarget() instanceof Player tracked
+                && event.getEntity() instanceof ServerPlayer viewer) {
+            CapabilityBroadcaster.broadcastCapToPlayer(tracked, viewer);
+        }
     }
 
     /**
@@ -112,13 +263,17 @@ public class PlayerEvents {
      * couple of points and a lethal one is most of a full bar. There is nothing to cast, it simply
      * happens whenever it is affordable.</p>
      *
-     * <p>It is all or nothing on purpose. Not being able to pay used to leave the caster with a
-     * partially cushioned landing, which read as the stamina doing something random; now an
-     * unaffordable fall is simply a fall, and the stamina is kept for the next one.</p>
+     * <p>Stamina is spent before health, point for point: if the bar covers the whole fall it is
+     * cushioned, and if it covers only part of it that part is taken and the rest of the damage is
+     * left for the caster to take normally. Only whole points of damage are bought, so a nearly
+     * empty bar is not spent on a rounding error - a caster with two stamina left still keeps their
+     * two stamina for a fall it could actually help with.</p>
      */
     @SubscribeEvent
     public static void livingFall(LivingFallEvent event) {
-        if (event.getEntity() instanceof Player player){
+        // The event fires on both sides; only the server owns stamina, so a client-side pass would
+        // only make the bar dip locally while the server still lands the damage.
+        if (event.getEntity() instanceof Player player && !player.level().isClientSide) {
             player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
                 if (!ninjaData.isNinjaModeEnabled()) {
                     return;
@@ -133,20 +288,51 @@ public class PlayerEvents {
                     return;
                 }
 
-                float staminaCost = damage * SOFT_LANDING_STAMINA_PER_DAMAGE;
-                if (ninjaData.getStamina() < staminaCost) {
+                // The endurance branch makes a cushioned landing cheaper: the same point of damage
+                // costs less stamina the more the caster has trained the roll.
+                float discount = SkillTree.bonus(ninjaData.getSkillData().getUnlocked(),
+                        SkillEffect.SOFT_LANDING);
+                float staminaPerDamage = SOFT_LANDING_STAMINA_PER_DAMAGE
+                        * Math.max(0.0f, 1.0f - discount);
+                if (staminaPerDamage <= 0.0f) {
+                    // A fully discounted landing is free; nothing to pay and nothing to leave over.
+                    cushion(event, player, 0.0f, jumpBoost, damage);
                     return;
                 }
 
-                ninjaData.useStamina(staminaCost, SOFT_LANDING_STAMINA_REGEN_DELAY);
-                event.setDistance(0.0f);
-                player.resetFallDistance();
-                if (player.level() instanceof ServerLevel serverLevel) {
-                    serverLevel.sendParticles(ParticleTypes.CLOUD, player.getX(),
-                            player.getY() + 0.1d, player.getZ(),
-                            20, 0.35d, 0.05d, 0.35d, 0.02d);
+                // Only whole points: a bar too thin for one point buys nothing, which is better than
+                // charging the caster for a fraction of a heart they will not notice.
+                int affordable = (int) Math.floor(ninjaData.getStamina() / staminaPerDamage);
+                float absorbed = Math.min(damage, affordable);
+                if (absorbed <= 0.0f) {
+                    return;
                 }
+
+                ninjaData.useStamina(absorbed * staminaPerDamage, SOFT_LANDING_STAMINA_REGEN_DELAY);
+                cushion(event, player, damage - absorbed, jumpBoost, damage);
             });
+        }
+    }
+
+    /**
+     * Cuts the fall down to the damage the stamina did not cover and plays the landing cloud. A
+     * remainder of zero is a full cushion; anything above it is handed back to vanilla, which does
+     * the usual damage on touchdown.
+     */
+    private static void cushion(LivingFallEvent event, Player player, float remaining, float jumpBoost,
+                                float original) {
+        if (remaining <= 0.0f) {
+            event.setDistance(0.0f);
+        } else {
+            // Vanilla turns the distance back into ceil(distance - 3 - jumpBoost), so handing it
+            // back the distance for the damage that is left makes exactly that much land.
+            event.setDistance(remaining + 3.0f + jumpBoost);
+        }
+        player.resetFallDistance();
+        if (player.level() instanceof ServerLevel serverLevel && remaining < original) {
+            serverLevel.sendParticles(ParticleTypes.CLOUD, player.getX(),
+                    player.getY() + 0.1d, player.getZ(),
+                    20, 0.35d, 0.05d, 0.35d, 0.02d);
         }
     }
 

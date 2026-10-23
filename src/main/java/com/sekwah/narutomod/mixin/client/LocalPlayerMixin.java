@@ -5,6 +5,8 @@ import com.sekwah.narutomod.abilities.NarutoAbilities;
 import com.sekwah.narutomod.abilities.AbilityUnlocks;
 import com.sekwah.narutomod.abilities.utility.DoubleJumpAbility;
 import com.sekwah.narutomod.capabilities.DoubleJumpData;
+import com.sekwah.narutomod.skills.SkillEffect;
+import com.sekwah.narutomod.skills.SkillTree;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -56,7 +58,11 @@ public class LocalPlayerMixin extends AbstractClientPlayer {
                         }
                         doubleJumpData.clientJump();
                         Vec3 movement = this.getDeltaMovement();
-                        this.lerpMotion(movement.x, 0.5F, movement.z);
+                        // The endurance branch turns the standard hop into a real leap: the lift is
+                        // the same 0.5 by default and grows with every node bought.
+                        float lift = 0.5F * (1.0F + SkillTree.bonus(ninjaData.getSkillData().getUnlocked(),
+                                SkillEffect.DOUBLE_JUMP_POWER));
+                        this.lerpMotion(movement.x, lift, movement.z);
                         NarutoAbilities.triggerAbility(NarutoAbilities.DOUBLE_JUMP.getId());
                     }
                 }

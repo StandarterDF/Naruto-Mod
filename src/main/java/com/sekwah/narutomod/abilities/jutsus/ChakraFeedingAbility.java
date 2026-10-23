@@ -17,6 +17,14 @@ import net.minecraft.world.food.FoodData;
  * replacing eating.</p>
  */
 public class ChakraFeedingAbility extends Ability implements Ability.Toggled, Ability.HandleEnded {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** C B B. */
     public static final long COMBO = 122L;

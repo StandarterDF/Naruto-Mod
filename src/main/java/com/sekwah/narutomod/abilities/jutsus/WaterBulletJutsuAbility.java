@@ -14,6 +14,14 @@ import net.minecraft.world.phys.Vec3;
  * More of a slight speed boost than an actual dash
  */
 public class WaterBulletJutsuAbility extends Ability implements Ability.Cooldown {
+    /**
+     * How far a cast of this technique carries as a game event. An ordinary cast.
+     */
+    @Override
+    public int noiseRadius() {
+        return 24;
+    }
+
 
     @Override
     public ActivationType activationType() {

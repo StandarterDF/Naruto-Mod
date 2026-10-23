@@ -73,6 +73,13 @@ public class ServerAbilityChannelPacket {
                                 .withStyle(ChatFormatting.RED), true);
                         return;
                     }
+                    // Switched off in the jutsu menu, see DisabledAbilityData.
+                    if (ninjaData.isAbilityDisabled(msg.abilityResource)) {
+                        player.displayClientMessage(Component.translatable("jutsu.fail.techdisabled",
+                                Component.translatable(ability.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                                .withStyle(ChatFormatting.RED), true);
+                        return;
+                    }
                     // Just check if its
                     if (ability.activationType() == Ability.ActivationType.CHANNELED) {
                         if (msg.status == ChannelStatus.START) {
@@ -96,9 +103,8 @@ public class ServerAbilityChannelPacket {
                                 if(ability.handleCost(player, ninjaData, -1)) {
                                     if (ability.castingSound() != null) {
                                         player.level().playSound(null, player, ability.castingSound(), SoundSource.PLAYERS, 0.5f, 1.0f);
-
-                                        player.level().gameEvent(player, NarutoGameEvents.JUTSU_CASTING.get(), player.position().add(0, player.getEyeHeight() * 0.7, 0));
                                     }
+                                    ability.emitNoise(player);
                                     player.displayClientMessage(Component.translatable("jutsu.cast", Component.translatable(ability.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)).withStyle(ChatFormatting.GREEN), true);
                                     ability.performServer(player, ninjaData, -1);
                                     ability.recordMastery(player, ninjaData);

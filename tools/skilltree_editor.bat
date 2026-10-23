@@ -7,8 +7,10 @@ rem  their cards, then press "save" - the page POSTs the whole table to this
 rem  little server, which writes tmp\skilltree-edits.json. After that tell the
 rem  agent "apply the edits" and it patches Skill.java + the language files.
 rem
-rem  The page is the editor: nodes snap to the grid, occupied cells are
-rem  refused, Ctrl+Z undoes, Ctrl+S saves. The lint under the board runs live.
+rem  The page is the editor: sections and branches are the two tab rows, "overview"
+rem  shows all sixteen boards at once, the search box (Ctrl+F) jumps to any node,
+rem  nodes snap to the grid, occupied cells are refused, Ctrl+Z undoes, Ctrl+S
+rem  saves. The lint under the board runs live.
 rem
 rem  Close this window (or press Ctrl+C) when done - the page keeps working,
 rem  but "save" only works while this server is running.

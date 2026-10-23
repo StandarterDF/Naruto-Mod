@@ -4,8 +4,12 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.network.PacketHandler;
+import com.sekwah.narutomod.network.c2s.ServerBuySkillPointsPacket;
 import com.sekwah.narutomod.network.c2s.ServerUnlockSkillPacket;
 import com.sekwah.narutomod.skills.Skill;
+import com.sekwah.narutomod.skills.SkillBranch;
+import com.sekwah.narutomod.skills.SkillPoints;
+import com.sekwah.narutomod.skills.SkillSection;
 import com.sekwah.narutomod.skills.SkillTree;
 import com.sekwah.narutomod.util.ExperienceUtils;
 import com.sekwah.narutomod.util.GuiUtils;
@@ -29,17 +33,27 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The skill tree: a board of nodes a caster buys with experience points.
+ * The skill tree: a board of nodes a caster buys with skill points.
  *
  * <p>The board is drawn in its own coordinates and then panned and zoomed as a whole, so the layout
  * in {@link Skill} is all the screen needs to place anything. Nodes are coloured by what they are
  * waiting on - locked, ready, ready but unaffordable, learned - and a click sends the node's path to
- * the server, which is the only side allowed to spend the points. Everything the screen knows comes
- * from the synced {@code SkillData}, so it can never show a node open that the server has not
- * agreed to.</p>
+ * the server, which is the only side allowed to spend the points. Experience is first exchanged for
+ * points with the buttons at the bottom left, so a caster can bank what they have earned and spend
+ * it at their own pace. Everything the screen knows comes from the synced {@code SkillData}, so it
+ * can never show a node open that the server has not agreed to.</p>
  *
- * <p>The tree is meant to be big and to radiate from the first node, so the board starts zoomed out
- * enough to see most of it and has a button to snap back to the centre.</p>
+ * <h2>Two levels of tabs</h2>
+ * <p>The tree is far too big for one strip of tabs, so the navigation is two rows deep. The top row
+ * is the four {@link SkillSection sections} (the physical path, the natures, the special techniques
+ * and the eye bloodlines); the row below it is the {@link SkillBranch branches} of the active
+ * section. Each branch is its own constellation around its own centre, panned and zoomed on its own,
+ * and switching a branch snaps the view back to that centre. A section is only a grouping - it holds
+ * no nodes - so a caster picks a discipline first and a speciality second.</p>
+ *
+ * <p>A branch with no nodes yet (the eye bloodlines) is still a selectable tab: the board is simply
+ * empty and says so, which is what leaves room for the next set of techniques without reshaping the
+ * screen again.</p>
  *
  * <h2>Keeping it light</h2>
  * <p>A board this size is easy to make stutter, so the drawing is deliberately cheap. Every node's
@@ -89,6 +103,18 @@ public class SkillTreeScreen extends Screen {
     /** For each node, the indices of the nodes that must be learned first. */
     private static final int[][] PREREQUISITES = new int[NODES.length][];
 
+    /** The sections of the top row, in display order. */
+    private static final SkillSection[] SECTIONS = SkillSection.values();
+
+    /** For each section, the branches of its sub-tab row, in declaration order. */
+    private static final SkillBranch[][] SECTION_BRANCHES = new SkillBranch[SECTIONS.length][];
+
+    /** Every branch, in display order (section by section). */
+    private static final SkillBranch[] BRANCHES = SkillBranch.values();
+
+    /** For each branch, the indices into {@link #NODES} of the nodes that belong to it. */
+    private static final int[][] BRANCH_NODES = new int[BRANCHES.length][];
+
     static {
         for (int i = 0; i < NODES.length; i++) {
             INDEX.put(NODES[i], i);
@@ -103,11 +129,45 @@ public class SkillTreeScreen extends Screen {
             }
             PREREQUISITES[i] = indices;
         }
+        for (int s = 0; s < SECTIONS.length; s++) {
+            SECTION_BRANCHES[s] = SkillBranch.of(SECTIONS[s]);
+        }
+        for (int b = 0; b < BRANCHES.length; b++) {
+            SkillBranch branch = BRANCHES[b];
+            int count = 0;
+            for (Skill node : NODES) {
+                if (node.branch() == branch) {
+                    count++;
+                }
+            }
+            int[] members = new int[count];
+            int at = 0;
+            for (int i = 0; i < NODES.length; i++) {
+                if (NODES[i].branch() == branch) {
+                    members[at++] = i;
+                }
+            }
+            BRANCH_NODES[b] = members;
+        }
     }
+
+    /** Section row geometry: a strip of equal cells across the top of the board. */
+    private static final int SECTION_TOP = 28;
+    private static final int TAB_HEIGHT = 16;
+
+    /** Branch row geometry: one row lower, sized to fit the widest section. */
+    private static final int BRANCH_TOP = SECTION_TOP + TAB_HEIGHT + 2;
+    private static final int BRANCH_TAB_WIDTH = 74;
 
     private double panX;
     private double panY;
     private float zoom = 0.6f;
+
+    /** Which section is open; its branch row is the one on screen. */
+    private int activeSection;
+
+    /** Which branch's board is on screen; the others are hidden entirely. */
+    private int activeBranch;
 
     private boolean dragging;
     private boolean pressMoved;
@@ -117,11 +177,19 @@ public class SkillTreeScreen extends Screen {
     private double lastY;
 
     private Set<ResourceLocation> unlocked = Set.of();
-    private int points;
+    private Set<ResourceLocation> scrolls = Set.of();
+
+    /** Skill points already banked, and the experience that can still be turned into more. */
+    private int skillPoints;
+    private int xp;
 
     private Skill hovered;
     private Button done;
     private Button center;
+    private Button friends;
+    private Button buyOne;
+    private Button buyTen;
+    private Button buyMax;
 
     /** Per node: whether it is on the route to the hovered one. Reused every frame. */
     private final boolean[] highlighted = new boolean[NODES.length];
@@ -137,7 +205,24 @@ public class SkillTreeScreen extends Screen {
                 .pos(this.width / 2 - 49, this.height - 30).size(98, 20).build());
         this.center = this.addRenderableWidget(Button.builder(Component.translatable("naruto.gui.skill.center"),
                         button -> this.center())
+                .pos(this.width - 218, this.height - 30).size(98, 20).build());
+        // Friends sit at the bottom right, next to the view reset: the list belongs to the same
+        // social side of the menu as the tree, not to the techniques screen.
+        this.friends = this.addRenderableWidget(Button.builder(Component.translatable("naruto.friends.button"),
+                        button -> this.minecraft.setScreen(new FriendsScreen(this)))
                 .pos(this.width - 108, this.height - 30).size(98, 20).build());
+        // The exchange lives in the free space at the bottom left: one, ten, or everything the
+        // experience on hand affords. Buying is a request to the server either way.
+        int exchangeY = this.height - 30;
+        this.buyOne = this.addRenderableWidget(Button.builder(Component.literal("+1"),
+                        button -> this.buyPoints(1))
+                .pos(10, exchangeY).size(30, 20).build());
+        this.buyTen = this.addRenderableWidget(Button.builder(Component.literal("+10"),
+                        button -> this.buyPoints(10))
+                .pos(44, exchangeY).size(38, 20).build());
+        this.buyMax = this.addRenderableWidget(Button.builder(Component.translatable("naruto.gui.skill.buy.max"),
+                        button -> this.buyPoints(0))
+                .pos(86, exchangeY).size(46, 20).build());
     }
 
     @Override
@@ -146,14 +231,66 @@ public class SkillTreeScreen extends Screen {
         INinjaData ninjaData = player == null ? null
                 : player.getCapability(NinjaCapabilityHandler.NINJA_DATA).orElse(null);
         this.unlocked = ninjaData == null ? Set.of() : new HashSet<>(ninjaData.getSkillData().getUnlocked());
-        this.points = player == null ? 0 : ExperienceUtils.currentPoints(player);
+        this.scrolls = ninjaData == null ? Set.of() : new HashSet<>(ninjaData.getSkillData().getScrolls());
+        this.skillPoints = ninjaData == null ? 0 : ninjaData.getSkillData().getPoints();
+        this.xp = player == null ? 0 : ExperienceUtils.currentPoints(player);
     }
 
-    /** Snaps the board back to the first node at a readable scale. */
+    /**
+     * Asks the server to exchange experience for points. A non-positive amount means "everything
+     * affordable"; the server trims the request to the experience actually on hand either way.
+     */
+    private void buyPoints(int amount) {
+        if (this.minecraft == null || this.minecraft.player == null) {
+            return;
+        }
+        int affordable = SkillPoints.affordable(this.minecraft.player);
+        int wanted = amount <= 0 ? affordable : Math.min(amount, affordable);
+        if (wanted <= 0) {
+            return;
+        }
+        PacketHandler.sendToServer(new ServerBuySkillPointsPacket(wanted));
+    }
+
+    /** Snaps the board back to its centre node at a readable scale. */
     private void center() {
         this.panX = 0.0;
         this.panY = 0.0;
         this.zoom = 1.0f;
+    }
+
+    /** Shows another section and opens its first branch, so the board is never left blank. */
+    private void switchSection(int section) {
+        if (section < 0 || section >= SECTIONS.length || section == this.activeSection) {
+            return;
+        }
+        this.activeSection = section;
+        SkillBranch[] branches = SECTION_BRANCHES[section];
+        this.activeBranch = branches.length == 0 ? 0 : indexOf(branches[0]);
+        this.center();
+        this.hovered = null;
+    }
+
+    /** Shows another branch of the open section: the board is per-branch, so the view snaps back. */
+    private void switchBranch(int branch) {
+        if (branch < 0 || branch >= BRANCHES.length || branch == this.activeBranch) {
+            return;
+        }
+        if (BRANCHES[branch].section() != SECTIONS[this.activeSection]) {
+            return;
+        }
+        this.activeBranch = branch;
+        this.center();
+        this.hovered = null;
+    }
+
+    private static int indexOf(SkillBranch branch) {
+        for (int i = 0; i < BRANCHES.length; i++) {
+            if (BRANCHES[i] == branch) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -171,7 +308,8 @@ public class SkillTreeScreen extends Screen {
     private Skill nodeAt(double mouseX, double mouseY) {
         double treeX = (mouseX - (this.width / 2.0 + this.panX)) / this.zoom;
         double treeY = (mouseY - (this.height / 2.0 + this.panY)) / this.zoom;
-        for (Skill skill : NODES) {
+        for (int index : BRANCH_NODES[this.activeBranch]) {
+            Skill skill = NODES[index];
             if (Math.abs(treeX - nodeX(skill)) <= HALF && Math.abs(treeY - nodeY(skill)) <= HALF) {
                 return skill;
             }
@@ -206,6 +344,16 @@ public class SkillTreeScreen extends Screen {
             return true;
         }
         if (button == 0) {
+            int section = sectionAt(mouseX, mouseY);
+            if (section >= 0) {
+                switchSection(section);
+                return true;
+            }
+            int branch = branchAt(mouseX, mouseY);
+            if (branch >= 0) {
+                switchBranch(branch);
+                return true;
+            }
             this.dragging = true;
             this.pressMoved = false;
             this.pressX = mouseX;
@@ -215,6 +363,39 @@ public class SkillTreeScreen extends Screen {
             return true;
         }
         return false;
+    }
+
+    /** The section tab under the cursor, or -1. */
+    private int sectionAt(double mouseX, double mouseY) {
+        if (mouseY < SECTION_TOP || mouseY > SECTION_TOP + TAB_HEIGHT) {
+            return -1;
+        }
+        int width = this.sectionTabWidth();
+        int left = this.width / 2 - (SECTIONS.length * width) / 2;
+        int index = (int) ((mouseX - left) / width);
+        if (mouseX < left || index < 0 || index >= SECTIONS.length) {
+            return -1;
+        }
+        return index;
+    }
+
+    /** The branch tab under the cursor, or -1 when the cursor is not on the open section's row. */
+    private int branchAt(double mouseX, double mouseY) {
+        if (mouseY < BRANCH_TOP || mouseY > BRANCH_TOP + TAB_HEIGHT) {
+            return -1;
+        }
+        SkillBranch[] branches = SECTION_BRANCHES[this.activeSection];
+        int left = this.width / 2 - (branches.length * BRANCH_TAB_WIDTH) / 2;
+        int index = (int) ((mouseX - left) / BRANCH_TAB_WIDTH);
+        if (mouseX < left || index < 0 || index >= branches.length) {
+            return -1;
+        }
+        return indexOf(branches[index]);
+    }
+
+    /** The section tabs share the width of the screen, so a longer name still fits. */
+    private int sectionTabWidth() {
+        return Math.max(96, Math.min(150, (this.width - 24) / SECTIONS.length));
     }
 
     @Override
@@ -274,7 +455,7 @@ public class SkillTreeScreen extends Screen {
         if (!SkillTree.prerequisitesMet(skill, this.unlocked)) {
             return;
         }
-        if (this.points < skill.cost()) {
+        if (this.skillPoints < skill.cost()) {
             return;
         }
         PacketHandler.sendToServer(new ServerUnlockSkillPacket(skill.path()));
@@ -296,24 +477,83 @@ public class SkillTreeScreen extends Screen {
         // Links first, so the nodes sit on top of them. They go into one shared buffer and are drawn
         // in a single call, which is what keeps a tree this size from stuttering.
         this.drawLinks(guiGraphics);
-        for (int i = 0; i < NODES.length; i++) {
-            this.drawNode(guiGraphics, i);
+        for (int index : BRANCH_NODES[this.activeBranch]) {
+            this.drawNode(guiGraphics, index);
         }
 
         guiGraphics.pose().popPose();
 
-        GuiUtils.centeredText(guiGraphics, this.font, this.title, this.width / 2, 14, 0xFFFFFF);
+        GuiUtils.centeredText(guiGraphics, this.font, this.title, this.width / 2, 10, 0xFFFFFF);
+        this.drawTabs(guiGraphics, mouseX, mouseY);
+        this.drawWallet(guiGraphics);
+        if (BRANCH_NODES[this.activeBranch].length == 0) {
+            GuiUtils.centeredText(guiGraphics, this.font,
+                    Component.translatable("naruto.gui.skill.section.empty"),
+                    this.width / 2, this.height / 2, 0x9A9A9A);
+        }
         GuiUtils.centeredText(guiGraphics, this.font, Component.translatable("naruto.gui.skill.hint"),
-                this.width / 2, 28, 0xAAAAAA);
-        guiGraphics.drawString(this.font,
-                Component.translatable("naruto.gui.skill.xp", formatXp(this.points)),
-                10, this.height - 20, 0xFFD37F, true);
+                this.width / 2, this.height - 58, 0xAAAAAA);
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
         if (this.hovered != null) {
             guiGraphics.renderComponentTooltip(this.font, tooltipFor(this.hovered), mouseX, mouseY);
         }
+    }
+
+    /** The two currencies top left, and the exchange label above the buy buttons bottom left. */
+    private void drawWallet(GuiGraphics guiGraphics) {
+        guiGraphics.drawString(this.font,
+                Component.translatable("naruto.gui.skill.points", grouped(this.skillPoints)),
+                10, 8, 0xFFD37F, true);
+        guiGraphics.drawString(this.font,
+                Component.translatable("naruto.gui.skill.xp", grouped(this.xp)),
+                10, 19, 0xFFE8E8E8, true);
+        guiGraphics.drawString(this.font, Component.translatable("naruto.gui.skill.buy"),
+                10, this.height - 44, 0xFFD37F, true);
+    }
+
+    /** Both tab rows: the sections on top, the branches of the open section right below. */
+    private void drawTabs(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        int sectionWidth = this.sectionTabWidth();
+        int sectionLeft = this.width / 2 - (SECTIONS.length * sectionWidth) / 2;
+        int hoveredSection = sectionAt(mouseX, mouseY);
+        for (int i = 0; i < SECTIONS.length; i++) {
+            SkillSection section = SECTIONS[i];
+            int x = sectionLeft + i * sectionWidth;
+            boolean active = i == this.activeSection;
+            boolean over = i == hoveredSection;
+            drawTab(guiGraphics, x, SECTION_TOP, sectionWidth - 2,
+                    active ? section.colour() : (over ? 0xFFAAAAAA : 0xFF4A4A4A),
+                    active ? 0xFF2C2C2C : (over ? 0xFF232323 : 0xFF161616));
+            GuiUtils.centeredText(guiGraphics, this.font,
+                    Component.translatable(section.translationKey()),
+                    x + (sectionWidth - 2) / 2, SECTION_TOP + 4,
+                    active ? section.colour() : (over ? 0xFFFFFFFF : 0xFFB0B0B0));
+        }
+
+        SkillBranch[] branches = SECTION_BRANCHES[this.activeSection];
+        int branchLeft = this.width / 2 - (branches.length * BRANCH_TAB_WIDTH) / 2;
+        int hoveredBranch = branchAt(mouseX, mouseY);
+        for (int i = 0; i < branches.length; i++) {
+            SkillBranch branch = branches[i];
+            int x = branchLeft + i * BRANCH_TAB_WIDTH;
+            boolean active = indexOf(branch) == this.activeBranch;
+            boolean over = indexOf(branch) == hoveredBranch;
+            int width = BRANCH_TAB_WIDTH - 2;
+            drawTab(guiGraphics, x, BRANCH_TOP, width,
+                    active ? branch.colour() : (over ? 0xFF8A8A8A : 0xFF3A3A3A),
+                    active ? 0xFF242424 : (over ? 0xFF1D1D1D : 0xFF121212));
+            GuiUtils.centeredText(guiGraphics, this.font,
+                    Component.translatable(branch.translationKey()),
+                    x + width / 2, BRANCH_TOP + 4,
+                    active ? branch.colour() : (over ? 0xFFE8E8E8 : 0xFF909090));
+        }
+    }
+
+    private static void drawTab(GuiGraphics guiGraphics, int x, int y, int width, int border, int fill) {
+        guiGraphics.fill(x, y, x + width, y + TAB_HEIGHT, border);
+        guiGraphics.fill(x + 1, y + 1, x + width - 1, y + TAB_HEIGHT - 1, fill);
     }
 
     /**
@@ -341,7 +581,7 @@ public class SkillTreeScreen extends Screen {
 
         // Two passes: pass 0 draws the dim links, pass 1 the lit route on top of them.
         for (int pass = 0; pass < 2; pass++) {
-            for (int i = 0; i < NODES.length; i++) {
+            for (int i : BRANCH_NODES[this.activeBranch]) {
                 int x2 = nodeX(NODES[i]);
                 int y2 = nodeY(NODES[i]);
                 for (int j : PREREQUISITES[i]) {
@@ -414,8 +654,9 @@ public class SkillTreeScreen extends Screen {
         }
 
         boolean learned = this.unlocked.contains(skill.id());
-        boolean ready = SkillTree.prerequisitesMet(skill, this.unlocked);
-        boolean affordable = this.points >= skill.cost();
+        boolean ready = SkillTree.prerequisitesMet(skill, this.unlocked)
+                && this.hasScroll(skill);
+        boolean affordable = this.skillPoints >= skill.cost();
 
         int border;
         int fill;
@@ -443,6 +684,10 @@ public class SkillTreeScreen extends Screen {
         }
     }
 
+    private boolean hasScroll(Skill skill) {
+        return !skill.requiresScroll() || this.scrolls.contains(skill.scrollKnowledge());
+    }
+
     private List<Component> tooltipFor(Skill skill) {
         List<Component> lines = new ArrayList<>();
         lines.add(Component.translatable(skill.nameKey()).withStyle(ChatFormatting.GOLD));
@@ -454,11 +699,13 @@ public class SkillTreeScreen extends Screen {
             if (!SkillTree.prerequisitesMet(skill, this.unlocked)) {
                 lines.add(Component.translatable("naruto.gui.skill.locked", prerequisiteNames(skill))
                         .withStyle(ChatFormatting.RED));
-            } else if (this.points < skill.cost()) {
-                lines.add(Component.translatable("naruto.gui.skill.poor", formatXp(skill.cost() - this.points))
+            } else if (!this.hasScroll(skill)) {
+                lines.add(Component.translatable("naruto.gui.skill.scroll").withStyle(ChatFormatting.RED));
+            } else if (this.skillPoints < skill.cost()) {
+                lines.add(Component.translatable("naruto.gui.skill.poor", grouped(skill.cost() - this.skillPoints))
                         .withStyle(ChatFormatting.RED));
             }
-            lines.add(Component.translatable("naruto.gui.skill.cost", formatXp(skill.cost()))
+            lines.add(Component.translatable("naruto.gui.skill.cost", grouped(skill.cost()))
                     .withStyle(ChatFormatting.YELLOW));
         }
         return lines;
@@ -477,7 +724,7 @@ public class SkillTreeScreen extends Screen {
     }
 
     /** A plain grouped number, e.g. {@code 12,345}. */
-    private static String formatXp(int points) {
+    private static String grouped(int points) {
         return String.format(Locale.ROOT, "%,d", points);
     }
 

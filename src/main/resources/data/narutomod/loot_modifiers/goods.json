@@ -1,0 +1,35 @@
+{
+  "type": "narutomod:add_loot",
+  "conditions": [
+    {
+      "condition": "minecraft:alternative",
+      "terms": [
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/abandoned_mineshaft" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/desert_pyramid" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/jungle_temple" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/igloo_chest" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/ruined_portal" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/underwater_ruin_small" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/underwater_ruin_big" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_supply" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/pillager_outpost" }
+      ]
+    }
+  ],
+  "entries": [
+    { "item": "narutomod:chakra_seal", "weight": 10 },
+    { "item": "narutomod:military_pills", "weight": 8 },
+    { "item": "narutomod:kunai", "weight": 14 },
+    { "item": "narutomod:shuriken", "weight": 14 },
+    { "item": "narutomod:senbon", "weight": 10 },
+    { "item": "narutomod:ramen", "weight": 6 },
+    { "item": "narutomod:fabric", "weight": 8 },
+    { "item": "narutomod:armor_plate", "weight": 4 },
+    { "item": "narutomod:treasure_map", "weight": 6 }
+  ],
+  "chance": 0.5,
+  "luck_bonus": 0.03,
+  "min": 1,
+  "max": 3
+}

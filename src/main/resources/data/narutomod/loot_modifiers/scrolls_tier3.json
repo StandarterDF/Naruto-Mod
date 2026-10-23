@@ -1,0 +1,29 @@
+{
+  "type": "narutomod:add_loot",
+  "conditions": [
+    {
+      "condition": "minecraft:alternative",
+      "terms": [
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/ancient_city" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/ancient_city_ice_box" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/end_city_treasure" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_treasure" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/woodland_mansion" }
+      ]
+    }
+  ],
+  "entries": [
+    { "item": "narutomod:scroll_kamui", "weight": 3 },
+    { "item": "narutomod:scroll_kirin", "weight": 2 },
+    { "item": "narutomod:scroll_rasenshuriken", "weight": 2 },
+    { "item": "narutomod:scroll_rinnegan", "weight": 1 },
+    { "item": "narutomod:scroll_chibaku_tensei", "weight": 1 },
+    { "item": "narutomod:scroll_sharingan", "weight": 1 },
+    { "item": "narutomod:scroll_byakugan", "weight": 1 },
+    { "item": "narutomod:scroll_jougan", "weight": 1 }
+  ],
+  "chance": 0.3,
+  "luck_bonus": 0.08,
+  "min": 1,
+  "max": 1
+}

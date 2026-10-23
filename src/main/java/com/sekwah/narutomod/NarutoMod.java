@@ -6,21 +6,25 @@ import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.capabilities.NinjaData;
 import com.sekwah.narutomod.client.NarutoClientScreens;
+import com.sekwah.narutomod.client.NarutoClientItems;
 import com.sekwah.narutomod.client.gui.NarutoInGameGUI;
 import com.sekwah.narutomod.client.keybinds.NarutoKeyHandler;
 import com.sekwah.narutomod.client.renderer.NarutoRenderEvents;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.commands.NarutoCommands;
+import com.sekwah.narutomod.effect.NarutoEffects;
 import com.sekwah.narutomod.entity.NarutoDataSerialisers;
 import com.sekwah.narutomod.entity.NarutoEntities;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.item.NarutoCreativeTabs;
 import com.sekwah.narutomod.item.NarutoDispenseItemBehavior;
 import com.sekwah.narutomod.item.NarutoItems;
+import com.sekwah.narutomod.loot.NarutoLootModifiers;
 import com.sekwah.narutomod.menu.NarutoMenus;
 import com.sekwah.narutomod.network.PacketHandler;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import com.sekwah.narutomod.sounds.NarutoSounds;
+import com.sekwah.narutomod.triggers.NarutoTriggers;
 import com.sekwah.narutomod.world.NarutoWorldGen;
 import com.sekwah.sekclib.capabilitysync.capabilitysync.RegisterCapabilitySyncEvent;
 import net.minecraft.resources.ResourceLocation;
@@ -72,6 +76,9 @@ public class NarutoMod {
         NarutoCreativeTabs.register(eventBus);
         NarutoWorldGen.register(eventBus);
         NarutoMenus.register(eventBus);
+        NarutoEffects.register(eventBus);
+        NarutoLootModifiers.register(eventBus);
+        NarutoTriggers.register();
 
         DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> NarutoInGameGUI::new);
     }
@@ -81,6 +88,7 @@ public class NarutoMod {
         //NarutoRenderEvents.registerRenderTypes();
         //NarutoWorldRenderEvents.registerEvents();
         event.enqueueWork(() -> DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> NarutoClientScreens::register));
+        event.enqueueWork(() -> DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> NarutoClientItems::register));
     }
 
     private void setup(FMLCommonSetupEvent event) {

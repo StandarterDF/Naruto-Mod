@@ -33,6 +33,14 @@ import java.util.UUID;
  * rather than the panic button it becomes later.</p>
  */
 public class ChakraShieldAbility extends Ability {
+    /**
+     * How far a cast of this technique carries as a game event. A blast, heard a long way off.
+     */
+    @Override
+    public int noiseRadius() {
+        return 32;
+    }
+
 
     /** B V B */
     public static final long COMBO = 323L;
@@ -66,6 +74,15 @@ public class ChakraShieldAbility extends Ability {
     @Override
     public ActivationType activationType() {
         return ActivationType.INSTANT;
+    }
+
+    /**
+     * The shield is instant to raise but stays up until it is broken, so it belongs with the stances
+     * in the jutsu menu: it is one of the things a player wants to see and switch off from there.
+     */
+    @Override
+    public boolean isMenuControllable() {
+        return true;
     }
 
     @Override

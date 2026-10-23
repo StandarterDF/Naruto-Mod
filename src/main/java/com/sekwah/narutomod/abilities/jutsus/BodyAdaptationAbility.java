@@ -25,6 +25,14 @@ import net.minecraft.world.entity.player.Player;
  * couple of seconds instead of having to be stripped off by hand.</p>
  */
 public class BodyAdaptationAbility extends Ability implements Ability.Toggled, Ability.HandleEnded {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** B V V. */
     public static final long COMBO = 233L;
@@ -98,6 +106,14 @@ public class BodyAdaptationAbility extends Ability implements Ability.Toggled, A
      */
     @Override
     public void recordMastery(Player player, INinjaData ninjaData) {
+    }
+
+    /**
+     * Whether the body is currently adapted to its surroundings, asked by the events that lean on
+     * it - eating something the stomach would rather not digest, for now.
+     */
+    public static boolean isActive(INinjaData ninjaData) {
+        return ninjaData.getToggleAbilityData().getAbilitiesHashSet().contains(ID);
     }
 
     @Override

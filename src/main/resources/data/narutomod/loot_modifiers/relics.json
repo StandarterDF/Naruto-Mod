@@ -1,0 +1,35 @@
+{
+  "type": "narutomod:add_loot",
+  "conditions": [
+    {
+      "condition": "minecraft:alternative",
+      "terms": [
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_library" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/woodland_mansion" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/ancient_city" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/ancient_city_ice_box" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/end_city_treasure" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_treasure" }
+      ]
+    }
+  ],
+  "entries": [
+    { "item": "narutomod:headband_leaf", "weight": 8 },
+    { "item": "narutomod:headband_sand", "weight": 8 },
+    { "item": "narutomod:headband_mist", "weight": 8 },
+    { "item": "narutomod:headband_cloud", "weight": 8 },
+    { "item": "narutomod:headband_rock", "weight": 8 },
+    { "item": "narutomod:headband_leaf_black", "weight": 3 },
+    { "item": "narutomod:headband_sound", "weight": 3 },
+    { "item": "narutomod:flak_jacket_new", "weight": 6 },
+    { "item": "narutomod:flak_jacket", "weight": 3 },
+    { "item": "narutomod:red_anbu_mask", "weight": 2 },
+    { "item": "narutomod:blue_anbu_mask", "weight": 2 },
+    { "item": "narutomod:anbu_armor", "weight": 1 },
+    { "item": "narutomod:akatsuki_cloak", "weight": 1 }
+  ],
+  "chance": 0.2,
+  "luck_bonus": 0.05,
+  "min": 1,
+  "max": 1
+}

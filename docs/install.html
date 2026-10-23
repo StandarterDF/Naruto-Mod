@@ -176,7 +176,10 @@
         </table>
       </div>
       <p>Дев-клиент и дев-сервер (для тестов в игре, с JEI в клиенте) запускаются скриптами
-        <code>run-dev-client.bat</code> и <code>run-dev-server.bat</code> — они сами находят JDK 17.</p>
+        <code>run-dev-client.bat</code> и <code>run-dev-server.bat</code> — они сами находят JDK 17
+        и запускают Gradle с <code>--offline</code>, поэтому интернет для дев-сборки не нужен: все
+        зависимости, ассеты и нативы уже в локальном кэше. После изменения зависимостей один раз
+        запустите с <code>set NARUTO_ONLINE=1</code>, чтобы Gradle смог их скачать.</p>
     </section>
 
     <section id="config">

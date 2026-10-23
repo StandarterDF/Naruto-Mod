@@ -45,6 +45,25 @@ public final class Mastery {
      */
     private static final float MAX_REDUCTION = 0.9f;
 
+    /**
+     * How fast mastery is earned, as a multiplier on every gain. One is the real pace; the
+     * {@code /naruto debug masteryspeed} command turns it up or down so a tester can feel how a
+     * technique plays at its early and late values without grinding through the curve twice. It
+     * only affects future earnings, never the mastery already on a technique, and it is not saved:
+     * a restart puts it back to normal.
+     */
+    private static volatile float gainMultiplier = 1.0f;
+
+    /** The current testing multiplier on mastery gains. */
+    public static float gainMultiplier() {
+        return gainMultiplier;
+    }
+
+    /** Sets the testing multiplier on mastery gains; zero freezes progress entirely. */
+    public static void setGainMultiplier(float multiplier) {
+        gainMultiplier = Math.max(0f, multiplier);
+    }
+
     /** The curve's own shape, not tuned from config here; {@link #level(int)} reads the config. */
     public static float level(int casts) {
         if (casts <= 0) {
@@ -91,13 +110,7 @@ public final class Mastery {
 
     /** Records one successful cast of the technique, the only thing that moves mastery forward. */
     public static void recordCast(Player player, INinjaData ninjaData, Ability ability) {
-        if (!NarutoConfig.masteryEnabled || player.isCreative()) {
-            return;
-        }
-        ResourceLocation id = idOf(ability);
-        if (id != null) {
-            ninjaData.getMasteryData().addCast(id);
-        }
+        award(player, ninjaData, ability, 1.0f);
     }
 
     /**
@@ -107,7 +120,19 @@ public final class Mastery {
      * a run of short channels is worth the same as one long one.
      */
     public static void recordCredit(Player player, INinjaData ninjaData, Ability ability, float credit) {
-        if (!NarutoConfig.masteryEnabled || player.isCreative() || credit <= 0f) {
+        award(player, ninjaData, ability, credit);
+    }
+
+    /**
+     * The whole of mastery earning funnels through here, so the testing speed multiplier applies the
+     * same way whether a technique is counted by casts or by the work it did.
+     */
+    private static void award(Player player, INinjaData ninjaData, Ability ability, float credit) {
+        if (!NarutoConfig.masteryEnabled || player.isCreative()) {
+            return;
+        }
+        float scaled = credit * gainMultiplier;
+        if (scaled <= 0f) {
             return;
         }
         ResourceLocation id = idOf(ability);
@@ -115,7 +140,7 @@ public final class Mastery {
             return;
         }
         MasteryData data = ninjaData.getMasteryData();
-        float total = data.getCredit(id) + credit;
+        float total = data.getCredit(id) + scaled;
         int whole = (int) total;
         if (whole > 0) {
             data.addCasts(id, whole);

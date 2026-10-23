@@ -44,6 +44,14 @@ import java.util.List;
  * chests and spawners. The tag read is {@code forge:ores}, so modded ores count too.</p>
  */
 public class OreSenseAbility extends Ability implements Ability.Cooldown {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** C C B. */
     public static final long COMBO = 112L;
@@ -57,14 +65,23 @@ public class OreSenseAbility extends Ability implements Ability.Cooldown {
     private static final int COOLDOWN = 20 * 30;
 
     /** Reach of an untrained pulse, and of a fully mastered one, in blocks. */
-    private static final float BASE_RADIUS = 24f;
-    private static final float MASTER_RADIUS = 32f;
+    private static final float BASE_RADIUS = 10f;
+    private static final float MASTER_RADIUS = 26f;
 
     /** Mastery at which the pulse starts finding ancient debris, chests and spawners as well. */
     private static final float SPECIALS_AT = 0.5f;
 
-    /** The pulse only shows the closest handful, so a rich cave does not turn into a wall of boxes. */
-    private static final int MAX_MARKERS = 64;
+    /**
+     * How many blocks a pulse shows. A beginner's pulse is deliberately sparse, so it points at the
+     * nearest seam instead of laying the whole cave open; practice widens and sharpens it until a
+     * mastered caster can read a full mining trip's worth of ore in one cast.
+     */
+    private static final int BASE_MARKERS = 8;
+    private static final int MASTER_MARKERS = 48;
+
+    /** How long the picture lasts: short at the start, a comfortable read when mastered. */
+    private static final int BASE_DURATION = 20 * 3;
+    private static final int MASTER_DURATION = 20 * 6;
 
     private static final int CHAKRA_REGEN_DELAY = 20;
 
@@ -111,13 +128,16 @@ public class OreSenseAbility extends Ability implements Ability.Cooldown {
         }
         float mastery = this.masteryLevel(ninjaData);
         float radius = BASE_RADIUS + (MASTER_RADIUS - BASE_RADIUS) * mastery;
+        int markerCap = BASE_MARKERS + Math.round((MASTER_MARKERS - BASE_MARKERS) * mastery);
+        int duration = BASE_DURATION + Math.round((MASTER_DURATION - BASE_DURATION) * mastery);
         boolean specials = mastery >= SPECIALS_AT;
-        List<ClientboundOreSensePacket.Marker> markers = scan(level, player.blockPosition(), radius, specials);
+        List<ClientboundOreSensePacket.Marker> markers =
+                scan(level, player.blockPosition(), radius, specials, markerCap);
         if (markers.isEmpty()) {
             player.displayClientMessage(Component.translatable("jutsu.oresense.none")
                     .withStyle(ChatFormatting.YELLOW), true);
         }
-        PacketHandler.sendToPlayer(new ClientboundOreSensePacket(markers), serverPlayer);
+        PacketHandler.sendToPlayer(new ClientboundOreSensePacket(markers, duration), serverPlayer);
     }
 
     /**
@@ -126,7 +146,7 @@ public class OreSenseAbility extends Ability implements Ability.Cooldown {
      * touching its blocks.
      */
     private static List<ClientboundOreSensePacket.Marker> scan(ServerLevel level, BlockPos origin,
-                                                              float radius, boolean specials) {
+                                                              float radius, boolean specials, int markerCap) {
         double radiusSqr = (double) radius * radius;
         int reach = Mth.ceil(radius);
         int minChunkX = (origin.getX() - reach) >> 4;
@@ -190,8 +210,8 @@ public class OreSenseAbility extends Ability implements Ability.Cooldown {
         }
 
         markers.sort(Comparator.comparingDouble(marker -> marker.pos().distSqr(origin)));
-        if (markers.size() > MAX_MARKERS) {
-            return new ArrayList<>(markers.subList(0, MAX_MARKERS));
+        if (markers.size() > markerCap) {
+            return new ArrayList<>(markers.subList(0, markerCap));
         }
         return markers;
     }

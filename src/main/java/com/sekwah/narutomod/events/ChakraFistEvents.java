@@ -35,8 +35,9 @@ public class ChakraFistEvents {
                 // getNewSpeed() is the speed vanilla has already worked out, which includes the
                 // tool's own multiplier (a netherite pickaxe is far past a bare hand before the
                 // stance touches it). Multiplying it scales the tool-boosted number, it does not
-                // just add a flat "twice as fast".
-                event.setNewSpeed(event.getNewSpeed() * ChakraFistAbility.BREAK_SPEED_MULTIPLIER);
+                // just add a flat "twice as fast". The multiplier itself grows with mastery, so a
+                // fresh stance speeds digging up only a little and a practiced one a lot.
+                event.setNewSpeed(event.getNewSpeed() * ChakraFistAbility.breakSpeedMultiplier(ninjaData));
             }
         });
     }
@@ -55,6 +56,11 @@ public class ChakraFistEvents {
             if (!ChakraFistAbility.isActive(ninjaData)) {
                 return;
             }
+            // Breaking is what the fist is for, so it is the main source of mastery. Paid before the
+            // chakra check on purpose: the speed boost was already working while the block was dug,
+            // even if the stance is running dry at the very moment it pops.
+            Mastery.recordCredit(player, ninjaData, NarutoAbilities.CHAKRA_FIST.get(),
+                    ChakraFistAbility.MASTERY_CREDIT_PER_BLOCK);
             float perBlock = Mastery.cost(ninjaData, NarutoAbilities.CHAKRA_FIST.get(),
                     ChakraFistAbility.CHAKRA_PER_BLOCK);
             if (ninjaData.getChakra() >= perBlock) {
@@ -91,6 +97,10 @@ public class ChakraFistEvents {
                 return;
             }
             ninjaData.useChakra(perHit, ChakraFistAbility.REGEN_DELAY_PER_HIT);
+            // A hit only pays mastery when the fist actually landed: the chakra was there and the
+            // bonus damage is about to be applied. A swing that could not be afforded is not practice.
+            Mastery.recordCredit(player, ninjaData, NarutoAbilities.CHAKRA_FIST.get(),
+                    ChakraFistAbility.MASTERY_CREDIT_PER_HIT);
             event.setAmount(event.getAmount() + ChakraFistAbility.BONUS_MELEE_DAMAGE);
         });
     }

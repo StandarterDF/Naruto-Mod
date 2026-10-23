@@ -1,0 +1,7 @@
+{
+  "type": "narutomod:sacred_tree",
+  "biomes": "#minecraft:is_forest",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "beard_thin"
+}

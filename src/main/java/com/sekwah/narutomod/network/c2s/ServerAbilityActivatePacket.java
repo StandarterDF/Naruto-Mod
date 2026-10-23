@@ -2,6 +2,7 @@ package com.sekwah.narutomod.network.c2s;
 
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.AbilityUnlocks;
+import com.sekwah.narutomod.abilities.jutsus.AbstractDojutsuAbility;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
@@ -67,6 +68,14 @@ public class ServerAbilityActivatePacket {
                                 .withStyle(ChatFormatting.RED), true);
                         return;
                     }
+                    // Switched off in the jutsu menu: the row is grey there and the packet is skipped,
+                    // but the server repeats the check so a hacked client cannot cast it anyway.
+                    if (ninjaData.isAbilityDisabled(abilityId)) {
+                        player.displayClientMessage(Component.translatable("jutsu.fail.techdisabled",
+                                Component.translatable(ability.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                                .withStyle(ChatFormatting.RED), true);
+                        return;
+                    }
                     if (ability.activationType() == Ability.ActivationType.INSTANT) {
 
                         boolean canTriggerJutsu = true;
@@ -81,8 +90,8 @@ public class ServerAbilityActivatePacket {
                             if(ability.castingSound() != null) {
                                 player.level().playSound(null,
                                         player, ability.castingSound(), SoundSource.PLAYERS, 0.5f, 1.0f);
-                                player.level().gameEvent(player, NarutoGameEvents.JUTSU_CASTING.get(), player.position().add(0, player.getEyeHeight() * 0.7, 0));
                             }
+                            ability.emitNoise(player);
                             ability.performServer(player, ninjaData);
                             ability.recordMastery(player, ninjaData);
 
@@ -101,7 +110,12 @@ public class ServerAbilityActivatePacket {
                                 // Toggle ability off
                                 abilityTracker.removeAbilityEnded(player, ninjaData, ability);
                             } else {
-                                // Toggle ability on
+                                // Toggle ability on. An eye takes the place of the one already
+                                // burning in this same step; letting both sit in the set for a tick
+                                // made their upkeeps close each other, sometimes leaving neither.
+                                if (ability instanceof AbstractDojutsuAbility eye) {
+                                    eye.switchFrom(player, ninjaData);
+                                }
                                 abilityTracker.addAbilityStarted(player, ninjaData, ability);
                                 ability.recordMastery(player, ninjaData);
                             }

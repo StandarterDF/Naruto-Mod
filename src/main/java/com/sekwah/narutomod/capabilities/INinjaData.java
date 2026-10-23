@@ -1,6 +1,8 @@
 package com.sekwah.narutomod.capabilities;
 
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.capabilities.absorption.AbsorptionData;
+import com.sekwah.narutomod.capabilities.disabledabilitydata.DisabledAbilityData;
 import com.sekwah.narutomod.capabilities.mastery.MasteryData;
 import com.sekwah.narutomod.capabilities.skills.SkillData;
 import com.sekwah.narutomod.capabilities.mastery.MeditationData;
@@ -43,6 +45,21 @@ public interface INinjaData extends INBTSerializable<Tag> {
     void setArmorHealthBonus(float bonus);
 
     /**
+     * Extra chakra capacity handed out by an open eye, see {@code RinneganAbility}. Kept apart from
+     * the armour and meditation bonuses for the same reason those two are kept apart, and cleared as
+     * soon as the eye closes. Recomputed every tick and never written to disk.
+     */
+    float getEyeChakraBonus();
+    void setEyeChakraBonus(float bonus);
+
+    /**
+     * Extra nature energy capacity handed out by an open eye, see {@code RinneganAbility}. Same rules
+     * as {@link #getEyeChakraBonus()}.
+     */
+    float getEyeSeninBonus();
+    void setEyeSeninBonus(float bonus);
+
+    /**
      * Armour points bought with chakra, spent as they soak up damage. Zero when there is no shield.
      */
     float getShieldPoints();
@@ -67,6 +84,12 @@ public interface INinjaData extends INBTSerializable<Tag> {
     void setGateBacklashCarry(float carry);
 
     float getSubstitutionCount();
+
+    /**
+     * How many substitution charges the pool can hold: the configured base plus whatever the skill
+     * tree has bought. The technique starts at a single charge and grows by one per upgrade node.
+     */
+    float getMaxSubstitutions();
 
     float getMaxStamina();
     void setChakra(float amount);
@@ -180,10 +203,61 @@ public interface INinjaData extends INBTSerializable<Tag> {
     MasteryData getMasteryData();
 
     /**
-     * The skill tree nodes bought with experience levels. Synced, because the skill screen draws the
-     * tree from it, and saved, because levels spent are permanent.
+     * The skill tree nodes bought with skill points, and the points themselves. Synced, because the
+     * skill screen draws the tree from it, and saved, because points and nodes are permanent.
      */
     SkillData getSkillData();
+
+    /**
+     * Techniques swallowed through the palm Rinnegan and not yet handed back, per nature. Synced for
+     * the HUD and deliberately not saved: borrowed chakra is a held stance, not a possession. See
+     * {@code MomoshikiAbsorptionAbility}.
+     */
+    AbsorptionData getAbsorptionData();
+
+    /**
+     * The techniques this caster has switched off in the jutsu menu. Synced, so the menu can grey
+     * them out and refuse to send their cast packets, and saved, so the choice survives a relog.
+     */
+    DisabledAbilityData getDisabledAbilityData();
+
+    /** Whether a technique is currently switched off, see {@link #getDisabledAbilityData()}. */
+    boolean isAbilityDisabled(ResourceLocation abilityId);
+
+    /**
+     * Whether a click in the jutsu menu may cast any technique, not only the ones that stay on, see
+     * {@code MenuClickCommand}. Off by default.
+     */
+    boolean isMenuClickAll();
+
+    /** Turns {@link #isMenuClickAll()} on or off. */
+    void setMenuClickAll(boolean enabled);
+
+    /**
+     * Whether this ninja has already collected the one-time reward for a boss milestone. Bosses are
+     * tracked by a short id rather than by entity, because the reward is about the hunt, not the
+     * individual mob.
+     */
+    boolean hasClaimedBossMilestone(String bossId);
+
+    /** Marks a boss milestone as collected, so its reward is paid exactly once. */
+    void claimBossMilestone(String bossId);
+
+    /**
+     * The ninja's current rank id (see {@code ranks/NinjaRank}), or an empty string before their
+     * first promotion. Server side only: the client only needs the advancement screen.
+     */
+    String getNinjaRank();
+
+    void setNinjaRank(String rank);
+
+    /**
+     * Whether the starting handbook was already given. Saved, so turning ninja mode off and on again
+     * cannot be used to print more copies of it.
+     */
+    boolean isHandbookGiven();
+
+    void setHandbookGiven(boolean given);
 
     /**
      * The standing meditating clones of this caster, used to feed them chakra at a distance without

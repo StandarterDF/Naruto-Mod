@@ -36,6 +36,14 @@ import net.minecraft.world.phys.Vec3;
  * survival one does not suddenly keep them either.</p>
  */
 public class KamuiPhaseAbility extends Ability implements Ability.Toggled, Ability.HandleEnded {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** V C B - deliberately not a prefix of the Kamui eye, so the two never trip over each other. */
     public static final long COMBO = 213L;
@@ -123,10 +131,20 @@ public class KamuiPhaseAbility extends Ability implements Ability.Toggled, Abili
         player.getCapability(NinjaCapabilityHandler.NINJA_DATA)
                 .ifPresent(ninjaData -> {
                     boolean phasing = isActive(ninjaData);
-                    if (player.noPhysics != phasing) {
-                        player.noPhysics = phasing;
+                    // A spectator walks through walls by vanilla rule, and that has to survive this
+                    // hook: writing noPhysics = false under them put the spectator back into
+                    // collision with the world, which is exactly what a spectator must never have.
+                    boolean passThrough = phasing || player.isSpectator();
+                    if (player.noPhysics != passThrough) {
+                        player.noPhysics = passThrough;
                     }
-                    player.setNoGravity(phasing);
+                    if (phasing) {
+                        player.setNoGravity(true);
+                    } else if (!player.isSpectator()) {
+                        // Spectators keep the vanilla floating state; only a caster who just turned
+                        // solid gets gravity back.
+                        player.setNoGravity(false);
+                    }
                     if (!player.level().isClientSide) {
                         applyFlight(player, phasing);
                     }
@@ -169,8 +187,12 @@ public class KamuiPhaseAbility extends Ability implements Ability.Toggled, Abili
      */
     public static void release(Player player, INinjaData ninjaData) {
         applyFlight(player, false);
-        player.noPhysics = false;
-        player.setNoGravity(false);
+        // A spectator is allowed to stand inside walls; restoring collisions there would be the bug,
+        // not the fix.
+        player.noPhysics = player.isSpectator();
+        if (!player.isSpectator()) {
+            player.setNoGravity(false);
+        }
         unstick(player);
     }
 

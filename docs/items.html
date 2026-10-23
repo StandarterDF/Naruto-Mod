@@ -98,6 +98,7 @@
         <li class="toc-l3"><a href="#headbands">Повязки</a></li>
         <li class="toc-l2"><a href="#consumables">Расходники</a></li>
         <li class="toc-l2"><a href="#paperbomb">Бумажная бомба</a></li>
+        <li class="toc-l2"><a href="#scrolls">Свитки техник</a></li>
         <li class="toc-l2"><a href="#misc">Прочее</a></li>
       </ol>
     </nav>
@@ -251,7 +252,7 @@
             <tr>
               <td><strong>Маски АНБУ</strong> (5 цветов)</td>
               <td>Шлем</td><td class="num">2</td><td class="num">385</td>
-              <td class="gold">+75 чакры</td>
+              <td class="gold">+30 чакры</td>
               <td class="small">Скрывают ник над головой. Цвета: красная, жёлтая, зелёная, синяя и «Хаку».</td>
             </tr>
             <tr>
@@ -269,20 +270,20 @@
             <tr>
               <td><strong>Броня АНБУ</strong> <span class="mono small">anbu_armor</span></td>
               <td>Нагрудник</td><td class="num">7</td><td class="num">560</td>
-              <td class="gold">+40 чакры, +2 HP, +0,2 чакры/с</td>
+              <td class="gold">+20 чакры, +2 HP, +0,2 чакры/с</td>
               <td class="small">Баланс между жилетом и маской АНБУ в одном слоте.</td>
             </tr>
             <tr>
               <td><strong>Плащ Акацуки</strong> <span class="mono small">akatsuki_cloak</span></td>
               <td>Нагрудник</td><td class="num">7</td><td class="num">560</td>
-              <td class="gold">+120 чакры, +0,5 чакры/с</td>
+              <td class="gold">+50 чакры, +0,5 чакры/с</td>
               <td class="small">Лучший источник чакры и регенерации в игре — но и крафт самый дорогой.</td>
             </tr>
           </tbody>
         </table>
       </div>
       <ul>
-        <li><strong>Суммирование:</strong> повязка с плащом Акацуки дают +0,9 чакры/с и +120 к
+        <li><strong>Суммирование:</strong> повязка с плащом Акацуки дают +0,9 чакры/с и +50 к
           максимуму; HP-бонусы складываются так же. Каждый бонус живёт, пока предмет надет.</li>
         <li><strong>Защита указана без учёта зачарований:</strong> у всей брони мода стойкость
           (toughness) 2,1 и зачаруемость 8 — повязки зачаровываются чуть хуже (6). Прочность шлемов
@@ -375,8 +376,26 @@
       <h3 id="headbands">Повязки</h3>
       <p>Любая повязка — это <strong>ткань + пластина брони + символ деревни</strong>. Царапины
         делаются поверх готовой повязки: положи её в верстак с кремнем и получишь версию
-        «Scratched». Все 27 повязок дают один и тот же бонус (+0,4 чакры/с) — выбор чисто
-        по вкусу.</p>
+        «Scratched». Бонус зависит от <strong>деревни</strong>, которой повязка принадлежит: деревня
+        учит своих синоби разному, и повязка носит часть этой школы.</p>
+      <div class="tbl-wrap">
+        <table class="tbl tbl--compact">
+          <thead>
+            <tr><th>Школа</th><th>Повязки</th><th>Бонус</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Лист, Трава</td><td class="small">leaf, grass (+ scratched/black)</td><td>+0,4 чакры/с</td></tr>
+            <tr><td>Песок</td><td class="small">sand</td><td>+2 здоровья</td></tr>
+            <tr><td>Камень, Лава</td><td class="small">rock, lava</td><td>+4 здоровья</td></tr>
+            <tr><td>Облако</td><td class="small">cloud</td><td>+25 чакры к максимуму</td></tr>
+            <tr><td>Туман, Водопад, Дождь</td><td class="small">mist, waterfall, rain</td><td>+0,7 чакры/с</td></tr>
+            <tr><td>Звук</td><td class="small">sound</td><td>+40 чакры к максимуму</td></tr>
+            <tr><td>Пустые и декоративные</td><td class="small">blue, black, red, custard, pride, youtube</td><td>+0,4 чакры/с</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">Числа одинаковы у обычной и «испарапанной» версии одной деревни: кремень
+        меняет только вид. Бонусы складываются с бронёй и медитацией.</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
           <thead>
@@ -504,6 +523,111 @@
         взрыв самой бомбы фильтра союзников не имеет — в радиусе достаётся и кастеру, и его клонам.</p>
     </section>
 
+    <section id="scrolls">
+      <h2 id="s-scrolls">Свитки техник</h2>
+      <p>Свиток — это знание, а не крафт: его нельзя сделать, только найти. Прочитанный свиток
+        открывает технику (у части техник он <strong>обязателен</strong> вместе с узлом дерева),
+        а <strong>повторный свиток</strong> уже знакомой техники не пропадает зря — он засчитывается
+        как дополнительная практика и поднимает освоение. Свитки подмешиваются в сундуки через
+        Global Loot Modifier: чем опаснее место, тем выше тир.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Свиток</th><th>Тир</th><th>Где искать</th><th>Шанс</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Свиток Расенгана</strong> <span class="mono small">scroll_rasengan</span></td>
+              <td>1</td>
+              <td class="small">обычные данжи, шахты, пирамиды, храмы, иглу, руины, затонувшие корабли,
+                аванпост разбойников</td>
+              <td class="num">10 %</td>
+            </tr>
+            <tr>
+              <td><strong>Свиток Восьми врат</strong> <span class="mono small">scroll_eight_gates</span></td>
+              <td>2</td>
+              <td class="small">крепости, крепость Нижнего мира, бастионы, сокровище затонувшего корабля,
+                оружейник деревни</td>
+              <td class="num">18 %</td>
+            </tr>
+            <tr>
+              <td><strong>Свиток Режима Мудреца</strong> <span class="mono small">scroll_sage_mode</span></td>
+              <td>2</td>
+              <td class="small">те же места, что и у Восьми врат</td>
+              <td class="num">18 %</td>
+            </tr>
+            <tr>
+              <td><strong>Свиток Стены Земли</strong> <span class="mono small">scroll_earth_wall</span></td>
+              <td>2</td>
+              <td class="small">те же места, что и у Восьми врат</td>
+              <td class="num">18 %</td>
+            </tr>
+            <tr>
+              <td><strong>Свиток Камуи</strong> <span class="mono small">scroll_kamui</span></td>
+              <td>3</td>
+              <td class="small">древний город, ледяной ящик, город Края, сокровищница бастиона,
+                лесной особняк</td>
+              <td class="num">30 %</td>
+            </tr>
+            <tr>
+              <td><strong>Свиток Кирин</strong> <span class="mono small">scroll_kirin</span></td>
+              <td>3</td>
+              <td class="small">те же места, что и у Камуи; <strong>единственный</strong> способ получить
+                технику — узла в дереве у неё нет</td>
+              <td class="num">30 %</td>
+            </tr>
+            <tr>
+              <td><strong>Свиток Расэнсюрикена</strong> <span class="mono small">scroll_rasenshuriken</span></td>
+              <td>3</td>
+              <td class="small">те же места, что и у Камуи</td>
+              <td class="num">30 %</td>
+            </tr>
+            <tr>
+              <td><strong>Свиток Риннегана</strong> <span class="mono small">scroll_rinnegan</span></td>
+              <td>3</td>
+              <td class="small">те же места, что и у Камуи, плюс сундук священного дерева</td>
+              <td class="num">30 %</td>
+            </tr>
+            <tr>
+              <td><strong>Свиток Чибаку Тенсэй</strong> <span class="mono small">scroll_chibaku_tensei</span></td>
+              <td>3</td>
+              <td class="small">те же места, что и у Камуи, плюс сундук священного дерева</td>
+              <td class="num">30 %</td>
+            </tr>
+            <tr>
+              <td><strong>Свиток Шарингана</strong> <span class="mono small">scroll_sharingan</span></td>
+              <td>3</td>
+              <td class="small">те же места, что и у Риннегана</td>
+              <td class="num">30 %</td>
+            </tr>
+            <tr>
+              <td><strong>Свиток Бьякугана</strong> <span class="mono small">scroll_byakugan</span></td>
+              <td>3</td>
+              <td class="small">те же места, что и у Риннегана</td>
+              <td class="num">30 %</td>
+            </tr>
+            <tr>
+              <td><strong>Свиток Джоугана</strong> <span class="mono small">scroll_jougan</span></td>
+              <td>3</td>
+              <td class="small">те же места, что и у Риннегана</td>
+              <td class="num">30 %</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">Шанс — базовый; удача (Luck) прибавляет по 5–8 % за уровень. В сундук
+        попадает один свиток за раз. Кроме свитков в сундуки подмешиваются <strong>товары ниндзя</strong>
+        (печати, пилюли, материалы) и <strong>реликвии</strong> (броня и повязки).</p>
+      <p>Кроме ванильных сундуков свитки лежат в <a href="world.html#structures">сундуках мода</a>:
+        священное дерево отдаёт свиток высшей техники с шансом 60 %, руины — свиток тира 1–3 с шансом
+        35 %. Капитан патруля роняет свиток за каждое убийство, а разгром рейда приносит свиток высшей
+        техники один раз за рейд.</p>
+      <p><strong>Свитки можно выловить.</strong> Рыбалка изредка приносит «Свиток Расенгана», «Свиток
+        Стены Земли» или «Свиток Режима Мудреца» — базовый шанс 1 %, и удача (Luck) помогает так же,
+        как в сундуках. Это отдельная строка добычи: улов не заменяется, свиток просто добавляется
+        к нему.</p>
+    </section>
+
     <section id="misc">
       <h2 id="s-misc">Прочее</h2>
       <div class="tbl-wrap">
@@ -512,6 +636,23 @@
             <tr><th>Предмет</th><th>Что это</th><th>Крафт</th></tr>
           </thead>
           <tbody>
+            <tr>
+              <td><strong>Обрывок карты</strong> <span class="mono small">treasure_map</span></td>
+              <td class="small">Кусок чужой карты. ПКМ превращает его в настоящую заполненную карту с
+                меткой ближайшей деревни, заброшенной шахты, затонувшего корабля, руин портала,
+                океанских руин, священного дерева или руин мода (поиск до 120 чанков). Если рядом
+                ничего нет, обрывок не тратится. Находится в сундуках вместе с остальными товарами
+                ниндзя.</td>
+              <td class="small">не крафтится</td>
+            </tr>
+            <tr>
+              <td><strong>Книга шиноби</strong> <span class="mono small">Shinobi Handbook</span></td>
+              <td class="small">Ванильная записанная книга, которую выдаёт сервер, когда игрок впервые
+                становится ниндзя: шесть страниц о клавишах, чакре, дереве навыков, клонах, свитках и
+                званиях. Читается в обычном книжном экране, страницы — на языке игрока. Выбросить можно;
+                повторно не выдаётся.</td>
+              <td class="small">не крафтится</td>
+            </tr>
             <tr>
               <td><strong>Пластинка</strong> <span class="mono small">lonely_march</span></td>
               <td class="small">«Sekwah — Lonely March», 46 секунд, редкость RARE. Играется в

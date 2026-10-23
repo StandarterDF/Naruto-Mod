@@ -1,0 +1,28 @@
+{
+  "type": "narutomod:add_loot",
+  "conditions": [
+    {
+      "condition": "minecraft:alternative",
+      "terms": [
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/abandoned_mineshaft" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/desert_pyramid" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/jungle_temple" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/igloo_chest" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/ruined_portal" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/underwater_ruin_small" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/underwater_ruin_big" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_supply" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_map" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/pillager_outpost" }
+      ]
+    }
+  ],
+  "entries": [
+    { "item": "narutomod:scroll_rasengan", "weight": 1 }
+  ],
+  "chance": 0.1,
+  "luck_bonus": 0.05,
+  "min": 1,
+  "max": 1
+}

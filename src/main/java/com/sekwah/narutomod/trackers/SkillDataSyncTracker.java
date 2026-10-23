@@ -14,8 +14,13 @@ public class SkillDataSyncTracker implements SyncTrackerSerializer<SkillData>, S
 
     @Override
     public void encode(SkillData objectToSend, FriendlyByteBuf outBuffer) {
+        outBuffer.writeVarInt(objectToSend.getPoints());
         outBuffer.writeInt(objectToSend.getUnlocked().size());
         for (ResourceLocation id : objectToSend.getUnlocked()) {
+            outBuffer.writeResourceLocation(id);
+        }
+        outBuffer.writeInt(objectToSend.getScrolls().size());
+        for (ResourceLocation id : objectToSend.getScrolls()) {
             outBuffer.writeResourceLocation(id);
         }
     }
@@ -23,9 +28,14 @@ public class SkillDataSyncTracker implements SyncTrackerSerializer<SkillData>, S
     @Override
     public SkillData decode(FriendlyByteBuf inBuffer) {
         SkillData data = new SkillData();
+        data.addPoints(inBuffer.readVarInt());
         int size = inBuffer.readInt();
         for (int i = 0; i < size; i++) {
             data.unlock(inBuffer.readResourceLocation());
+        }
+        int scrolls = inBuffer.readInt();
+        for (int i = 0; i < scrolls; i++) {
+            data.learnScroll(inBuffer.readResourceLocation());
         }
         return data;
     }
@@ -33,7 +43,9 @@ public class SkillDataSyncTracker implements SyncTrackerSerializer<SkillData>, S
     @Override
     public SkillData clone(SkillData objectToClone) {
         SkillData copy = new SkillData();
+        copy.addPoints(objectToClone.getPoints());
         copy.getUnlocked().addAll(objectToClone.getUnlocked());
+        copy.getScrolls().addAll(objectToClone.getScrolls());
         return copy;
     }
 }

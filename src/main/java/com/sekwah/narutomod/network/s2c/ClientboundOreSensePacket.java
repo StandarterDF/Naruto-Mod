@@ -27,13 +27,24 @@ public class ClientboundOreSensePacket {
     public static final byte KIND_SPAWNER = 3;
 
     private final List<Marker> markers;
+    /** How long the client should keep drawing this pulse, in ticks. Chosen by the caster's mastery. */
+    private final int duration;
 
     public ClientboundOreSensePacket(List<Marker> markers) {
+        this(markers, 20 * 5);
+    }
+
+    public ClientboundOreSensePacket(List<Marker> markers, int duration) {
         this.markers = markers;
+        this.duration = Math.max(1, duration);
     }
 
     public List<Marker> markers() {
         return this.markers;
+    }
+
+    public int duration() {
+        return this.duration;
     }
 
     public static void encode(ClientboundOreSensePacket msg, FriendlyByteBuf buffer) {
@@ -42,6 +53,7 @@ public class ClientboundOreSensePacket {
             buffer.writeBlockPos(marker.pos());
             buffer.writeByte(marker.kind());
         }
+        buffer.writeVarInt(msg.duration);
     }
 
     public static ClientboundOreSensePacket decode(FriendlyByteBuf buffer) {
@@ -50,14 +62,14 @@ public class ClientboundOreSensePacket {
         for (int i = 0; i < count; i++) {
             markers.add(new Marker(buffer.readBlockPos(), buffer.readByte()));
         }
-        return new ClientboundOreSensePacket(markers);
+        return new ClientboundOreSensePacket(markers, buffer.readVarInt());
     }
 
     public static class Handler {
         public static void handle(ClientboundOreSensePacket msg, Supplier<NetworkEvent.Context> ctx) {
             NetworkEvent.Context context = ctx.get();
             context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
-                    () -> () -> ClientOreSenseData.apply(msg.markers)));
+                    () -> () -> ClientOreSenseData.apply(msg.markers, msg.duration)));
             context.setPacketHandled(true);
         }
     }

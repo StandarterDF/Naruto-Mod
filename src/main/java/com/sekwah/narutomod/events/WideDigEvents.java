@@ -32,6 +32,11 @@ import java.util.List;
  * for one at a time - chakra and tool durability both - and anything the tool could not have broken
  * by hand is left where it is. The whole batch is wrapped in a re-entry guard: breaking a block can
  * itself report a break, and without the guard one swing would eat the world.</p>
+ *
+ * <p>The extra blocks are taken outright, so Mining Fatigue does not slow the widened swing: the
+ * stance pays in chakra and tool durability, never in swing time. Chakra beating the old curse is a
+ * rule of the mod, so nothing here may be routed through {@code Player#getDigSpeed} or a
+ * fatigue-scaled delay later on.</p>
  */
 @Mod.EventBusSubscriber(modid = NarutoMod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class WideDigEvents {

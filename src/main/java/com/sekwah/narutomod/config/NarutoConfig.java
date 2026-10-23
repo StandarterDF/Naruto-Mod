@@ -23,6 +23,10 @@ public class NarutoConfig {
 
     public static final String CATEGORY_KAMUI = "kamui";
 
+    public static final String CATEGORY_DOJUTSU = "dojutsu";
+
+    public static final String CATEGORY_FRIENDS = "friends";
+
     public static final ForgeConfigSpec MOD_CONFIG;
 
     private static final ForgeConfigSpec.DoubleValue CONFIG_MAX_CHAKRA;
@@ -70,6 +74,27 @@ public class NarutoConfig {
     private static final ForgeConfigSpec.IntValue CONFIG_KAMUI_TRANSFER_SECONDS;
     public static int kamuiTransferSeconds;
 
+    private static final ForgeConfigSpec.BooleanValue CONFIG_RINNEGAN_ENABLED;
+    public static boolean rinneganEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_CHIBAKU_TENSEI_ENABLED;
+    public static boolean chibakuTenseiEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_SHARINGAN_ENABLED;
+    public static boolean sharinganEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_BYAKUGAN_ENABLED;
+    public static boolean byakuganEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_JOUGAN_ENABLED;
+    public static boolean jouganEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_SENRIGAN_ENABLED;
+    public static boolean senriganEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_FRIENDS_ENABLED;
+    public static boolean friendsEnabled;
+
     private static final ForgeConfigSpec.DoubleValue CONFIG_MAX_SENIN_MANA;
     public static float maxSeninMana;
 
@@ -78,6 +103,9 @@ public class NarutoConfig {
 
     private static final ForgeConfigSpec.BooleanValue CONFIG_HENGE_ENABLED;
     public static boolean hengeEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_HENGE_REACTIONS_ENABLED;
+    public static boolean hengeReactionsEnabled;
 
     // Mastery: the more a technique is used, the cheaper it becomes.
 
@@ -147,6 +175,45 @@ public class NarutoConfig {
     private static final ForgeConfigSpec.BooleanValue CONFIG_SILENCE_ENABLED;
     public static boolean silenceEnabled;
 
+    private static final ForgeConfigSpec.BooleanValue CONFIG_ENVIRONMENT_ENABLED;
+    public static boolean environmentEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_SCROLL_LOOT_ENABLED;
+    public static boolean scrollLootEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_SLEEP_RESTORES_CHAKRA;
+    public static boolean sleepRestoresChakra;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_CHAKRA_FLOW_ENABLED;
+    public static boolean chakraFlowEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_CHAKRA_EXHAUSTION_ENABLED;
+    public static boolean chakraExhaustionEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_JUTSU_LOUDNESS_ENABLED;
+    public static boolean jutsuLoudnessEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_MEDITATION_AMBIENCE_ENABLED;
+    public static boolean meditationAmbienceEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_LIGHTNING_CHARGES_BATTERIES;
+    public static boolean lightningChargesBatteries;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_MARKER_RESPAWN_ENABLED;
+    public static boolean markerRespawnEnabled;
+
+    private static final ForgeConfigSpec.IntValue CONFIG_SENTRY_SEAL_RADIUS;
+    public static int sentrySealRadius;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_SENTRY_SEAL_SUPPRESSES_SPAWNS;
+    public static boolean sentrySealSuppressesSpawns;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_ELEMENTAL_STATES_ENABLED;
+    public static boolean elementalStatesEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_NINJA_RANKS_ENABLED;
+    public static boolean ninjaRanksEnabled;
+
     //private static final ForgeConfigSpec.BooleanValue CONFIG_STARTS_AS_NINJA;
     //public static boolean startsAsNinja;
 
@@ -177,8 +244,8 @@ public class NarutoConfig {
         CONFIG_STAMINA_REGEN = configBuilder.comment("Stamina Regen")
                 .defineInRange("staminaRegen",  0.4d ,  0d, Double.MAX_VALUE);
 
-        CONFIG_MAX_SUBSTITUTIONS = configBuilder.comment("Max Substitutions")
-                .defineInRange("maxSubstitutions",  3 ,  0, Integer.MAX_VALUE);
+        CONFIG_MAX_SUBSTITUTIONS = configBuilder.comment("Max Substitutions (base; skill tree nodes add more)")
+                .defineInRange("maxSubstitutions",  1 ,  0, Integer.MAX_VALUE);
 
         CONFIG_SUBSTITUTION_REGEN_TIME = configBuilder.comment("Substitution Regen Time (Seconds)")
                         .defineInRange("substitutionRegenTime",  60 ,  0, Integer.MAX_VALUE);
@@ -191,6 +258,11 @@ public class NarutoConfig {
 
         CONFIG_HENGE_ENABLED = configBuilder.comment("Can players copy another player's skin and name with henge?")
                 .define("hengeEnabled", true);
+
+        CONFIG_HENGE_REACTIONS_ENABLED = configBuilder.comment("Do mobs react to a disguise? A face that"
+                        + " belongs to a monster scares villagers into running and turns iron golems against"
+                        + " the wearer. Off by default: it changes how the world's AI behaves.")
+                .define("hengeReactionsEnabled", false);
 
         configBuilder.comment("Technique mastery: every cast makes a technique a little cheaper, and a"
                 + " death sets that progress back, the harder the closer it was to finished").push("mastery");
@@ -234,7 +306,7 @@ public class NarutoConfig {
                 .defineInRange("meditationPassiveAt", 0.95d, 0d, 1d);
 
         CONFIG_MEDITATION_PASSIVE_CAPACITY = configBuilder.comment("Chakra capacity each meditating clone adds while out of range past the threshold")
-                .defineInRange("meditationPassiveCapacity", 50d, 0d, Double.MAX_VALUE);
+                .defineInRange("meditationPassiveCapacity", 25d, 0d, Double.MAX_VALUE);
 
         configBuilder.pop();
 
@@ -290,6 +362,65 @@ public class NarutoConfig {
 
         configBuilder.pop();
 
+        configBuilder.comment("How the world around the caster changes techniques: weather, biome and"
+                + " dimension make a breath reach further or hit softer").push("world");
+
+        CONFIG_ENVIRONMENT_ENABLED = configBuilder.comment("Do weather, biome and dimension affect the"
+                        + " elemental breaths (and how fast nature energy gathers)?")
+                .define("environmentEnabled", true);
+
+        CONFIG_SCROLL_LOOT_ENABLED = configBuilder.comment("Do the mod's scrolls and kit turn up in vanilla"
+                        + " chests? Turn this off to keep chests exactly vanilla and hand scrolls out another way.")
+                .define("scrollLootEnabled", true);
+
+        CONFIG_SLEEP_RESTORES_CHAKRA = configBuilder.comment("Does sleeping through the night refill chakra and"
+                        + " nature energy? Only a natural morning wake-up counts, never being woken by damage.")
+                .define("sleepRestoresChakra", true);
+
+        CONFIG_CHAKRA_FLOW_ENABLED = configBuilder.comment("Does filling the chakra bar by hand grant the short"
+                        + " chakra flow effect (a faster passive trickle for a while)?")
+                .define("chakraFlowEnabled", true);
+
+        CONFIG_CHAKRA_EXHAUSTION_ENABLED = configBuilder.comment("Does an almost empty chakra pool slow the"
+                        + " caster down? It is a soft penalty that removes itself as soon as the pool recovers.")
+                .define("chakraExhaustionEnabled", true);
+
+        CONFIG_JUTSU_LOUDNESS_ENABLED = configBuilder.comment("Do technique casts make noise the world can hear"
+                        + " (sculk sensors, shriekers, the warden, mob ears)? Silent techniques stay silent.")
+                .define("jutsuLoudnessEnabled", true);
+
+        CONFIG_MEDITATION_AMBIENCE_ENABLED = configBuilder.comment("Do meditating clones hum and give off a soft"
+                        + " glow while they are feeding their caster? Purely cosmetic.")
+                .define("meditationAmbienceEnabled", true);
+
+        CONFIG_LIGHTNING_CHARGES_BATTERIES = configBuilder.comment("Does lightning striking a lightning rod"
+                        + " refill the chakra batteries lying or carried nearby? The only free way to charge one.")
+                .define("lightningChargesBatteries", true);
+
+        CONFIG_MARKER_RESPAWN_ENABLED = configBuilder.comment("Does a standing chakra marker log act as a respawn"
+                        + " point when the ninja has no bed or respawn anchor? Beds and anchors always win.")
+                .define("markerRespawnEnabled", true);
+
+        CONFIG_SENTRY_SEAL_RADIUS = configBuilder.comment("How far a sentry seal watches for hostile mobs,"
+                        + " in blocks. Also the radius kept clear of spawns when suppression is on.")
+                .defineInRange("sentrySealRadius", 16, 4, 64);
+
+        CONFIG_SENTRY_SEAL_SUPPRESSES_SPAWNS = configBuilder.comment("Does a sentry seal stop hostile mobs"
+                        + " from spawning inside its radius? Off by default; spawner blocks are never affected.")
+                .define("sentrySealSuppressesSpawns", false);
+
+        CONFIG_ELEMENTAL_STATES_ENABLED = configBuilder.comment("Do the breaths leave elemental states behind?"
+                        + " A soaked creature cannot catch fire and takes less fire damage; cold water chills"
+                        + " a creature, slowing it until it warms up.")
+                .define("elementalStatesEnabled", true);
+
+        CONFIG_NINJA_RANKS_ENABLED = configBuilder.comment("Do ninja ranks (Genin, Chunin, Jonin, S-rank) exist?"
+                        + " Ranks are milestones worked out from learned skill nodes and boss milestones, and"
+                        + " are shown as advancements. Turn off to keep the ladder out of the game entirely.")
+                .define("ninjaRanksEnabled", true);
+
+        configBuilder.pop();
+
         configBuilder.comment("Variables for weapons").push(CATEGORY_WEAPONS);
 
         CONFIG_KUNAI_BLOCK_DAMAGE = configBuilder.comment("Explosive Kunai block damage")
@@ -319,6 +450,37 @@ public class NarutoConfig {
 
         CONFIG_KAMUI_TRANSFER_SECONDS = configBuilder.comment("Seconds anything dragged into Kamui (anyone but the caster) spends in the void before it is spat back out where it was taken from")
                 .defineInRange("kamuiTransferSeconds", 30, 1, 600);
+
+        configBuilder.pop();
+
+        configBuilder.comment("The eye bloodlines: a stance that is paid for by the tick and opens one eye's powers")
+                .push(CATEGORY_DOJUTSU);
+
+        CONFIG_RINNEGAN_ENABLED = configBuilder.comment("Can players open the Rinnegan? It costs chakra every tick and grants extra chakra and nature energy while it is open.")
+                .define("rinneganEnabled", true);
+
+        CONFIG_CHIBAKU_TENSEI_ENABLED = configBuilder.comment("Can players cast Chibaku Tensei? It lifts the ground and everything standing on it into a ball in the sky, then brings it down. Requires an open Rinnegan.")
+                .define("chibakuTenseiEnabled", true);
+
+        CONFIG_SHARINGAN_ENABLED = configBuilder.comment("Can players open the Sharingan? It costs chakra every tick and reads whoever the caster looks at; Amaterasu is built on it.")
+                .define("sharinganEnabled", true);
+
+        CONFIG_BYAKUGAN_ENABLED = configBuilder.comment("Can players open the Byakugan? It costs chakra every tick and shows every living body in a short bubble through the walls; Rotation is built on it.")
+                .define("byakuganEnabled", true);
+
+        CONFIG_JOUGAN_ENABLED = configBuilder.comment("Can players open the Jougan? It costs chakra every tick, grants extra capacity and lights up hostile chakra; Dimensional Step and Chakra Sever are built on it.")
+                .define("jouganEnabled", true);
+
+        CONFIG_SENRIGAN_ENABLED = configBuilder.comment("Can players open the Senrigan? It is the cheapest eye: it gives no power of its own, but it lets the caster watch through any of their own shadow clones.")
+                .define("senriganEnabled", true);
+
+        configBuilder.pop();
+
+        configBuilder.comment("Friendships between players: a two-way pact that keeps the mod's techniques and shadow clones off a friend")
+                .push(CATEGORY_FRIENDS);
+
+        CONFIG_FRIENDS_ENABLED = configBuilder.comment("Can players add each other as friends? A friendship is two-way: the mod's techniques and shadow clones spare a friend, and a request can be answered from the friends button in the skill menu.")
+                .define("friendsEnabled", true);
 
         configBuilder.pop();
 
@@ -358,9 +520,17 @@ public class NarutoConfig {
                 .get();
         kamuiEnabled = CONFIG_KAMUI_ENABLED.get();
         kamuiTransferSeconds = CONFIG_KAMUI_TRANSFER_SECONDS.get();
+        rinneganEnabled = CONFIG_RINNEGAN_ENABLED.get();
+        chibakuTenseiEnabled = CONFIG_CHIBAKU_TENSEI_ENABLED.get();
+        sharinganEnabled = CONFIG_SHARINGAN_ENABLED.get();
+        byakuganEnabled = CONFIG_BYAKUGAN_ENABLED.get();
+        jouganEnabled = CONFIG_JOUGAN_ENABLED.get();
+        senriganEnabled = CONFIG_SENRIGAN_ENABLED.get();
+        friendsEnabled = CONFIG_FRIENDS_ENABLED.get();
         maxSeninMana = CONFIG_MAX_SENIN_MANA.get().floatValue();
         sageModeEnabled = CONFIG_SAGE_MODE_ENABLED.get();
         hengeEnabled = CONFIG_HENGE_ENABLED.get();
+        hengeReactionsEnabled = CONFIG_HENGE_REACTIONS_ENABLED.get();
         masteryEnabled = CONFIG_MASTERY_ENABLED.get();
         masteryHalfwayCasts = CONFIG_MASTERY_HALFWAY_CASTS.get();
         masteryExponent = CONFIG_MASTERY_EXPONENT.get();
@@ -383,6 +553,19 @@ public class NarutoConfig {
         smokeEnabled = CONFIG_SMOKE_ENABLED.get();
         smokeBlindPlayers = CONFIG_SMOKE_BLIND_PLAYERS.get();
         silenceEnabled = CONFIG_SILENCE_ENABLED.get();
+        environmentEnabled = CONFIG_ENVIRONMENT_ENABLED.get();
+        scrollLootEnabled = CONFIG_SCROLL_LOOT_ENABLED.get();
+        sleepRestoresChakra = CONFIG_SLEEP_RESTORES_CHAKRA.get();
+        chakraFlowEnabled = CONFIG_CHAKRA_FLOW_ENABLED.get();
+        chakraExhaustionEnabled = CONFIG_CHAKRA_EXHAUSTION_ENABLED.get();
+        jutsuLoudnessEnabled = CONFIG_JUTSU_LOUDNESS_ENABLED.get();
+        meditationAmbienceEnabled = CONFIG_MEDITATION_AMBIENCE_ENABLED.get();
+        lightningChargesBatteries = CONFIG_LIGHTNING_CHARGES_BATTERIES.get();
+        markerRespawnEnabled = CONFIG_MARKER_RESPAWN_ENABLED.get();
+        sentrySealRadius = CONFIG_SENTRY_SEAL_RADIUS.get();
+        sentrySealSuppressesSpawns = CONFIG_SENTRY_SEAL_SUPPRESSES_SPAWNS.get();
+        elementalStatesEnabled = CONFIG_ELEMENTAL_STATES_ENABLED.get();
+        ninjaRanksEnabled = CONFIG_NINJA_RANKS_ENABLED.get();
         //startsAsNinja = CONFIG_STARTS_AS_NINJA.get();
     }
 

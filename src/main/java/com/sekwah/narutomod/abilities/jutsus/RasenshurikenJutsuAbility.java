@@ -28,6 +28,14 @@ import net.minecraft.world.phys.Vec3;
  * that reaches that far is not meant to be free.</p>
  */
 public class RasenshurikenJutsuAbility extends Ability implements Ability.Channeled {
+    /**
+     * How far a cast of this technique carries as a game event. A blast, heard a long way off.
+     */
+    @Override
+    public int noiseRadius() {
+        return 48;
+    }
+
 
     /** C B B C B V - the rasengan's seals, then one more to shape it. */
     public static final long COMBO = 133132L;

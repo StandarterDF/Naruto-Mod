@@ -63,8 +63,17 @@ public class CloneFollowOwnerGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
-        return this.owner != null
-                && this.clone.distanceToSqr(this.owner) > (double) (this.stopDistance * this.stopDistance);
+        // The caster can die, respawn or leave the dimension while this goal is running, and the
+        // reference it started with would then point at a player who is no longer there. Reaching
+        // for the current one every tick keeps the clone walking to its caster instead of to the
+        // spot where the old body was left.
+        Player current = this.clone.getOwner();
+        if (current == null || current.isSpectator() || current.isDeadOrDying()
+                || current.level() != this.clone.level()) {
+            return false;
+        }
+        this.owner = current;
+        return this.clone.distanceToSqr(current) > (double) (this.stopDistance * this.stopDistance);
     }
 
     @Override

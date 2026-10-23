@@ -6,6 +6,8 @@ import com.sekwah.narutomod.abilities.NarutoAbilities;
 import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.config.NarutoConfig;
+import com.sekwah.narutomod.skills.SkillEffect;
+import com.sekwah.narutomod.skills.SkillTree;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -31,6 +33,14 @@ import net.minecraft.world.entity.player.Player;
  * {@code PlayerEvents#onEntityUpdate}, in the same way the eight gates are kept alive.</p>
  */
 public class SageModeAbility extends Ability {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** V B V */
     public static final long COMBO = 232L;
@@ -82,6 +92,15 @@ public class SageModeAbility extends Ability {
         return ActivationType.INSTANT;
     }
 
+    /**
+     * Sage mode is entered and left with the same cast, so it is a stance in all but name and is
+     * controlled from the jutsu menu like one.
+     */
+    @Override
+    public boolean isMenuControllable() {
+        return true;
+    }
+
     @Override
     public long defaultCombo() {
         return COMBO;
@@ -100,13 +119,22 @@ public class SageModeAbility extends Ability {
             // down, so the recast always goes through and performServer closes it.
             return true;
         }
-        if (ninjaData.getSeninMana() < MIN_SENIN) {
+        if (ninjaData.getSeninMana() < entryThreshold(ninjaData)) {
             player.displayClientMessage(Component.translatable("jutsu.fail.senin.notenough",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW),
-                    (int) MIN_SENIN).withStyle(ChatFormatting.RED), true);
+                    (int) entryThreshold(ninjaData)).withStyle(ChatFormatting.RED), true);
             return false;
         }
         return true;
+    }
+
+    /**
+     * Nature energy needed to open the mode. It starts at {@link #MIN_SENIN} and the sage branch's
+     * entry node shaves it down, so a practiced sage needs to hold less before they can step in.
+     */
+    public static float entryThreshold(INinjaData ninjaData) {
+        float reduction = SkillTree.bonus(ninjaData.getSkillData().getUnlocked(), SkillEffect.SAGE_ENTRY);
+        return MIN_SENIN * Math.max(0.0f, 1.0f - reduction);
     }
 
     @Override

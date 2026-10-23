@@ -2,11 +2,15 @@ package com.sekwah.narutomod.capabilities;
 
 import com.mojang.logging.LogUtils;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.utility.ChakraChargeAbility;
+import com.sekwah.narutomod.capabilities.absorption.AbsorptionData;
+import com.sekwah.narutomod.capabilities.disabledabilitydata.DisabledAbilityData;
 import com.sekwah.narutomod.capabilities.mastery.MasteryData;
 import com.sekwah.narutomod.capabilities.mastery.MeditationData;
 import com.sekwah.narutomod.capabilities.skills.SkillData;
 import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
 import com.sekwah.narutomod.config.NarutoConfig;
+import com.sekwah.narutomod.effect.NarutoEffects;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.item.ChakraBatteryItem;
 import com.sekwah.narutomod.menu.SupplyChestContainer;
@@ -22,6 +26,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
@@ -33,7 +38,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class NinjaData implements INinjaData, ICapabilityProvider {
@@ -69,6 +76,22 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private float armorChakraBonus;
 
     /**
+     * Chakra capacity handed out by an open eye, see {@code RinneganAbility}. A third separate field
+     * for the same reason the armour has one: the eye and the armour must be able to stop giving
+     * their bonus without wiping the other's. Not saved, not synced for the HUD's sake but for the
+     * bar's maximum, which the client draws from the same number.
+     */
+    @Sync(minTicks = 1)
+    private float eyeChakraBonus;
+
+    /**
+     * Nature energy capacity handed out by an open eye, see {@code RinneganAbility}. Same rules as
+     * {@link #eyeChakraBonus}.
+     */
+    @Sync(minTicks = 1)
+    private float eyeSeninBonus;
+
+    /**
      * The max health bonus the worn armour last wrote onto the player's attribute. Server side only,
      * used to tell whether the attribute modifier needs rebuilding.
      */
@@ -83,8 +106,11 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private float shieldPoints;
 
     /**
-     * Whether the second breath trick is armed. Server side only, the client has no use for it.
+     * Whether the second breath trick is armed. Synced so the jutsu menu can show the technique as
+     * readied without the client having to guess from an effect that only appears on the killing
+     * blow.
      */
+    @Sync(minTicks = 1)
     private boolean secondBreathArmed;
 
     /**
@@ -176,7 +202,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
      * client renderer is what turns it into a copied skin and name tag, and deliberately not written
      * to disk: logging out drops the disguise.
      */
-    @Sync(minTicks = 1)
+    @Sync(minTicks = 1, syncGlobally = true)
     private String hengeTarget = "";
 
     /**
@@ -184,11 +210,11 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
      * disguise at all). Synced for the same reason as {@link #hengeTarget}: the client renderer is
      * the only thing that reads it.
      */
-    @Sync(minTicks = 1)
+    @Sync(minTicks = 1, syncGlobally = true)
     private String hengeEntityType = "";
 
     /** Display name that goes with {@link #hengeTarget}, synced for the same reason. */
-    @Sync(minTicks = 1)
+    @Sync(minTicks = 1, syncGlobally = true)
     private String hengeName = "";
 
     /** Ticks of disguise left, server side only. */
@@ -228,11 +254,52 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private MasteryData masteryData = new MasteryData();
 
     /**
-     * The skill tree nodes this caster has bought with experience levels. Synced because the skill
-     * screen and the HUD both read it, and saved so the levels spent are never lost.
+     * The skill tree nodes this caster has bought with skill points, plus the points themselves.
+     * Synced because the skill screen and the HUD both read it, and saved so neither is ever lost.
      */
     @Sync(minTicks = 1)
     private SkillData skillData = new SkillData();
+
+    /**
+     * Techniques switched off from the jutsu menu, see {@link DisabledAbilityData}. Synced, because
+     * the menu greys the rows from it and skips the cast packet, and saved, because a technique the
+     * player deliberately put aside should stay aside after a relog.
+     */
+    @Sync(minTicks = 1)
+    private DisabledAbilityData disabledAbilityData = new DisabledAbilityData();
+
+    /**
+     * Whether clicks in the jutsu menu may cast any technique, not only the ones that stay on, see
+     * {@code MenuClickCommand}. Off by default: the menu is a reference, and a stray click firing a
+     * one-shot cast is a nuisance. Synced so the menu itself knows which rows it may mark as
+     * clickable, and saved so a player who asked for it keeps it after a relog.
+     */
+    @Sync(minTicks = 1)
+    private boolean menuClickAll;
+
+    /**
+     * Chakra swallowed through the palm Rinnegan and not yet spent, per nature. Synced for the HUD
+     * and never written to disk: it is a held stance, and dying or logging out drops the stance.
+     */
+    @Sync(minTicks = 1)
+    private AbsorptionData absorptionData = new AbsorptionData();
+
+    /**
+     * Bosses whose one-time milestone reward this ninja has already collected, by short id. Kept
+     * server side and saved so a milestone cannot be farmed by killing the same boss again.
+     */
+    private final Set<String> claimedBossMilestones = new HashSet<>();
+
+    /** The ninja's rank id, see {@code ranks/NinjaRank}. Server side only, saved with the rest. */
+    private String ninjaRank = "";
+
+    /**
+     * Whether the starting handbook has already been handed out. Ninja mode can be switched off and
+     * on again, so "became a ninja just now" is not enough to decide: without a flag of its own the
+     * awakening path would give a second handbook on every toggle, which used to be a free book
+     * printer. See {@code ServerToggleNinjaPacket}.
+     */
+    private boolean handbookGiven;
 
     /**
      * The standing meditating clones of this caster, see {@code MeditationData}. Server side only,
@@ -300,10 +367,38 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private static final String KAMUI_RETURN_TAG = "kamuiReturn";
     private static final String KAMUI_RETURN_DIMENSION_TAG = "kamuiReturnDimension";
     private static final String SENIN_MANA_TAG = "seninMana";
+    /**
+     * The bought chakra shield and the armed second breath live in the bar rather than in a block or
+     * an effect, so they have to be written down: a caster who spent the whole bar on the shield must
+     * not find it gone after a relogin, and the same goes for a readied second breath.
+     */
+    private static final String SHIELD_TAG = "shieldPoints";
+    private static final String SECOND_BREATH_TAG = "secondBreathArmed";
     private static final String MASTERY_TAG = "mastery";
     private static final String SKILLS_TAG = "skills";
+    private static final String SKILL_POINTS_TAG = "skillPoints";
+    private static final String SCROLLS_TAG = "scrolls";
+    private static final String BOSS_MILESTONES_TAG = "bossMilestones";
+    private static final String NINJA_RANK_TAG = "ninjaRank";
+    private static final String HANDBOOK_GIVEN_TAG = "handbookGiven";
+    private static final String DISABLED_ABILITIES_TAG = "disabledAbilities";
+    private static final String MENU_CLICK_ALL_TAG = "menuClickAll";
 
-    private final LazyOptional<INinjaData> holder = LazyOptional.of(() -> this);
+    /** Below this share of the pool the caster is running on fumes and moves slower. */
+    private static final float EXHAUSTION_THRESHOLD = 0.15f;
+
+    /** Short and refreshed every tick, so it drops the moment the pool recovers. */
+    private static final int EXHAUSTION_TICKS = 40;
+
+    /** How much faster the passive trickle runs while the chakra flow effect is up. */
+    private static final float CHAKRA_FLOW_MULTIPLIER = 4.0f;
+
+    /**
+     * Creative casts are not free, they are fast: the pool still empties, it just comes back ten
+     * times quicker. That keeps creative mode useful for testing a technique's cost without making
+     * every bar meaningless.
+     */
+    private static final float CREATIVE_REGEN_MULTIPLIER = 10.0f;    private final LazyOptional<INinjaData> holder = LazyOptional.of(() -> this);
 
     @Override
     public float getChakra() {
@@ -312,8 +407,10 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
     @Override
     public float getMaxChakra() {
-        return this.maxChakra + this.chakraCapacityBonus + this.armorChakraBonus
-                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.MAX_CHAKRA);
+        return this.maxChakra + this.chakraCapacityBonus + this.armorChakraBonus + this.eyeChakraBonus
+                + ChakraChargeAbility.masteryChakraBonus(this)
+                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.MAX_CHAKRA)
+                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.ALL_ROUNDED);
     }
 
     @Override
@@ -344,6 +441,26 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     @Override
     public void setArmorHealthBonus(float bonus) {
         this.armorHealthBonus = bonus;
+    }
+
+    @Override
+    public float getEyeChakraBonus() {
+        return this.eyeChakraBonus;
+    }
+
+    @Override
+    public void setEyeChakraBonus(float bonus) {
+        this.eyeChakraBonus = bonus;
+    }
+
+    @Override
+    public float getEyeSeninBonus() {
+        return this.eyeSeninBonus;
+    }
+
+    @Override
+    public void setEyeSeninBonus(float bonus) {
+        this.eyeSeninBonus = bonus;
     }
 
     @Override
@@ -397,9 +514,16 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     }
 
     @Override
+    public float getMaxSubstitutions() {
+        return this.maxSubstitutions
+                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.MAX_SUBSTITUTIONS);
+    }
+
+    @Override
     public float getMaxStamina() {
         return this.maxStamina
-                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.MAX_STAMINA);
+                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.MAX_STAMINA)
+                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.ALL_ROUNDED);
     }
 
     @Override
@@ -519,7 +643,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
     @Override
     public float getMaxSeninMana() {
-        return NarutoConfig.maxSeninMana;
+        return NarutoConfig.maxSeninMana + this.eyeSeninBonus
+                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.SENIN_MANA);
     }
 
     @Override
@@ -617,8 +742,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         if (ability != null) {
             if (ability.castingSound() != null) {
                 player.level().playSound(null, player, ability.castingSound(), SoundSource.PLAYERS, 0.5f, 1.0f);
-                player.level().gameEvent(player, NarutoGameEvents.JUTSU_CASTING.get(), player.position().add(0, player.getEyeHeight() * 0.7, 0));
             }
+            ability.emitNoise(player);
 
             if(!(ability instanceof Ability.Channeled channeled && channeled.hideChannelMessages())) {
                 if (ability instanceof Ability.Channeled channeled && channeled.useChargedMessages()) {
@@ -664,13 +789,90 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     }
 
     @Override
+    public AbsorptionData getAbsorptionData() {
+        return this.absorptionData;
+    }
+
+    @Override
+    public DisabledAbilityData getDisabledAbilityData() {
+        return this.disabledAbilityData;
+    }
+
+    @Override
+    public boolean isAbilityDisabled(ResourceLocation abilityId) {
+        if (abilityId == null || !this.disabledAbilityData.contains(abilityId)) {
+            return false;
+        }
+        // Only techniques the menu controls can be put aside. A save from an older build may list
+        // anything, and a stale entry must not silently block a fireball.
+        Ability ability = NarutoRegistries.ABILITIES.getValue(abilityId);
+        return ability != null && ability.isMenuControllable();
+    }
+
+    @Override
+    public boolean isMenuClickAll() {
+        return this.menuClickAll;
+    }
+
+    @Override
+    public void setMenuClickAll(boolean enabled) {
+        this.menuClickAll = enabled;
+    }
+
+    @Override
+    public boolean hasClaimedBossMilestone(String bossId) {
+        return this.claimedBossMilestones.contains(bossId);
+    }
+
+    @Override
+    public void claimBossMilestone(String bossId) {
+        this.claimedBossMilestones.add(bossId);
+    }
+
+    @Override
+    public String getNinjaRank() {
+        return this.ninjaRank;
+    }
+
+    @Override
+    public void setNinjaRank(String rank) {
+        this.ninjaRank = rank == null ? "" : rank;
+    }
+
+    @Override
+    public boolean isHandbookGiven() {
+        return this.handbookGiven;
+    }
+
+    @Override
+    public void setHandbookGiven(boolean given) {
+        this.handbookGiven = given;
+    }
+
+    @Override
     public MeditationData getMeditationData() {
         return this.meditationData;
     }
 
+    /**
+     * The soft price of an empty pool: below {@link #EXHAUSTION_THRESHOLD} the caster moves a little
+     * slower. It is refreshed every tick and removes itself as soon as the pool is back above the
+     * line, so it never becomes a death spiral, and it is never applied in creative or spectator.
+     */
+    private void updateExhaustion(Player player) {
+        boolean exhausted = NarutoConfig.chakraExhaustionEnabled
+                && this.chakra < this.getMaxChakra() * EXHAUSTION_THRESHOLD
+                && !player.isCreative() && !player.isSpectator();
+        if (exhausted) {
+            player.addEffect(new MobEffectInstance(NarutoEffects.CHAKRA_EXHAUSTION.get(),
+                    EXHAUSTION_TICKS, 0, true, false));
+        } else {
+            player.removeEffect(NarutoEffects.CHAKRA_EXHAUSTION.get());
+        }
+    }
+
     @Override
     public void updateDataServer(Player player) {
-
         if(this.invisibleTicks > 0) {
             this.invisibleTicks--;
             this.isInvisible = true;
@@ -705,17 +907,33 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         }
 
         if (this.staminaRegenInfo.canRegen()) {
-            this.stamina += NarutoConfig.staminaRegen
+            float staminaRegen = NarutoConfig.staminaRegen
                     + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.STAMINA_REGEN) / 20.0f;
+            if (player.isCreative()) {
+                staminaRegen *= CREATIVE_REGEN_MULTIPLIER;
+            }
+            this.stamina += staminaRegen;
         }
         if (this.chakraRegenInfo.canRegen()) {
-            this.chakra += NarutoConfig.chakraRegen
+            float regen = NarutoConfig.chakraRegen
                     + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.CHAKRA_REGEN) / 20.0f;
+            // A freshly filled pool keeps trickling in faster for a while, which is what makes
+            // topping the bar up before a fight worth the time, see ChakraChargeAbility.
+            if (player.hasEffect(NarutoEffects.CHAKRA_FLOW.get()) && NarutoConfig.chakraFlowEnabled) {
+                regen *= CHAKRA_FLOW_MULTIPLIER;
+            }
+            // Creative is faster rather than free, see CREATIVE_REGEN_MULTIPLIER.
+            if (player.isCreative()) {
+                regen *= CREATIVE_REGEN_MULTIPLIER;
+            }
+            this.chakra += regen;
         }
-        this.substitutions += NarutoConfig.substitutionRegenRate;
-        this.substitutions = Math.min(Math.max(this.substitutions, 0), this.maxSubstitutions);
+        this.substitutions += NarutoConfig.substitutionRegenRate
+                * (1.0f + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.SUBSTITUTION_REGEN));
+        this.substitutions = Math.min(Math.max(this.substitutions, 0), this.getMaxSubstitutions());
         this.stamina = Math.min(Math.max(this.stamina, 0), this.getMaxStamina());
         this.chakra = Math.min(Math.max(this.chakra, 0), this.getMaxChakra());
+        this.updateExhaustion(player);
 
         if (this.currentlyChanneled != null) {
             Ability ability = NarutoRegistries.ABILITIES.getValue(this.currentlyChanneled);
@@ -728,11 +946,15 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
                         channeled.handleChannelling(player, this, this.ticksChanneled);
                     }
                 } else {
+                    // A channel that could not even pay its first tick must end quietly: calling
+                    // performServer(0) here would hand the caster the release effect (a free earth
+                    // wall, a free rasengan hit) for a cast the server just refused, and leaving the
+                    // channel set would keep re-checking it every tick.
                     if (this.ticksChanneled > 0) {
                         int finalTicksChanneled = this.ticksChanneled - 1;
                         ability.performServer(player, this, finalTicksChanneled);
-                        this.setCurrentlyChanneledAbility(player, null);
                     }
+                    this.setCurrentlyChanneledAbility(player, null);
                 }
             } else {
                 LOGGER.error("Somehow non channeled ability has been set to ninja data {}", this.currentlyChanneled);
@@ -810,6 +1032,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
             nbt.putString(KAMUI_RETURN_DIMENSION_TAG, this.kamuiReturnDimension.toString());
         }
         nbt.putFloat(SENIN_MANA_TAG, this.seninMana);
+        nbt.putFloat(SHIELD_TAG, this.shieldPoints);
+        nbt.putBoolean(SECOND_BREATH_TAG, this.secondBreathArmed);
         CompoundTag masteryTag = new CompoundTag();
         this.masteryData.getCasts().forEach((ability, casts) -> masteryTag.putInt(ability.toString(), casts));
         nbt.put(MASTERY_TAG, masteryTag);
@@ -818,6 +1042,25 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
             skillTag.putBoolean(skill.toString(), true);
         }
         nbt.put(SKILLS_TAG, skillTag);
+        nbt.putInt(SKILL_POINTS_TAG, this.skillData.getPoints());
+        CompoundTag scrollTag = new CompoundTag();
+        for (ResourceLocation knowledge : this.skillData.getScrolls()) {
+            scrollTag.putBoolean(knowledge.toString(), true);
+        }
+        nbt.put(SCROLLS_TAG, scrollTag);
+        CompoundTag bossTag = new CompoundTag();
+        for (String boss : this.claimedBossMilestones) {
+            bossTag.putBoolean(boss, true);
+        }
+        nbt.put(BOSS_MILESTONES_TAG, bossTag);
+        nbt.putString(NINJA_RANK_TAG, this.ninjaRank);
+        nbt.putBoolean(HANDBOOK_GIVEN_TAG, this.handbookGiven);
+        CompoundTag disabledTag = new CompoundTag();
+        for (ResourceLocation id : this.disabledAbilityData.getAbilities()) {
+            disabledTag.putBoolean(id.toString(), true);
+        }
+        nbt.put(DISABLED_ABILITIES_TAG, disabledTag);
+        nbt.putBoolean(MENU_CLICK_ALL_TAG, this.menuClickAll);
         return nbt;
     }
 
@@ -859,6 +1102,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
                 this.kamuiReturnDimension = new ResourceLocation(compoundTag.getString(KAMUI_RETURN_DIMENSION_TAG));
             }
             this.seninMana = compoundTag.getFloat(SENIN_MANA_TAG);
+            this.shieldPoints = compoundTag.getFloat(SHIELD_TAG);
+            this.secondBreathArmed = compoundTag.getBoolean(SECOND_BREATH_TAG);
             CompoundTag masteryTag = compoundTag.getCompound(MASTERY_TAG);
             // Counts are authoritative, so a load replaces whatever was there rather than adding to it.
             this.masteryData.getCasts().clear();
@@ -877,6 +1122,36 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
                     this.skillData.unlock(skill);
                 }
             }
+            this.skillData.addPoints(compoundTag.getInt(SKILL_POINTS_TAG));
+            CompoundTag scrollTag = compoundTag.getCompound(SCROLLS_TAG);
+            for (String key : scrollTag.getAllKeys()) {
+                ResourceLocation knowledge = ResourceLocation.tryParse(key);
+                if (knowledge != null) {
+                    this.skillData.learnScroll(knowledge);
+                }
+            }
+            this.claimedBossMilestones.clear();
+            CompoundTag bossTag = compoundTag.getCompound(BOSS_MILESTONES_TAG);
+            for (String boss : bossTag.getAllKeys()) {
+                this.claimedBossMilestones.add(boss);
+            }
+            this.ninjaRank = compoundTag.getString(NINJA_RANK_TAG);
+            this.handbookGiven = compoundTag.getBoolean(HANDBOOK_GIVEN_TAG);
+            this.menuClickAll = compoundTag.getBoolean(MENU_CLICK_ALL_TAG);
+            this.disabledAbilityData.getAbilities().clear();
+            CompoundTag disabledTag = compoundTag.getCompound(DISABLED_ABILITIES_TAG);
+            for (String key : disabledTag.getAllKeys()) {
+                ResourceLocation id = ResourceLocation.tryParse(key);
+                if (id != null) {
+                    this.disabledAbilityData.getAbilities().add(id);
+                }
+            }
+            // Older builds let any technique be switched off. Only the ones the menu controls are
+            // honoured now, so anything else is dropped instead of lingering as a dead entry.
+            this.disabledAbilityData.getAbilities().removeIf(id -> {
+                Ability ability = NarutoRegistries.ABILITIES.getValue(id);
+                return ability == null || !ability.isMenuControllable();
+            });
         }
     }
 

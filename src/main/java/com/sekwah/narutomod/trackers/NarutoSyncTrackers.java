@@ -2,6 +2,8 @@ package com.sekwah.narutomod.trackers;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.capabilities.DoubleJumpData;
+import com.sekwah.narutomod.capabilities.absorption.AbsorptionData;
+import com.sekwah.narutomod.capabilities.disabledabilitydata.DisabledAbilityData;
 import com.sekwah.narutomod.capabilities.mastery.MasteryData;
 import com.sekwah.narutomod.capabilities.skills.SkillData;
 import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
@@ -17,5 +19,7 @@ public class NarutoSyncTrackers {
         event.registerSyncTracker(DoubleJumpData.class, new DoubleJumpDataSyncTracker());
         event.registerSyncTracker(MasteryData.class, new MasteryDataSyncTracker());
         event.registerSyncTracker(SkillData.class, new SkillDataSyncTracker());
+        event.registerSyncTracker(AbsorptionData.class, new AbsorptionDataSyncTracker());
+        event.registerSyncTracker(DisabledAbilityData.class, new DisabledAbilityDataSyncTracker());
     }
 }

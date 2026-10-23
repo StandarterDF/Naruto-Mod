@@ -26,6 +26,14 @@ import net.minecraft.world.entity.player.Player;
  * a break event because an ability cannot see blocks being broken.</p>
  */
 public class WideDigAbility extends Ability implements Ability.Toggled, Ability.HandleEnded {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** C V V. */
     public static final long COMBO = 133L;

@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "item": "narutomod:chakra_seal"
+    },
+    "title": {
+      "translate": "advancements.narutomod.ninja.first_jutsu.title"
+    },
+    "description": {
+      "translate": "advancements.narutomod.ninja.first_jutsu.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "cast": {
+      "trigger": "narutomod:jutsu_cast"
+    }
+  },
+  "parent": "narutomod:ninja/root"
+}

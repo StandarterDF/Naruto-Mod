@@ -1,5 +1,6 @@
 package com.sekwah.narutomod.abilities.jutsus;
 
+import com.sekwah.narutomod.friends.Friends;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.JutsuEffects;
@@ -52,6 +53,14 @@ import java.util.function.Function;
  * this technique open only opens the eye, it does not turn the body to smoke.</p>
  */
 public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
+    /**
+     * How far a cast of this technique carries as a game event. A blast, heard a long way off.
+     */
+    @Override
+    public int noiseRadius() {
+        return 40;
+    }
+
 
     /** B V V C C */
     public static final long COMBO = 32211L;
@@ -259,6 +268,11 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
         if (living instanceof Player victim && (victim.isCreative() || victim.isSpectator())) {
             player.displayClientMessage(Component.translatable("jutsu.fail.kamui.notarget",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            return;
+        }
+        if (Friends.areFriends(player, living)) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.friend")
                     .withStyle(ChatFormatting.RED), true);
             return;
         }

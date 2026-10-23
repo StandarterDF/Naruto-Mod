@@ -1,5 +1,6 @@
 package com.sekwah.narutomod.abilities.jutsus;
 
+import com.sekwah.narutomod.friends.Friends;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.JutsuEffects;
 import com.sekwah.narutomod.capabilities.INinjaData;
@@ -24,6 +25,14 @@ import net.minecraft.world.phys.Vec3;
  * all.</p>
  */
 public class RasenganJutsuAbility extends Ability implements Ability.Channeled {
+    /**
+     * How far a cast of this technique carries as a game event. A blast, heard a long way off.
+     */
+    @Override
+    public int noiseRadius() {
+        return 40;
+    }
+
 
     /** C B B C B */
     public static final long COMBO = 13313L;
@@ -107,7 +116,8 @@ public class RasenganJutsuAbility extends Ability implements Ability.Channeled {
         AABB area = new AABB(centre, centre).inflate(reach);
 
         for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, area,
-                entity -> entity != player && !entity.isAlliedTo(player))) {
+                entity -> entity != player && !entity.isAlliedTo(player)
+                        && !Friends.areFriends(player, entity))) {
             target.hurt(player.damageSources().playerAttack(player), damage);
             Vec3 push = target.position().subtract(player.position());
             if (push.lengthSqr() > 0.0001d) {

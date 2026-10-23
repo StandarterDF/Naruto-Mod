@@ -28,6 +28,14 @@ import net.minecraft.world.food.FoodData;
  * a fight, not an out-of-combat top-up, and the chakra and the hunger it burns are meant to hurt.</p>
  */
 public class ChakraRegenerationAbility extends Ability implements Ability.Toggled, Ability.HandleEnded {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** V B B C */
     public static final long COMBO = 2331L;

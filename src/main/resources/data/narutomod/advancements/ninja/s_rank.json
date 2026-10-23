@@ -1,0 +1,26 @@
+{
+  "display": {
+    "icon": {
+      "item": "narutomod:akatsuki_cloak"
+    },
+    "title": {
+      "translate": "advancements.narutomod.ninja.s_rank.title"
+    },
+    "description": {
+      "translate": "advancements.narutomod.ninja.s_rank.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "s_rank": {
+      "trigger": "narutomod:ninja_rank",
+      "conditions": {
+        "rank": "s_rank"
+      }
+    }
+  },
+  "parent": "narutomod:ninja/jonin"
+}

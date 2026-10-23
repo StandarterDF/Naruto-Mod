@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "narutomod:jutsu_casting",
+    "narutomod:jutsu_boom",
+    "narutomod:leap",
+    "narutomod:double_jump"
+  ]
+}

@@ -8,6 +8,8 @@ import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.network.PacketHandler;
 import com.sekwah.narutomod.network.s2c.ClientboundSensingPacket;
+import com.sekwah.narutomod.skills.SkillTree;
+import com.sekwah.narutomod.world.WorldEnvironment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -52,6 +54,14 @@ import java.util.Set;
  * so the technique is invisible to everyone else.</p>
  */
 public class ChakraSensingAbility extends Ability implements Ability.Channeled {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** C B C C */
     public static final long COMBO = 1311L;
@@ -67,6 +77,9 @@ public class ChakraSensingAbility extends Ability implements Ability.Channeled {
 
     /** Reach of an untrained sense, in blocks. Mastery widens it up to the configured ceiling. */
     public static final float BASE_RADIUS = 16f;
+
+    /** How much wider a full moon opens the sense. */
+    private static final float MOON_RADIUS_BONUS = 0.25f;
 
     /**
      * The sense is taught in steps, and each kind of creature has two of them: a mastery at which it
@@ -131,8 +144,17 @@ public class ChakraSensingAbility extends Ability implements Ability.Channeled {
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
         if (chargeAmount < 0) {
-            // The tap is the night vision trick. Its upkeep is paid tick by tick in maintain, so all
-            // that is checked here is that there is a bar to draw on at all.
+            // The tap is the night vision trick, and the tree has to have taught it: a caster who
+            // has only bought the sense itself can still hold to look around, but tapping does
+            // nothing until the night vision node is theirs.
+            if (!nightVisionUnlocked(ninjaData)) {
+                player.displayClientMessage(Component.translatable("jutsu.fail.sensing.nightvision_locked",
+                        Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                        .withStyle(ChatFormatting.RED), true);
+                return false;
+            }
+            // Its upkeep is paid tick by tick in maintain, so all that is checked here is that there
+            // is a bar to draw on at all.
             if (ninjaData.getChakra() <= 0f) {
                 player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                         Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
@@ -157,7 +179,7 @@ public class ChakraSensingAbility extends Ability implements Ability.Channeled {
 
     @Override
     public void handleChannelling(Player player, INinjaData ninjaData, int ticksChanneled) {
-        ninjaData.setSensingRadius(radius(ninjaData));
+        ninjaData.setSensingRadius(radius(ninjaData, player));
         // Sensing is lived in, not cast: its mastery is paid for the time the sense is actually
         // open, so a long look is worth more than a tapped-on and tapped-off one. See recordMastery.
         this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
@@ -212,6 +234,12 @@ public class ChakraSensingAbility extends Ability implements Ability.Channeled {
         if (ticks <= 0) {
             return;
         }
+        // If the node was somehow lost (a reset tree, an old save), the trick goes off rather than
+        // keeping the caster lit for free.
+        if (!nightVisionUnlocked(ninjaData)) {
+            stopNightVision(player, ninjaData);
+            return;
+        }
         float base = (float) (NarutoConfig.sensingNightVisionChakraPerSecond / 20.0d);
         float cost = base * (1.0f - NIGHT_VISION_MASTERY_DISCOUNT * Mastery.level(ninjaData, ID));
         if (ninjaData.getChakra() < cost) {
@@ -238,6 +266,14 @@ public class ChakraSensingAbility extends Ability implements Ability.Channeled {
         float level = Mastery.level(ninjaData, ID);
         double max = Math.max(BASE_RADIUS, NarutoConfig.sensingRadiusMax);
         return (float) (BASE_RADIUS + (max - BASE_RADIUS) * level);
+    }
+
+    /**
+     * The same reach after the night has had its say: under a full moon the sense opens wider, while
+     * by day and on a new moon it is the plain radius.
+     */
+    public static float radius(INinjaData ninjaData, Player player) {
+        return radius(ninjaData) * (1.0f + MOON_RADIUS_BONUS * WorldEnvironment.moonClarity(player));
     }
 
     /**
@@ -276,6 +312,11 @@ public class ChakraSensingAbility extends Ability implements Ability.Channeled {
         return Mastery.level(ninjaData, ID) >= STRUCTURES_AT;
     }
 
+    /** @return whether the tree has taught the tap - the night vision half of the technique. */
+    public static boolean nightVisionUnlocked(INinjaData ninjaData) {
+        return SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), "mechanic:night_vision");
+    }
+
     /**
      * Feels out every structure in the loaded chunks around the caster and sends the nearest handful
      * over. Only starts that were generated here are seen - an unexplored stretch of map has nothing
@@ -285,7 +326,7 @@ public class ChakraSensingAbility extends Ability implements Ability.Channeled {
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
-        float radius = radius(ninjaData);
+        float radius = radius(ninjaData, player);
         double radiusSqr = (double) radius * radius;
         BlockPos origin = player.blockPosition();
         int chunkRadius = Mth.ceil(radius / 16f);

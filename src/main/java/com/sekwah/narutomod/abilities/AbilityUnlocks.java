@@ -26,6 +26,14 @@ public final class AbilityUnlocks {
             "substitution",
             "leap");
 
+    /**
+     * Techniques that are never on the skill tree and are learned from a scroll alone. See
+     * {@code JutsuScrollItem}: the scroll writes its knowledge into the caster's scroll set, and this
+     * is the single check both sides share.
+     */
+    private static final Set<String> SCROLL_ONLY = Set.of(
+            "kirin");
+
     private AbilityUnlocks() {
     }
 
@@ -41,6 +49,9 @@ public final class AbilityUnlocks {
         }
         if (BASIC.contains(abilityId.getPath())) {
             return true;
+        }
+        if (SCROLL_ONLY.contains(abilityId.getPath())) {
+            return ninjaData.getSkillData().hasScroll(abilityId);
         }
         return SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), unlockKey(abilityId));
     }

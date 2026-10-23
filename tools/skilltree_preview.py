@@ -7,6 +7,14 @@ language files) and writes a single self-contained HTML page that draws the boar
 ``SkillTreeScreen`` does - same grid, same node boxes, same stepped links, hover route
 highlight, pan and zoom - and lets that board be edited by hand:
 
+* the same two-level tab bar the screen has: four sections on the top row, the branches of the
+  active section below it, each tab carrying its node count (a dot marks a branch with lint
+  problems, an empty dojutsu branch stays clickable and says it is still in development);
+* ``обзор`` lays every board out side by side, so all sixteen branches fit on one screen and a
+  click on a board opens it - sixteen overlapping boards would be unreadable;
+* a search box (Ctrl+F or ``/``) finds a node by path, English or Russian name, technique key or
+  branch and jumps to it across boards, and the right-hand panel lists the nodes of the board;
+* each board remembers its own pan and zoom, ``[`` and ``]`` cycle through the branches;
 * drag a node to another grid cell (cells snap, occupied cells are refused);
 * click a node to open its card: cost, branch, technique key, effect and amount, prerequisites,
   the four language strings, and a delete button;
@@ -40,6 +48,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_JAVA = ROOT / "src/main/java/com/sekwah/narutomod/skills/Skill.java"
 BRANCH_JAVA = ROOT / "src/main/java/com/sekwah/narutomod/skills/SkillBranch.java"
+SECTION_JAVA = ROOT / "src/main/java/com/sekwah/narutomod/skills/SkillSection.java"
 EFFECT_JAVA = ROOT / "src/main/java/com/sekwah/narutomod/skills/SkillEffect.java"
 LANG_EN = ROOT / "src/main/resources/assets/narutomod/lang/en_us.json"
 LANG_RU = ROOT / "src/main/resources/assets/narutomod/lang/ru_ru.json"
@@ -47,12 +56,15 @@ DEFAULT_OUT = ROOT / "tmp/skilltree-preview.html"
 DEFAULT_EDITS = ROOT / "tmp/skilltree-edits.json"
 
 DECL = re.compile(
-    r'(?s)(node|unlock)\(\s*"([a-z_]+)"\s*,\s*SkillBranch\.([A-Z_]+)\s*,\s*'
+    r'(?s)(node|unlock)\(\s*"([a-z0-9_]+)"\s*,\s*SkillBranch\.([A-Z_]+)\s*,\s*'
     r"(-?\d+)\s*,\s*(-?\d+)\s*,\s*(\d+)\s*,(.*?)\)\s*;"
 )
 QUOTED = re.compile(r'"([a-z_:]+)"')
 EFFECT_DECL = re.compile(r"SkillEffect\.([A-Z_]+)\s*,\s*([0-9.]+)f")
-BRANCH = re.compile(r'([A-Z_]+)\("([^"]+)",\s*(0x[0-9A-Fa-f]+)\)')
+BRANCH = re.compile(
+    r'([A-Z_]+)\(\s*(?:SkillSection\.([A-Z_]+)\s*,\s*)?"([^"]+)"\s*,\s*(0x[0-9A-Fa-f]+)\)'
+)
+SECTION = re.compile(r'([A-Z_]+)\(\s*"([^"]+)"\s*,\s*(0x[0-9A-Fa-f]+)\s*\)')
 EFFECT_NAME = re.compile(r"^    ([A-Z_]+),?$", re.M)
 STATIC_START = re.compile(r"    static \{\n")
 BLOCK_END = "\n    }\n"
@@ -113,10 +125,25 @@ def parse_branches():
     branches = {}
     order = []
     for match in BRANCH.finditer(read_text(BRANCH_JAVA)):
-        name, key, colour = match.groups()
-        branches[name] = {"key": key, "colour": int(colour, 16)}
+        name, section, key, colour = match.groups()
+        branches[name] = {
+            "key": key,
+            "colour": int(colour, 16),
+            "section": section,
+        }
         order.append(name)
     return branches, order
+
+
+def parse_sections():
+    """The first level of the tab bar; branches name their section."""
+    sections = {}
+    order = []
+    for match in SECTION.finditer(read_text(SECTION_JAVA)):
+        name, key, colour = match.groups()
+        sections[name] = {"key": key, "colour": int(colour, 16)}
+        order.append(name)
+    return sections, order
 
 
 def parse_effects():
@@ -141,6 +168,31 @@ def load_lang(nodes):
     return en, ru
 
 
+def load_tab_lang(branches, sections):
+    """Tab labels come from the same language files as the in-game tab bar.
+
+    The editor shows the Russian names (the page is Russian) and keeps the English ones for the
+    tooltips, so a board reads "Медицина" instead of a raw enum constant. Returns the hint the game
+    prints for a branch that has no nodes yet.
+    """
+
+    def load(path):
+        try:
+            return json.loads(read_text(path))
+        except FileNotFoundError:
+            return {}
+
+    en, ru = load(LANG_EN), load(LANG_RU)
+    for table in (branches, sections):
+        for name, data in table.items():
+            key = data["key"]
+            data["label"] = ru.get(key) or en.get(key) or name
+            data["label_en"] = en.get(key) or name
+    return ru.get("naruto.gui.skill.section.empty") or en.get(
+        "naruto.gui.skill.section.empty", ""
+    )
+
+
 def lint(nodes, branches):
     problems = []
     notes = []
@@ -149,19 +201,33 @@ def lint(nodes, branches):
         if node["path"] in by_path:
             problems.append("duplicate path: %s" % node["path"])
         by_path[node["path"]] = node
+
+    # Each branch is its own board with exactly one centre - the node nobody has to precede.
+    centres = {}
+    for node in nodes:
+        if not node["requires"]:
+            if node["branch"] in centres:
+                problems.append(
+                    "two centres in %s: %s and %s"
+                    % (node["branch"], centres[node["branch"]], node["path"])
+                )
+            centres[node["branch"]] = node["path"]
+
     cells = {}
     keys = {}
     for node in nodes:
-        cell = (node["x"], node["y"])
+        # Cells are local to a board, so the same coordinate may be reused across tabs.
+        cell = (node["branch"], node["x"], node["y"])
         if cell in cells:
             problems.append(
-                "duplicate cell %s: %s and %s" % (cell, cells[cell], node["path"])
+                "duplicate cell %s/%s: %s and %s"
+                % (node["branch"], (node["x"], node["y"]), cells[cell], node["path"])
             )
         cells[cell] = node["path"]
         if node["branch"] not in branches:
             problems.append("unknown branch %s on %s" % (node["branch"], node["path"]))
         for lang, key in (("en", "name"), ("ru", "name_ru")):
-            if node["path"] != "root" and not node[key]:
+            if not node[key]:
                 problems.append(
                     "missing %s lang: naruto.skill.%s.name" % (lang, node["path"])
                 )
@@ -189,9 +255,15 @@ def lint(nodes, branches):
             if other is None:
                 problems.append("unknown prerequisite %s -> %s" % (node["path"], req))
                 continue
+            if other["branch"] != node["branch"]:
+                problems.append(
+                    "cross-tab prerequisite %s (%s) -> %s (%s)"
+                    % (node["path"], node["branch"], req, other["branch"])
+                )
+                continue
             step = max(abs(node["x"] - other["x"]), abs(node["y"] - other["y"]))
-            # The branch trunks leave the root on a longer spoke; that star is intentional.
-            limit = 3 if other["path"] == "root" else 2
+            # The star spokes leaving a tab centre are longer on purpose; every other link is short.
+            limit = 4 if other["path"] == centres.get(node["branch"]) else 2
             if step > limit:
                 problems.append(
                     "long link (%d steps): %s -> %s" % (step, node["path"], req)
@@ -199,25 +271,33 @@ def lint(nodes, branches):
             elif step > 1:
                 notes.append("%d-step link: %s -> %s" % (step, node["path"], req))
 
-    # Reachability from the root.
-    root = next((n for n in nodes if n["path"] == "root"), None)
-    seen = set()
-    stack = [root["path"]] if root else []
+    # Reachability from each tab's own centre.
     children = {}
     for node in nodes:
         for req in node["requires"]:
             children.setdefault(req, []).append(node["path"])
-    while stack:
-        path = stack.pop()
-        if path in seen:
-            continue
-        seen.add(path)
-        stack.extend(children.get(path, []))
-    for node in nodes:
-        if node["path"] not in seen:
-            problems.append("unreachable from root: %s" % node["path"])
+    for branch, centre in centres.items():
+        seen = set()
+        stack = [centre]
+        while stack:
+            path = stack.pop()
+            if path in seen:
+                continue
+            seen.add(path)
+            stack.extend(children.get(path, []))
+        for node in nodes:
+            if node["branch"] == branch and node["path"] not in seen:
+                problems.append(
+                    "unreachable from %s centre: %s" % (branch, node["path"])
+                )
 
-    # Branch boxes, to catch two branches sitting on top of each other.
+    # Every branch that has nodes must have a centre; a missing one means its nodes have no entry
+    # point at all. A branch with no nodes (the reserved dojutsu boards) is a legal empty tab.
+    populated = {node["branch"] for node in nodes}
+    for branch in branches:
+        if branch in populated and branch not in centres:
+            problems.append("branch %s has no centre" % branch)
+
     boxes = {}
     for node in nodes:
         box = boxes.setdefault(
@@ -227,15 +307,7 @@ def lint(nodes, branches):
         box[1] = min(box[1], node["y"])
         box[2] = max(box[2], node["x"])
         box[3] = max(box[3], node["y"])
-    names = sorted(boxes)
-    for i, a in enumerate(names):
-        for b in names[i + 1 :]:
-            if a == "ROOT" or b == "ROOT":
-                continue
-            ba, bb = boxes[a], boxes[b]
-            if ba[0] > bb[2] or bb[0] > ba[2] or ba[1] > bb[3] or bb[1] > ba[3]:
-                continue
-            notes.append("branch boxes overlap: %s %s and %s %s" % (a, ba, b, bb))
+
     return problems, notes, boxes
 
 
@@ -462,7 +534,11 @@ def apply_edits(edits_path: Path) -> int:
                 removals += [base + ".name", base + ".desc"]
         lang_report[lang] = patch_lang(path, updates, removals)
 
-    print("applied %s" % edits_path.relative_to(ROOT).as_posix())
+    try:
+        shown = edits_path.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        shown = str(edits_path)
+    print("applied %s" % shown)
     print("  statements updated: %d" % report["updated"])
     if report["added"]:
         print("  added: %s" % ", ".join(report["added"]))
@@ -494,40 +570,74 @@ HTML = r"""<!doctype html>
   canvas { display: block; }
   .panel { position: fixed; background: #000c; color: #ddd; font-size: 12px;
            padding: 6px 9px; border-radius: 4px; line-height: 1.6; }
-  #legend { right: 8px; top: 8px; width: 118px; }
-  #legend div { cursor: pointer; }
-  #legend div:hover { color: #fff; }
-  #legend .off { opacity: .35; }
-  #tools { left: 8px; top: 8px; width: 316px; }
-  #tools button, #card button { background: #23292f; color: #ddd; border: 1px solid #444;
+  .panel button { background: #23292f; color: #ddd; border: 1px solid #444;
         border-radius: 3px; font: inherit; padding: 2px 7px; margin: 0 4px 4px 0;
         cursor: pointer; }
-  #tools button:hover, #card button:hover { background: #2f3740; }
-  #tools button.on { border-color: #a06cff; color: #fff; }
+  .panel button:hover { background: #2f3740; }
+  .panel button.on { border-color: #a06cff; color: #fff; }
+
+  /* Two-level tab bar, exactly like the screen: sections on top, branches below. */
+  #tabs { left: 342px; right: 214px; top: 8px; padding: 5px 7px; z-index: 6; }
+  #tabs .tabs { display: flex; flex-wrap: wrap; gap: 3px; }
+  #tabs .tabs + .tabs { margin-top: 4px; }
+  #tabs button { margin: 0; }
+  #tabs button.empty { color: #8a8a8a; font-style: italic; }
+  #tabs button.warn { border-color: #a04a4a; }
+  #tabs button .n { color: #8fa3b8; }
+
+  /* Board facts and the node list of the active board. */
+  #info { right: 8px; top: 8px; width: 198px; max-height: calc(100% - 16px); overflow: auto; }
+  #info .head { color: #7a8794; font-size: 10px; letter-spacing: .04em;
+                text-transform: uppercase; margin: 6px 0 2px; }
+  #info .head:first-child { margin-top: 0; }
+  #info .row { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #info .node { cursor: pointer; padding-left: 2px; }
+  #info .node:hover { color: #fff; }
+  #info .node.sel { color: #ffe082; }
+  #info .ok { color: #7fd18a; }
+  #info .bad { color: #ff8888; }
+  #info .muted { color: #8a8a8a; }
+
+  #tools { left: 8px; top: 8px; width: 320px; z-index: 5; }
   #tools .line { line-height: 1.5; }
-  #card { left: 8px; top: 132px; width: 316px; display: none;
-          max-height: calc(100% - 200px); overflow: auto; }
+  #tools .search { position: relative; margin: 2px 0 4px; }
+  #tools input[type=search] { width: 100%; box-sizing: border-box; background: #1a1f24;
+        color: #eee; border: 1px solid #3a424a; border-radius: 3px; font: inherit;
+        padding: 2px 6px; }
+  #hits { display: none; position: absolute; left: 0; right: 0; top: 100%; margin-top: 2px;
+          max-height: 280px; overflow: auto; background: #0b0e12; border: 1px solid #4a5568;
+          border-radius: 3px; z-index: 30; }
+  #hits .hit { padding: 2px 6px; cursor: pointer; border-bottom: 1px solid #1e242a; }
+  #hits .hit:last-child { border-bottom: 0; }
+  #hits .hit:hover { background: #232c36; }
+  #hits .hit .where { color: #7a8794; }
+  #hits .none { padding: 2px 6px; color: #8a8a8a; }
+
+  #card { left: 8px; top: 176px; width: 320px; display: none;
+          max-height: calc(100% - 240px); overflow: auto; z-index: 5; }
   #card .row { margin: 3px 0; }
   #card label { display: inline-block; width: 72px; color: #9a9a9a; vertical-align: top; }
   #card input, #card select, #card textarea { background: #1a1f24; color: #eee;
         border: 1px solid #3a424a; border-radius: 3px; font: inherit; padding: 1px 4px; }
   #card input[type=number] { width: 58px; }
-  #card input[type=text] { width: 214px; }
-  #card textarea { width: 214px; height: 30px; }
+  #card input[type=text] { width: 218px; }
+  #card textarea { width: 218px; height: 30px; }
   .chip { display: inline-block; background: #2a3140; border: 1px solid #4a5568;
           border-radius: 8px; padding: 0 6px; margin: 1px 3px 1px 0; cursor: pointer; }
   .chip:hover { border-color: #ff6b6b; color: #fff; }
-  #problems { left: 8px; top: 8px; width: 470px; display: none;
-              max-height: 70%; overflow: auto; }
+
+  #problems { left: 8px; top: 8px; width: 480px; display: none;
+              max-height: 76%; overflow: auto; z-index: 20; }
   #problems div { cursor: pointer; }
   #problems div:hover { color: #fff; }
   #problems .note { color: #9a9a9a; }
-  #hud { left: 8px; bottom: 8px; }
+
+  #hud { left: 8px; bottom: 8px; z-index: 5; }
   #tip { position: fixed; display: none; pointer-events: none; max-width: 480px;
          background: #14001fee; border: 1px solid #a06cff; color: #eee;
          font-size: 12px; padding: 7px 9px; border-radius: 3px;
          white-space: pre-wrap; z-index: 10; }
-  #banner { position: fixed; left: 50%; top: 10px; transform: translateX(-50%);
+  #banner { position: fixed; left: 50%; top: 80px; transform: translateX(-50%);
             display: none; background: #16210f; border: 1px solid #4caf50;
             color: #e8ffe8; font-size: 12px; padding: 6px 10px; border-radius: 4px;
             z-index: 20; max-width: 80%; }
@@ -539,7 +649,11 @@ HTML = r"""<!doctype html>
 <body>
 <canvas id="board"></canvas>
 <div id="banner"></div>
-<div id="legend" class="panel"></div>
+<div id="tabs" class="panel">
+  <div id="rowSections" class="tabs"></div>
+  <div id="rowBranches" class="tabs"></div>
+</div>
+<div id="info" class="panel"></div>
 <div id="tools" class="panel"></div>
 <div id="card" class="panel"></div>
 <div id="problems" class="panel"></div>
@@ -549,27 +663,39 @@ HTML = r"""<!doctype html>
 const DATA = __DATA__;
 
 const GRID_X = 132, GRID_Y = 94, NODE = 22, HALF = NODE / 2;
-const MIN_ZOOM = 0.2, MAX_ZOOM = 1.6;
+const MIN_ZOOM = 0.08, MAX_ZOOM = 1.6;
 const HIGHLIGHT = 0xFFFFD37F;
 
 const branches = DATA.branches;
 const branchNames = DATA.branchList;
+const sections = DATA.sections || {};
+const sectionNames = DATA.sectionList || [];
 const effects = DATA.effects;
+const emptyHint = DATA.emptyHint || 'Ветка пока пуста.';
 let nodes = DATA.nodes;
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 const tip = document.getElementById('tip');
 const hud = document.getElementById('hud');
-const legendBox = document.getElementById('legend');
+const infoBox = document.getElementById('info');
 const toolsBox = document.getElementById('tools');
 const card = document.getElementById('card');
 const problemsBox = document.getElementById('problems');
 const banner = document.getElementById('banner');
 
+// One board at a time, like in game; "overview" lays all boards out side by side so the whole
+// tree (16 branches) can be seen at once. Views are remembered per board.
+let mode = 'board';
+let board = branchNames.find(name => nodes.some(n => n.branch === name)) || branchNames[0] || null;
+let activeSection = board && branches[board] ? branches[board].section : (sectionNames[0] || null);
+let views = new Map();
+let overviewView = null;
+let layout = {pos: new Map(), visible: new Set(), frames: []};
+
 let panX = 0, panY = 0, zoom = 0.6;
 let hovered = -1, selected = -1, linkFrom = -1;
-let isolate = null, colourByBranch = true, alwaysNames = false, showGrid = true;
+let colourByBranch = true, alwaysNames = false, showGrid = true;
 let pan = null, nodeDrag = null, dragTarget = null;
 let dirty = false, undoStack = [], problems = [], notes = [], problemPaths = new Set();
 let index = new Map();
@@ -578,21 +704,35 @@ let bannerTimer = 0;
 function f(id) { return document.getElementById(id); }
 function width() { return canvas.width / devicePixelRatio; }
 function height() { return canvas.height / devicePixelRatio; }
-function branchVisible(name) { return !isolate || name === isolate; }
-function nodeX(n) { return n.x * GRID_X; }
-function nodeY(n) { return n.y * GRID_Y; }
+function branchLabel(name) { return (branches[name] && branches[name].label) || name; }
+function sectionLabel(name) { return (sections[name] && sections[name].label) || name; }
+function nodeX(n) { const p = layout.pos.get(n.path); return p ? p.x : n.x * GRID_X; }
+function nodeY(n) { const p = layout.pos.get(n.path); return p ? p.y : n.y * GRID_Y; }
 function toTree(px, py) {
   return [(px - (width() / 2 + panX)) / zoom, (py - (height() / 2 + panY)) / zoom];
 }
+function toScreen(wx, wy) {
+  return [width() / 2 + panX + wx * zoom, height() / 2 + panY + wy * zoom];
+}
 function nodeAt(px, py) {
   const [tx, ty] = toTree(px, py);
+  const tolerance = mode === 'overview' ? Math.max(HALF, 10 / zoom) : HALF;
   for (let i = 0; i < nodes.length; i++) {
-    if (Math.abs(tx - nodeX(nodes[i])) <= HALF && Math.abs(ty - nodeY(nodes[i])) <= HALF) return i;
+    if (!layout.visible.has(nodes[i].path)) continue;
+    if (Math.abs(tx - nodeX(nodes[i])) <= tolerance
+        && Math.abs(ty - nodeY(nodes[i])) <= tolerance) return i;
   }
   return -1;
 }
+function frameAt(px, py) {
+  if (mode !== 'overview') return null;
+  const [tx, ty] = toTree(px, py);
+  return layout.frames.find(fr => tx >= fr.x && tx <= fr.x + fr.w
+    && ty >= fr.y && ty <= fr.y + fr.h) || null;
+}
 function occupied(x, y, except) {
-  return nodes.some((n, i) => i !== except && n.x === x && n.y === y);
+  const branch = (except >= 0 && nodes[except]) ? nodes[except].branch : (mode === 'board' ? board : null);
+  return nodes.some((n, i) => i !== except && n.x === x && n.y === y && (!branch || n.branch === branch));
 }
 function centreOn(n) {
   panX = -nodeX(n) * zoom;
@@ -600,17 +740,35 @@ function centreOn(n) {
 }
 function fit() {
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  nodes.forEach(n => {
-    if (!branchVisible(n.branch)) return;
-    x0 = Math.min(x0, nodeX(n)); y0 = Math.min(y0, nodeY(n));
-    x1 = Math.max(x1, nodeX(n)); y1 = Math.max(y1, nodeY(n));
-  });
-  if (!isFinite(x0)) return;
-  const pad = 90;
+  if (mode === 'overview') {
+    layout.frames.forEach(fr => {
+      x0 = Math.min(x0, fr.x); y0 = Math.min(y0, fr.y);
+      x1 = Math.max(x1, fr.x + fr.w); y1 = Math.max(y1, fr.y + fr.h);
+    });
+  } else {
+    nodes.forEach(n => {
+      if (n.branch !== board) return;
+      x0 = Math.min(x0, n.x * GRID_X); y0 = Math.min(y0, n.y * GRID_Y);
+      x1 = Math.max(x1, n.x * GRID_X); y1 = Math.max(y1, n.y * GRID_Y);
+    });
+  }
+  // Centre inside the space the fixed panels leave free: the tab bar owns the top, the board facts
+  // own the right edge and the HUD the bottom, so nothing important hides under them.
+  const left = 10, right = 214, top = 146, bottom = 52;
+  const availW = Math.max(200, width() - left - right);
+  const availH = Math.max(200, height() - top - bottom);
+  const screenX = left + availW / 2, screenY = top + availH / 2;
+  if (!isFinite(x0)) {
+    zoom = 0.8;
+    panX = screenX - width() / 2;
+    panY = screenY - height() / 2;
+    return;
+  }
+  const pad = mode === 'overview' ? 30 : 70;
   zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(
-    width() / (x1 - x0 + pad * 2), height() / (y1 - y0 + pad * 2))));
-  panX = -(x0 + x1) / 2 * zoom;
-  panY = -(y0 + y1) / 2 * zoom;
+    availW / (x1 - x0 + pad * 2), availH / (y1 - y0 + pad * 2))));
+  panX = screenX - width() / 2 - (x0 + x1) / 2 * zoom;
+  panY = screenY - height() / 2 - (y0 + y1) / 2 * zoom;
 }
 function route(start) {
   const lit = new Set();
@@ -624,15 +782,15 @@ function route(start) {
   }
   return lit;
 }
-function drawLine(x1, y1, x2, y2, width, colour) {
+function drawLine(x1, y1, x2, y2, lineWidth, colour) {
   const steps = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
-  const cells = Math.max(1, Math.ceil(steps / width));
+  const cells = Math.max(1, Math.ceil(steps / lineWidth));
   ctx.fillStyle = colour;
   for (let i = 0; i <= cells; i++) {
     const t = i / cells;
     const x = Math.round(x1 + (x2 - x1) * t);
     const y = Math.round(y1 + (y2 - y1) * t);
-    ctx.fillRect(x - width / 2, y - width / 2, width, width);
+    ctx.fillRect(x - lineWidth / 2, y - lineWidth / 2, lineWidth, lineWidth);
   }
 }
 function rgba(colour, alpha) {
@@ -640,18 +798,43 @@ function rgba(colour, alpha) {
   const r = (colour >> 16) & 255, g = (colour >> 8) & 255, b = colour & 255;
   return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
 }
+function clipText(text, maxWidth) {
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  let out = text;
+  while (out.length > 1 && ctx.measureText(out + '…').width > maxWidth) out = out.slice(0, -1);
+  return out + '…';
+}
+function wrapText(text, maxWidth) {
+  const words = String(text).split(/\s+/);
+  const lines = [];
+  let line = '';
+  words.forEach(word => {
+    const test = line ? line + ' ' + word : word;
+    if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = word; }
+    else line = test;
+  });
+  if (line) lines.push(line);
+  return lines;
+}
 
 function lint() {
   const out = [], grey = [];
   const byPath = new Map(nodes.map(n => [n.path, n]));
   const cells = new Map(), keys = new Map();
+  // Each board is its own coordinate space, so a cell is unique only inside one branch, and every
+  // populated branch has exactly one centre - the node with no prerequisites.
+  const centres = new Map();
   nodes.forEach(n => {
-    const cell = n.x + ',' + n.y;
+    const cell = n.branch + '/' + n.x + ',' + n.y;
     if (cells.has(cell)) out.push({text: 'клетка ' + cell + ' занята дважды: ' + cells.get(cell) + ' и ' + n.path, path: n.path});
     else cells.set(cell, n.path);
     if (!branches[n.branch]) out.push({text: 'неизвестная ветка ' + n.branch + ' у ' + n.path, path: n.path});
     if (!n.name) out.push({text: 'нет EN-названия: ' + n.path, path: n.path});
     if (!n.name_ru) out.push({text: 'нет RU-названия: ' + n.path, path: n.path});
+    if (!n.requires.length) {
+      if (centres.has(n.branch)) out.push({text: 'два центра в ' + n.branch + ': ' + centres.get(n.branch) + ' и ' + n.path, path: n.path});
+      else centres.set(n.branch, n.path);
+    }
     if (n.unlock) {
       if (keys.has(n.unlock)) out.push({text: 'дубль ключа ' + n.unlock + ': ' + keys.get(n.unlock) + ' и ' + n.path, path: n.path});
       else keys.set(n.unlock, n.path);
@@ -663,35 +846,35 @@ function lint() {
     n.requires.forEach(r => {
       const o = byPath.get(r);
       if (!o) { out.push({text: 'неизвестный предок: ' + n.path + ' -> ' + r, path: n.path}); return; }
+      if (o.branch !== n.branch) {
+        out.push({text: 'межветковая связь: ' + n.path + ' (' + n.branch + ') -> ' + r + ' (' + o.branch + ')', path: n.path});
+        return;
+      }
       const step = Math.max(Math.abs(n.x - o.x), Math.abs(n.y - o.y));
-      const limit = o.path === 'root' ? 3 : 2;
+      const limit = o.path === centres.get(n.branch) ? 4 : 2;
       if (step > limit) out.push({text: 'длинная связь (' + step + ' шага): ' + n.path + ' -> ' + r, path: n.path});
       else if (step > 1) grey.push({text: step + '-шаговая связь: ' + n.path + ' -> ' + r});
     });
   });
-  const seen = new Set(), stack = byPath.has('root') ? ['root'] : [];
+  // Reachability is per board: every node must be walkable from its own centre.
   const children = new Map();
   nodes.forEach(n => n.requires.forEach(r => children.set(r, (children.get(r) || []).concat(n.path))));
-  while (stack.length) {
-    const p = stack.pop();
-    if (seen.has(p)) continue;
-    seen.add(p);
-    (children.get(p) || []).forEach(c => stack.push(c));
-  }
-  nodes.forEach(n => { if (!seen.has(n.path)) out.push({text: 'недостижим из корня: ' + n.path, path: n.path}); });
-  const boxes = {};
-  nodes.forEach(n => {
-    const b = boxes[n.branch] = boxes[n.branch] || [n.x, n.y, n.x, n.y];
-    b[0] = Math.min(b[0], n.x); b[1] = Math.min(b[1], n.y);
-    b[2] = Math.max(b[2], n.x); b[3] = Math.max(b[3], n.y);
+  centres.forEach((centre, branch) => {
+    const seen = new Set(), stack = [centre];
+    while (stack.length) {
+      const p = stack.pop();
+      if (seen.has(p)) continue;
+      seen.add(p);
+      (children.get(p) || []).forEach(c => stack.push(c));
+    }
+    nodes.forEach(n => {
+      if (n.branch === branch && !seen.has(n.path)) {
+        out.push({text: 'недостижим из центра ' + branch + ': ' + n.path, path: n.path});
+      }
+    });
   });
-  const names = Object.keys(boxes).sort();
-  names.forEach((a, i) => names.slice(i + 1).forEach(b => {
-    if (a === 'ROOT' || b === 'ROOT') return;
-    const ba = boxes[a], bb = boxes[b];
-    if (ba[0] > bb[2] || bb[0] > ba[2] || ba[1] > bb[3] || bb[1] > ba[3]) return;
-    grey.push({text: 'боксы веток пересекаются: ' + a + ' и ' + b});
-  }));
+  // Boards are independent (each branch is its own tab in game), so overlapping branch boxes are
+  // not a problem any more - only cells inside one board have to stay unique.
   return {problems: out, notes: grey};
 }
 
@@ -703,6 +886,110 @@ function reindex() {
   problems = result.problems;
   notes = result.notes;
   problemPaths = new Set(problems.map(p => p.path).filter(Boolean));
+}
+
+// Places the nodes for the current mode. A board is the same grid the game uses; the overview is a
+// shelf packing of all the boards, so nothing overlaps even with sixteen of them.
+function recomputeLayout() {
+  layout = {pos: new Map(), visible: new Set(), frames: []};
+  if (mode === 'board') {
+    nodes.forEach(n => {
+      if (n.branch !== board) return;
+      layout.visible.add(n.path);
+      layout.pos.set(n.path, {x: n.x * GRID_X, y: n.y * GRID_Y});
+    });
+    return;
+  }
+  const CAP_MIN = 1600, GAP = 60, TITLE = 34, PAD = 34;
+  // Two passes: measure every board first, then pick a shelf width that balances the overview
+  // against the window. A fixed cap left one tall column with half the screen empty.
+  const boards = branchNames.map(name => {
+    const list = nodes.filter(n => n.branch === name);
+    let minX = 0, maxX = 0, minY = 0, maxY = 0;
+    list.forEach(n => {
+      minX = Math.min(minX, n.x); maxX = Math.max(maxX, n.x);
+      minY = Math.min(minY, n.y); maxY = Math.max(maxY, n.y);
+    });
+    const w = list.length ? (maxX - minX) * GRID_X + PAD * 2 : 320;
+    const h = list.length ? (maxY - minY) * GRID_Y + PAD * 2 + TITLE : 92;
+    return {name, list, minX, minY, w, h};
+  });
+  const area = boards.reduce((sum, b) => sum + (b.w + GAP) * (b.h + GAP), 0);
+  const aspect = Math.max(0.6, width() / Math.max(1, height()));
+  // 0.72 is a rough shelf-packing efficiency; the exact number only changes how square the map is.
+  const cap = Math.max(CAP_MIN, Math.sqrt(area * aspect / 0.72));
+
+  let cursorX = 0, cursorY = 0, rowHeight = 0;
+  boards.forEach(b => {
+    const {name, list, minX, minY, w, h} = b;
+    if (cursorX > 0 && cursorX + w > cap) { cursorX = 0; cursorY += rowHeight + GAP; rowHeight = 0; }
+    const frame = {branch: name, x: cursorX, y: cursorY, w: w, h: h};
+    const ox = cursorX + PAD - minX * GRID_X;
+    const oy = cursorY + TITLE + PAD - minY * GRID_Y;
+    list.forEach(n => {
+      layout.visible.add(n.path);
+      layout.pos.set(n.path, {x: ox + n.x * GRID_X, y: oy + n.y * GRID_Y});
+    });
+    layout.frames.push(frame);
+    cursorX += w + GAP;
+    rowHeight = Math.max(rowHeight, h);
+  });
+  layout.width = Math.max(cap, cursorX);
+  layout.height = cursorY + rowHeight;
+}
+
+function saveView() {
+  if (mode === 'overview') overviewView = {panX: panX, panY: panY, zoom: zoom};
+  else if (board) views.set(board, {panX: panX, panY: panY, zoom: zoom});
+}
+function restoreView() {
+  const view = mode === 'overview' ? overviewView : (board ? views.get(board) : null);
+  if (view) { panX = view.panX; panY = view.panY; zoom = view.zoom; }
+  else fit();
+}
+
+function switchBoard(name) {
+  if (!branches[name]) return;
+  saveView();
+  linkFrom = -1;
+  mode = 'board';
+  board = name;
+  activeSection = branches[name].section;
+  if (selected >= 0 && nodes[selected] && nodes[selected].branch !== board) { selected = -1; syncCard(); }
+  recomputeLayout();
+  buildTabs();
+  buildInfo();
+  syncTools();
+  restoreView();
+  draw();
+}
+
+function showOverview() {
+  saveView();
+  linkFrom = -1;
+  mode = 'overview';
+  recomputeLayout();
+  buildTabs();
+  buildInfo();
+  restoreView();
+  syncTools();
+  draw();
+}
+
+function switchSection(name) {
+  if (!sections[name] && name !== '—') return;
+  activeSection = name;
+  const first = branchNames.find(n => branches[n].section === name);
+  if (first) switchBoard(first);
+  else { buildTabs(); buildInfo(); draw(); }
+}
+
+function cycleBoard(step) {
+  const list = branchNames;
+  if (!list.length) return;
+  const at = list.indexOf(board);
+  const next = list[((at < 0 ? 0 : at) + step + list.length) % list.length];
+  switchBoard(next);
 }
 
 function draw() {
@@ -717,29 +1004,41 @@ function draw() {
   const cell = Math.max(1, Math.ceil(1 / zoom));
   const lit = route(hovered >= 0 ? hovered : selected);
 
-  if (showGrid) {
+  if (showGrid && mode === 'board') {
+    let gx0 = -6, gx1 = 6, gy0 = -6, gy1 = 6;
+    if (layout.visible.size) {
+      gx0 = Infinity; gy0 = Infinity; gx1 = -Infinity; gy1 = -Infinity;
+      nodes.forEach(n => {
+        if (n.branch !== board) return;
+        gx0 = Math.min(gx0, n.x); gy0 = Math.min(gy0, n.y);
+        gx1 = Math.max(gx1, n.x); gy1 = Math.max(gy1, n.y);
+      });
+      gx0 -= 1; gy0 -= 1; gx1 += 1; gy1 += 1;
+    }
     ctx.strokeStyle = '#ffffff10';
     ctx.lineWidth = 1 / zoom;
-    for (let gx = -20; gx <= 20; gx++) {
-      ctx.beginPath(); ctx.moveTo(gx * GRID_X, -20 * GRID_Y);
-      ctx.lineTo(gx * GRID_X, 20 * GRID_Y); ctx.stroke();
+    for (let gx = gx0; gx <= gx1; gx++) {
+      ctx.beginPath(); ctx.moveTo(gx * GRID_X, gy0 * GRID_Y);
+      ctx.lineTo(gx * GRID_X, gy1 * GRID_Y); ctx.stroke();
     }
-    for (let gy = -20; gy <= 20; gy++) {
-      ctx.beginPath(); ctx.moveTo(-20 * GRID_X, gy * GRID_Y);
-      ctx.lineTo(20 * GRID_X, gy * GRID_Y); ctx.stroke();
+    for (let gy = gy0; gy <= gy1; gy++) {
+      ctx.beginPath(); ctx.moveTo(gx0 * GRID_X, gy * GRID_Y);
+      ctx.lineTo(gx1 * GRID_X, gy * GRID_Y); ctx.stroke();
     }
   }
 
   for (let pass = 0; pass < 2; pass++) {
     nodes.forEach((n, i) => {
-      if (!branchVisible(n.branch)) return;
+      if (!layout.visible.has(n.path)) return;
       const onRoute = lit.size > 1 && lit.has(i);
       if ((pass === 1) !== onRoute) return;
       n.req.forEach(j => {
         if (j === undefined) return;
+        const other = nodes[j];
+        if (!other || !layout.visible.has(other.path)) return;
         const colour = onRoute ? rgba(HIGHLIGHT, 1)
           : (colourByBranch ? rgba((branches[n.branch] || {colour: 0x888888}).colour, .55) : '#3a3a3a');
-        drawLine(nodeX(nodes[j]), nodeY(nodes[j]), nodeX(n), nodeY(n),
+        drawLine(nodeX(other), nodeY(other), nodeX(n), nodeY(n),
                  onRoute ? cell + 1 : cell, colour);
       });
     });
@@ -752,7 +1051,7 @@ function draw() {
   }
 
   nodes.forEach((n, i) => {
-    if (!branchVisible(n.branch)) return;
+    if (!layout.visible.has(n.path)) return;
     const cx = nodeX(n), cy = nodeY(n);
     const b = (branches[n.branch] || {colour: 0x888888}).colour;
     const isHover = hovered === i, isSel = selected === i, isSrc = linkFrom === i;
@@ -766,7 +1065,7 @@ function draw() {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(String(n.cost >= 1000 ? (n.cost / 1000) + 'k' : n.cost), cx, cy - 3);
-    if (alwaysNames || zoom >= 0.65 || isHover || isSel) {
+    if (mode === 'board' && (alwaysNames || zoom >= 0.65 || isHover || isSel)) {
       ctx.font = '8px Consolas, monospace';
       ctx.fillStyle = (isHover || isSel) ? '#ffffff' : '#d8d8d8';
       ctx.fillText(n.name, cx, cy + HALF + 7);
@@ -777,28 +1076,161 @@ function draw() {
   });
   ctx.restore();
 
-  hud.textContent = 'зум ' + zoom.toFixed(2) + '   узлов ' + nodes.length
-    + '   наведение: ' + (hovered >= 0 ? nodes[hovered].path : '-')
-    + '   ветка: ' + (isolate || 'все')
-    + (dirty ? '   ● есть несохранённые правки' : '   правки сохранены') + '\n'
-    + 'колесо = зум, ЛКМ по пустому = панорама, Shift+ЛКМ тоже, тянуть узел = переставить, '
-    + 'клик по узлу = свойства, F = вписать, N = имена, G = сетка, Ctrl+Z = отмена, Ctrl+S = сохранить';
+  // Board frames and empty-board messages are drawn in screen space, so the titles stay readable
+  // whatever the zoom is.
+  if (mode === 'overview') {
+    layout.frames.forEach(fr => {
+      const [sx, sy] = toScreen(fr.x, fr.y);
+      const sw = fr.w * zoom, sh = fr.h * zoom;
+      const active = fr.branch === board;
+      ctx.fillStyle = active ? '#ffffff0a' : '#ffffff05';
+      ctx.fillRect(sx, sy, sw, sh);
+      ctx.strokeStyle = rgba((branches[fr.branch] || {colour: 0x888888}).colour, active ? .85 : .45);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(Math.round(sx) + .5, Math.round(sy) + .5, Math.round(sw), Math.round(sh));
+      const bar = Math.min(sh, 22);
+      ctx.fillStyle = '#0007';
+      ctx.fillRect(sx, sy, sw, bar);
+      const count = nodes.filter(n => n.branch === fr.branch).length;
+      const titleRoom = Math.max(18, sw - (count ? 34 : 12));
+      ctx.fillStyle = '#e8e8e8';
+      ctx.font = 'bold 11px Consolas, monospace';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(clipText(branchLabel(fr.branch), titleRoom), sx + 6, sy + bar / 2);
+      if (count) {
+        ctx.fillStyle = '#8fa3b8';
+        ctx.textAlign = 'right';
+        ctx.fillText(String(count), sx + sw - 6, sy + bar / 2);
+      }
+      if (!count && sh > 50) {
+        ctx.fillStyle = '#8a8a8a';
+        ctx.font = '11px Consolas, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('в разработке', sx + sw / 2, sy + bar + (sh - bar) / 2);
+      }
+    });
+  } else if (!layout.visible.size) {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#b9b9b9';
+    ctx.font = '14px Consolas, monospace';
+    const lines = wrapText(emptyHint, Math.min(560, w - 80));
+    lines.forEach((line, k) => ctx.fillText(line, w / 2, h / 2 - 20 + k * 20));
+    ctx.fillStyle = '#7a8794';
+    ctx.font = '12px Consolas, monospace';
+    ctx.fillText('нажмите «+ узел», чтобы начать', w / 2, h / 2 + 18 + lines.length * 20);
+  }
+
+  const bits = [];
+  bits.push(mode === 'overview' ? 'режим: обзор' : 'ветка: ' + branchLabel(board) + ' · ' + board);
+  bits.push('узлов ' + nodes.length);
+  if (mode === 'board') bits.push('на доске ' + layout.visible.size);
+  bits.push('зум ' + zoom.toFixed(2));
+  bits.push('наведение: ' + (hovered >= 0 ? nodes[hovered].path : '-'));
+  hud.textContent = bits.join('   ') + (dirty ? '   ● не сохранено' : '') + '\n'
+    + 'колесо = зум · ЛКМ по пустому = панорама · тянуть узел = переставить · клик = свойства · '
+    + '[ ] = ветки · O = обзор · Ctrl+F = поиск · F = вписать · N = имена · G = сетка · '
+    + 'Ctrl+Z = отмена · Ctrl+S = сохранить';
 }
 
-function buildLegend() {
-  legendBox.innerHTML = '';
-  const all = document.createElement('div');
-  all.textContent = 'все ветки';
-  all.onclick = () => { isolate = null; fit(); draw(); buildLegend(); };
-  all.className = isolate ? 'off' : '';
-  legendBox.appendChild(all);
-  branchNames.forEach(name => {
-    const row = document.createElement('div');
-    row.innerHTML = '<span style="color:' + rgba(branches[name].colour, 1) + '">&#9632;</span> ' + name;
-    row.className = isolate === name ? '' : (isolate ? 'off' : '');
-    row.onclick = () => { isolate = isolate === name ? null : name; fit(); draw(); buildLegend(); };
-    legendBox.appendChild(row);
+function tabButton(label, opts) {
+  const button = document.createElement('button');
+  button.textContent = label;
+  if (opts.title) button.title = opts.title;
+  if (opts.cls) button.className = opts.cls;
+  if (opts.on) button.classList.add('on');
+  button.onclick = opts.onclick;
+  return button;
+}
+
+function buildTabs() {
+  const sectionRow = f('rowSections');
+  const branchRow = f('rowBranches');
+  sectionRow.innerHTML = '';
+  branchRow.innerHTML = '';
+
+  sectionRow.appendChild(tabButton('обзор', {
+    on: mode === 'overview', title: 'Все доски сразу (O)', onclick: showOverview,
+  }));
+  const current = mode === 'board' && branches[board] ? branches[board].section : activeSection;
+  sectionNames.forEach(name => {
+    const count = nodes.filter(n => (branches[n.branch] || {}).section === name).length;
+    sectionRow.appendChild(tabButton(sectionLabel(name) + ' · ' + count, {
+      on: mode === 'board' && current === name,
+      title: ((sections[name] || {}).labelEn || name) + ' — ' + count + ' узлов',
+      cls: count ? '' : 'empty',
+      onclick: () => switchSection(name),
+    }));
   });
+
+  const visible = branchNames.filter(name => !current || (branches[name].section || null) === current);
+  visible.forEach(name => {
+    const count = nodes.filter(n => n.branch === name).length;
+    const warn = nodes.some(n => n.branch === name && problemPaths.has(n.path));
+    const b = branches[name] || {};
+    branchRow.appendChild(tabButton(branchLabel(name) + ' · ' + count, {
+      on: mode === 'board' && board === name,
+      title: name + (b.labelEn ? ' · ' + b.labelEn : '') + ' — ' + count + ' узлов'
+        + (count ? '' : ' (ветка пуста)'),
+      cls: (count ? '' : 'empty') + (warn ? ' warn' : ''),
+      onclick: () => switchBoard(name),
+    }));
+  });
+}
+
+function infoRow(text, cls) {
+  const row = document.createElement('div');
+  row.className = 'row' + (cls ? ' ' + cls : '');
+  row.textContent = text;
+  infoBox.appendChild(row);
+  return row;
+}
+
+function buildInfo() {
+  infoBox.innerHTML = '';
+  const head = text => {
+    const row = document.createElement('div');
+    row.className = 'head';
+    row.textContent = text;
+    infoBox.appendChild(row);
+  };
+  const total = nodes.reduce((sum, n) => sum + (n.cost || 0), 0);
+  head('дерево');
+  infoRow('узлов ' + nodes.length + ' · ' + total.toLocaleString('ru-RU') + ' очк.');
+  infoRow('проблем: ' + problems.length, problems.length ? 'bad' : 'ok');
+
+  if (mode === 'board' && branches[board]) {
+    const list = nodes.filter(n => n.branch === board);
+    const branchXp = list.reduce((sum, n) => sum + (n.cost || 0), 0);
+    head(sectionLabel(branches[board].section) + ' / ' + branchLabel(board));
+    const b = branches[board];
+    infoRow(board + (b.labelEn ? ' · ' + b.labelEn : ''), 'muted');
+    infoRow('узлов ' + list.length + ' · ' + branchXp.toLocaleString('ru-RU') + ' очк.');
+    const centre = list.find(n => !n.requires.length);
+    infoRow('центр: ' + (centre ? centre.path : '—'));
+    head('узлы доски');
+    if (!list.length) {
+      infoRow('ветка пуста — задел на будущее', 'muted');
+    } else {
+      list.slice().sort((a, b2) => (a.y - b2.y) || (a.x - b2.x) || a.path.localeCompare(b2.path))
+        .forEach(n => {
+          const row = infoRow(n.path, 'node' + (selected >= 0 && nodes[selected] === n ? ' sel' : '')
+            + (problemPaths.has(n.path) ? ' bad' : ''));
+          row.title = n.name + (n.name_ru ? ' / ' + n.name_ru : '') + ' · ' + n.cost + ' очк.';
+          row.onclick = () => { select(index.get(n.path)); centreOn(n); draw(); };
+        });
+    }
+  } else {
+    head('обзор');
+    infoRow('досок: ' + branchNames.length + ' · в разработке: '
+      + branchNames.filter(name => !nodes.some(n => n.branch === name)).length);
+    sectionNames.forEach(name => {
+      const count = nodes.filter(n => (branches[n.branch] || {}).section === name).length;
+      infoRow(sectionLabel(name) + ' · ' + count);
+    });
+    infoRow('клик по доске — открыть её', 'muted');
+  }
 }
 
 function buildTools() {
@@ -807,17 +1239,38 @@ function buildTools() {
     '<button id="bAdd">+ узел</button>' +
     '<button id="bLink">связать</button>' +
     '<button id="bUndo">отмена</button>' +
+    '<button id="bOverview">обзор</button>' +
     '<button id="bGrid">сетка</button>' +
     '<button id="bFit">вписать</button>' +
+    '<div class="search"><input id="q" type="search" placeholder="поиск: путь или имя (Ctrl+F)">' +
+    '<div id="hits"></div></div>' +
     '<div class="line" id="lProblems"></div>' +
     '<div class="line" id="lHint"></div>';
   f('bSave').onclick = save;
   f('bAdd').onclick = addNode;
   f('bLink').onclick = () => startLink();
   f('bUndo').onclick = undo;
-  f('bGrid').onclick = () => { showGrid = !showGrid; draw(); };
+  f('bOverview').onclick = showOverview;
+  f('bGrid').onclick = () => { showGrid = !showGrid; syncTools(); draw(); };
   f('bFit').onclick = () => { fit(); draw(); };
   f('lProblems').onclick = toggleProblems;
+
+  const query = f('q');
+  query.oninput = () => renderHits();
+  query.onkeydown = event => {
+    if (event.key === 'Enter') {
+      const first = f('hits').querySelector('.hit');
+      if (first) first.click();
+      event.preventDefault();
+    } else if (event.key === 'Escape') {
+      query.value = '';
+      renderHits();
+      query.blur();
+    }
+  };
+  document.addEventListener('mousedown', event => {
+    if (!toolsBox.contains(event.target)) hideHits();
+  });
   syncTools();
 }
 
@@ -829,6 +1282,7 @@ function syncTools() {
   f('lHint').textContent = dirty ? '● правки не сохранены (Ctrl+S)' : 'правки сохранены';
   f('bLink').className = linkFrom >= 0 ? 'on' : '';
   f('bGrid').className = showGrid ? 'on' : '';
+  f('bOverview').className = mode === 'overview' ? 'on' : '';
 }
 
 function toggleProblems() {
@@ -841,17 +1295,19 @@ function toggleProblems() {
     const row = document.createElement('div');
     row.textContent = item.text;
     if (cls) row.className = cls;
-    if (item.path) row.onclick = () => {
-      const i = index.get(item.path);
-      if (i === undefined) return;
-      select(i); centreOn(nodes[i]); draw();
-    };
+    if (item.path) row.onclick = () => gotoNode(item.path);
     problemsBox.appendChild(row);
   };
   if (!problems.length) add({text: 'проблем нет'});
   problems.forEach(item => add(item));
   notes.forEach(item => add(item, 'note'));
   problemsBox.style.display = 'block';
+}
+
+function renamePath(oldPath, newPath) {
+  nodes.forEach(n => { n.requires = n.requires.map(r => r === oldPath ? newPath : r); });
+  const view = views.get(oldPath);
+  if (view) { views.delete(oldPath); views.set(newPath, view); }
 }
 
 function buildCard() {
@@ -877,7 +1333,20 @@ function buildCard() {
   f('fX').onchange = () => moveTo(+f('fX').value, +f('fY').value);
   f('fY').onchange = () => moveTo(+f('fX').value, +f('fY').value);
   f('fCost').onchange = () => { pushUndo(); nodes[selected].cost = Math.max(0, Math.round(+f('fCost').value || 0)); touch(); };
-  f('fBranch').onchange = () => { pushUndo(); nodes[selected].branch = f('fBranch').value; touch(); };
+  f('fBranch').onchange = () => {
+    const value = f('fBranch').value;
+    if (value === nodes[selected].branch) return;
+    pushUndo();
+    nodes[selected].branch = value;
+    const keep = selected;
+    touch();
+    switchBoard(value);
+    selected = keep;
+    syncCard();
+    buildInfo();
+    centreOn(nodes[selected]);
+    draw();
+  };
   f('fUnlock').onchange = () => {
     pushUndo();
     const value = f('fUnlock').value.trim();
@@ -898,7 +1367,7 @@ function buildCard() {
     pushUndo();
     const old = n.path;
     n.path = value;
-    nodes.forEach(o => { o.requires = o.requires.map(r => r === old ? value : r); });
+    renamePath(old, value);
     touch(); syncCard();
   };
   f('fReq').onclick = event => {
@@ -940,13 +1409,17 @@ function select(i) {
   selected = i;
   syncCard();
   syncTools();
+  buildInfo();
   draw();
 }
 
 function touch() {
   dirty = true;
   reindex();
+  recomputeLayout();
   syncTools();
+  buildTabs();
+  buildInfo();
   draw();
 }
 
@@ -995,14 +1468,15 @@ function moveTo(x, y) {
   touch();
 }
 
-function freeCell() {
+function freeCell(branch) {
   const [tx, ty] = toTree(width() / 2, height() / 2);
   const cx = Math.round(tx / GRID_X), cy = Math.round(ty / GRID_Y);
-  for (let r = 0; r < 24; r++) {
+  const taken = (x, y) => nodes.some(n => n.branch === branch && n.x === x && n.y === y);
+  for (let r = 0; r < 30; r++) {
     for (let dx = -r; dx <= r; dx++) {
       for (let dy = -r; dy <= r; dy++) {
         if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
-        if (!occupied(cx + dx, cy + dy, -1)) return [cx + dx, cy + dy];
+        if (!taken(cx + dx, cy + dy)) return [cx + dx, cy + dy];
       }
     }
   }
@@ -1010,11 +1484,15 @@ function freeCell() {
 }
 
 function addNode() {
-  const branch = (selected >= 0 && nodes[selected]) ? nodes[selected].branch : (isolate || 'ROOT');
+  let branch = mode === 'board' ? board
+    : ((selected >= 0 && nodes[selected]) ? nodes[selected].branch
+      : branchNames.find(name => (branches[name].section || null) === activeSection) || branchNames[0]);
+  if (!branch) { flash('сначала выберите ветку'); return; }
+  if (mode !== 'board' || board !== branch) switchBoard(branch);
   let path = 'new_node';
   let i = 1;
   while (index.has(path)) path = 'new_node_' + (++i);
-  const cell = freeCell();
+  const cell = freeCell(branch);
   pushUndo();
   nodes.push({
     path, branch, x: cell[0], y: cell[1], cost: 200, unlock: null,
@@ -1124,9 +1602,81 @@ function loadEdits(payload) {
   pushUndo();
   nodes = clean;
   selected = -1;
+  views = new Map();
+  overviewView = null;
+  mode = 'board';
+  const first = branchNames.find(name => nodes.some(n => n.branch === name)) || branchNames[0];
+  board = first;
+  activeSection = branches[first] ? branches[first].section : activeSection;
   touch(); syncCard();
   fit(); draw();
   flash('загружено ' + nodes.length + ' узлов из файла правок');
+}
+
+function gotoNode(path) {
+  const i = index.get(path);
+  if (i === undefined) return;
+  const n = nodes[i];
+  hideHits();
+  hideTip();
+  if (mode !== 'board' || board !== n.branch) switchBoard(n.branch);
+  select(i);
+  centreOn(n);
+  draw();
+}
+
+function searchHits(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const scored = [];
+  nodes.forEach((n, i) => {
+    const where = branchLabel(n.branch) + ' ' + n.branch;
+    const hay = (n.path + ' ' + (n.name || '') + ' ' + (n.name_ru || '') + ' '
+      + (n.unlock || '') + ' ' + where).toLowerCase();
+    if (!hay.includes(q)) return;
+    let score = 0;
+    if (n.path.toLowerCase() === q) score += 8;
+    else if (n.path.toLowerCase().startsWith(q)) score += 4;
+    if ((n.name || '').toLowerCase().startsWith(q)) score += 3;
+    if (n.branch.toLowerCase() === q) score += 2;
+    scored.push({i: i, score: score});
+  });
+  scored.sort((a, b) => (b.score - a.score) || (a.i - b.i));
+  return scored.slice(0, 12).map(s => nodes[s.i]);
+}
+
+function renderHits() {
+  const box = f('hits');
+  if (!box) return;
+  const query = f('q').value;
+  box.innerHTML = '';
+  if (!query.trim()) { box.style.display = 'none'; return; }
+  const found = searchHits(query);
+  if (!found.length) {
+    const row = document.createElement('div');
+    row.className = 'none';
+    row.textContent = 'ничего не найдено';
+    box.appendChild(row);
+  } else {
+    found.forEach(n => {
+      const row = document.createElement('div');
+      row.className = 'hit';
+      row.textContent = n.path + ' — ' + (n.name || '');
+      const where = document.createElement('span');
+      where.className = 'where';
+      where.textContent = '  ' + branchLabel(n.branch);
+      row.appendChild(where);
+      row.title = (n.name || '') + (n.name_ru ? ' / ' + n.name_ru : '');
+      row.onclick = () => { gotoNode(n.path); f('q').value = ''; renderHits(); };
+      box.appendChild(row);
+    });
+  }
+  box.style.display = 'block';
+}
+
+function hideHits() {
+  const box = f('hits');
+  if (box) box.style.display = 'none';
 }
 
 function showTip(i, event) {
@@ -1135,14 +1685,20 @@ function showTip(i, event) {
   tip.style.left = Math.min(event.clientX + 14, innerWidth - 490) + 'px';
   tip.style.top = (event.clientY + 14) + 'px';
   tip.textContent = n.name + (n.name_ru ? '  /  ' + n.name_ru : '') + '\n'
-    + n.branch + '   ' + (n.unlock ? 'техника: ' + n.unlock : 'пассивка: ' + n.effect + ' ' + n.amount) + '\n'
+    + branchLabel(n.branch) + ' (' + n.branch + ')   '
+    + (n.unlock ? 'техника: ' + n.unlock : 'пассивка: ' + n.effect + ' ' + n.amount) + '\n'
     + (n.desc || '') + (n.desc_ru ? '\n' + n.desc_ru : '') + '\n'
-    + 'цена ' + n.cost + ' xp'
+    + 'цена ' + n.cost + ' очк.'
     + (n.requires.length ? '   предки: ' + n.requires.join(', ') : '   предков нет');
 }
 function hideTip() { tip.style.display = 'none'; }
 
-window.addEventListener('resize', () => { resize(); draw(); });
+window.addEventListener('resize', () => {
+  resize();
+  recomputeLayout();
+  if (mode === 'overview') fit();
+  draw();
+});
 function resize() {
   canvas.width = innerWidth * devicePixelRatio;
   canvas.height = innerHeight * devicePixelRatio;
@@ -1159,8 +1715,22 @@ canvas.addEventListener('mousedown', event => {
   }
   if (event.button !== 0) return;
   const i = nodeAt(event.offsetX, event.offsetY);
-  if (linkFrom >= 0) {
+  if (linkFrom >= 0 && mode === 'board') {
     if (i >= 0) tryLink(linkFrom, i); else { linkFrom = -1; syncTools(); draw(); }
+    return;
+  }
+  if (mode === 'overview') {
+    if (i >= 0) {
+      const n = nodes[i];
+      switchBoard(n.branch);
+      select(i);
+      centreOn(n);
+      draw();
+      return;
+    }
+    const frame = frameAt(event.offsetX, event.offsetY);
+    if (frame) { switchBoard(frame.branch); return; }
+    pan = {x: event.clientX, y: event.clientY};
     return;
   }
   if (i < 0) { pan = {x: event.clientX, y: event.clientY}; return; }
@@ -1169,6 +1739,7 @@ canvas.addEventListener('mousedown', event => {
 canvas.addEventListener('mousemove', event => {
   if (pan) { panX += event.movementX; panY += event.movementY; draw(); return; }
   if (nodeDrag) {
+    if (mode !== 'board') { nodeDrag = null; return; }
     const n = nodes[nodeDrag.index];
     const [tx, ty] = toTree(event.offsetX, event.offsetY);
     const cx = Math.round(tx / GRID_X), cy = Math.round(ty / GRID_Y);
@@ -1178,6 +1749,7 @@ canvas.addEventListener('mousemove', event => {
       n.x = cx; n.y = cy;
       nodeDrag.moved = true;
       dirty = true;
+      recomputeLayout();
       syncCard();
       syncTools();
     }
@@ -1196,6 +1768,9 @@ window.addEventListener('mouseup', () => {
   if (nodeDrag.moved) {
     undoStack.push(nodeDrag.snapshot);
     if (undoStack.length > 200) undoStack.shift();
+    reindex();
+    buildTabs();
+    buildInfo();
     syncTools();
   } else {
     select(nodeDrag.index);
@@ -1222,15 +1797,27 @@ window.addEventListener('keydown', event => {
     event.preventDefault();
     return;
   }
+  if (event.ctrlKey && (event.key === 'f' || event.key === 'F')) {
+    f('q').focus();
+    f('q').select();
+    event.preventDefault();
+    return;
+  }
   if (event.target !== document.body) return;
   if (event.key === 'Escape') {
     if (linkFrom >= 0) { linkFrom = -1; syncTools(); draw(); } else select(-1);
     return;
   }
+  if (event.key === '[' || event.key === ']') {
+    cycleBoard(event.key === ']' ? 1 : -1);
+    return;
+  }
+  if (event.key === 'o' || event.key === 'O') { showOverview(); return; }
   if (event.key === 'f' || event.key === 'F') { fit(); draw(); }
   if (event.key === 'n' || event.key === 'N') { alwaysNames = !alwaysNames; draw(); }
   if (event.key === 'g' || event.key === 'G') { showGrid = !showGrid; syncTools(); draw(); }
   if (event.key === 'c' || event.key === 'C') { colourByBranch = !colourByBranch; draw(); }
+  if (event.key === '/') { f('q').focus(); event.preventDefault(); }
 });
 window.addEventListener('beforeunload', event => {
   if (!dirty) return;
@@ -1240,11 +1827,16 @@ window.addEventListener('beforeunload', event => {
 
 // Hooks for screenshots, automated checks and the agent's own runs.
 window.previewHover = path => { hovered = index.has(path) ? index.get(path) : -1; hideTip(); draw(); };
-window.previewBranch = name => { isolate = branches[name] ? name : null; fit(); buildLegend(); draw(); };
+window.previewBranch = name => { if (branches[name]) switchBoard(name); };
+window.previewSection = name => switchSection(name);
+window.previewOverview = () => showOverview();
 window.previewFit = () => { fit(); draw(); };
-window.previewSelect = path => { if (index.has(path)) { select(index.get(path)); centreOn(nodes[selected]); draw(); } };
+window.previewSelect = path => { if (index.has(path)) { gotoNode(path); } };
+window.previewGoto = path => gotoNode(path);
+window.previewSearch = query => { f('q').value = query; renderHits(); return searchHits(query).map(n => n.path); };
 window.previewMove = (path, x, y) => {
   if (!index.has(path)) return 'no such node';
+  if (mode !== 'board' || board !== nodes[index.get(path)].branch) switchBoard(nodes[index.get(path)].branch);
   selected = index.get(path);
   moveTo(x, y);
   return nodes[selected].x + ',' + nodes[selected].y;
@@ -1254,7 +1846,9 @@ window.previewCollect = () => collect();
 window.previewSave = () => save();
 window.previewProblems = () => problems.map(p => p.text);
 window.previewState = () => ({
-  zoom, panX, panY, dirty, selected: (nodes[selected] || {}).path || null, problems: problems.length,
+  mode, board, section: activeSection, zoom, panX, panY, dirty,
+  selected: (nodes[selected] || {}).path || null, problems: problems.length,
+  frames: layout.frames.map(fr => ({branch: fr.branch, x: fr.x, y: fr.y, w: fr.w, h: fr.h})),
   boxes: nodes.reduce((acc, n) => {
     const b = acc[n.branch] = acc[n.branch] || [1e9, 1e9, -1e9, -1e9];
     b[0] = Math.min(b[0], n.x); b[1] = Math.min(b[1], n.y);
@@ -1264,10 +1858,12 @@ window.previewState = () => ({
 });
 
 resize();
-buildLegend();
 buildTools();
 buildCard();
+buildTabs();
+buildInfo();
 reindex();
+recomputeLayout();
 fit();
 draw();
 
@@ -1285,14 +1881,32 @@ fetch('skilltree-edits.json', { cache: 'no-store' })
 """
 
 
-def write_html(out: Path, nodes, branches, order, effects) -> None:
+def write_html(
+    out: Path, nodes, branches, order, effects, sections, section_order, empty_hint
+) -> None:
     payload = {
         "nodes": nodes,
         "branches": {
-            name: {"colour": data["colour"]} for name, data in branches.items()
+            name: {
+                "colour": data["colour"],
+                "section": data["section"],
+                "label": data.get("label", name),
+                "labelEn": data.get("label_en", name),
+            }
+            for name, data in branches.items()
         },
         "branchList": order,
+        "sections": {
+            name: {
+                "colour": data["colour"],
+                "label": data.get("label", name),
+                "labelEn": data.get("label_en", name),
+            }
+            for name, data in sections.items()
+        },
+        "sectionList": section_order,
         "effects": effects,
+        "emptyHint": empty_hint,
     }
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(
@@ -1355,9 +1969,20 @@ def serve(port: int, out: Path, open_browser: bool) -> int:
 
 def report(nodes, branches, order, boxes, problems, notes) -> None:
     print("nodes: %d   branches: %d" % (len(nodes), len(branches)))
+    grouped = {}
     for name in order:
-        if name in boxes:
-            print("  %-10s %s" % (name, boxes[name]))
+        grouped.setdefault(branches[name]["section"], []).append(name)
+    for section, names in grouped.items():
+        section_nodes = sum(1 for node in nodes if node["branch"] in names)
+        print("  %s (%d nodes)" % (section, section_nodes))
+        for name in names:
+            count = sum(1 for node in nodes if node["branch"] == name)
+            label = branches[name].get("label", name)
+            box = boxes.get(name)
+            print(
+                "    %-10s %-16s %3d  %s"
+                % (name, label, count, box if box else "empty board")
+            )
     for note in notes:
         print("  note: " + note)
     if problems:
@@ -1413,20 +2038,38 @@ def main():
 
     nodes = parse_skills()
     branches, order = parse_branches()
+    sections, section_order = parse_sections()
     effects = parse_effects()
     load_lang(nodes)
+    empty_hint = load_tab_lang(branches, sections)
     problems, notes, boxes = lint(nodes, branches)
     report(nodes, branches, order, boxes, problems, notes)
 
     if args.check:
         return 1 if problems else 0
 
-    write_html(out, nodes, branches, order, effects)
+    write_html(
+        out, nodes, branches, order, effects, sections, section_order, empty_hint
+    )
     if args.json:
         payload = {
             "nodes": nodes,
             "branches": {
-                name: {"colour": data["colour"]} for name, data in branches.items()
+                name: {
+                    "colour": data["colour"],
+                    "section": data["section"],
+                    "label": data.get("label", name),
+                    "labelEn": data.get("label_en", name),
+                }
+                for name, data in branches.items()
+            },
+            "sections": {
+                name: {
+                    "colour": data["colour"],
+                    "label": data.get("label", name),
+                    "labelEn": data.get("label_en", name),
+                }
+                for name, data in sections.items()
             },
         }
         json_out = out.with_suffix(".json")

@@ -17,6 +17,14 @@ import net.minecraft.world.phys.Vec3;
  * More of a slight speed boost than an actual dash
  */
 public class WaterWalkAbility extends Ability implements Ability.Toggled {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     @Override
     public ActivationType activationType() {

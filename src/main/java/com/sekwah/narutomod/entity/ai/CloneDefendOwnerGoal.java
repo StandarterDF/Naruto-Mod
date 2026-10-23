@@ -1,6 +1,7 @@
 package com.sekwah.narutomod.entity.ai;
 
 import com.sekwah.narutomod.entity.ShadowCloneEntity;
+import com.sekwah.narutomod.friends.Friends;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.player.Player;
@@ -97,13 +98,27 @@ public class CloneDefendOwnerGoal extends Goal {
         return nearest;
     }
 
-    /** @return whether the candidate has taken the clone's caster as its current target. */
+    /**
+     * @return whether the candidate has taken the clone's caster as its current target and is close
+     *         enough to actually be a threat.
+     *
+     * <p>The line of sight check is what keeps a clone from picking a fight it cannot take part in.
+     * A zombie on the other side of a wall, or a mob in a sealed cave under the caster, can hold the
+     * caster as its target for as long as it likes - its own pathing simply never arrives - and a
+     * clone that went for it would stand at the wall swinging instead of staying useful. A mob that
+     * is hunting the caster and can be seen is one that can actually reach them, so that is the line
+     * drawn here. The clone still reacts to anything that hits it or its caster through the usual
+     * hurt triggers, so nothing is lost when the aggressor is behind cover: the fight just starts
+     * when it comes into view.</p>
+     */
     private boolean isHuntingOwner(Mob candidate) {
         Player owner = this.clone.getOwner();
         return owner != null
                 && candidate != this.clone
                 && candidate.isAlive()
                 && !this.clone.isAlliedTo(candidate)
-                && candidate.getTarget() == owner;
+                && !Friends.areFriends(owner, candidate)
+                && candidate.getTarget() == owner
+                && this.clone.hasLineOfSight(candidate);
     }
 }

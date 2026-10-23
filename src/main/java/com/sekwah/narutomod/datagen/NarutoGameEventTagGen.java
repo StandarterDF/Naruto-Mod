@@ -24,6 +24,7 @@ public class NarutoGameEventTagGen extends GameEventTagsProvider {
 
     protected void addTags() {
         soundDetected(NarutoGameEvents.JUTSU_CASTING.get());
+        soundDetected(NarutoGameEvents.JUTSU_BOOM.get());
         soundDetected(NarutoGameEvents.DOUBLE_JUMP.get());
         soundDetected(NarutoGameEvents.LEAP.get());
     }

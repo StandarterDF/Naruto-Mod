@@ -25,6 +25,14 @@ import net.minecraft.world.entity.player.Player;
  * caster they are left half blind for a minute and cannot arm it again for ten.</p>
  */
 public class SecondBreathAbility extends Ability implements Ability.Cooldown {
+    /**
+     * How far a cast of this technique carries as a game event. An ordinary cast.
+     */
+    @Override
+    public int noiseRadius() {
+        return 24;
+    }
+
 
     /** V V B */
     public static final long COMBO = 223L;

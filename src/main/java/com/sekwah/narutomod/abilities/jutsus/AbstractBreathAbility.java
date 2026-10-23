@@ -2,6 +2,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.world.WorldEnvironment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
@@ -12,11 +13,9 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -126,11 +125,20 @@ public abstract class AbstractBreathAbility extends Ability implements Ability.C
     /** What the breath does to the blocks in the cone. */
     protected abstract void affectBlocks(ServerLevel level, Player player, float mastery);
 
+    /** Which element this breath belongs to, for the world multipliers in {@link WorldEnvironment}. */
+    protected abstract WorldEnvironment.Element element();
+
+    /** How far this breath reaches, after the weather and biome have had their say. */
+    protected double range(Player player, float mastery) {
+        return Mth.lerp(mastery, RANGE_MIN, RANGE_MAX)
+                * WorldEnvironment.rangeMultiplier(player, element());
+    }
+
     /** The spray of particles itself, purely for looks. */
     protected void emitBreath(ServerLevel level, Player player, float mastery) {
         Vec3 eye = player.getEyePosition();
         Vec3 look = player.getViewVector(1.0f);
-        double range = Mth.lerp(mastery, RANGE_MIN, RANGE_MAX);
+        double range = range(player, mastery);
         ParticleOptions secondary = secondaryParticle();
         for (int step = 1; step <= VISUAL_STEPS; step++) {
             double dist = range * step / (double) VISUAL_STEPS;
@@ -145,23 +153,7 @@ public abstract class AbstractBreathAbility extends Ability implements Ability.C
 
     /** Everything alive caught in the cone, the caster and their allies excluded. */
     protected List<LivingEntity> coneEntities(ServerLevel level, Player player, double range) {
-        Vec3 eye = player.getEyePosition();
-        Vec3 look = player.getViewVector(1.0f);
-        Vec3 centre = eye.add(look.scale(range * 0.5d));
-        AABB area = new AABB(centre, centre).inflate(range);
-        List<LivingEntity> found = new ArrayList<>();
-        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, area,
-                entity -> entity != player && entity.isAlive() && !entity.isAlliedTo(player))) {
-            Vec3 toTarget = target.getEyePosition().subtract(eye);
-            if (toTarget.lengthSqr() > range * range) {
-                continue;
-            }
-            if (toTarget.normalize().dot(look) < CONE_COS) {
-                continue;
-            }
-            found.add(target);
-        }
-        return found;
+        return BreathCone.entities(level, player, range, CONE_COS);
     }
 
     /**
@@ -169,21 +161,6 @@ public abstract class AbstractBreathAbility extends Ability implements Ability.C
      * plain coordinate walk, so a consumer is free to change the world as it goes.
      */
     protected void forEachConeBlock(Player player, double range, Consumer<BlockPos> consumer) {
-        Vec3 eye = player.getEyePosition();
-        Vec3 look = player.getViewVector(1.0f);
-        Vec3 centre = eye.add(look.scale(range * 0.5d));
-        BlockPos origin = BlockPos.containing(centre.x, centre.y, centre.z);
-        int r = Mth.ceil(range);
-        for (BlockPos pos : BlockPos.betweenClosed(
-                origin.offset(-r, -r, -r), origin.offset(r, r, r))) {
-            Vec3 to = Vec3.atCenterOf(pos).subtract(eye);
-            if (to.lengthSqr() > range * range) {
-                continue;
-            }
-            if (to.normalize().dot(look) < CONE_COS) {
-                continue;
-            }
-            consumer.accept(pos.immutable());
-        }
+        BreathCone.forEachBlock(player, range, CONE_COS, consumer);
     }
 }

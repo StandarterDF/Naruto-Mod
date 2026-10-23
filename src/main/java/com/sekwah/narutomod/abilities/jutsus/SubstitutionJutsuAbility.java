@@ -3,6 +3,8 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.entity.SubstitutionLogEntity;
+import com.sekwah.narutomod.skills.SkillEffect;
+import com.sekwah.narutomod.skills.SkillTree;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -16,6 +18,14 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 public class SubstitutionJutsuAbility extends Ability implements Ability.Channeled {
+    /**
+     * How far a cast of this technique carries as a game event. Soft, heard only up close.
+     */
+    @Override
+    public int noiseRadius() {
+        return 8;
+    }
+
 
     public static int MAX_MARKER_DISTANCE = 70;
 
@@ -77,8 +87,12 @@ public class SubstitutionJutsuAbility extends Ability implements Ability.Channel
     }
 
     public void spawnLogAt(Player player, Vec3 pos, INinjaData ninjaData) {
-        ninjaData.setInvisibleTicks(5);
-        player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 5, 0, false, false));
+        // Five ticks of cover by default; the endurance branch can stretch the veil out a little so
+        // a substitution buys enough time to break line of sight and slip away.
+        int veil = 5 + (int) SkillTree.bonus(ninjaData.getSkillData().getUnlocked(),
+                SkillEffect.SUBSTITUTION_INVISIBILITY);
+        ninjaData.setInvisibleTicks(veil);
+        player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, veil, 0, false, false));
         SubstitutionLogEntity log = new SubstitutionLogEntity(player.level());
         log.setPos(pos.add(0, 1, 0));
         player.level().addFreshEntity(log);

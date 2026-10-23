@@ -4,6 +4,7 @@ import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.events.GenjutsuEvents;
 import com.sekwah.narutomod.util.Targeting;
+import com.sekwah.narutomod.world.WorldEnvironment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -28,6 +29,14 @@ import net.minecraft.world.entity.player.Player;
  * they make a fight break out somewhere else and walk away from it.</p>
  */
 public class GenjutsuJutsuAbility extends Ability implements Ability.Cooldown {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** C B C */
     public static final long COMBO = 131L;
@@ -37,6 +46,9 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Cooldown {
 
     /** How far the ninja can reach with the technique. */
     public static final double RANGE = 24.0d;
+
+    /** How much further a full moon lets an illusion reach. */
+    public static final double MOON_RANGE_BONUS = 0.25d;
 
     /** How long the illusion lasts, in ticks. */
     public static final int DURATION = 20 * 30;
@@ -110,7 +122,9 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Cooldown {
 
     /** @return the mob the ninja is looking at, or null when they are looking at anything else. */
     public static Mob findTarget(Player player) {
-        Entity lookedAt = Targeting.lookedAtEntity(player, RANGE);
+        // The full moon makes an illusion reach further; by day or on a new moon it is the plain range.
+        double range = RANGE * (1.0d + MOON_RANGE_BONUS * WorldEnvironment.moonClarity(player));
+        Entity lookedAt = Targeting.lookedAtEntity(player, range);
         if (lookedAt instanceof Mob mob && mob.isAlive()) {
             return mob;
         }

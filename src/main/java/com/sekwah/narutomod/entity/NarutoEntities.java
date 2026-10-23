@@ -2,6 +2,7 @@ package com.sekwah.narutomod.entity;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.entity.item.PaperBombEntity;
+import com.sekwah.narutomod.entity.jutsuprojectile.ChibakuTenseiEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.FireballJutsuEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.RasenshurikenJutsuEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.WaterBulletJutsuEntity;
@@ -9,6 +10,7 @@ import com.sekwah.narutomod.entity.projectile.ExplosiveKunaiEntity;
 import com.sekwah.narutomod.entity.projectile.KunaiEntity;
 import com.sekwah.narutomod.entity.projectile.SenbonEntity;
 import com.sekwah.narutomod.entity.projectile.ShurikenEntity;
+import com.sekwah.narutomod.entity.projectile.SmokeBombEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -72,6 +74,21 @@ public class NarutoEntities {
      */
     public static final RegistryObject<EntityType<SmokeCloudEntity>> SMOKE_CLOUD = register("smoke_cloud",
             EntityType.Builder.<SmokeCloudEntity>of(SmokeCloudEntity::new, MobCategory.MISC).fireImmune().sized(4.5F, 3.0F).clientTrackingRange(10).updateInterval(5));
+
+    /**
+     * The thrown smoke bomb. It does nothing itself but leave a cloud, which is the point: the
+     * consumable and the technique share one cloud entity.
+     */
+    public static final RegistryObject<EntityType<SmokeBombEntity>> SMOKE_BOMB = register("smoke_bomb",
+            EntityType.Builder.<SmokeBombEntity>of(SmokeBombEntity::new, MobCategory.MISC).sized(0.25F, 0.25F).clientTrackingRange(6).updateInterval(10));
+
+    /**
+     * The invisible centre of the Chibaku Tensei ball. It carries no model, so it only needs a box
+     * wide enough to cover the shell of debris it holds, and a tracking range that reaches the
+     * moment the ball comes down.
+     */
+    public static final RegistryObject<EntityType<ChibakuTenseiEntity>> CHIBAKU_TENSEI = register("chibaku_tensei",
+            EntityType.Builder.<ChibakuTenseiEntity>of(ChibakuTenseiEntity::new, MobCategory.MISC).fireImmune().sized(6.0F, 6.0F).clientTrackingRange(10).updateInterval(5));
 
     private static <T extends Entity> RegistryObject<EntityType<T>> register(String key, EntityType.Builder<T> builder) {
         return ENTITIES.register(key, () -> builder.build(key));

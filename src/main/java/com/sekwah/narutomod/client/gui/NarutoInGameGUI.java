@@ -27,6 +27,8 @@ public class NarutoInGameGUI {
     private final WorldMarkerGUI worldMarkerOverlay;
     private final SeninGUI seninOverlay;
     private final SensingGUI sensingOverlay;
+    private final SharinganGUI sharinganOverlay;
+    private final AbsorptionGUI absorptionOverlay;
     private final Minecraft minecraft;
 
     private final PlayerGUI[] overlays;
@@ -46,8 +48,11 @@ public class NarutoInGameGUI {
         this.worldMarkerOverlay = new WorldMarkerGUI(this.minecraft);
         this.seninOverlay = new SeninGUI(this.minecraft);
         this.sensingOverlay = new SensingGUI(this.minecraft);
+        this.sharinganOverlay = new SharinganGUI(this.minecraft);
+        this.absorptionOverlay = new AbsorptionGUI(this.minecraft);
 
-        this.overlays = new PlayerGUI[]{this.worldMarkerOverlay, this.substitutionOverlay, this.chakraOverlay, this.seninOverlay, this.sensingOverlay};
+        this.overlays = new PlayerGUI[]{this.worldMarkerOverlay, this.substitutionOverlay, this.chakraOverlay,
+                this.seninOverlay, this.sensingOverlay, this.sharinganOverlay, this.absorptionOverlay};
 
         MinecraftForge.EVENT_BUS.addListener(this::renderGameOverlay);
         MinecraftForge.EVENT_BUS.addListener(this::clientTickEvent);

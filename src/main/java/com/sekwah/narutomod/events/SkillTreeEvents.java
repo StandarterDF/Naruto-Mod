@@ -46,8 +46,9 @@ public class SkillTreeEvents {
         }
         player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
             Set<ResourceLocation> unlocked = ninjaData.getSkillData().getUnlocked();
+            float rounded = SkillTree.bonus(unlocked, SkillEffect.ALL_ROUNDED);
             apply(player, Attributes.MAX_HEALTH, HEALTH_ID, HEALTH_NAME,
-                    SkillTree.bonus(unlocked, SkillEffect.MAX_HEALTH));
+                    SkillTree.bonus(unlocked, SkillEffect.MAX_HEALTH) + rounded);
             apply(player, Attributes.ARMOR, ARMOR_ID, ARMOR_NAME,
                     SkillTree.bonus(unlocked, SkillEffect.ARMOR));
             apply(player, Attributes.MOVEMENT_SPEED, SPEED_ID, SPEED_NAME,

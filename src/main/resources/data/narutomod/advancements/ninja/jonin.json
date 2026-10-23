@@ -1,0 +1,26 @@
+{
+  "display": {
+    "icon": {
+      "item": "narutomod:anbu_armor"
+    },
+    "title": {
+      "translate": "advancements.narutomod.ninja.jonin.title"
+    },
+    "description": {
+      "translate": "advancements.narutomod.ninja.jonin.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "jonin": {
+      "trigger": "narutomod:ninja_rank",
+      "conditions": {
+        "rank": "jonin"
+      }
+    }
+  },
+  "parent": "narutomod:ninja/chunin"
+}

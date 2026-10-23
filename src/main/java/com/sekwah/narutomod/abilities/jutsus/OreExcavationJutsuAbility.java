@@ -43,8 +43,22 @@ import java.util.Set;
  * {@link #PER_BLOCK}: a caster who finds a rich seam pays for it and a caster who finds nothing has
  * only paid for the attempt. Run out of chakra half way and the rest of the vein stays in the
  * ground, to be finished with a second cast.</p>
+ *
+ * <p>It breaks blocks outright rather than digging them faster, so Mining Fatigue does not slow it
+ * down: the old curse drains a caster's arm, and this technique does not use the arm's strength, only
+ * its tool. That is a rule of the mod - chakra beats the curse - and not an accident of the
+ * implementation, so do not route this through {@code Player#getDigSpeed} or a fatigue-scaled delay
+ * later on.</p>
  */
 public class OreExcavationJutsuAbility extends Ability {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** C V V C */
     public static final long COMBO = 1221L;

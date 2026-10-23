@@ -2,6 +2,8 @@ package com.sekwah.narutomod.capabilities;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.jutsus.SenriganFlightAbility;
+import com.sekwah.narutomod.abilities.jutsus.SenriganSightAbility;
 import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import com.sekwah.narutomod.item.ChakraBatteryItem;
@@ -41,10 +43,9 @@ public class NinjaCapabilityHandler {
             Player player = event.player;
             player.getCapability(NINJA_DATA).ifPresent(data -> {
                 if(event.side.isServer()) {
-                    if(player.isCreative()) {
-                        data.setChakra(data.getMaxChakra());
-                        data.setStamina(data.getMaxStamina());
-                    }
+                    // Creative no longer refills the pool every tick: it regenerates ten times as
+                    // fast instead (see NinjaData#updateDataServer), so a creative caster still has
+                    // to pay for what they cast and gets the bar back quickly rather than instantly.
                     data.updateDataServer(player);
                     if(!player.isSpectator()) {
                         // Toggles are paid for tick by tick, so a battery in the ninja's inventory
@@ -98,6 +99,11 @@ public class NinjaCapabilityHandler {
                     dispelMeditationClones(event.getEntity(), original);
                     future.getMeditationData().clear();
                     future.setChakraCapacityBonus(0f);
+                    // The Senrigan's borrowed flight must not be inherited by the new body: the
+                    // toggle set is copied over, and without this a respawned caster would still be
+                    // marked as flying.
+                    SenriganFlightAbility.clearOnDeath(event.getEntity(), future);
+                    SenriganSightAbility.clear(event.getEntity());
                 }
             });
         });

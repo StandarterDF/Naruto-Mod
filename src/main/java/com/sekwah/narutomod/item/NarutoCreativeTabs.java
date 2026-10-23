@@ -27,6 +27,7 @@ public class NarutoCreativeTabs {
                 output.accept(NarutoItems.EXPLOSIVE_KUNAI.get());
                 output.accept(NarutoItems.SHURIKEN.get());
                 output.accept(NarutoBlocks.ITEM_PAPER_BOMB.get());
+                output.accept(NarutoItems.SMOKE_BOMB.get());
                 output.accept(NarutoItems.KATANA.get());
                 output.accept(NarutoItems.SAMEHADA.get());
                 output.accept(NarutoItems.KUBIKIRIBOCHO.get());
@@ -86,8 +87,30 @@ public class NarutoCreativeTabs {
                 output.accept(NarutoItems.ARMOR_PLATE_GREEN.get());
                 output.accept(NarutoItems.MILITARY_PILLS.get());
                 output.accept(NarutoItems.RAMEN.get());
+                output.accept(NarutoItems.RAMEN_MISO.get());
+                output.accept(NarutoItems.RAMEN_PORK.get());
+                output.accept(NarutoItems.RAMEN_SEAFOOD.get());
+                output.accept(NarutoItems.ONIGIRI.get());
+                output.accept(NarutoItems.DANGO.get());
+                output.accept(NarutoItems.CURRY.get());
                 output.accept(NarutoItems.CHAKRA_SEAL.get());
+                output.accept(NarutoBlocks.ITEM_SENTRY_SEAL.get());
                 output.accept(NarutoItems.CHAKRA_BATTERY.get());
+                output.accept(NarutoItems.CHAKRA_CRYSTAL.get());
+                output.accept(NarutoItems.CHAKRA_COMPASS.get());
+                output.accept(NarutoItems.SCROLL_RASENGAN.get());
+                output.accept(NarutoItems.SCROLL_RASENSHURIKEN.get());
+                output.accept(NarutoItems.SCROLL_EIGHT_GATES.get());
+                output.accept(NarutoItems.SCROLL_KAMUI.get());
+                output.accept(NarutoItems.SCROLL_SAGE_MODE.get());
+                output.accept(NarutoItems.SCROLL_KIRIN.get());
+                output.accept(NarutoItems.SCROLL_EARTH_WALL.get());
+                output.accept(NarutoItems.SCROLL_RINNEGAN.get());
+                output.accept(NarutoItems.SCROLL_CHIBAKU_TENSEI.get());
+                output.accept(NarutoItems.SCROLL_SHARINGAN.get());
+                output.accept(NarutoItems.SCROLL_BYAKUGAN.get());
+                output.accept(NarutoItems.SCROLL_JOUGAN.get());
+                output.accept(NarutoItems.TREASURE_MAP.get());
             }).title(Component.translatable("narutomod_materials"))::build);
 
 

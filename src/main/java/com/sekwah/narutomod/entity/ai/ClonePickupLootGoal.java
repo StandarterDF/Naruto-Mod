@@ -19,6 +19,10 @@ import java.util.Map;
  * {@link ShadowCloneEntity#collect(ItemStack)}. If the caster is not around to take it, it waits in
  * the clone's own bag and is handed over when the clone pops, so nothing is ever lost.</p>
  *
+ * <p>Nothing is picked up before the caster has learned to open the supply chest, though: a clone
+ * hoovering items into a chest its caster cannot reach is worse than leaving them on the ground. The
+ * whole goal simply does not run until then, see {@link ShadowCloneEntity#canGatherLoot()}.</p>
+ *
  * <p>The goal sits at priority 0, above every other goal a clone has, because of how vanilla
  * {@code GoalSelector} hands out flags: {@code WrappedGoal#canBeReplacedBy} lets a goal take a flag
  * from a running one only when its priority number is <em>strictly</em> smaller, so a loot goal
@@ -118,9 +122,11 @@ public class ClonePickupLootGoal extends Goal {
         return true;
     }
 
-    /** Only the server picks things up, and a meditating clone stays where it was put. */
+    /** Only the server picks things up, and only once the caster can actually store what is found. */
     private boolean applies() {
-        return !this.clone.level().isClientSide && !this.clone.isMeditating();
+        return !this.clone.level().isClientSide
+                && !this.clone.isMeditating()
+                && this.clone.canGatherLoot();
     }
 
     @Override

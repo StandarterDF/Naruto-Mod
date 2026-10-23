@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " R ",
+    "RCR",
+    " R "
+  ],
+  "key": {
+    "R": { "item": "minecraft:redstone" },
+    "C": { "item": "narutomod:chakra_crystal" }
+  },
+  "result": {
+    "item": "narutomod:chakra_battery",
+    "count": 1
+  }
+}

@@ -1,5 +1,6 @@
 package com.sekwah.narutomod.entity.jutsuprojectile;
 
+import com.sekwah.narutomod.friends.Friends;
 import com.sekwah.narutomod.damagetypes.NarutoDamageTypes;
 import com.sekwah.narutomod.entity.NarutoEntities;
 import com.sekwah.narutomod.entity.projectile.AbstractNonGlowingHurtingProjectile;
@@ -66,6 +67,9 @@ public class RasenshurikenJutsuEntity extends AbstractNonGlowingHurtingProjectil
     /** How far the hold lifts its catch every tick. */
     private static final double CARRY_RISE = 0.4d;
 
+    /** How far the hold carries its catch forward every tick, along the disc's flight. */
+    private static final double CARRY_FORWARD = 0.45d;
+
     /** How long the storm of blasts lasts once the disc stops rising. */
     private static final int DETONATION_TICKS = 30;
 
@@ -98,6 +102,14 @@ public class RasenshurikenJutsuEntity extends AbstractNonGlowingHurtingProjectil
     /** How far into the spin the disc is, advanced on both sides so it can be drawn spinning. */
     private int spinTicks;
     private int prevSpinTicks;
+
+    /**
+     * The direction the disc was flying when it caught someone, flattened to the ground plane. The
+     * hold keeps carrying the catch that way while lifting it, instead of leaving it to rise on the
+     * spot - the technique is a throw, and the victim is supposed to be taken where it was going.
+     */
+    private double carryDirX;
+    private double carryDirZ;
 
     /**
      * The charge the caster put in, 0.7 for a barely held disc up to 1.0 for a full one. Only ever
@@ -194,26 +206,29 @@ public class RasenshurikenJutsuEntity extends AbstractNonGlowingHurtingProjectil
     }
 
     /**
-     * The hold: rise for a while, then blow up. Both sides put the disc over the target every tick,
-     * but only the server lifts and explodes - the client is following along a step behind it.
+     * The hold: carry the catch forward and up, then blow up. Both sides put the disc over the
+     * target every tick, but only the server moves and explodes - the client is following along a
+     * step behind it.
      */
     private void tickCarry(Entity carried) {
-        this.setPos(carried.getX(), carried.getY() + carried.getBbHeight() * 0.5d, carried.getZ());
         this.setDeltaMovement(Vec3.ZERO);
         this.xPower = 0.0D;
         this.yPower = 0.0D;
         this.zPower = 0.0D;
 
         if (!(this.level() instanceof ServerLevel level)) {
+            this.follow(carried);
             return;
         }
         this.carryTicks++;
         double midY = carried.getY() + carried.getBbHeight() * 0.5d;
 
         if (this.carryTicks <= CARRY_TICKS) {
-            // Carrying them up. Teleporting rather than pushing, because a player's own client would
-            // otherwise just walk back out of it.
-            carried.teleportTo(carried.getX(), carried.getY() + CARRY_RISE, carried.getZ());
+            // Carrying them onward and up. Teleporting rather than pushing, because a player's own
+            // client would otherwise just walk back out of it.
+            carried.teleportTo(carried.getX() + this.carryDirX * CARRY_FORWARD,
+                    carried.getY() + CARRY_RISE,
+                    carried.getZ() + this.carryDirZ * CARRY_FORWARD);
             carried.fallDistance = 0.0f;
             level.sendParticles(ParticleTypes.CLOUD, carried.getX(), midY, carried.getZ(),
                     6, 0.8d, 0.6d, 0.8d, 0.02d);
@@ -221,6 +236,7 @@ public class RasenshurikenJutsuEntity extends AbstractNonGlowingHurtingProjectil
                 level.sendParticles(ParticleTypes.SWEEP_ATTACK, carried.getX(), midY, carried.getZ(),
                         2, 1.0d, 0.5d, 1.0d, 0.0d);
             }
+            this.follow(carried);
             return;
         }
 
@@ -232,7 +248,14 @@ public class RasenshurikenJutsuEntity extends AbstractNonGlowingHurtingProjectil
         }
         if (this.carryTicks >= CARRY_TICKS + DETONATION_TICKS) {
             this.detonate(level, carried);
+            return;
         }
+        this.follow(carried);
+    }
+
+    /** Keeps the disc hovering over whatever it is carrying, on both sides. */
+    private void follow(Entity carried) {
+        this.setPos(carried.getX(), carried.getY() + carried.getBbHeight() * 0.5d, carried.getZ());
     }
 
     /** One volley of the storm: a couple of small blasts scattered around the catch. */
@@ -269,7 +292,8 @@ public class RasenshurikenJutsuEntity extends AbstractNonGlowingHurtingProjectil
     /** Whether the disc should scoop this hit up rather than simply coming apart on it. */
     private boolean canCarry(LivingEntity target) {
         Entity owner = this.getOwner();
-        if (target == owner || (owner != null && target.isAlliedTo(owner))) {
+        if (target == owner || (owner != null && target.isAlliedTo(owner))
+                || Friends.areFriends(owner, target)) {
             return false;
         }
         return !target.isSpectator() && !(target instanceof Player player && player.isCreative());
@@ -279,6 +303,18 @@ public class RasenshurikenJutsuEntity extends AbstractNonGlowingHurtingProjectil
     private void capture(LivingEntity target) {
         this.carryTicks = 0;
         this.entityData.set(DATA_CARRIED_ID, target.getId());
+        // Remember where the disc was heading before its motion is zeroed: the hold carries the
+        // catch on along that line rather than letting it rise straight up on the spot.
+        Vec3 motion = this.getDeltaMovement();
+        if (motion.lengthSqr() < 1.0E-4d) {
+            motion = new Vec3(this.xPower, this.yPower, this.zPower);
+        }
+        Vec3 flat = new Vec3(motion.x, 0.0d, motion.z);
+        if (flat.lengthSqr() > 1.0E-4d) {
+            flat = flat.normalize();
+            this.carryDirX = flat.x;
+            this.carryDirZ = flat.z;
+        }
         this.setDeltaMovement(Vec3.ZERO);
         if (this.level() instanceof ServerLevel level) {
             level.playSound(null, target.getX(), target.getY(), target.getZ(),
@@ -363,7 +399,7 @@ public class RasenshurikenJutsuEntity extends AbstractNonGlowingHurtingProjectil
         if (entity == owner || entity == this) {
             return false;
         }
-        return owner == null || !entity.isAlliedTo(owner);
+        return owner == null || (!entity.isAlliedTo(owner) && !Friends.areFriends(owner, entity));
     }
 
     @Override

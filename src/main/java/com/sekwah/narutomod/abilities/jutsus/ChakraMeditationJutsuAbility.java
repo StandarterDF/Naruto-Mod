@@ -35,6 +35,14 @@ import java.util.HashMap;
  * halved cooldowns is a long time to make use of one.</p>
  */
 public class ChakraMeditationJutsuAbility extends ShadowCloneJutsuAbility {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** Chakra pushed into the caster every tick, per meditating clone in range. */
     private static final float CHAKRA_PER_CLONE = 0.2f;
@@ -44,7 +52,10 @@ public class ChakraMeditationJutsuAbility extends ShadowCloneJutsuAbility {
      * the configured maximum. This is where most of the refill comes from: the caster can bank
      * chakra they would not otherwise be able to hold at all.
      */
-    private static final float CAPACITY_PER_CLONE = 100.0f;
+    private static final float CAPACITY_PER_CLONE = 50.0f;
+
+    /** How often (in ticks) a meditating clone hums and sheds a few motes. */
+    private static final int AMBIENCE_INTERVAL = 80;
 
     public ChakraMeditationJutsuAbility() {
         super(CHAKRA_MEDITATION_SETTINGS);
@@ -69,12 +80,14 @@ public class ChakraMeditationJutsuAbility extends ShadowCloneJutsuAbility {
 
             int linked = 0;
             int distant = 0;
+            java.util.List<net.minecraft.world.phys.Vec3> glowing = new ArrayList<>();
             for (MeditationData.Link link : links.getLinks().values()) {
                 if (!here.equals(link.dimension())) {
                     continue;
                 }
                 if (player.position().distanceTo(link.position()) <= range) {
                     linked++;
+                    glowing.add(link.position());
                 } else {
                     distant++;
                 }
@@ -87,6 +100,7 @@ public class ChakraMeditationJutsuAbility extends ShadowCloneJutsuAbility {
             // The extra capacity goes up and down with the clones, whether or not there is any to
             // draw on right now.
             ninjaData.setChakraCapacityBonus(CAPACITY_PER_CLONE * linked + passive);
+            ambience(player, glowing);
             if (linked <= 0) {
                 return;
             }
@@ -100,6 +114,27 @@ public class ChakraMeditationJutsuAbility extends ShadowCloneJutsuAbility {
             }
             fastForwardCooldowns(ninjaData);
         });
+    }
+
+    /**
+     * The quiet side of meditation: every few seconds a low hum comes off the sitting clones and a
+     * few motes of chakra drift up from them, so a camp with clones posted around it looks and
+     * sounds alive. Purely cosmetic and switchable - it is the clones that carry it, not the caster.
+     */
+    private static void ambience(Player player, java.util.List<net.minecraft.world.phys.Vec3> positions) {
+        if (!NarutoConfig.meditationAmbienceEnabled || positions.isEmpty()
+                || !(player.level() instanceof net.minecraft.server.level.ServerLevel level)) {
+            return;
+        }
+        if (level.getGameTime() % AMBIENCE_INTERVAL != 0) {
+            return;
+        }
+        for (net.minecraft.world.phys.Vec3 at : positions) {
+            level.playSound(null, at.x, at.y, at.z, net.minecraft.sounds.SoundEvents.BEACON_AMBIENT,
+                    net.minecraft.sounds.SoundSource.PLAYERS, 0.2f, 1.35f);
+            level.sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANT,
+                    at.x, at.y + 1.1d, at.z, 4, 0.45d, 0.5d, 0.45d, 0.0d);
+        }
     }
 
     /**

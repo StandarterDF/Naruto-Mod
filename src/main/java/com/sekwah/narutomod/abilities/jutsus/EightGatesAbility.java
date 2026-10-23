@@ -36,6 +36,14 @@ import net.minecraft.world.entity.player.Player;
  * every tick while the gates are open.</p>
  */
 public class EightGatesAbility extends Ability implements Ability.Channeled {
+    /**
+     * How far a cast of this technique carries as a game event. A blast, heard a long way off.
+     */
+    @Override
+    public int noiseRadius() {
+        return 48;
+    }
+
 
     /** V B B B - tap to open the next gate, hold the last key to seal them again. */
     public static final long COMBO = 2333L;

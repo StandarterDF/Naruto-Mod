@@ -74,13 +74,13 @@
       <h1>Настройки</h1>
       <p class="doc__lead">
         Весь мод настраивается <strong>одним файлом</strong> <code>config/naruto-mod.toml</code> —
-        в нём 41 опция. Здесь перечислены все, по разделам, с точными значениями по умолчанию.
+        в нём 43 опции. Здесь перечислены все, по разделам, с точными значениями по умолчанию.
         Цены и длительности самих техник в конфиг не выведены: это константы кода, их правят только
         в сборке.
       </p>
       <div class="doc__meta">
-        <span>1 файл · 41 опция</span>
-        <span>8 разделов</span>
+        <span>1 файл · 43 опции</span>
+        <span>9 разделов</span>
         <span>Правки — без перезапуска</span>
         <span>Ключи: C / V / B / X / J</span>
       </div>
@@ -97,7 +97,10 @@
         <li class="toc-l2"><a href="#mining">Копание</a></li>
         <li class="toc-l2"><a href="#stances">Стойки и уловки</a></li>
         <li class="toc-l2"><a href="#weapons">Оружие и взрывы</a></li>
+        <li class="toc-l2"><a href="#world">Мир и механики</a></li>
         <li class="toc-l2"><a href="#kamui">Камуи</a></li>
+        <li class="toc-l2"><a href="#dojutsu">Додзюцу</a></li>
+        <li class="toc-l2"><a href="#friends">Друзья</a></li>
         <li class="toc-l2"><a href="#client">Интерфейс</a></li>
         <li class="toc-l3"><a href="#bars">Восемь дизайнов полоски</a></li>
       </ol>
@@ -132,6 +135,10 @@
               <td>Радиусы взрывов и пороги клавиш каста.</td></tr>
             <tr><td class="mono">[server.kamui]</td><td class="num">2</td>
               <td>Карманное измерение.</td></tr>
+            <tr><td class="mono">[server.dojutsu]</td><td class="num">6</td>
+              <td>Пять глаз и Чибаку Тенсэй: Риннеган, Шаринган, Бьякуган, Джоуган, Сенриган.</td></tr>
+            <tr><td class="mono">[server.friends]</td><td class="num">1</td>
+              <td>Система друзей.</td></tr>
             <tr><td class="mono">[client.ui]</td><td class="num">1</td>
               <td>Дизайн полоски чакры.</td></tr>
           </tbody>
@@ -141,7 +148,7 @@
         <div class="callout__title">Чего в конфиге нет</div>
         <p>Расход чакры и КД техник, время жизни клонов, слив здоровья у Восьми врат, радиусы
           рудокопа и дыханий — всё это константы кода. В файле живут только ресурсы игрока, освоение,
-          взрывы, пороги клавиш, Камуи и интерфейс.</p>
+          взрывы, пороги клавиш, Камуи, друзья и интерфейс.</p>
       </div>
     </section>
 
@@ -228,7 +235,7 @@
             <tr>
               <td class="mono">maxChakra</td>
               <td class="num">25</td>
-              <td>База максимальной чакры. К ней прибавляются бонусы: <strong>+50</strong> от корня
+              <td>База максимальной чакры. К ней прибавляются бонусы: <strong>+40</strong> от корня
                 <a href="skills.html">дерева скилов</a>, прибавки ветвей, броня и медитирующие клоны,
                 поэтому «настоящий» максимум в игре заметно выше. Итог считает
                 <code>getMaxChakra()</code>.</td>
@@ -253,8 +260,9 @@
             </tr>
             <tr>
               <td class="mono">maxSubstitutions</td>
-              <td class="num">3</td>
-              <td>Сколько зарядов у техники «Замещение». В креативе замена бесплатна.</td>
+              <td class="num">1</td>
+              <td>Базовый максимум зарядов у техники «Замещение». Узлы дерева прибавляются к нему
+                (до <strong>5</strong>). В креативе замена бесплатна.</td>
             </tr>
             <tr>
               <td class="mono">substitutionRegenTime</td>
@@ -365,7 +373,7 @@
             </tr>
             <tr>
               <td class="mono">meditationPassiveCapacity</td>
-              <td class="num">50</td>
+              <td class="num">25</td>
               <td>Сколько чакры ёмкости добавляет такой «дальний» клон.</td>
             </tr>
           </tbody>
@@ -519,6 +527,111 @@
       </div>
     </section>
 
+    <section id="world">
+      <h2 id="s-world">Мир и механики</h2>
+      <p>Раздел <code>[server.player.world]</code> — то, как мир реагирует на ниндзя: погода и стихии,
+        сон, шум техник, добыча в сундуках, звания. Почти всё здесь можно выключить, не трогая сами
+        техники.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Опция</th><th class="num">По умолчанию</th><th>Что делает</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">environmentEnabled</td>
+              <td class="num">true</td>
+              <td>Влияют ли погода, биом и измерение на дыхания и на скорость сбора природной энергии.</td>
+            </tr>
+            <tr>
+              <td class="mono">scrollLootEnabled</td>
+              <td class="num">true</td>
+              <td>Подмешивает свитки и снаряжение мода в ванильные сундуки. <code>false</code> оставляет
+                сундуки полностью ванильными; свитки тогда придётся выдать командой.</td>
+            </tr>
+            <tr>
+              <td class="mono">sleepRestoresChakra</td>
+              <td class="num">true</td>
+              <td>Полностью восстанавливает чакру и сенин-ману после сна до утра. Считается только
+                естественное пробуждение, не от урона.</td>
+            </tr>
+            <tr>
+              <td class="mono">chakraFlowEnabled</td>
+              <td class="num">true</td>
+              <td>Даёт короткий эффект «поток» (ускоренный пассивный приток) после того, как полоса
+                чакры заполнена вручную.</td>
+            </tr>
+            <tr>
+              <td class="mono">chakraExhaustionEnabled</td>
+              <td class="num">true</td>
+              <td>Замедляет кастера на почти пустой чакре. Мягкий штраф: снимается сам, как только пул
+                восстановился.</td>
+            </tr>
+            <tr>
+              <td class="mono">jutsuLoudnessEnabled</td>
+              <td class="num">true</td>
+              <td>Слышит ли мир касты техник (скалк-сенсоры, шрикеры, Хранитель, уши мобов). Тихие
+                техники молчат в любом случае.</td>
+            </tr>
+            <tr>
+              <td class="mono">meditationAmbienceEnabled</td>
+              <td class="num">true</td>
+              <td>Гудят ли медитирующие клоны и светятся ли мягким светом. Чисто косметика.</td>
+            </tr>
+            <tr>
+              <td class="mono">lightningChargesBatteries</td>
+              <td class="num">true</td>
+              <td>Молния в громоотвод подзаряжает чакра-батареи рядом. Единственный бесплатный способ
+                зарядить батарею.</td>
+            </tr>
+            <tr>
+              <td class="mono">markerRespawnEnabled</td>
+              <td class="num">true</td>
+              <td>Стоящее бревно-метка работает точкой возрождения, если у ниндзя нет кровати или якоря.
+                Кровать и якорь всегда важнее.</td>
+            </tr>
+            <tr>
+              <td class="mono">sentrySealRadius</td>
+              <td class="num">16 <span class="muted small">(4–64)</span></td>
+              <td>Радиус, в котором сторожевой печать видит враждебных мобов и держит зону чистой от
+                спавна.</td>
+            </tr>
+            <tr>
+              <td class="mono">sentrySealSuppressesSpawns</td>
+              <td class="num">false</td>
+              <td>Запрещает враждебным мобам спавниться внутри радиуса печати. По умолчанию выключено;
+                спавнеры не затрагиваются.</td>
+            </tr>
+            <tr>
+              <td class="mono">hengeReactionsEnabled</td>
+              <td class="num">false</td>
+              <td>Реагируют ли мобы на личину. Облик монстра заставляет жителей бежать, а железных
+                големов — брать носителя в цель. По умолчанию выключено: это меняет поведение AI мира.</td>
+            </tr>
+            <tr>
+              <td class="mono">elementalStatesEnabled</td>
+              <td class="num">true</td>
+              <td>Оставляют ли дыхания состояния: промокшее существо не загорается и получает меньше
+                урона огнём, холодная вода замедляет, пока существо не согреется.</td>
+            </tr>
+            <tr>
+              <td class="mono">ninjaRanksEnabled</td>
+              <td class="num">true</td>
+              <td>Существуют ли звания Генин→S-ранг. Ранг считается по изученным узлам дерева и вехам за
+                боссов и открывается как ачивка; выключение убирает всю лестницу.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout--note">
+        <div class="callout__title">Свитки без добычи</div>
+        <p>Если <code>scrollLootEnabled = false</code>, техники, которым нужен свиток (Расэнсюрикен,
+          Камуи, Режим Мудреца, Стена Земли, Кирин), можно получить только командой
+          <code>/give @s narutomod:scroll_kirin</code> и т. п. Кирин в дереве нет вовсе — она
+          открывается только свитком.</p>
+      </div>
+    </section>
+
     <section id="kamui">
       <h2 id="s-kamui">Камуи</h2>
       <p>Раздел <code>[server.kamui]</code> — карманное измерение целиком. Устройство самого мира —
@@ -549,6 +662,92 @@
         <div class="callout__title">Не выключайте Камуи, пока кто-то внутри</div>
         <p>Выход из пустоты — это тот же каст, поэтому при <code>kamuiEnabled = false</code>
           выбраться из измерения нечем: игрок внутри окажется заперт, пока настройку не вернут.</p>
+      </div>
+    </section>
+
+    <section id="dojutsu">
+      <h2 id="s-dojutsu">Додзюцу</h2>
+      <p>Раздел <code>[server.dojutsu]</code> — глазные стойки и техники, построенные на них.
+        Подробности механик — на странице <a href="techniques.html#dojutsu">Техники</a>.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Опция</th><th class="num">По умолчанию</th><th>Что делает</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">rinneganEnabled</td>
+              <td class="num">true</td>
+              <td>Разрешает открывать Риннеган. При <code>false</code> и стойка, и Вселенская сила
+                отказывают сообщением «отключён на этом сервере»; Чибаку Тенсэй и Поглощение Момошики
+                наследуют запрет, потому что требуют открытого глаза (своей опции у поглощения нет).</td>
+            </tr>
+            <tr>
+              <td class="mono">chibakuTenseiEnabled</td>
+              <td class="num">true</td>
+              <td>Разрешает Чибаку Тенсэй отдельно от глаза: можно оставить Риннеган игрокам, но
+                убрать самую разрушительную технику.</td>
+            </tr>
+            <tr>
+              <td class="mono">sharinganEnabled</td>
+              <td class="num">true</td>
+              <td>Разрешает открывать Шаринган. При <code>false</code> отказывают и стойка, и
+                Аматэрасу, потому что оно требует открытого глаза.</td>
+            </tr>
+            <tr>
+              <td class="mono">byakuganEnabled</td>
+              <td class="num">true</td>
+              <td>Разрешает открывать Бьякуган и, вместе с ним, Вращение небес (оно требует глаза).</td>
+            </tr>
+            <tr>
+              <td class="mono">jouganEnabled</td>
+              <td class="num">true</td>
+              <td>Разрешает открывать Джоуган, а с ним — Пространственный шаг и Разрыв чакры.</td>
+            </tr>
+            <tr>
+              <td class="mono">senriganEnabled</td>
+              <td class="num">true</td>
+              <td>Разрешает открывать Сенриган и, вместе с ним, Взор Сенригана (вселение в своего клона)
+                и Полёт Сенригана.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout--note">
+        <div class="callout__title">Блоки не страдают</div>
+        <p>Взрывы Чибаку Тенсэй всегда идут с <code>ExplosionInteraction.NONE</code>: техника вырывает
+          землю и швыряет её, но не подрывает постройки. Это не настройка, а решение кода — иначе одна
+          каст-цепочка стирала бы деревню.</p>
+      </div>
+    </section>
+
+    <section id="friends">
+      <h2 id="s-friends">Друзья</h2>
+      <p>Раздел <code>[server.friends]</code>. Дружба — двусторонний договор между игроками: техники
+        мода не задевают друга, а клоны считают друзей кастера своими. Список открывается кнопкой
+        <strong>«Друзья»</strong> справа снизу в дереве скилов.</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Опция</th><th class="num">По умолчанию</th><th>Что делает</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">friendsEnabled</td>
+              <td class="num">true</td>
+              <td>Включает систему друзей целиком. При <code>false</code> экран отвечает «друзья
+                отключены на этом сервере», а запросы не сохраняются. Записи дружб при этом
+                <strong>не стираются</strong>: выключение только прячет механику, включение
+                возвращает всё как было.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout--note">
+        <div class="callout__title">Дружба живёт в мире</div>
+        <p>Список хранится в <code>saved_data/narutomod_friends.dat</code> мира, а не в данных игрока.
+          Поэтому удаление из друзей срабатывает, даже если второй игрок офлайн, а запрос, отправленный
+          офлайн-игроку, ждёт его следующего входа.</p>
       </div>
     </section>
 

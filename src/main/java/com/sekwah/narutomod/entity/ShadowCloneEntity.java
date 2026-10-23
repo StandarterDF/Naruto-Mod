@@ -16,6 +16,8 @@ import com.sekwah.narutomod.entity.ai.WorkerHarvestGoal;
 import com.sekwah.narutomod.entity.ai.WorkerHuntGoal;
 import com.sekwah.narutomod.entity.ai.WorkerMineGoal;
 import com.sekwah.narutomod.entity.ai.WorkerTorchGoal;
+import com.sekwah.narutomod.friends.Friends;
+import com.sekwah.narutomod.skills.SkillTree;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -160,6 +162,12 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
      * none. A clone only ever shoots while this stack still has arrows in it.
      */
     private ItemStack ammo = ItemStack.EMPTY;
+
+    /**
+     * The most arrows a copied quiver may hold. {@code ItemStack#save} writes the count as a single
+     * byte, so anything above this would wrap into a negative stack after a reload.
+     */
+    private static final int MAX_COPIED_ARROWS = 127;
 
     /**
      * True when the caster was holding a paper bomb at spawn time. Such a clone goes off when a
@@ -329,7 +337,11 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
             }
         }
         if (!arrows.isEmpty() && total > 0) {
-            arrows.setCount(total);
+            // A quiver is a plain stack carried in the clone's data, and stacks are written with a
+            // byte-sized count. Summing nine stacks of arrows can pass 127, which would wrap at the
+            // next save and leave the clone with no arrows at all, so the copy is capped at what a
+            // stack can actually hold on disk.
+            arrows.setCount(Math.min(total, MAX_COPIED_ARROWS));
             this.ammo = arrows;
         }
     }
@@ -645,7 +657,12 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
             return true;
         }
         if (entity instanceof ShadowCloneEntity other) {
-            return this.getOwnerUUID().equals(other.getOwnerUUID());
+            return this.getOwnerUUID().equals(other.getOwnerUUID())
+                    || Friends.areFriends(this.getOwner(), other.getOwner());
+        }
+        if (entity instanceof Player) {
+            // A caster's friends are the caster's side: clone bodies and clone sights spare them.
+            return Friends.areFriends(this.getOwner(), entity);
         }
         return false;
     }
@@ -792,6 +809,10 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
      */
     @Override
     public void setTarget(LivingEntity target) {
+        // A friend of the caster is never a target, not even in self defence against that friend.
+        if (target != null && Friends.areFriends(this.getOwner(), target)) {
+            return;
+        }
         if (this.isWorker() && target != null
                 && (target != this.getLastHurtByMob() || this.isAlliedTo(target))) {
             return;
@@ -876,9 +897,10 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     }
 
     /**
-     * Takes what a worker just picked up. It goes straight into the caster's supply chest when they
-     * have one; anything that will not fit (or a caster who is not around) falls back into the bag,
-     * which is handed over when the worker pops, so nothing is lost either way.
+     * Takes what a worker just picked up. It goes straight into the caster's supply chest once the
+     * caster has learned to open it; anything that will not fit - or a caster who is not around, or
+     * has not learned the chest yet - falls back into the bag, which is handed over when the worker
+     * pops, so nothing is lost either way.
      */
     public void collect(ItemStack stack) {
         if (stack.isEmpty()) {
@@ -891,16 +913,35 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
     }
 
     /**
+     * Whether this clone is allowed to gather loot at all.
+     *
+     * <p>Nothing is picked up until the caster has learned to open the supply chest: a clone hoovering
+     * items into a chest its caster cannot reach is worse than leaving them on the ground, where the
+     * caster can still walk over and take them. A clone with no caster around gathers nothing either,
+     * since there is nobody to hand it to.</p>
+     */
+    public boolean canGatherLoot() {
+        Player owner = this.getOwner();
+        if (owner == null) {
+            return false;
+        }
+        INinjaData ninjaData = owner.getCapability(NinjaCapabilityHandler.NINJA_DATA).orElse(null);
+        return ninjaData != null
+                && SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), "ability:storage_chest");
+    }
+
+    /**
      * Puts one stack into the caster's supply chest, directly. The chest lives in the caster's own
      * data rather than in a block, so there is no distance or chunk to worry about.
      *
-     * @return what would not fit, or the whole stack when the caster is not around.
+     * @return what would not fit, or the whole stack when the caster is not around or has not learned
+     *         the supply chest yet.
      */
     private ItemStack depositInSupplyChest(ItemStack stack) {
-        Player owner = this.getOwner();
-        if (owner == null) {
+        if (!this.canGatherLoot()) {
             return stack.copy();
         }
+        Player owner = this.getOwner();
         INinjaData ninjaData = owner.getCapability(NinjaCapabilityHandler.NINJA_DATA).orElse(null);
         if (ninjaData == null) {
             return stack.copy();

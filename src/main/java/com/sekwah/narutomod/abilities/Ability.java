@@ -2,7 +2,10 @@ package com.sekwah.narutomod.abilities;
 
 import com.sekwah.narutomod.capabilities.CooldownTickEvent;
 import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.triggers.NarutoAdvancements;
 import com.sekwah.narutomod.abilities.mastery.Mastery;
+import com.sekwah.narutomod.config.NarutoConfig;
+import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.ChatFormatting;
@@ -35,6 +38,20 @@ public abstract class Ability {
      * @return
      */
     public abstract ActivationType activationType();
+
+    /**
+     * Whether this technique can be switched on, off or put aside from the jutsu menu.
+     *
+     * <p>The menu is a reference first. A fireball has nothing to hold, so clicking it there would
+     * only be a way to cast it by accident. What the menu controls are the techniques that stay on -
+     * stances that drain chakra every tick and can be left running by mistake - so a player can see
+     * what is currently burning and stop it without hunting for the combo. Techniques that behave
+     * like a stance but report {@link ActivationType#INSTANT} (the chakra shield is armed, sage mode
+     * is entered and left by recasting) override this.</p>
+     */
+    public boolean isMenuControllable() {
+        return this.activationType() == ActivationType.TOGGLE;
+    }
 
     /**
      * Also tell the player why they can't cast the ability.
@@ -147,6 +164,7 @@ public abstract class Ability {
      */
     public void recordMastery(Player player, INinjaData ninjaData) {
         Mastery.recordCast(player, ninjaData, this);
+        NarutoAdvancements.onTechniqueCast(player, ninjaData, this);
     }
 
     /**
@@ -158,6 +176,32 @@ public abstract class Ability {
      */
     protected void recordMasteryCredit(Player player, INinjaData ninjaData, float credit) {
         Mastery.recordCredit(player, ninjaData, this, credit);
+    }
+
+    /**
+     * How far a cast of this technique carries as a game event, roughly its loudness. The default is
+     * the ordinary cast; quiet techniques return zero (they are not heard at all) and the big ones
+     * return a radius of their own. See {@link #emitNoise(Player)}.
+     */
+    public int noiseRadius() {
+        return 16;
+    }
+
+    /**
+     * Tells the world that this technique was cast, so sculk sensors, shriekers and the warden can
+     * hear it. A silence stance cancels the event before it leaves the player (see
+     * {@code GameEventDispatcherMixin}), and a quiet technique never posts one in the first place.
+     */
+    public void emitNoise(Player player) {
+        int radius = this.noiseRadius();
+        if (radius <= 0 || !NarutoConfig.jutsuLoudnessEnabled) {
+            return;
+        }
+        var event = radius >= NarutoGameEvents.BOOM_RADIUS
+                ? NarutoGameEvents.JUTSU_BOOM.get()
+                : NarutoGameEvents.JUTSU_CASTING.get();
+        player.level().gameEvent(player, event,
+                player.position().add(0, player.getEyeHeight() * 0.7, 0));
     }
 
     /**

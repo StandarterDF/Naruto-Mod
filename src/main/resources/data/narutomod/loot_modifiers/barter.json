@@ -1,0 +1,21 @@
+{
+  "type": "narutomod:add_loot",
+  "conditions": [
+    {
+      "condition": "forge:loot_table_id",
+      "loot_table_id": "minecraft:gameplay/piglin_bartering"
+    }
+  ],
+  "entries": [
+    { "item": "narutomod:chakra_seal", "weight": 12 },
+    { "item": "narutomod:military_pills", "weight": 8 },
+    { "item": "narutomod:smoke_bomb", "weight": 8 },
+    { "item": "narutomod:ramen", "weight": 6 },
+    { "item": "narutomod:kunai", "weight": 10 },
+    { "item": "narutomod:shuriken", "weight": 10 }
+  ],
+  "chance": 0.12,
+  "luck_bonus": 0.02,
+  "min": 1,
+  "max": 2
+}

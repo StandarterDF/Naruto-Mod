@@ -37,6 +37,12 @@ public class SmokeCloudEntity extends Entity {
     /** How far from the centre the cloud hides and blinds, in blocks. */
     public static final double RADIUS = 4.5d;
 
+    /** How far this particular cloud reaches; a thrown bomb makes a smaller one than the technique. */
+    private double radius = RADIUS;
+
+    /** How long this particular cloud lives, in ticks. */
+    private int lifetime = LIFETIME;
+
     /** How often the creatures inside are reminded of where they are, in ticks. */
     private static final int AFFECT_INTERVAL = 5;
 
@@ -65,6 +71,12 @@ public class SmokeCloudEntity extends Entity {
         if (tag.hasUUID("Owner")) {
             this.owner = tag.getUUID("Owner");
         }
+        if (tag.contains("Radius")) {
+            this.radius = Math.max(0.5d, tag.getDouble("Radius"));
+        }
+        if (tag.contains("Life")) {
+            this.lifetime = Math.max(1, tag.getInt("Life"));
+        }
     }
 
     @Override
@@ -72,10 +84,22 @@ public class SmokeCloudEntity extends Entity {
         if (this.owner != null) {
             tag.putUUID("Owner", this.owner);
         }
+        tag.putDouble("Radius", this.radius);
+        tag.putInt("Life", this.lifetime);
     }
 
     public void setOwner(Player player) {
         this.owner = player.getUUID();
+    }
+
+    /**
+     * Shrinks the cloud to a thrown bomb's size: the item is a pocket version of the technique, so
+     * it is smaller and shorter lived while the behaviour inside it stays exactly the same.
+     */
+    public SmokeCloudEntity setCloudSize(double radius, int lifetime) {
+        this.radius = Math.max(0.5d, radius);
+        this.lifetime = Math.max(1, lifetime);
+        return this;
     }
 
     @Override
@@ -85,7 +109,7 @@ public class SmokeCloudEntity extends Entity {
             drawSmoke();
             return;
         }
-        if (this.tickCount >= LIFETIME) {
+        if (this.tickCount >= this.lifetime) {
             this.discard();
             return;
         }
@@ -96,8 +120,8 @@ public class SmokeCloudEntity extends Entity {
 
     /** Drops the target of every mob inside, and darkens every player but the caster. */
     private void affectCreatures() {
-        double radiusSqr = RADIUS * RADIUS;
-        List<Mob> mobs = this.level().getEntitiesOfClass(Mob.class, this.getBoundingBox().inflate(RADIUS));
+        double radiusSqr = this.radius * this.radius;
+        List<Mob> mobs = this.level().getEntitiesOfClass(Mob.class, this.getBoundingBox().inflate(this.radius));
         for (Mob mob : mobs) {
             if (mob.distanceToSqr(this) <= radiusSqr) {
                 mob.setTarget(null);
@@ -106,7 +130,7 @@ public class SmokeCloudEntity extends Entity {
         if (!NarutoConfig.smokeBlindPlayers) {
             return;
         }
-        List<Player> players = this.level().getEntitiesOfClass(Player.class, this.getBoundingBox().inflate(RADIUS));
+        List<Player> players = this.level().getEntitiesOfClass(Player.class, this.getBoundingBox().inflate(this.radius));
         for (Player player : players) {
             if (this.owner != null && this.owner.equals(player.getUUID())) {
                 continue;
@@ -122,9 +146,9 @@ public class SmokeCloudEntity extends Entity {
     private void drawSmoke() {
         RandomSource random = this.random;
         for (int i = 0; i < PARTICLES_PER_TICK; i++) {
-            double x = this.getX() + (random.nextDouble() * 2.0d - 1.0d) * RADIUS * 0.8d;
+            double x = this.getX() + (random.nextDouble() * 2.0d - 1.0d) * this.radius * 0.8d;
             double y = this.getY() + random.nextDouble() * 2.5d;
-            double z = this.getZ() + (random.nextDouble() * 2.0d - 1.0d) * RADIUS * 0.8d;
+            double z = this.getZ() + (random.nextDouble() * 2.0d - 1.0d) * this.radius * 0.8d;
             this.level().addParticle(ParticleTypes.LARGE_SMOKE, x, y, z, 0.0d, 0.02d, 0.0d);
         }
     }
@@ -133,7 +157,7 @@ public class SmokeCloudEntity extends Entity {
     public static boolean isHiddenBySmoke(Entity entity) {
         for (SmokeCloudEntity cloud : entity.level().getEntitiesOfClass(SmokeCloudEntity.class,
                 entity.getBoundingBox().inflate(RADIUS))) {
-            if (cloud.distanceToSqr(entity) <= RADIUS * RADIUS) {
+            if (cloud.distanceToSqr(entity) <= cloud.radius * cloud.radius) {
                 return true;
             }
         }

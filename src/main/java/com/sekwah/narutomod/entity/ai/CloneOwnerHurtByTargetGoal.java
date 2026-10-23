@@ -1,6 +1,7 @@
 package com.sekwah.narutomod.entity.ai;
 
 import com.sekwah.narutomod.entity.ShadowCloneEntity;
+import com.sekwah.narutomod.friends.Friends;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
@@ -38,6 +39,7 @@ public class CloneOwnerHurtByTargetGoal extends Goal {
                 && this.ownerHurtBy.isAlive()
                 && !this.clone.isOwnedBy(this.ownerHurtBy)
                 && !this.clone.isAlliedTo(this.ownerHurtBy)
+                && !Friends.areFriends(owner, this.ownerHurtBy)
                 && TargetingConditions.DEFAULT.test(this.clone, this.ownerHurtBy);
     }
 

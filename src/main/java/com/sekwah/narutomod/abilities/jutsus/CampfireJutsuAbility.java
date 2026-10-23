@@ -32,6 +32,14 @@ import javax.annotation.Nullable;
  * failed cast that costs nothing.</p>
  */
 public class CampfireJutsuAbility extends Ability {
+    /**
+     * How far a cast of this technique carries as a game event. Soft, heard only up close.
+     */
+    @Override
+    public int noiseRadius() {
+        return 8;
+    }
+
 
     /** B C B */
     public static final long COMBO = 313L;

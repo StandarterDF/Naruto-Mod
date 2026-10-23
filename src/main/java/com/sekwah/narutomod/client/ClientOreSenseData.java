@@ -16,8 +16,8 @@ import java.util.List;
  */
 public final class ClientOreSenseData {
 
-    /** How long a pulse stays visible, in client ticks. */
-    private static final int DURATION = 20 * 5;
+    /** How long a pulse stays visible when the server does not say, in client ticks. */
+    private static final int DEFAULT_DURATION = 20 * 5;
 
     /** How long the fade at the end of the pulse lasts, in ticks. */
     private static final float FADE_TICKS = 20f;
@@ -30,9 +30,17 @@ public final class ClientOreSenseData {
 
     /** Stores a freshly found pulse and starts its clock. */
     public static void apply(List<ClientboundOreSensePacket.Marker> incoming) {
+        apply(incoming, DEFAULT_DURATION);
+    }
+
+    /**
+     * Stores a freshly found pulse with the duration the caster's mastery bought: a beginner's read
+     * is short, a mastered one lingers long enough to plan a dig.
+     */
+    public static void apply(List<ClientboundOreSensePacket.Marker> incoming, int duration) {
         markers = new ArrayList<>(incoming);
         Minecraft mc = Minecraft.getInstance();
-        expiresAt = mc.level == null ? 0L : mc.level.getGameTime() + DURATION;
+        expiresAt = mc.level == null ? 0L : mc.level.getGameTime() + Math.max(1, duration);
     }
 
     /** The blocks still being drawn. Empty once the pulse has run out. */

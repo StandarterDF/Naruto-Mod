@@ -3,6 +3,10 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.config.NarutoConfig;
+import com.sekwah.narutomod.skills.SkillEffect;
+import com.sekwah.narutomod.skills.SkillTree;
+import com.sekwah.narutomod.world.NarutoWorldGen;
+import com.sekwah.narutomod.world.WorldEnvironment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -21,12 +25,23 @@ import net.minecraft.world.entity.player.Player;
  * energy does not throw it away. Spending it is {@link SageModeAbility}'s business.</p>
  */
 public class SenjutsuChargingAbility extends Ability implements Ability.Channeled {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** V B C */
     public static final long COMBO = 231L;
 
     /** Nature energy gathered per tick of perfect stillness. */
     private static final float CHARGE_PER_TICK = 0.5f;
+
+    /** A sacred tree is a well of natural energy: gathering under one is twice as fast. */
+    private static final float SACRED_TREE_BONUS = 2.0f;
 
     /**
      * How much drift still counts as standing still, as a squared horizontal speed. Vanilla players
@@ -68,6 +83,16 @@ public class SenjutsuChargingAbility extends Ability implements Ability.Channele
             }
             return;
         }
+        // There is nothing to draw from in the End: no life, no nature energy. The message is paced
+        // like the other channel messages so holding the keys does not flood the chat.
+        float environment = WorldEnvironment.senjutsuMultiplier(player);
+        if (environment <= 0.0f) {
+            if (ticksChanneled % PROGRESS_INTERVAL == 0) {
+                player.displayClientMessage(Component.translatable("jutsu.senin.nonature")
+                        .withStyle(ChatFormatting.RED), true);
+            }
+            return;
+        }
         if (ninjaData.getSeninMana() >= ninjaData.getMaxSeninMana()) {
             if (ticksChanneled % PROGRESS_INTERVAL == 0) {
                 player.displayClientMessage(Component.translatable("jutsu.senin.full")
@@ -77,8 +102,11 @@ public class SenjutsuChargingAbility extends Ability implements Ability.Channele
         }
         // Mastery is earned by the nature energy that actually landed in the pool, one full pool to
         // a cast, so a tap gathers nothing worth counting and a long sit is real practice.
+        boolean sacred = isInsideSacredTree(player);
         float before = ninjaData.getSeninMana();
-        ninjaData.addSeninMana(CHARGE_PER_TICK);
+        float gather = CHARGE_PER_TICK * (1.0f + SkillTree.bonus(ninjaData.getSkillData().getUnlocked(),
+                SkillEffect.SENIN_MANA_REGEN)) * environment * (sacred ? SACRED_TREE_BONUS : 1.0f);
+        ninjaData.addSeninMana(gather);
         float gathered = ninjaData.getSeninMana() - before;
         this.recordMasteryCredit(player, ninjaData, gathered / Math.max(1f, ninjaData.getMaxSeninMana()));
 
@@ -89,10 +117,18 @@ public class SenjutsuChargingAbility extends Ability implements Ability.Channele
         }
 
         if (ticksChanneled % PROGRESS_INTERVAL == 0) {
-            player.displayClientMessage(Component.translatable("jutsu.senin.progress",
+            String key = sacred ? "jutsu.senin.sacred" : "jutsu.senin.progress";
+            player.displayClientMessage(Component.translatable(key,
                             (int) ninjaData.getSeninMana(), (int) ninjaData.getMaxSeninMana())
                     .withStyle(ChatFormatting.GREEN), true);
         }
+    }
+
+    /** @return whether the caster stands inside a generated sacred tree. */
+    public static boolean isInsideSacredTree(Player player) {
+        return player.level() instanceof ServerLevel level
+                && level.structureManager().getStructureWithPieceAt(player.blockPosition(),
+                        NarutoWorldGen.SACRED_TREE_KEY) != null;
     }
 
     /**

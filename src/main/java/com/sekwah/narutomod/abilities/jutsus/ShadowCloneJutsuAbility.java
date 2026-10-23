@@ -6,6 +6,7 @@ import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import com.sekwah.narutomod.entity.WorkerJob;
 import com.sekwah.narutomod.item.NarutoItems;
+import com.sekwah.narutomod.skills.SkillEffect;
 import com.sekwah.narutomod.skills.SkillTree;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.ChatFormatting;
@@ -34,6 +35,14 @@ import net.minecraft.world.phys.Vec3;
  * {@link WorkerJob}.</p>
  */
 public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown {
+    /**
+     * How far a cast of this technique carries as a game event. An ordinary cast.
+     */
+    @Override
+    public int noiseRadius() {
+        return 24;
+    }
+
 
     /**
      * Tunables for one version of the technique.
@@ -223,6 +232,11 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
 
         for (int i = 0; i < cloneCount; i++) {
             int lifetime = summoningWorkers ? ShadowCloneEntity.WORKER_LIFETIME : this.settings.lifetime();
+            // The clone branch stretches the life of a copy - worker and fighter tracked separately,
+            // since a worker's shift and a fighter's charge are tuned against different numbers.
+            float lifetimeBonus = SkillTree.bonus(ninjaData.getSkillData().getUnlocked(),
+                    summoningWorkers ? SkillEffect.WORKER_LIFETIME : SkillEffect.CLONE_LIFETIME);
+            lifetime = Math.round(lifetime * (1.0f + lifetimeBonus));
             ShadowCloneEntity clone = new ShadowCloneEntity(level, player,
                     lifetime, this.settings.chibi(), this.settings.meditating());
             clone.applyVariantAttributes(this.settings.attackDamage(), this.settings.movementSpeed());

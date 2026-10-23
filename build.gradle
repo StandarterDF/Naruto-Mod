@@ -15,15 +15,18 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "org.spongepowered:mixingradle:0.7+"
+        // Exact versions, not dynamic ranges: a range makes Gradle re-check the repositories
+        // (and fail after timeouts when there is no internet) even though the artifacts are
+        // already in the local cache. See run-dev-client.bat / run-dev-server.bat.
+        classpath "org.spongepowered:mixingradle:0.7.38"
         classpath "org.apache.httpcomponents:httpmime:4.5.14"
-        classpath "org.parchmentmc:librarian:1.+"
+        classpath "org.parchmentmc:librarian:1.2.0.7-dev-SNAPSHOT"
     }
 }
 plugins {
-    id "com.modrinth.minotaur" version "2.+"
+    id "com.modrinth.minotaur" version "2.10.0"
     id "com.matthewprenger.cursegradle" version "1.4.0"
-    id 'net.neoforged.gradle' version '[6.0.13, 6.2)'
+    id 'net.neoforged.gradle' version '6.0.21'
 }
 
 apply plugin: "java"
@@ -163,7 +166,7 @@ dependencies {
     implementation 'org.spongepowered:mixin:0.8.5'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
-    implementation fg.deobf("com.sekwah:sekclib-forge:[1.0.0,2)")
+    implementation fg.deobf("com.sekwah:sekclib-forge:1.0.2-SNAPSHOT")
 
     // Just Enough Items, for the dev runs only: a convenience for looking up recipes and item uses
     // while testing the mod, not something the mod itself depends on. runtimeOnly keeps it off the

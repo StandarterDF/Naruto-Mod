@@ -14,6 +14,7 @@ import com.sekwah.narutomod.entity.NarutoEntities;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
@@ -48,6 +49,9 @@ public class NarutoRenderEvents {
         event.registerEntityRenderer(NarutoEntities.CHAKRA_MARKER.get(), ChakraMarkerRenderer::new);
 
         event.registerEntityRenderer(NarutoEntities.SMOKE_CLOUD.get(), SmokeCloudRenderer::new);
+        event.registerEntityRenderer(NarutoEntities.SMOKE_BOMB.get(), ThrownItemRenderer::new);
+
+        event.registerEntityRenderer(NarutoEntities.CHIBAKU_TENSEI.get(), ChibakuTenseiRenderer::new);
 
         event.registerEntityRenderer(NarutoEntities.SHADOW_CLONE.get(), ShadowCloneRenderer::new);
 

@@ -59,6 +59,11 @@ public class ShadowCloneEvents {
         if (!(event.getEntity().getKillCredit() instanceof ShadowCloneEntity clone)) {
             return;
         }
+        // Before the caster can open the supply chest there is nowhere to put a kill's drops, so
+        // they are left on the ground for the caster to pick up themselves.
+        if (!clone.canGatherLoot()) {
+            return;
+        }
         List<ItemEntity> drops = new ArrayList<>(event.getDrops());
         if (drops.isEmpty()) {
             return;

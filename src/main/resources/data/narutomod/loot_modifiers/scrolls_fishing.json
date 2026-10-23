@@ -1,0 +1,15 @@
+{
+  "type": "narutomod:add_loot",
+  "conditions": [
+    { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:gameplay/fishing" }
+  ],
+  "entries": [
+    { "item": "narutomod:scroll_rasengan", "weight": 2 },
+    { "item": "narutomod:scroll_earth_wall", "weight": 2 },
+    { "item": "narutomod:scroll_sage_mode", "weight": 1 }
+  ],
+  "chance": 0.01,
+  "luck_bonus": 0.01,
+  "min": 1,
+  "max": 1
+}

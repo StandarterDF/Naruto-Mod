@@ -1,0 +1,28 @@
+{
+  "type": "narutomod:add_loot",
+  "conditions": [
+    {
+      "condition": "minecraft:alternative",
+      "terms": [
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_corridor" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_crossing" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_library" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/nether_bridge" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_other" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_bridge" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_hoglin_stable" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_treasure" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_weaponsmith" }
+      ]
+    }
+  ],
+  "entries": [
+    { "item": "narutomod:scroll_eight_gates", "weight": 3 },
+    { "item": "narutomod:scroll_sage_mode", "weight": 2 },
+    { "item": "narutomod:scroll_earth_wall", "weight": 3 }
+  ],
+  "chance": 0.18,
+  "luck_bonus": 0.06,
+  "min": 1,
+  "max": 1
+}

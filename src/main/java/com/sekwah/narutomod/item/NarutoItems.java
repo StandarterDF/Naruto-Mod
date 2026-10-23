@@ -7,6 +7,9 @@ import com.sekwah.narutomod.item.weapons.KunaiItem;
 import com.sekwah.narutomod.item.weapons.SenbonItem;
 import com.sekwah.narutomod.item.weapons.ShurikenItem;
 import com.sekwah.narutomod.sounds.NarutoSounds;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.*;
@@ -37,6 +40,25 @@ public class NarutoItems {
     public static final RegistryObject<Item> SHURIKEN = ITEMS.register("shuriken", ()
             -> new ShurikenItem(new Item.Properties()));
 
+    /**
+     * A throwable smoke bomb: the smoke screen technique in the pocket, for anyone who has not
+     * learned the combo or would rather keep the chakra.
+     */
+    public static final RegistryObject<Item> SMOKE_BOMB = ITEMS.register("smoke_bomb", ()
+            -> new SmokeBombItem(new Item.Properties().stacksTo(16)));
+
+    /**
+     * The material the better recipes are built from: a crystal that can be charged with chakra.
+     */
+    public static final RegistryObject<Item> CHAKRA_CRYSTAL = ITEMS.register("chakra_crystal", ()
+            -> new ChakraCrystalItem(new Item.Properties().stacksTo(16)));
+
+    /**
+     * A compass that points at a place the ninja chose rather than at the world spawn.
+     */
+    public static final RegistryObject<Item> CHAKRA_COMPASS = ITEMS.register("chakra_compass", ()
+            -> new ChakraCompassItem(new Item.Properties().stacksTo(1)));
+
 
     // Armor
 
@@ -47,15 +69,15 @@ public class NarutoItems {
     /** A village headband helps its ninja keep hold of their chakra. */
     private static final NarutoArmorItem.Bonus HEADBAND_BONUS = new NarutoArmorItem.Bonus(0.0f, 0.0f, 0.4f);
     /** An ANBU mask is worn by shinobi trained to hold far more than they show. */
-    private static final NarutoArmorItem.Bonus ANBU_MASK_BONUS = new NarutoArmorItem.Bonus(75.0f, 0.0f, 0.0f);
+    private static final NarutoArmorItem.Bonus ANBU_MASK_BONUS = new NarutoArmorItem.Bonus(30.0f, 0.0f, 0.0f);
     /** The standard flak jacket takes a hit so its wearer does not have to. */
     private static final NarutoArmorItem.Bonus FLAK_BONUS = new NarutoArmorItem.Bonus(0.0f, 2.0f, 0.0f);
     /** The jonin flak is built over the same idea with better plate. */
     private static final NarutoArmorItem.Bonus JONIN_FLAK_BONUS = new NarutoArmorItem.Bonus(0.0f, 4.0f, 0.0f);
     /** ANBU field armour: a little less plate than a flak, a little more chakra discipline. */
-    private static final NarutoArmorItem.Bonus ANBU_ARMOR_BONUS = new NarutoArmorItem.Bonus(40.0f, 2.0f, 0.2f);
+    private static final NarutoArmorItem.Bonus ANBU_ARMOR_BONUS = new NarutoArmorItem.Bonus(20.0f, 2.0f, 0.2f);
     /** The Akatsuki cloak: S-rank chakra, and plenty of it. */
-    private static final NarutoArmorItem.Bonus AKATSUKI_BONUS = new NarutoArmorItem.Bonus(120.0f, 0.0f, 0.5f);
+    private static final NarutoArmorItem.Bonus AKATSUKI_BONUS = new NarutoArmorItem.Bonus(50.0f, 0.0f, 0.5f);
 
     public static final RegistryObject<Item> RED_ANBU_MASK = ITEMS.register("red_anbu_mask", ()
             -> new NarutoArmorItem(NarutoArmorMaterial.ANBU_MAT, ArmorItem.Type.HELMET, new Item.Properties())
@@ -131,10 +153,54 @@ public class NarutoItems {
      * one bowl, and enough saturation to keep the caster topped up for a while afterwards.
      */
     public static final RegistryObject<Item> RAMEN = ITEMS.register("ramen",
-            () -> new Item(new Item.Properties().stacksTo(16)
+            () -> new Item(new Item.Properties().stacksTo(16).craftRemainder(Items.BOWL)
                     .food(new FoodProperties.Builder().nutrition(8).saturationMod(1.2f).build())));
 
-    /**
+    // ------------------------------------------------------------------------------------------
+    // Ninja cooking: food that puts a little back into the pools, see ChakraFoodItem.
+    // ------------------------------------------------------------------------------------------
+
+    /** Miso ramen: the gentle bowl, with a short regeneration to settle the stomach. */
+    public static final RegistryObject<Item> RAMEN_MISO = ITEMS.register("ramen_miso",
+            () -> new ChakraFoodItem(new Item.Properties().stacksTo(8).craftRemainder(Items.BOWL)
+                    .food(new FoodProperties.Builder().nutrition(9).saturationMod(1.3f)
+                            .effect(() -> new MobEffectInstance(MobEffects.REGENERATION, 100, 0), 1.0f)
+                            .build()), 15.0f, 0.0f));
+
+    /** Pork ramen: the heavy bowl, with a few seconds of strength behind it. */
+    public static final RegistryObject<Item> RAMEN_PORK = ITEMS.register("ramen_pork",
+            () -> new ChakraFoodItem(new Item.Properties().stacksTo(8).craftRemainder(Items.BOWL)
+                    .food(new FoodProperties.Builder().nutrition(10).saturationMod(1.4f)
+                            .effect(() -> new MobEffectInstance(MobEffects.DAMAGE_BOOST, 120, 0), 1.0f)
+                            .build()), 20.0f, 10.0f));
+
+    /** Seafood ramen: the light bowl, with a breath of water in it. */
+    public static final RegistryObject<Item> RAMEN_SEAFOOD = ITEMS.register("ramen_seafood",
+            () -> new ChakraFoodItem(new Item.Properties().stacksTo(8).craftRemainder(Items.BOWL)
+                    .food(new FoodProperties.Builder().nutrition(9).saturationMod(1.2f)
+                            .effect(() -> new MobEffectInstance(MobEffects.WATER_BREATHING, 200, 0), 1.0f)
+                            .build()), 15.0f, 5.0f));
+
+    /** Onigiri: a pocket snack, eaten fast, for a runner out of stamina rather than chakra. */
+    public static final RegistryObject<Item> ONIGIRI = ITEMS.register("onigiri",
+            () -> new ChakraFoodItem(new Item.Properties().stacksTo(16)
+                    .food(new FoodProperties.Builder().nutrition(4).saturationMod(0.4f).fast().build()),
+                    5.0f, 20.0f));
+
+    /** Dango: sweet, small, and mostly for closing a scratch between fights. */
+    public static final RegistryObject<Item> DANGO = ITEMS.register("dango",
+            () -> new ChakraFoodItem(new Item.Properties().stacksTo(16)
+                    .food(new FoodProperties.Builder().nutrition(3).saturationMod(0.5f).fast()
+                            .effect(() -> new MobEffectInstance(MobEffects.REGENERATION, 80, 0), 1.0f)
+                            .build()), 8.0f, 0.0f));
+
+    /** Curry of life: a full meal that leaves the eater stronger and quicker for a short while. */
+    public static final RegistryObject<Item> CURRY = ITEMS.register("curry",
+            () -> new ChakraFoodItem(new Item.Properties().stacksTo(8).craftRemainder(Items.BOWL)
+                    .food(new FoodProperties.Builder().nutrition(12).saturationMod(1.5f)
+                            .effect(() -> new MobEffectInstance(MobEffects.DAMAGE_BOOST, 200, 0), 1.0f)
+                            .effect(() -> new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 200, 0), 1.0f)
+                            .build()), 30.0f, 20.0f));    /**
      * The talisman every clone technique burns, see
      * {@code ShadowCloneJutsuAbility#handleCost(Player, INinjaData, int)}. One per summon, no matter
      * how many clones come out of it.
@@ -148,6 +214,30 @@ public class NarutoItems {
      */
     public static final RegistryObject<Item> CHAKRA_BATTERY = ITEMS.register("chakra_battery",
             () -> new ChakraBatteryItem(new Item.Properties().stacksTo(1)));
+
+    /**
+     * Scrolls: the knowledge of the deepest techniques, found in the world rather than bought with
+     * points. See {@link JutsuScrollItem} and {@code Skill#requiresScroll()}.
+     */
+    public static final RegistryObject<Item> SCROLL_RASENGAN = createScroll("rasengan");
+    public static final RegistryObject<Item> SCROLL_RASENSHURIKEN = createScroll("rasenshuriken");
+    public static final RegistryObject<Item> SCROLL_EIGHT_GATES = createScroll("eight_gates");
+    public static final RegistryObject<Item> SCROLL_KAMUI = createScroll("kamui");
+    public static final RegistryObject<Item> SCROLL_SAGE_MODE = createScroll("sage_mode");
+    public static final RegistryObject<Item> SCROLL_KIRIN = createScroll("kirin");
+    public static final RegistryObject<Item> SCROLL_EARTH_WALL = createScroll("earth_wall");
+    public static final RegistryObject<Item> SCROLL_RINNEGAN = createScroll("rinnegan");
+    public static final RegistryObject<Item> SCROLL_CHIBAKU_TENSEI = createScroll("chibaku_tensei");
+    public static final RegistryObject<Item> SCROLL_SHARINGAN = createScroll("sharingan");
+    public static final RegistryObject<Item> SCROLL_BYAKUGAN = createScroll("byakugan");
+    public static final RegistryObject<Item> SCROLL_JOUGAN = createScroll("jougan");
+
+    /**
+     * A scrap of somebody else's map: right-click to turn it into a real filled map pointing at the
+     * nearest village, mineshaft, shipwreck, ruined portal or ocean ruin. See {@link TreasureMapItem}.
+     */
+    public static final RegistryObject<Item> TREASURE_MAP = ITEMS.register("treasure_map",
+            () -> new TreasureMapItem(new Item.Properties()));
 
     public static final RegistryObject<Item> KATANA = ITEMS.register("katana", ()
             -> new SwordItem(NinjaTier.KATANA, 3, -1.95F, new Item.Properties()));
@@ -168,10 +258,31 @@ public class NarutoItems {
 
     // Ninja Masks
 
+    private static RegistryObject<Item> createScroll(String knowledge) {
+        return ITEMS.register("scroll_" + knowledge, () -> new JutsuScrollItem(
+                new Item.Properties().stacksTo(1).rarity(Rarity.RARE),
+                new ResourceLocation(MOD_ID, knowledge)));
+    }
+
+    /**
+     * Every village trains its ninja differently, and the headband carries a little of that: Leaf
+     * pours chakra back, Sand teaches endurance, Rock teaches taking a hit, Cloud stores more.
+     */
+    private static final NarutoArmorItem.Bonus LEAF_HEADBAND_BONUS = HEADBAND_BONUS;
+    private static final NarutoArmorItem.Bonus SAND_HEADBAND_BONUS = new NarutoArmorItem.Bonus(0.0f, 2.0f, 0.0f);
+    private static final NarutoArmorItem.Bonus ROCK_HEADBAND_BONUS = new NarutoArmorItem.Bonus(0.0f, 4.0f, 0.0f);
+    private static final NarutoArmorItem.Bonus CLOUD_HEADBAND_BONUS = new NarutoArmorItem.Bonus(25.0f, 0.0f, 0.0f);
+    private static final NarutoArmorItem.Bonus MIST_HEADBAND_BONUS = new NarutoArmorItem.Bonus(0.0f, 0.0f, 0.7f);
+    private static final NarutoArmorItem.Bonus SOUND_HEADBAND_BONUS = new NarutoArmorItem.Bonus(40.0f, 0.0f, 0.0f);
+
     private static RegistryObject<Item> createHeadband(String itemName) {
+        return createHeadband(itemName, HEADBAND_BONUS);
+    }
+
+    private static RegistryObject<Item> createHeadband(String itemName, NarutoArmorItem.Bonus bonus) {
         return ITEMS.register(itemName, ()
                 -> new NarutoArmorItem(NarutoArmorMaterial.HEADBAND, ArmorItem.Type.HELMET, new Item.Properties())
-                .setBonus(HEADBAND_BONUS));
+                .setBonus(bonus));
     }
 
     //    BLANK(0, "blankBlueHeadBand", "headband_blank);"),
@@ -184,39 +295,39 @@ public class NarutoItems {
     public static final RegistryObject<Item> HEADBAND_CUSTARD = createHeadband("headband_custard");
 
 
-    public static final RegistryObject<Item> HEADBAND_LEAF = createHeadband("headband_leaf");
-    public static final RegistryObject<Item> HEADBAND_LEAF_SCRATCHED = createHeadband("headband_leaf_scratched");
-    public static final RegistryObject<Item> HEADBAND_LEAF_BLACK = createHeadband("headband_leaf_black");
-    public static final RegistryObject<Item> HEADBAND_LEAF_BLACK_SCRATCHED = createHeadband("headband_leaf_black_scratched");
+    public static final RegistryObject<Item> HEADBAND_LEAF = createHeadband("headband_leaf", LEAF_HEADBAND_BONUS);
+    public static final RegistryObject<Item> HEADBAND_LEAF_SCRATCHED = createHeadband("headband_leaf_scratched", LEAF_HEADBAND_BONUS);
+    public static final RegistryObject<Item> HEADBAND_LEAF_BLACK = createHeadband("headband_leaf_black", LEAF_HEADBAND_BONUS);
+    public static final RegistryObject<Item> HEADBAND_LEAF_BLACK_SCRATCHED = createHeadband("headband_leaf_black_scratched", LEAF_HEADBAND_BONUS);
 
-    public static final RegistryObject<Item> HEADBAND_ROCK = createHeadband("headband_rock");
-    public static final RegistryObject<Item> HEADBAND_ROCK_SCRATCHED = createHeadband("headband_rock_scratched");
+    public static final RegistryObject<Item> HEADBAND_ROCK = createHeadband("headband_rock", ROCK_HEADBAND_BONUS);
+    public static final RegistryObject<Item> HEADBAND_ROCK_SCRATCHED = createHeadband("headband_rock_scratched", ROCK_HEADBAND_BONUS);
 
-    public static final RegistryObject<Item> HEADBAND_SAND = createHeadband("headband_sand");
-    public static final RegistryObject<Item> HEADBAND_SAND_SCRATCHED = createHeadband("headband_sand_scratched");
+    public static final RegistryObject<Item> HEADBAND_SAND = createHeadband("headband_sand", SAND_HEADBAND_BONUS);
+    public static final RegistryObject<Item> HEADBAND_SAND_SCRATCHED = createHeadband("headband_sand_scratched", SAND_HEADBAND_BONUS);
 
-    public static final RegistryObject<Item> HEADBAND_SOUND = createHeadband("headband_sound");
-    public static final RegistryObject<Item> HEADBAND_SOUND_SCRATCHED = createHeadband("headband_sound_scratched");
+    public static final RegistryObject<Item> HEADBAND_SOUND = createHeadband("headband_sound", SOUND_HEADBAND_BONUS);
+    public static final RegistryObject<Item> HEADBAND_SOUND_SCRATCHED = createHeadband("headband_sound_scratched", SOUND_HEADBAND_BONUS);
 
-    public static final RegistryObject<Item> HEADBAND_MIST = createHeadband("headband_mist");
-    public static final RegistryObject<Item> HEADBAND_MIST_SCRATCHED = createHeadband("headband_mist_scratched");
+    public static final RegistryObject<Item> HEADBAND_MIST = createHeadband("headband_mist", MIST_HEADBAND_BONUS);
+    public static final RegistryObject<Item> HEADBAND_MIST_SCRATCHED = createHeadband("headband_mist_scratched", MIST_HEADBAND_BONUS);
 
-    public static final RegistryObject<Item> HEADBAND_WATERFALL = createHeadband("headband_waterfall");
-    public static final RegistryObject<Item> HEADBAND_WATERFALL_SCRATCHED = createHeadband("headband_waterfall_scratched");
+    public static final RegistryObject<Item> HEADBAND_WATERFALL = createHeadband("headband_waterfall", MIST_HEADBAND_BONUS);
+    public static final RegistryObject<Item> HEADBAND_WATERFALL_SCRATCHED = createHeadband("headband_waterfall_scratched", MIST_HEADBAND_BONUS);
 
-    public static final RegistryObject<Item> HEADBAND_CLOUD = createHeadband("headband_cloud");
-    public static final RegistryObject<Item> HEADBAND_CLOUD_SCRATCHED = createHeadband("headband_cloud_scratched");
+    public static final RegistryObject<Item> HEADBAND_CLOUD = createHeadband("headband_cloud", CLOUD_HEADBAND_BONUS);
+    public static final RegistryObject<Item> HEADBAND_CLOUD_SCRATCHED = createHeadband("headband_cloud_scratched", CLOUD_HEADBAND_BONUS);
 
-    public static final RegistryObject<Item> HEADBAND_RAIN = createHeadband("headband_rain");
-    public static final RegistryObject<Item> HEADBAND_RAIN_SCRATCHED = createHeadband("headband_rain_scratched");
+    public static final RegistryObject<Item> HEADBAND_RAIN = createHeadband("headband_rain", MIST_HEADBAND_BONUS);
+    public static final RegistryObject<Item> HEADBAND_RAIN_SCRATCHED = createHeadband("headband_rain_scratched", MIST_HEADBAND_BONUS);
 
-    public static final RegistryObject<Item> HEADBAND_GRASS = createHeadband("headband_grass");
-    public static final RegistryObject<Item> HEADBAND_GRASS_SCRATCHED = createHeadband("headband_grass_scratched");
+    public static final RegistryObject<Item> HEADBAND_GRASS = createHeadband("headband_grass", LEAF_HEADBAND_BONUS);
+    public static final RegistryObject<Item> HEADBAND_GRASS_SCRATCHED = createHeadband("headband_grass_scratched", LEAF_HEADBAND_BONUS);
 
 
     public static final RegistryObject<Item> HEADBAND_PRIDE = createHeadband("headband_pride");
     public static final RegistryObject<Item> HEADBAND_YOUTUBE = createHeadband("headband_youtube");
-    public static final RegistryObject<Item> HEADBAND_LAVA = createHeadband("headband_lava");
+    public static final RegistryObject<Item> HEADBAND_LAVA = createHeadband("headband_lava", ROCK_HEADBAND_BONUS);
 
 
     // Materials

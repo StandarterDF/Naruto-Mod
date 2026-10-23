@@ -9,8 +9,16 @@ rem
 rem  This script picks a JDK 17 on its own: Gradle 8.1.1 (used by the wrapper)
 rem  cannot run on newer JVMs, and JAVA_HOME on this machine points to JDK 25.
 rem
+rem  It also runs Gradle in --offline mode: every dependency, the Minecraft
+rem  artifacts, the assets and the natives are already in the local caches, so
+rem  the client starts with no network at all. If you have just added/changed a
+rem  dependency and need to download it, run once with NARUTO_ONLINE=1:
+rem
+rem      set NARUTO_ONLINE=1
+rem      run-dev-client.bat
+rem
 rem  Usage:
-rem      run-dev-client.bat                 plain start
+rem      run-dev-client.bat                 offline start
 rem      run-dev-client.bat --debug-jvm     any extra arguments go to Gradle
 rem      run-dev-client.bat --stacktrace
 rem
@@ -66,16 +74,30 @@ if not defined JDK17 (
 set "JAVA_HOME=%JDK17%"
 set "PATH=%JDK17%\bin;%PATH%"
 
+rem --- offline by default -----------------------------------------------------
+rem Gradle still contacts repositories for dynamic versions / missing metadata
+rem even when everything is cached, and that is what made the dev launch fail
+rem without internet. NARUTO_ONLINE=1 opts out (needed only after adding a
+rem dependency).
+set "OFFLINE=--offline"
+if /i "%NARUTO_ONLINE%"=="1" set "OFFLINE="
+
 echo Using JDK: %JDK17%
 echo Starting the dev client from "%CD%" ...
 echo.
 
-call gradlew.bat runClient %*
+call gradlew.bat runClient %OFFLINE% %*
 set "CODE=%ERRORLEVEL%"
 
 if not "%CODE%"=="0" (
 	echo.
 	echo Dev client exited with code %CODE%.
+	if defined OFFLINE (
+		echo   Gradle was run in offline mode. If the error says a dependency is
+		echo   missing from the cache, run once with:
+		echo       set NARUTO_ONLINE=1
+		echo   and this script again ^(needs internet^).
+	)
 	pause
 )
 

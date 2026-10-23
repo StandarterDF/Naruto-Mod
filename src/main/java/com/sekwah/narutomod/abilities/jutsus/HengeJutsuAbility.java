@@ -1,5 +1,6 @@
 package com.sekwah.narutomod.abilities.jutsus;
 
+import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.config.NarutoConfig;
@@ -8,6 +9,7 @@ import com.sekwah.narutomod.util.Targeting;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -32,9 +34,19 @@ import org.jetbrains.annotations.Nullable;
  * so: the disguise does not change what mobs think of the caster.</p>
  */
 public class HengeJutsuAbility extends Ability implements Ability.Cooldown {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** V C V */
     public static final long COMBO = 212L;
+
+    public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "henge");
 
     /** Chakra for one cast. */
     public static final float CHAKRA_COST = 30.0f;

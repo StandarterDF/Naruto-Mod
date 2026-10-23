@@ -26,6 +26,14 @@ import net.minecraft.world.entity.player.Player;
  * the stance and its upkeep.</p>
  */
 public class SilenceAbility extends Ability implements Ability.Toggled, Ability.HandleEnded {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** V V V. */
     public static final long COMBO = 333L;

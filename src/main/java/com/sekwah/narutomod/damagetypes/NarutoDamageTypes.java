@@ -39,6 +39,22 @@ public class NarutoDamageTypes {
      */
     public static final ResourceKey<DamageType> FIRE_BREATH = create("fire_breath");
 
+    /**
+     * The crunch of a mountain of rock being dropped on whatever Chibaku Tensei caught. Its own type
+     * so the death message can name the technique, see {@code ChibakuTenseiEntity}. Like every other
+     * custom type in the mod it needs its JSON in {@code data/narutomod/damage_type/} or the server
+     * falls over the first time it lands.
+     */
+    public static final ResourceKey<DamageType> CHIBAKU_TENSEI = create("chibaku_tensei");
+
+    /**
+     * What the black flame of Amaterasu burns with. Its own type because the flame is not vanilla
+     * fire at all - water, rain and fire resistance do nothing to it - and so the death message can
+     * name the technique, see {@code AmaterasuEvents}. Like every other custom type it needs its
+     * JSON in {@code data/narutomod/damage_type/} or the server falls over the first time it bites.
+     */
+    public static final ResourceKey<DamageType> AMATERASU = create("amaterasu");
+
     public static ResourceKey<DamageType> create(String name) {
         return ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation(NarutoMod.MOD_ID, name));
     }
@@ -73,5 +89,7 @@ public class NarutoDamageTypes {
         register(context, WIND_RELEASE);
         register(context, GATE_BACKLASH);
         register(context, FIRE_BREATH);
+        register(context, CHIBAKU_TENSEI);
+        register(context, AMATERASU);
     }
 }

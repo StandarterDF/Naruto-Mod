@@ -29,6 +29,14 @@ import net.minecraft.world.entity.player.Player;
  * mob-only version.</p>
  */
 public class SmokeScreenAbility extends Ability implements Ability.Cooldown {
+    /**
+     * How far a cast of this technique carries as a game event. An ordinary cast.
+     */
+    @Override
+    public int noiseRadius() {
+        return 24;
+    }
+
 
     /** B B B. */
     public static final long COMBO = 222L;

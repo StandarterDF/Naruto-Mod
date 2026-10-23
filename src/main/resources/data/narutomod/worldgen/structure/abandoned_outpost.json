@@ -1,0 +1,8 @@
+{
+  "type": "narutomod:dungeon",
+  "variant": "abandoned_outpost",
+  "biomes": "#narutomod:has_structure/naruto_dungeons",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "beard_thin"
+}

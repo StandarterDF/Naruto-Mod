@@ -22,6 +22,14 @@ import net.minecraftforge.network.NetworkHooks;
  * builds a window that matches the grid the caster is about to see rather than guessing a size.</p>
  */
 public class StorageChestAbility extends Ability {
+    /**
+     * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
+     */
+    @Override
+    public int noiseRadius() {
+        return 0;
+    }
+
 
     /** B V C - kept short, since it is opened often. */
     public static final long COMBO = 321L;

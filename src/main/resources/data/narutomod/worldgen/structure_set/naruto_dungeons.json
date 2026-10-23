@@ -1,0 +1,18 @@
+{
+  "structures": [
+    {
+      "structure": "narutomod:ruined_training_grounds",
+      "weight": 1
+    },
+    {
+      "structure": "narutomod:abandoned_outpost",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 918273,
+    "spacing": 26,
+    "separation": 10
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "narutomod:chakra_seal" },
+    { "item": "minecraft:amethyst_shard" }
+  ],
+  "result": {
+    "item": "narutomod:sentry_seal",
+    "count": 1
+  }
+}
