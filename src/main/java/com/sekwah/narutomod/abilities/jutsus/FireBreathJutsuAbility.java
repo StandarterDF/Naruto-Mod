@@ -237,6 +237,10 @@ public class FireBreathJutsuAbility extends Ability implements Ability.Channeled
     private static void applyBlockHeat(ServerLevel level, Player player, float mastery) {
         double range = range(player, mastery);
         int[] remaining = {MAX_BLOCK_CHANGES};
+        // A world with fire spread turned off does not want its candles and campfires lit either;
+        // melting snow and driving furnaces is still allowed, those are not fire spread.
+        boolean fireAllowed = level.getGameRules()
+                .getBoolean(net.minecraft.world.level.GameRules.RULE_DOFIRETICK);
         BreathCone.forEachBlock(player, range, CONE_COS, pos -> {
             if (remaining[0] <= 0) {
                 return;
@@ -251,13 +255,13 @@ public class FireBreathJutsuAbility extends Ability implements Ability.Channeled
                 remaining[0]--;
                 return;
             }
-            if (state.getBlock() instanceof AbstractCandleBlock && !AbstractCandleBlock.isLit(state)) {
+            if (fireAllowed && state.getBlock() instanceof AbstractCandleBlock && !AbstractCandleBlock.isLit(state)) {
                 level.setBlockAndUpdate(pos, state.setValue(AbstractCandleBlock.LIT, true));
                 level.playSound(null, pos, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 0.6f, 1.0f);
                 remaining[0]--;
                 return;
             }
-            if (state.getBlock() instanceof CampfireBlock && !state.getValue(CampfireBlock.LIT)) {
+            if (fireAllowed && state.getBlock() instanceof CampfireBlock && !state.getValue(CampfireBlock.LIT)) {
                 level.setBlockAndUpdate(pos, state.setValue(CampfireBlock.LIT, true));
                 level.playSound(null, pos, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 0.8f, 1.0f);
                 remaining[0]--;
@@ -318,5 +322,11 @@ public class FireBreathJutsuAbility extends Ability implements Ability.Channeled
                 }
             }
         });
+    }
+
+    /** The element this technique belongs to, for the caster's innate affinity. */
+    @Override
+    public com.sekwah.narutomod.abilities.Nature nature() {
+        return com.sekwah.narutomod.abilities.Nature.FIRE;
     }
 }

@@ -28,7 +28,9 @@ public class GameEventDispatcherMixin {
     private void narutomod$silencePlayerEvents(GameEvent gameEvent, Vec3 source, GameEvent.Context context,
                                                 CallbackInfo callback) {
         Entity entity = context.sourceEntity();
-        if (entity instanceof Player player && SilenceAbility.isSilenced(player)) {
+        if (entity instanceof Player player
+                && (SilenceAbility.isSilenced(player)
+                    || player.getPersistentData().getBoolean("narutomod:silent_step"))) {
             callback.cancel();
         }
     }

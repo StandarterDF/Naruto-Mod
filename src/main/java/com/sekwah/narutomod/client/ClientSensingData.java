@@ -111,7 +111,7 @@ public final class ClientSensingData {
         // open it takes over the picture, and the shared renderer draws it.
         boolean byakugan = data != null && ByakuganAbility.isActive(data);
         if (byakugan) {
-            radius = Math.max(radius, ByakuganAbility.VISION_RADIUS);
+            radius = Math.max(radius, ByakuganAbility.visionRadius(data));
         }
         active = radius > 0f;
         if (data != null) {

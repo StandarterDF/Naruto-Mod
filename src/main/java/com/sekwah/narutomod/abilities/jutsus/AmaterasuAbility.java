@@ -84,7 +84,9 @@ public class AmaterasuAbility extends Ability implements Ability.Cooldown {
             return false;
         }
 
-        float cost = this.masteryCost(ninjaData, COST);
+        // The third eye reads the black flame more cheaply while it is open.
+        float base = RinneSharinganAbility.isActive(ninjaData) ? COST * 0.7f : COST;
+        float cost = this.masteryCost(ninjaData, base);
         if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);

@@ -159,6 +159,12 @@ public final class Skill {
                 SkillEffect.MOVEMENT_SPEED, 0.012f, "agility_gale");
         node("endurance", SkillBranch.ATHLETICS, 0, 0, 12,
                 SkillEffect.STAMINA_REGEN, 0.2f);
+        unlock("agility_shuriken_shadow", SkillBranch.ATHLETICS, -1, 2, 20,
+                "ability:shuriken_shadow", "endurance");
+        unlock("agility_beast_carry", SkillBranch.ATHLETICS, 0, 1, 24,
+                "ability:beast_carry", "endurance");
+        unlock("agility_shunshin", SkillBranch.ATHLETICS, 2, 1, 22,
+                "ability:chakra_dash", "endurance");
         unlock("agility_water_walk", SkillBranch.ATHLETICS, 1, -2, 21,
                 "ability:water_walk", "endurance");
         unlock("agility_adhesion", SkillBranch.ATHLETICS, 2, -1, 21,
@@ -229,6 +235,72 @@ public final class Skill {
                 SkillEffect.STAMINA_REGEN, 0.3f, "gates_core");
         unlock("body_eight_gates", SkillBranch.TAIJUTSU, -3, 0, 104,
                 "ability:eight_gates", "body_balance");
+        unlock("taijutsu_pole_vault", SkillBranch.TAIJUTSU, 1, 1, 22,
+                "ability:pole_vault", "taijutsu");
+        unlock("taijutsu_silent_kill", SkillBranch.TAIJUTSU, 0, 1, 26,
+                "ability:silent_kill", "taijutsu");
+        unlock("taijutsu_nuibari", SkillBranch.TAIJUTSU, -1, 1, 26,
+                "ability:nuibari", "taijutsu");
+        unlock("taijutsu_strong_shoulder", SkillBranch.TAIJUTSU, 1, -1, 24,
+                "ability:strong_shoulder", "agility_mighty");
+        unlock("taijutsu_dynamic_entry", SkillBranch.TAIJUTSU, 2, -1, 34,
+                "ability:dynamic_entry", "agility_power");
+        unlock("taijutsu_projectile_cut", SkillBranch.TAIJUTSU, 3, -1, 26,
+                "ability:projectile_cut", "agility_fury");
+        unlock("taijutsu_drunken_fist", SkillBranch.TAIJUTSU, 3, 1, 32,
+                "ability:drunken_fist", "agility_power");
+        unlock("taijutsu_wall_bounce", SkillBranch.TAIJUTSU, 4, 1, 24,
+                "ability:wall_bounce", "agility_fury");
+        unlock("taijutsu_blade_parry", SkillBranch.TAIJUTSU, 4, 2, 30,
+                "ability:blade_parry", "agility_fury");
+        unlock("taijutsu_vacuum_blade", SkillBranch.TAIJUTSU, 3, 2, 32,
+                "ability:vacuum_blade", "agility_perfect");
+        unlock("taijutsu_palm_block", SkillBranch.TAIJUTSU, -3, 1, 26,
+                "ability:palm_block", "body_balance");
+        unlock("taijutsu_inner_strike", SkillBranch.TAIJUTSU, -2, 2, 32,
+                "ability:inner_strike", "body_balance");
+        unlock("taijutsu_gate_peacock", SkillBranch.TAIJUTSU, 0, 2, 44,
+                "ability:gate_peacock", "gates_core");
+        unlock("taijutsu_gate_tiger", SkillBranch.TAIJUTSU, 1, 2, 52,
+                "ability:gate_tiger", "gates_core");
+        unlock("taijutsu_gate_elephant", SkillBranch.TAIJUTSU, 2, 2, 60,
+                "ability:gate_elephant", "agility_fury");
+        node("ken_whetstone", SkillBranch.TAIJUTSU, 4, 3, 24,
+                SkillEffect.STAMINA_REGEN, 0.3f, "taijutsu_blade_parry");
+        unlock("ken_chakra_whetstone", SkillBranch.TAIJUTSU, 5, 3, 26,
+                "ability:chakra_whetstone", "ken_whetstone");
+        unlock("ken_kusa_giri", SkillBranch.TAIJUTSU, 4, 4, 24,
+                "ability:kusa_giri", "ken_whetstone");
+        unlock("ken_kesa_giri", SkillBranch.TAIJUTSU, 3, 3, 26,
+                "ability:kesa_giri", "ken_whetstone");
+        node("ken_stance", SkillBranch.TAIJUTSU, 3, 4, 28,
+                SkillEffect.ATTACK_DAMAGE, 0.5f, "taijutsu_blade_parry");
+        unlock("ken_kamae", SkillBranch.TAIJUTSU, 2, 3, 30,
+                "ability:kamae", "ken_stance");
+        unlock("ken_bleeding_blade", SkillBranch.TAIJUTSU, 2, 4, 34,
+                "ability:bleeding_blade", "ken_stance");
+        unlock("ken_elemental_edge", SkillBranch.TAIJUTSU, 1, 4, 46,
+                "ability:elemental_edge", "ken_stance");
+        node("ken_great_blades", SkillBranch.TAIJUTSU, 5, 4, 40,
+                SkillEffect.COOLDOWN_REDUCTION, 0.03f, "ken_whetstone");
+        unlock("ken_hiramekarei", SkillBranch.TAIJUTSU, 5, 5, 48,
+                "ability:hiramekarei", "ken_great_blades");
+        unlock("ken_shibuki", SkillBranch.TAIJUTSU, 6, 4, 44,
+                "ability:shibuki", "ken_great_blades");
+        node("body_current", SkillBranch.TAIJUTSU, -3, 2, 28,
+                SkillEffect.STAMINA_REGEN, 0.2f, "body_balance");
+        unlock("taijutsu_flame_fist", SkillBranch.TAIJUTSU, -3, 3, 30,
+                "ability:flame_fist", "body_current");
+        unlock("taijutsu_water_hand", SkillBranch.TAIJUTSU, -2, 3, 26,
+                "ability:water_hand", "body_current");
+        unlock("taijutsu_grab_throw", SkillBranch.TAIJUTSU, -4, 2, 34,
+                "ability:grab_throw", "body_current");
+        unlock("taijutsu_size_expansion", SkillBranch.TAIJUTSU, -2, -1, 44,
+                "ability:size_expansion", "body_balance");
+        unlock("taijutsu_camellia_dance", SkillBranch.TAIJUTSU, -2, 1, 38,
+                "ability:camellia_dance", "body_balance");
+        unlock("taijutsu_bone_bullets", SkillBranch.TAIJUTSU, -1, 2, 34,
+                "ability:bone_bullets", "body_balance");
         node("taijutsu", SkillBranch.TAIJUTSU, 0, 0, 10,
                 SkillEffect.ATTACK_DAMAGE, 1f);
         //
@@ -270,6 +342,12 @@ public final class Skill {
                 "ability:water_breath", "elem_tide");
         node("elem_spring", SkillBranch.WATER, 0, 2, 10,
                 SkillEffect.COST_REDUCTION, 0.02f);
+        unlock("elem_irrigation", SkillBranch.WATER, 4, 2, 22,
+                "ability:suiton_watering", "elem_tide");
+        unlock("elem_ice_mirrors", SkillBranch.WATER, 3, 3, 48,
+                "ability:ice_mirrors", "elem_tide");
+        unlock("elem_lightning_mode", SkillBranch.WIND, 4, 0, 40,
+                "ability:lightning_mode", "elem_spiral");
         //
         // EARTH - Earth: ore excavation, the wide dig and ore sense.
         unlock("elem_ore_excavation", SkillBranch.EARTH, 1, 0, 10,
@@ -286,6 +364,10 @@ public final class Skill {
                 "ability:earth_wall", "elem_strata");
         //
         // WIND - Wind: the wind breath, the rasengan and the rasenshuriken.
+        node("elem_wind_step", SkillBranch.WIND, 0, 0, 20,
+                SkillEffect.MOVEMENT_SPEED, 0.02f, "elem_gust");
+        unlock("elem_wind_footwork", SkillBranch.WIND, 0, 1, 26,
+                "ability:wind_step", "elem_wind_step");
         node("elem_gust", SkillBranch.WIND, 1, 0, 19,
                 SkillEffect.COOLDOWN_REDUCTION, 0.02f);
         unlock("elem_wind_breath", SkillBranch.WIND, 2, 0, 34,
@@ -300,6 +382,10 @@ public final class Skill {
                 "ability:rasenshuriken", "elem_fusion");
         //
         // WOOD - Wood: the growth breath.
+        node("elem_growth", SkillBranch.WOOD, 1, 0, 18,
+                SkillEffect.COST_REDUCTION, 0.02f, "elem_sap");
+        unlock("elem_mokuton_growth", SkillBranch.WOOD, 1, -1, 26,
+                "ability:mokuton_growth", "elem_growth");
         node("elem_bloom", SkillBranch.WOOD, 2, 0, 32,
                 SkillEffect.CHAKRA_REGEN, 0.4f, "elem_sap");
         unlock("elem_wood_breath", SkillBranch.WOOD, 4, 0, 47,
@@ -315,6 +401,32 @@ public final class Skill {
                 SkillEffect.MAX_CHAKRA, 10f);
         unlock("clone_shadow", SkillBranch.CLONES, 3, 1, 20,
                 "ability:shadow_clone", "clone_focus");
+        unlock("clone_decoy", SkillBranch.CLONES, 4, 1, 22,
+                "ability:clone_decoy", "clone_drill");
+        unlock("clone_medic", SkillBranch.CLONES, 3, 0, 30,
+                "ability:clone_medic", "clone_drill");
+        unlock("clone_swap", SkillBranch.CLONES, 1, 1, 24,
+                "ability:clone_swap", "clone_focus");
+        unlock("clone_water", SkillBranch.CLONES, 2, 0, 34,
+                "ability:water_clone", "clone_drill");
+        unlock("clone_mud", SkillBranch.CLONES, 1, 3, 38,
+                "ability:mud_clone", "clone_vitality");
+        unlock("clone_clay", SkillBranch.CLONES, 1, 4, 46,
+                "ability:clay_clone", "clone_vitality");
+        unlock("clone_sparring", SkillBranch.CLONES, 1, 2, 30,
+                "ability:clone_sparring", "clone_focus");
+        unlock("clone_sacrifice", SkillBranch.CLONES, 0, 3, 34,
+                "ability:clone_sacrifice", "clone_vitality");
+        node("agility_volley", SkillBranch.ATHLETICS, 3, 1, 20,
+                SkillEffect.ATTACK_DAMAGE, 0.5f, "agility_swift");
+        unlock("agility_blade_rain", SkillBranch.ATHLETICS, 4, 1, 30,
+                "ability:blade_rain", "agility_volley");
+        unlock("sage_guardian", SkillBranch.SAGE, 3, -1, 48,
+                "ability:iron_guardian", "sage_mana");
+        unlock("space_silencer", SkillBranch.SPACE, 2, 1, 34,
+                "ability:explosion_silencer", "space_anchor");
+        unlock("medical_katsuyu", SkillBranch.MEDICINE, 1, 2, 44,
+                "ability:katsuyu_network", "body_flow");
         node("clone_drill", SkillBranch.CLONES, 3, 2, 16,
                 SkillEffect.MAX_CHAKRA, 12f, "clone_shadow");
         unlock("clone_meditation", SkillBranch.CLONES, 4, 2, 18,
@@ -387,6 +499,32 @@ public final class Skill {
                 "mechanic:night_vision", "mind_eyes");
         unlock("mind_genjutsu", SkillBranch.MIND, -1, 0, 20,
                 "ability:genjutsu", "mind_focus");
+        unlock("mind_kai", SkillBranch.MIND, 1, 1, 22,
+                "ability:kai", "mind_eyes");
+        unlock("mind_nemuri", SkillBranch.MIND, 2, 0, 26,
+                "ability:nemuri", "mind_eyes");
+        unlock("mind_narakumi", SkillBranch.MIND, -1, 1, 34,
+                "ability:narakumi", "mind_deceit");
+        unlock("mind_jubaku", SkillBranch.MIND, -2, 0, 38,
+                "ability:jubaku_satsu", "mind_deceit");
+        unlock("mind_utakata", SkillBranch.MIND, 2, -1, 28,
+                "ability:utakata", "mind_eyes");
+        unlock("mind_transfer", SkillBranch.MIND, 2, 2, 46,
+                "ability:mind_transfer", "mind_focus");
+        unlock("mind_player_genjutsu", SkillBranch.MIND, -2, 1, 36,
+                "ability:player_genjutsu", "mind_deceit");
+        unlock("mind_intent_reading", SkillBranch.MIND, -2, -1, 28,
+                "mechanic:intent_reading", "mind_deceit");
+        unlock("mind_kokoni", SkillBranch.MIND, 0, 1, 34,
+                "ability:kokoni_arazu", "mind_deceit");
+        unlock("mind_kagaami", SkillBranch.MIND, 0, 2, 40,
+                "ability:kagaami", "mind_focus");
+        unlock("mind_mrak", SkillBranch.MIND, 2, -2, 44,
+                "ability:mrak", "mind_eyes");
+        unlock("mind_face_swap", SkillBranch.MIND, 2, 1, 38,
+                "ability:face_swap", "mind_eyes");
+        unlock("mind_mirage", SkillBranch.MIND, 1, 2, 26,
+                "ability:mirage", "mind_focus");
         unlock("mind_henge", SkillBranch.MIND, 0, -1, 20,
                 "ability:henge", "mind_focus");
         node("mind_deceit", SkillBranch.MIND, -1, -1, 19,
@@ -417,6 +555,26 @@ public final class Skill {
                 SkillEffect.MAX_CHAKRA, 20f, "sage_entry");
         unlock("body_sage_mode", SkillBranch.SAGE, 3, 1, 104,
                 "ability:sage_mode", "body_enlighten");
+        unlock("sage_curse_seal_one", SkillBranch.SAGE, 0, 1, 40,
+                "ability:curse_seal_one", "sage_core");
+        unlock("sage_curse_seal_two", SkillBranch.SAGE, 0, 2, 56,
+                "ability:curse_seal_two", "sage_entry");
+        unlock("sage_chakra_cloak", SkillBranch.SAGE, 0, 0, 38,
+                "ability:chakra_cloak", "sage_core");
+        unlock("sage_tailed_cloak", SkillBranch.SAGE, 0, -1, 52,
+                "ability:tailed_cloak", "sage_core");
+        unlock("sage_orochimaru_body", SkillBranch.SAGE, 1, 1, 48,
+                "ability:orochimaru_body", "sage_core");
+        unlock("sage_seal_vessel", SkillBranch.SAGE, 1, -1, 52,
+                "ability:seal_vessel", "sage_core");
+        unlock("sage_divided_cloak", SkillBranch.SAGE, 0, -2, 44,
+                "ability:divided_cloak", "sage_core");
+        unlock("sage_seal_break", SkillBranch.SAGE, 1, -2, 48,
+                "ability:seal_break", "sage_core");
+        unlock("sage_perfect_cloak", SkillBranch.SAGE, 2, -1, 64,
+                "ability:perfect_cloak", "sage_core");
+        unlock("sage_tailed_ball", SkillBranch.SAGE, 2, -2, 58,
+                "ability:tailed_ball", "sage_core");
 
         // =====================================================================================
         // 4. DOJUTSU - the eye bloodlines.
@@ -433,6 +591,28 @@ public final class Skill {
                 SkillEffect.MAX_CHAKRA, 20f, "sharingan_insight");
         unlock("sharingan_eye", SkillBranch.SHARINGAN, 2, 0, 48,
                 "ability:sharingan", "sharingan_insight");
+        unlock("sharingan_chakra_trail", SkillBranch.SHARINGAN, 1, 1, 30,
+                "ability:chakra_trail", "sharingan_read");
+        unlock("sharingan_suggestion", SkillBranch.SHARINGAN, 1, 2, 34,
+                "ability:suggestion", "sharingan_genjutsu");
+        unlock("sharingan_tsukuyomi", SkillBranch.SHARINGAN, -1, 2, 60,
+                "ability:tsukuyomi", "sharingan_mangekyo");
+        unlock("sharingan_kyoujin", SkillBranch.SHARINGAN, 0, 3, 36,
+                "ability:kyoujin", "sharingan_genjutsu");
+        unlock("sharingan_kurai", SkillBranch.SHARINGAN, 2, 2, 42,
+                "ability:kurai", "sharingan_genjutsu");
+        unlock("sharingan_step_behind", SkillBranch.SHARINGAN, 3, 1, 38,
+                "ability:step_behind", "sharingan_read");
+        unlock("sharingan_izanagi", SkillBranch.SHARINGAN, 0, 4, 64,
+                "ability:izanagi", "sharingan_mangekyo");
+        unlock("sharingan_izanami", SkillBranch.SHARINGAN, -1, 3, 58,
+                "ability:izanami", "sharingan_mangekyo");
+        unlock("sharingan_kotoamatsukami", SkillBranch.SHARINGAN, 2, 3, 64,
+                "ability:kotoamatsukami", "sharingan_genjutsu");
+        unlock("sharingan_susanoo", SkillBranch.SHARINGAN, -2, 2, 70,
+                "ability:susanoo", "sharingan_mangekyo");
+        unlock("sharingan_illusory_double", SkillBranch.SHARINGAN, 4, 2, 44,
+                "ability:illusory_double", "sharingan_shape");
         node("sharingan_flame", SkillBranch.SHARINGAN, 2, -1, 30,
                 SkillEffect.MAX_CHAKRA, 15f, "sharingan_read");
         unlock("sharingan_amaterasu", SkillBranch.SHARINGAN, 3, -1, 64,
@@ -456,6 +636,12 @@ public final class Skill {
                 SkillEffect.COST_REDUCTION, 0.04f, "byakugan_base");
         unlock("byakugan_eye", SkillBranch.BYAKUGAN, 2, 0, 48,
                 "ability:byakugan", "byakugan_sight");
+        // The circle grows with training: the eye is the only one whose picture is drawn from a
+        // radius, so widening it is a real upgrade and not a number on a tooltip.
+        node("byakugan_wide", SkillBranch.BYAKUGAN, 2, 1, 34,
+                SkillEffect.BYAKUGAN_RANGE, 8f, "byakugan_eye");
+        node("byakugan_wide2", SkillBranch.BYAKUGAN, 3, 1, 40,
+                SkillEffect.BYAKUGAN_RANGE, 8f, "byakugan_wide");
         node("byakugan_palm", SkillBranch.BYAKUGAN, 0, -1, 30,
                 SkillEffect.MAX_CHAKRA, 20f, "byakugan_base");
         node("byakugan_rotation_prep", SkillBranch.BYAKUGAN, 0, -2, 32,
@@ -466,6 +652,46 @@ public final class Skill {
                 SkillEffect.MAX_CHAKRA, 20f, "byakugan_base");
         node("byakugan_tenketsu_mastery", SkillBranch.BYAKUGAN, 0, 2, 34,
                 SkillEffect.CHAKRA_REGEN, 0.15f, "byakugan_tenketsu");
+        // The tenketsu line: from the soft fist out to the techniques that strike the channels
+        // directly, and the far sight that decides where to stand before the first palm.
+        unlock("byakugan_needles", SkillBranch.BYAKUGAN, 1, 2, 30,
+                "ability:tenketsu_needles", "byakugan_tenketsu_mastery");
+        unlock("byakugan_blind", SkillBranch.BYAKUGAN, 2, 2, 28,
+                "ability:tenketsu_blind", "byakugan_tenketsu_mastery");
+        unlock("byakugan_grip", SkillBranch.BYAKUGAN, 0, 3, 34,
+                "ability:chakra_grip", "byakugan_tenketsu_mastery");
+        unlock("byakugan_rupture", SkillBranch.BYAKUGAN, -1, 3, 40,
+                "ability:node_rupture", "byakugan_tenketsu_mastery");
+        unlock("byakugan_farsight", SkillBranch.BYAKUGAN, 2, -1, 30,
+                "ability:byakugan_farsight", "byakugan_sight");
+        unlock("byakugan_mist_sight", SkillBranch.BYAKUGAN, 3, 0, 28,
+                "ability:byakugan_mist_sight", "byakugan_wide");
+        unlock("byakugan_void_cast", SkillBranch.BYAKUGAN, 3, 3, 36,
+                "ability:void_cast", "byakugan_wide");
+        unlock("byakugan_mechanism", SkillBranch.BYAKUGAN, 4, 1, 30,
+                "ability:mechanism_sight", "byakugan_wide");
+        unlock("byakugan_field", SkillBranch.BYAKUGAN, -1, -1, 34,
+                "ability:eight_trigrams_field", "byakugan_palm");
+        unlock("byakugan_hidden_seal", SkillBranch.BYAKUGAN, -1, -2, 34,
+                "ability:hidden_seal", "byakugan_rotation_prep");
+        unlock("byakugan_doctor", SkillBranch.BYAKUGAN, 1, 4, 28,
+                "ability:doctor_sight", "byakugan_tenketsu_mastery");
+        unlock("byakugan_sixty_four", SkillBranch.BYAKUGAN, 2, 4, 44,
+                "ability:sixty_four_palms", "byakugan_tenketsu_mastery");
+        unlock("byakugan_mark", SkillBranch.BYAKUGAN, 1, 1, 24,
+                "ability:byakugan_mark", "byakugan_sight");
+        unlock("byakugan_air_palm", SkillBranch.BYAKUGAN, 0, 4, 34,
+                "ability:air_palm", "byakugan_tenketsu_mastery");
+        unlock("byakugan_circular_block", SkillBranch.BYAKUGAN, -2, 0, 32,
+                "ability:circular_block", "byakugan_base");
+        unlock("byakugan_pure_flow", SkillBranch.BYAKUGAN, -2, 1, 30,
+                "mechanic:byakugan_pure_flow", "byakugan_base");
+        unlock("byakugan_soshiken", SkillBranch.BYAKUGAN, 1, -1, 32,
+                "ability:soshiken", "byakugan_palm");
+        unlock("byakugan_palm_lance", SkillBranch.BYAKUGAN, 1, 3, 34,
+                "ability:palm_lance", "byakugan_tenketsu_mastery");
+        unlock("byakugan_collapse", SkillBranch.BYAKUGAN, 2, 3, 48,
+                "ability:eight_trigrams_collapse", "byakugan_tenketsu_mastery");
 
         // JOUGAN - the pure eye: it reads hostile chakra and carries the caster's reserves, and its
         // two techniques are one step into space and one cut through a body's chakra.
@@ -481,6 +707,32 @@ public final class Skill {
                 SkillEffect.SENIN_MANA, 25f, "jougan_eye");
         unlock("jougan_step", SkillBranch.JOUGAN, 2, -1, 56,
                 "ability:dimension_step", "jougan_senin");
+        unlock("jougan_stasis", SkillBranch.JOUGAN, 0, 3, 38,
+                "ability:jougan_stasis", "jougan_vision");
+        unlock("jougan_unweave", SkillBranch.JOUGAN, 1, 3, 32,
+                "ability:jougan_unweave", "jougan_focus");
+        unlock("jougan_seal_portal", SkillBranch.JOUGAN, 2, 2, 34,
+                "ability:seal_portal", "jougan_vision");
+        unlock("jougan_sewing_pocket", SkillBranch.JOUGAN, -1, 1, 30,
+                "ability:sewing_pocket", "jougan_pure");
+        unlock("jougan_sewing_lock", SkillBranch.JOUGAN, -1, 2, 28,
+                "ability:sewing_lock", "jougan_pure");
+        unlock("jougan_silent_step", SkillBranch.JOUGAN, 2, -2, 32,
+                "mechanic:jounin_silent_step", "jougan_senin");
+        unlock("jougan_shear", SkillBranch.JOUGAN, 2, 3, 34,
+                "ability:chakra_shear", "jougan_strike");
+        unlock("jougan_structure", SkillBranch.JOUGAN, 3, 3, 30,
+                "ability:structure_cut", "jougan_focus");
+        unlock("jougan_phase", SkillBranch.JOUGAN, -2, 1, 40,
+                "ability:jougan_phase", "jougan_pool");
+        unlock("eye_attract", SkillBranch.RINNEGAN, 4, -1, 28,
+                "ability:item_attraction", "eye_force");
+        unlock("eye_rod", SkillBranch.RINNEGAN, 4, 1, 32,
+                "ability:black_rod", "eye_palm");
+        unlock("eye_levitate", SkillBranch.RINNEGAN, 1, -2, 36,
+                "ability:rinnegan_levitation", "eye_gravity");
+        unlock("senrigan_echo", SkillBranch.SENRIGAN, 1, 1, 40,
+                "ability:senrigan_echo", "senrigan_far");
         node("jougan_cut", SkillBranch.JOUGAN, 0, 1, 30,
                 SkillEffect.COST_REDUCTION, 0.04f, "jougan_base");
         unlock("jougan_sever", SkillBranch.JOUGAN, 1, 1, 56,
@@ -515,12 +767,64 @@ public final class Skill {
                 SkillEffect.SENIN_MANA, 25f, "eye_rinnegan");
         unlock("eye_tensei", SkillBranch.RINNEGAN, 0, -1, 72,
                 "ability:chibaku_tensei", "eye_gravity");
+        // The other half of the eye's hand: what it takes it can also give, and what it lifts it can
+        // also press down.
+        unlock("eye_transfer", SkillBranch.RINNEGAN, 3, -1, 32,
+                "ability:chakra_transfer", "eye_palm");
+        unlock("eye_weight", SkillBranch.RINNEGAN, 1, 1, 34,
+                "ability:heaven_weight", "eye_gravity");
+        unlock("eye_residual", SkillBranch.RINNEGAN, 2, 1, 30,
+                "mechanic:residual_force", "eye_force");
+        unlock("eye_naraka", SkillBranch.RINNEGAN, 0, 2, 44,
+                "ability:naraka_path", "eye_rinn");
+        unlock("eye_animal", SkillBranch.RINNEGAN, 1, 2, 46,
+                "ability:animal_path", "eye_rinn");
+        unlock("eye_asura", SkillBranch.RINNEGAN, 2, 2, 40,
+                "ability:asura_missiles", "eye_palm");
+        unlock("eye_rinbo", SkillBranch.RINNEGAN, 3, 2, 52,
+                "ability:rinbo_hengoku", "eye_palm");
+        unlock("eye_chains", SkillBranch.RINNEGAN, -1, 1, 42,
+                "ability:outer_chains", "eye_rinn");
+        unlock("eye_shell", SkillBranch.RINNEGAN, 3, 1, 38,
+                "ability:outer_armor", "eye_palm");
         // The palm eye hangs off the same eye as the rest of its powers, but on its own side of the
         // board: absorbing is a different answer to a fight than pulling or dropping a mountain.
         node("eye_palm", SkillBranch.RINNEGAN, 3, 0, 30,
                 SkillEffect.COST_REDUCTION, 0.03f, "eye_rinnegan");
         unlock("eye_absorb", SkillBranch.RINNEGAN, 4, 0, 64,
                 "ability:momoshiki_absorption", "eye_palm");
+
+        // SIX PATHS - the sage's own branch: the mode and everything that hangs off it.
+        node("six_paths_base", SkillBranch.SIX_PATHS, 0, 0, 40,
+                SkillEffect.MAX_CHAKRA, 25f);
+        node("six_paths_flight", SkillBranch.SIX_PATHS, 1, 0, 46,
+                SkillEffect.MOVEMENT_SPEED, 0.01f, "six_paths_base");
+        node("six_paths_regen", SkillBranch.SIX_PATHS, 2, 0, 52,
+                SkillEffect.MAX_HEALTH, 4f, "six_paths_flight");
+        node("six_paths_immunity", SkillBranch.SIX_PATHS, 3, 0, 64,
+                SkillEffect.ARMOR, 2f, "six_paths_regen");
+        unlock("six_paths_yin_yang", SkillBranch.SIX_PATHS, -1, 0, 60,
+                "ability:yin_yang_heal", "six_paths_base");
+        node("six_paths_gate", SkillBranch.SIX_PATHS, 0, 1, 60,
+                SkillEffect.SENIN_MANA, 50f, "six_paths_base");
+        unlock("six_paths_rinne", SkillBranch.SIX_PATHS, -1, 1, 64,
+                "ability:rinne_sharingan", "six_paths_gate");
+        unlock("six_paths_mode", SkillBranch.SIX_PATHS, 0, 2, 96,
+                "ability:six_paths_mode", "six_paths_gate");
+        node("six_paths_void", SkillBranch.SIX_PATHS, -1, 2, 52,
+                SkillEffect.COST_REDUCTION, 0.04f, "six_paths_gate");
+        unlock("six_paths_limbo", SkillBranch.SIX_PATHS, -1, 3, 72,
+                "ability:limbo", "six_paths_void");
+        unlock("six_paths_amenominaka", SkillBranch.SIX_PATHS, -2, 2, 80,
+                "ability:amenominaka", "six_paths_void");
+        node("six_paths_orbs", SkillBranch.SIX_PATHS, 1, 1, 48,
+                SkillEffect.MAX_CHAKRA, 20f, "six_paths_gate");
+        unlock("six_paths_launch", SkillBranch.SIX_PATHS, 1, 2, 58,
+                "ability:gudodama_launch", "six_paths_orbs");
+        unlock("six_paths_guard", SkillBranch.SIX_PATHS, 2, 1, 54,
+                "ability:gudodama_guard", "six_paths_orbs");
+        unlock("six_paths_form", SkillBranch.SIX_PATHS, 2, 2, 62,
+                "ability:gudodama_form", "six_paths_orbs");
 
         // SENRIGAN - the far eye. It hands out no power, only a viewpoint, so the branch is short:
         // open the eye, train the sight, then learn to step the viewpoint through the caster's own

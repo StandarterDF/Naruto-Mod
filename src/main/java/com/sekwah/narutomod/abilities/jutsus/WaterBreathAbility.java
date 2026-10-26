@@ -208,4 +208,10 @@ public class WaterBreathAbility extends AbstractBreathAbility {
                 path.substring(0, path.length() - "_powder".length()));
         return BuiltInRegistries.BLOCK.getOptional(concreteId);
     }
+
+    /** The element this technique belongs to, for the caster's innate affinity. */
+    @Override
+    public com.sekwah.narutomod.abilities.Nature nature() {
+        return com.sekwah.narutomod.abilities.Nature.WATER;
+    }
 }

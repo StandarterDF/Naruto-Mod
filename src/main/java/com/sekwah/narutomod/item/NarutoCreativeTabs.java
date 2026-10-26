@@ -28,6 +28,10 @@ public class NarutoCreativeTabs {
                 output.accept(NarutoItems.SHURIKEN.get());
                 output.accept(NarutoBlocks.ITEM_PAPER_BOMB.get());
                 output.accept(NarutoItems.SMOKE_BOMB.get());
+                output.accept(NarutoItems.POISONED_NEEDLES.get());
+                output.accept(NarutoItems.SCROLL_WORKBENCH.get());
+                output.accept(NarutoItems.NINJA_NOTE.get());
+                output.accept(NarutoItems.TRAINING_WEIGHTS.get());
                 output.accept(NarutoItems.KATANA.get());
                 output.accept(NarutoItems.SAMEHADA.get());
                 output.accept(NarutoItems.KUBIKIRIBOCHO.get());
@@ -90,6 +94,7 @@ public class NarutoCreativeTabs {
                 output.accept(NarutoItems.RAMEN_MISO.get());
                 output.accept(NarutoItems.RAMEN_PORK.get());
                 output.accept(NarutoItems.RAMEN_SEAFOOD.get());
+                output.accept(NarutoItems.NINJA_RATION.get());
                 output.accept(NarutoItems.ONIGIRI.get());
                 output.accept(NarutoItems.DANGO.get());
                 output.accept(NarutoItems.CURRY.get());

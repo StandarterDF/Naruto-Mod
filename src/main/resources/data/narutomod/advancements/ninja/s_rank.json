@@ -22,5 +22,10 @@
       }
     }
   },
-  "parent": "narutomod:ninja/jonin"
+  "parent": "narutomod:ninja/jonin",
+  "rewards": {
+    "recipes": [
+      "narutomod:kubikiribocho"
+    ]
+  }
 }

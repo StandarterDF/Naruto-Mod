@@ -114,4 +114,10 @@ public class CampfireJutsuAbility extends Ability {
         }
         return hit;
     }
+
+    /** The element this technique belongs to, for the caster's innate affinity. */
+    @Override
+    public com.sekwah.narutomod.abilities.Nature nature() {
+        return com.sekwah.narutomod.abilities.Nature.FIRE;
+    }
 }

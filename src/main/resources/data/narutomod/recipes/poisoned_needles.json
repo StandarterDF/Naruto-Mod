@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:iron_nugget" },
+    { "item": "minecraft:iron_nugget" },
+    { "item": "minecraft:spider_eye" }
+  ],
+  "result": {
+    "item": "narutomod:poisoned_needles",
+    "count": 3
+  }
+}

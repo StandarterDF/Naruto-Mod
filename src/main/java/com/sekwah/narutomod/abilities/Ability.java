@@ -7,6 +7,7 @@ import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.registries.NarutoRegistries;
+import com.sekwah.narutomod.skills.SkillTree;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -150,7 +151,24 @@ public abstract class Ability {
      * {@link Mastery#cost(INinjaData, Ability, float)}.
      */
     protected float masteryCost(INinjaData ninjaData, float baseCost) {
-        return Mastery.cost(ninjaData, this, baseCost);
+        float cost = Mastery.cost(ninjaData, this, baseCost);
+        Nature element = this.nature();
+        if (element != null) {
+            String affinity = ninjaData.getNatureAffinity();
+            if (affinity != null && !affinity.isEmpty()) {
+                cost *= element.getSerializedName().equals(affinity) ? 0.9f : 1.1f;
+            }
+        }
+        return cost;
+    }
+
+    /**
+     * The element this technique belongs to, or null for techniques that are not elemental (the
+     * eyes, the clones, plain taijutsu). Read by {@link #masteryCost} to apply the caster's innate
+     * affinity: a tenth off the element they were born to and a tenth on the rest.
+     */
+    public Nature nature() {
+        return null;
     }
 
     /** How far this technique has been mastered, from zero to just under one. */
@@ -165,6 +183,12 @@ public abstract class Ability {
     public void recordMastery(Player player, INinjaData ninjaData) {
         Mastery.recordCast(player, ninjaData, this);
         NarutoAdvancements.onTechniqueCast(player, ninjaData, this);
+        // Residual force: a technique leaves a little of itself in the next blow. The mark is what
+        // the melee hook reads; it is refreshed by every cast so the reward belongs to the last one.
+        if (SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), "mechanic:residual_force")) {
+            player.getPersistentData().putLong("narutomod:residual_force_until",
+                    player.level().getGameTime() + 100L);
+        }
     }
 
     /**

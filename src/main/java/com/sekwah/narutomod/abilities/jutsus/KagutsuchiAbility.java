@@ -127,7 +127,12 @@ public class KagutsuchiAbility extends Ability implements Ability.Cooldown {
             }
         }
 
-        float cost = this.masteryCost(ninjaData, snuff ? SNUFF_COST : GATHER_COST);
+        // The third eye shapes the black flame more cheaply while it is open.
+        float base = snuff ? SNUFF_COST : GATHER_COST;
+        if (RinneSharinganAbility.isActive(ninjaData)) {
+            base *= 0.7f;
+        }
+        float cost = this.masteryCost(ninjaData, base);
         if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);

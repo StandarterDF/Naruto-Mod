@@ -1,5 +1,6 @@
 package com.sekwah.narutomod.abilities.jutsus;
 
+import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.events.GenjutsuEvents;
@@ -8,6 +9,7 @@ import com.sekwah.narutomod.world.WorldEnvironment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
@@ -40,6 +42,8 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Cooldown {
 
     /** C B C */
     public static final long COMBO = 131L;
+
+    public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "genjutsu");
 
     /** Chakra for one cast. */
     public static final float CHAKRA_COST = 35.0f;
@@ -92,27 +96,64 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Cooldown {
 
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
-        Mob target = findTarget(player);
-        if (target == null) {
+        // A mastered illusion does not stop at one mind: the caster can lead up to three creatures
+        // that are standing together, which is what turns the technique from a duel trick into a
+        // way to break a patrol.
+        float mastery = this.masteryLevel(ninjaData);
+        int limit = 1 + (mastery >= 0.3f ? 1 : 0) + (mastery >= 0.6f ? 1 : 0);
+        java.util.List<Mob> targets = findTargets(player, limit);
+        if (targets.isEmpty()) {
             // The check in handleCost already passed, so this should not happen; refund nothing, the
             // cast simply fizzles rather than charging for nothing.
             return;
         }
-        GenjutsuEvents.apply(player, target, DURATION);
-        // A mind that is already held can be led: a beast comes out of the illusion as the ninja's own.
-        tryTame(player, target);
+        for (Mob target : targets) {
+            GenjutsuEvents.apply(player, target, DURATION);
+            // A mind that is already held can be led: a beast comes out of the illusion as the ninja's own.
+            tryTame(player, target);
 
-        player.displayClientMessage(Component.translatable("jutsu.genjutsu.cast",
-                target.getDisplayName().copy().withStyle(ChatFormatting.LIGHT_PURPLE))
-                .withStyle(ChatFormatting.DARK_PURPLE), true);
+            player.displayClientMessage(Component.translatable("jutsu.genjutsu.cast",
+                    target.getDisplayName().copy().withStyle(ChatFormatting.LIGHT_PURPLE))
+                    .withStyle(ChatFormatting.DARK_PURPLE), true);
 
-        if (target.level() instanceof ServerLevel level) {
-            level.sendParticles(ParticleTypes.ENCHANT, target.getX(),
-                    target.getY() + target.getBbHeight(), target.getZ(),
-                    30, 0.5d, 0.4d, 0.5d, 0.4d);
-            level.playSound(null, target.getX(), target.getY(), target.getZ(),
-                    SoundEvents.ILLUSIONER_CAST_SPELL, net.minecraft.sounds.SoundSource.PLAYERS, 0.8f, 0.7f);
+            if (target.level() instanceof ServerLevel level) {
+                level.sendParticles(ParticleTypes.ENCHANT, target.getX(),
+                        target.getY() + target.getBbHeight(), target.getZ(),
+                        30, 0.5d, 0.4d, 0.5d, 0.4d);
+                level.playSound(null, target.getX(), target.getY(), target.getZ(),
+                        SoundEvents.ILLUSIONER_CAST_SPELL, net.minecraft.sounds.SoundSource.PLAYERS, 0.8f, 0.7f);
+            }
         }
+    }
+
+    /** The looked-at mob first, then the nearest others sharing roughly the same line of sight. */
+    private static java.util.List<Mob> findTargets(Player player, int limit) {
+        java.util.List<Mob> found = new java.util.ArrayList<>();
+        Mob aimed = findTarget(player);
+        if (aimed == null) {
+            return found;
+        }
+        found.add(aimed);
+        double range = RANGE * (1.0d + MOON_RANGE_BONUS * WorldEnvironment.moonClarity(player));
+        var look = player.getLookAngle();
+        java.util.List<Mob> nearby = player.level().getEntitiesOfClass(Mob.class,
+                player.getBoundingBox().inflate(range),
+                mob -> mob.isAlive() && mob != aimed && mob.distanceToSqr(player) <= range * range);
+        nearby.sort(java.util.Comparator.comparingDouble(mob -> mob.distanceToSqr(player)));
+        for (Mob mob : nearby) {
+            if (found.size() >= limit) {
+                break;
+            }
+            var toMob = mob.position().subtract(player.position());
+            if (toMob.lengthSqr() < 1.0e-4d) {
+                continue;
+            }
+            if (look.dot(toMob.normalize()) < 0.5d) {
+                continue;
+            }
+            found.add(mob);
+        }
+        return found;
     }
 
     @Override

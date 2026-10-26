@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.9.0](https://github.com/StandarterDF/Naruto-Mod/compare/v1.8.4...v1.9.0) (2026-10-26)
+
+### Features
+
+* **Dojutsu - Sharingan:** Tsukuyomi, Kagutsuchi and Susanoo join Amaterasu, alongside Kotoamatsukami, Izanagi, Izanami, Chakra Trail and Illusory Double; the eye now reads its own illusions back.
+* **Dojutsu - Byakugan:** the full Gentle Fist line - Sixty-Four Palms, Soshiken, Palm Lance, Empty Palm, Mountain Collapse, Tenketsu Needles and Blind Palm - plus the sight techniques Far Sight, Mist Sight, Mechanism Sight, Doctor Sight, Void Cast, Hidden Seal, Mark, Eight Trigrams Field and Circular Block.
+* **Genjutsu:** Kai, Narakumi, Kyoujin, Kurai, Jubaku Satsu, Utakata, Kokoni Arazu, Kagaami, Mrak, Mirage, Face Swap, Suggestion, Nemuri and Mind Body Transfer, with a server option that decides whether illusions may be laid on other players.
+* **Kenjutsu:** the three Kamae guards, Kesa Cut, Grass-Cutting Sweep, Vacuum Blade, Blade Parry, Palm Block, Projectile Cut, Chakra Whetstone, Elemental Edge, Bleeding Blade, Chakra Shear, Silent Kill, Blade Rain and Structure Cut.
+* **Seven Swordsmen:** Nuibari, Hiramekarei, Shibuki and the Kubikiribocho each bring their own technique and handling.
+* **Eight Inner Gates:** Morning Peacock, Daytime Tiger and Evening Elephant, paid for out of the caster's own body, with a gate counter on the HUD.
+* **Rinnegan and Six Paths:** Six Paths Mode with the Truth-Seeking Orbs (Launch, Guard, Form), Rinne Sharingan, Limbo, Amenominaka, Rinbo Hengoku, the Outer Path chains and shell, the Naraka, Animal and Asura paths, Black Rod, Universal Pull levitation, Attractive Force and Yin-Yang Restoration.
+* **Tailed beast chakra:** Chakra Cloak, Tailed Beast Cloak, the Eight Trigrams Seal vessel, Divided Cloak, Seal Break, Perfect Cloak and the Tailed Beast Bomb, plus Orochimaru's body shedding and both stages of the curse seal.
+* **Clone variants:** Decoy, Medical, Water, Mud and Clay clones, Clone Swap, Clone Sparring and Clone Sacrifice, and the Shadow Shuriken jutsu.
+* **Elemental and clan techniques:** Wind Step, Wood Release Growth, Water Release Irrigation, Lightning Mode, The Weight of Heaven, Demonic Ice Mirrors, the Kaguya bone techniques, Partial Multi-Size, and a Nature command to set the caster's element.
+* **Taijutsu:** Body Flicker, Dynamic Entry, Strong Shoulder, Drunken Fist, Grab and Throw, Wall Bounce and Pole Vault round out the unarmed kit.
+* **Items:** Ninja Notes, Ninja Rations, Poisoned Needles, the Scroll Workbench and Training Weights, new paintings, archaeology loot modifiers and their recipes.
+* **Interface and quality of life:** a mode HUD, intent-reading and Byakugan read overlays, a Sharingan clone overlay, far sight, a reveal renderer, rank chat messages and new config toggles for the whole set.
+* **Skill tree:** dozens of new nodes, branches and effects wiring all of the above into the existing progression.
+
+**Full Changelog**: https://github.com/StandarterDF/Naruto-Mod/compare/v1.8.4...v1.9.0
+
 ## [1.8.1](https://github.com/sekwah41/Naruto-Mod/compare/v1.8.0...v1.8.1) (2023-08-05)
 
 

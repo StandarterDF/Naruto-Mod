@@ -16,6 +16,8 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.AbstractHurtingProjectile;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.phys.Vec3;
 
@@ -57,6 +59,10 @@ public class RotationAbility extends Ability implements Ability.Cooldown {
     /** How hard the spin throws a body outwards, and how high it lifts it. */
     private static final double PUSH_SPEED = 0.9d;
     private static final double PUSH_LIFT = 0.3d;
+
+    /** The least speed a caught shot is sent back with, and how much of its own speed it keeps. */
+    private static final double REFLECT_SPEED = 1.35d;
+    private static final double REFLECT_KEEP = 1.1d;
 
     /** How long the resistance and the vanilla damage window last, in ticks. */
     private static final int GUARD_TICKS = 40;
@@ -126,7 +132,12 @@ public class RotationAbility extends Ability implements Ability.Cooldown {
                 24, RADIUS * 0.35d, 0.5d, RADIUS * 0.35d, 0.06d);
     }
 
-    /** Tears apart every projectile in the spin that was not fired by the caster. */
+    /**
+     * Turns away every projectile in the spin that was not fired by the caster. A shot with a body to
+     * it - an arrow or a thrown technique - is sent back the way it came rather than torn apart, so
+     * the spin answers the archer as well as the arrow; anything else (a pearl, a bottle, a trident
+     * with its own rules) is simply destroyed, which is what the old version did to everything.
+     */
     private void clearProjectiles(ServerLevel level, Player player) {
         List<Projectile> incoming = level.getEntitiesOfClass(Projectile.class,
                 player.getBoundingBox().inflate(RADIUS), projectile -> projectile.getOwner() != player);
@@ -136,8 +147,29 @@ public class RotationAbility extends Ability implements Ability.Cooldown {
             }
             level.sendParticles(ParticleTypes.CRIT, projectile.getX(), projectile.getY(), projectile.getZ(),
                     6, 0.15d, 0.15d, 0.15d, 0.05d);
-            projectile.discard();
+            if (projectile instanceof AbstractArrow || projectile instanceof AbstractHurtingProjectile) {
+                reflect(projectile, player);
+            } else {
+                projectile.discard();
+            }
         }
+    }
+
+    /**
+     * Sends a caught shot back outwards with the caster as its new owner, so a reflected arrow or
+     * fireball can actually hurt whoever loosed it. The direction is taken from the shot's own place
+     * relative to the caster, which is the way it came in; speed is kept, with a floor so a spent
+     * arrow does not flop out of the spin.
+     */
+    private void reflect(Projectile projectile, Player player) {
+        Vec3 away = projectile.position().subtract(player.position());
+        if (away.lengthSqr() < 0.04d) {
+            away = player.getLookAngle().reverse();
+        }
+        double speed = Math.max(REFLECT_SPEED, projectile.getDeltaMovement().length() * REFLECT_KEEP);
+        projectile.setOwner(player);
+        projectile.setDeltaMovement(away.normalize().scale(speed).add(0.0d, 0.08d, 0.0d));
+        projectile.hurtMarked = true;
     }
 
     /** Throws every body inside the spin outwards, sparing the caster's own side. */

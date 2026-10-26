@@ -71,6 +71,12 @@ public enum SkillEffect {
     /** Fraction of the stamina a cushioned landing costs that is waived. */
     SOFT_LANDING,
 
+    /**
+     * Extra blocks of Byakugan circular vision. Only the Byakugan reads it, because it is the one
+     * eye whose picture is drawn from a radius rather than from whoever is being looked at.
+     */
+    BYAKUGAN_RANGE,
+
     /** Extra points of nature energy (senin mana) the caster can hold. */
     SENIN_MANA,
 

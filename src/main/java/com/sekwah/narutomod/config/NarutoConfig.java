@@ -80,6 +80,9 @@ public class NarutoConfig {
     private static final ForgeConfigSpec.BooleanValue CONFIG_CHIBAKU_TENSEI_ENABLED;
     public static boolean chibakuTenseiEnabled;
 
+    private static final ForgeConfigSpec.IntValue CONFIG_CHIBAKU_TENSEI_RADIUS;
+    public static int chibakuTenseiRadius;
+
     private static final ForgeConfigSpec.BooleanValue CONFIG_SHARINGAN_ENABLED;
     public static boolean sharinganEnabled;
 
@@ -213,6 +216,9 @@ public class NarutoConfig {
 
     private static final ForgeConfigSpec.BooleanValue CONFIG_NINJA_RANKS_ENABLED;
     public static boolean ninjaRanksEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_GENJUTSU_ON_PLAYERS;
+    public static boolean genjutsuOnPlayers;
 
     //private static final ForgeConfigSpec.BooleanValue CONFIG_STARTS_AS_NINJA;
     //public static boolean startsAsNinja;
@@ -419,6 +425,11 @@ public class NarutoConfig {
                         + " are shown as advancements. Turn off to keep the ladder out of the game entirely.")
                 .define("ninjaRanksEnabled", true);
 
+        CONFIG_GENJUTSU_ON_PLAYERS = configBuilder.comment("May genjutsu be turned on players as well as mobs?"
+                        + " Off by default: illusions on another player are a PvP tool and many servers do"
+                        + " not want them, so the technique refuses a player target unless this is on.")
+                .define("genjutsuOnPlayers", false);
+
         configBuilder.pop();
 
         configBuilder.comment("Variables for weapons").push(CATEGORY_WEAPONS);
@@ -459,8 +470,11 @@ public class NarutoConfig {
         CONFIG_RINNEGAN_ENABLED = configBuilder.comment("Can players open the Rinnegan? It costs chakra every tick and grants extra chakra and nature energy while it is open.")
                 .define("rinneganEnabled", true);
 
-        CONFIG_CHIBAKU_TENSEI_ENABLED = configBuilder.comment("Can players cast Chibaku Tensei? It lifts the ground and everything standing on it into a ball in the sky, then brings it down. Requires an open Rinnegan.")
+        CONFIG_CHIBAKU_TENSEI_ENABLED = configBuilder.comment("Can players cast Chibaku Tensei? It pulls the ground and everything standing on it into a ball in the sky, then brings it down. Requires an open Rinnegan. The ball breaks no blocks - see chibakuTenseiRadius for how big it gets.")
                 .define("chibakuTenseiEnabled", true);
+
+        CONFIG_CHIBAKU_TENSEI_RADIUS = configBuilder.comment("How big the Chibaku Tensei ball gets at a full charge, in blocks of radius. A tapped ball is a fifth of this. Only the picture, the reach of the pull and the weight of the landing scale with it: the technique never breaks blocks.")
+                .defineInRange("chibakuTenseiRadius", 16, 6, 32);
 
         CONFIG_SHARINGAN_ENABLED = configBuilder.comment("Can players open the Sharingan? It costs chakra every tick and reads whoever the caster looks at; Amaterasu is built on it.")
                 .define("sharinganEnabled", true);
@@ -522,6 +536,7 @@ public class NarutoConfig {
         kamuiTransferSeconds = CONFIG_KAMUI_TRANSFER_SECONDS.get();
         rinneganEnabled = CONFIG_RINNEGAN_ENABLED.get();
         chibakuTenseiEnabled = CONFIG_CHIBAKU_TENSEI_ENABLED.get();
+        chibakuTenseiRadius = CONFIG_CHIBAKU_TENSEI_RADIUS.get();
         sharinganEnabled = CONFIG_SHARINGAN_ENABLED.get();
         byakuganEnabled = CONFIG_BYAKUGAN_ENABLED.get();
         jouganEnabled = CONFIG_JOUGAN_ENABLED.get();
@@ -566,6 +581,7 @@ public class NarutoConfig {
         sentrySealSuppressesSpawns = CONFIG_SENTRY_SEAL_SUPPRESSES_SPAWNS.get();
         elementalStatesEnabled = CONFIG_ELEMENTAL_STATES_ENABLED.get();
         ninjaRanksEnabled = CONFIG_NINJA_RANKS_ENABLED.get();
+        genjutsuOnPlayers = CONFIG_GENJUTSU_ON_PLAYERS.get();
         //startsAsNinja = CONFIG_STARTS_AS_NINJA.get();
     }
 

@@ -62,4 +62,10 @@ public class WaterBulletJutsuAbility extends Ability implements Ability.Cooldown
     public int getCooldown() {
         return 4 * 20;
     }
+
+    /** The element this technique belongs to, for the caster's innate affinity. */
+    @Override
+    public com.sekwah.narutomod.abilities.Nature nature() {
+        return com.sekwah.narutomod.abilities.Nature.WATER;
+    }
 }

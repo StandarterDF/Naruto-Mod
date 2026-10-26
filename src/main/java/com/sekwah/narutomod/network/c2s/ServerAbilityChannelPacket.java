@@ -3,7 +3,9 @@ package com.sekwah.narutomod.network.c2s;
 import com.mojang.logging.LogUtils;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.AbilityUnlocks;
+import com.sekwah.narutomod.abilities.jutsus.ChakraCloakAbility;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
+import com.sekwah.narutomod.events.ByakuganEvents;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import net.minecraft.ChatFormatting;
@@ -76,6 +78,21 @@ public class ServerAbilityChannelPacket {
                     // Switched off in the jutsu menu, see DisabledAbilityData.
                     if (ninjaData.isAbilityDisabled(msg.abilityResource)) {
                         player.displayClientMessage(Component.translatable("jutsu.fail.techdisabled",
+                                Component.translatable(ability.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                                .withStyle(ChatFormatting.RED), true);
+                        return;
+                    }
+                    // A Byakugan palm has closed the caster's channels. A hold may still be let go,
+                    // so a sealed caster never loses the technique they already had in hand.
+                    if (ByakuganEvents.isSealed(player) && msg.status != ChannelStatus.STOP) {
+                        player.displayClientMessage(Component.translatable("jutsu.fail.tenketsu")
+                                .withStyle(ChatFormatting.RED), true);
+                        return;
+                    }
+                    // The chakra cloak leaves no room to start a hold, but releasing one that is
+                    // already running stays possible.
+                    if (msg.status != ChannelStatus.STOP && !ChakraCloakAbility.leavesRoomFor(player, ability)) {
+                        player.displayClientMessage(Component.translatable("jutsu.fail.chakra_cloak.locked",
                                 Component.translatable(ability.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
                                 .withStyle(ChatFormatting.RED), true);
                         return;

@@ -7,6 +7,7 @@ import com.sekwah.narutomod.network.s2c.ClientboundCameraPacket;
 import com.sekwah.narutomod.network.s2c.ClientboundFriendNoticePacket;
 import com.sekwah.narutomod.network.s2c.ClientboundFriendsPacket;
 import com.sekwah.narutomod.network.s2c.ClientboundOreSensePacket;
+import com.sekwah.narutomod.network.s2c.ClientboundRevealPacket;
 import com.sekwah.narutomod.network.s2c.ClientboundSensingPacket;
 import com.sekwah.narutomod.network.s2c.ClientboundSupplyChestPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -54,6 +55,7 @@ public class PacketHandler {
         NARUTO_CHANNEL.registerMessage(getPacketID(), ClientboundSupplyChestPacket.class, ClientboundSupplyChestPacket::encode, ClientboundSupplyChestPacket::decode, ClientboundSupplyChestPacket.Handler::handle);
         NARUTO_CHANNEL.registerMessage(getPacketID(), ClientboundSensingPacket.class, ClientboundSensingPacket::encode, ClientboundSensingPacket::decode, ClientboundSensingPacket.Handler::handle);
         NARUTO_CHANNEL.registerMessage(getPacketID(), ClientboundOreSensePacket.class, ClientboundOreSensePacket::encode, ClientboundOreSensePacket::decode, ClientboundOreSensePacket.Handler::handle);
+        NARUTO_CHANNEL.registerMessage(getPacketID(), ClientboundRevealPacket.class, ClientboundRevealPacket::encode, ClientboundRevealPacket::decode, ClientboundRevealPacket.Handler::handle);
         NARUTO_CHANNEL.registerMessage(getPacketID(), ClientboundFriendsPacket.class, ClientboundFriendsPacket::encode, ClientboundFriendsPacket::decode, ClientboundFriendsPacket.Handler::handle);
         NARUTO_CHANNEL.registerMessage(getPacketID(), ClientboundCameraPacket.class, ClientboundCameraPacket::encode, ClientboundCameraPacket::decode, ClientboundCameraPacket.Handler::handle);
         NARUTO_CHANNEL.registerMessage(getPacketID(), ClientboundFriendNoticePacket.class, ClientboundFriendNoticePacket::encode, ClientboundFriendNoticePacket::decode, ClientboundFriendNoticePacket.Handler::handle);

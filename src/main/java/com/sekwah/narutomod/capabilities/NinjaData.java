@@ -293,6 +293,10 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     /** The ninja's rank id, see {@code ranks/NinjaRank}. Server side only, saved with the rest. */
     private String ninjaRank = "";
 
+    /** The element the ninja was born to, see {@code abilities/Nature}; empty before the choice. */
+    @Sync
+    private String natureAffinity = "";
+
     /**
      * Whether the starting handbook has already been handed out. Ninja mode can be switched off and
      * on again, so "became a ninja just now" is not enough to decide: without a flag of its own the
@@ -380,6 +384,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private static final String SCROLLS_TAG = "scrolls";
     private static final String BOSS_MILESTONES_TAG = "bossMilestones";
     private static final String NINJA_RANK_TAG = "ninjaRank";
+    private static final String NATURE_AFFINITY_TAG = "natureAffinity";
     private static final String HANDBOOK_GIVEN_TAG = "handbookGiven";
     private static final String DISABLED_ABILITIES_TAG = "disabledAbilities";
     private static final String MENU_CLICK_ALL_TAG = "menuClickAll";
@@ -542,9 +547,12 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         this.chakraRegenInfo.cooldown = Math.max(cooldown, this.chakraRegenInfo.cooldown);
     }
 
+    /** Extra stamina every action costs, from the training weights the body is carrying. */
+    private float staminaCostMultiplier = 1.0f;
+
     @Override
     public void useStamina(float amount, int cooldown) {
-        this.stamina -= amount;
+        this.stamina -= amount * this.staminaCostMultiplier;
         this.staminaRegenInfo.cooldown = Math.max(cooldown, this.staminaRegenInfo.cooldown);
     }
 
@@ -840,6 +848,16 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     }
 
     @Override
+    public String getNatureAffinity() {
+        return this.natureAffinity;
+    }
+
+    @Override
+    public void setNatureAffinity(String affinity) {
+        this.natureAffinity = affinity == null ? "" : affinity;
+    }
+
+    @Override
     public boolean isHandbookGiven() {
         return this.handbookGiven;
     }
@@ -906,15 +924,31 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
             }
         }
 
+        this.staminaCostMultiplier = com.sekwah.narutomod.item.TrainingWeightsItem
+                .staminaMultiplier(player);
         if (this.staminaRegenInfo.canRegen()) {
             float staminaRegen = NarutoConfig.staminaRegen
                     + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.STAMINA_REGEN) / 20.0f;
+            // Running dry leaves the body winded for a few seconds: the bar comes back at half rate,
+            // which is what makes spending the last point a decision rather than a formality.
+            if (this.stamina <= 0.0f) {
+                player.getPersistentData().putLong("narutomod:winded_until",
+                        player.level().getGameTime() + 100L);
+            }
+            if (player.getPersistentData().getLong("narutomod:winded_until")
+                    > player.level().getGameTime()) {
+                staminaRegen *= 0.5f;
+            }
+            // Weight is real: every point of armour takes a little off the recovery.
+            staminaRegen *= 1.0f - Math.min(0.3f, player.getArmorValue() * 0.01f);
             if (player.isCreative()) {
                 staminaRegen *= CREATIVE_REGEN_MULTIPLIER;
             }
             this.stamina += staminaRegen;
         }
-        if (this.chakraRegenInfo.canRegen()) {
+        if (this.chakraRegenInfo.canRegen()
+                && player.getPersistentData().getLong("narutomod:node_rupture_until")
+                <= player.level().getGameTime()) {
             float regen = NarutoConfig.chakraRegen
                     + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.CHAKRA_REGEN) / 20.0f;
             // A freshly filled pool keeps trickling in faster for a while, which is what makes
@@ -1054,6 +1088,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         }
         nbt.put(BOSS_MILESTONES_TAG, bossTag);
         nbt.putString(NINJA_RANK_TAG, this.ninjaRank);
+        nbt.putString(NATURE_AFFINITY_TAG, this.natureAffinity);
         nbt.putBoolean(HANDBOOK_GIVEN_TAG, this.handbookGiven);
         CompoundTag disabledTag = new CompoundTag();
         for (ResourceLocation id : this.disabledAbilityData.getAbilities()) {
@@ -1136,6 +1171,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
                 this.claimedBossMilestones.add(boss);
             }
             this.ninjaRank = compoundTag.getString(NINJA_RANK_TAG);
+            this.natureAffinity = compoundTag.getString(NATURE_AFFINITY_TAG);
             this.handbookGiven = compoundTag.getBoolean(HANDBOOK_GIVEN_TAG);
             this.menuClickAll = compoundTag.getBoolean(MENU_CLICK_ALL_TAG);
             this.disabledAbilityData.getAbilities().clear();

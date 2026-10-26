@@ -1,0 +1,24 @@
+{
+  "type": "narutomod:add_loot",
+  "conditions": [
+    {
+      "condition": "minecraft:alternative",
+      "terms": [
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:archaeology/trail_ruins_rare" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/buried_treasure" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_treasure" },
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:chests/woodland_mansion" }
+      ]
+    }
+  ],
+  "entries": [
+    { "item": "narutomod:scroll_jougan", "weight": 1 },
+    { "item": "narutomod:scroll_rasengan", "weight": 2 },
+    { "item": "narutomod:scroll_byakugan", "weight": 3 },
+    { "item": "narutomod:chakra_crystal", "weight": 4 }
+  ],
+  "chance": 0.2,
+  "luck_bonus": 0.05,
+  "min": 1,
+  "max": 1
+}

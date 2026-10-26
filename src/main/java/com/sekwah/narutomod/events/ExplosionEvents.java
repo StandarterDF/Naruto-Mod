@@ -2,7 +2,6 @@ package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.entity.ShadowCloneEntity;
-import com.sekwah.narutomod.entity.jutsuprojectile.ChibakuTenseiEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.RasenshurikenJutsuEntity;
 import com.sekwah.narutomod.friends.Friends;
 import net.minecraft.world.entity.Entity;
@@ -33,11 +32,6 @@ public class ExplosionEvents {
             event.getAffectedEntities().removeIf(clone::isAlliedTo);
         } else if (source instanceof RasenshurikenJutsuEntity disc) {
             Entity owner = disc.getOwner();
-            if (owner != null) {
-                event.getAffectedEntities().removeIf(entity -> Friends.isOwnSide(owner, entity));
-            }
-        } else if (source instanceof ChibakuTenseiEntity ball) {
-            Entity owner = ball.getOwner();
             if (owner != null) {
                 event.getAffectedEntities().removeIf(entity -> Friends.isOwnSide(owner, entity));
             }

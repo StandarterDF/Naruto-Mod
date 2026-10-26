@@ -92,6 +92,20 @@ public class EarthWallSavedData extends SavedData {
     }
 
     /**
+     * Whether a block at this position is already waiting to rise or is standing as part of a wall.
+     * A wall that is still growing asks this before adding a layer, so holding the technique does
+     * not schedule the same block twice as the aim drifts.
+     */
+    public boolean isScheduled(BlockPos pos) {
+        for (Entry entry : this.entries) {
+            if (entry.pos.equals(pos)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Advances the wall animation: places every block whose rise time has come and removes every
      * block whose time is up. Called every tick from {@code events/EarthWallEvents}.
      */
@@ -150,7 +164,7 @@ public class EarthWallSavedData extends SavedData {
         level.setBlockAndUpdate(entry.pos, entry.placed);
         level.playSound(null, entry.pos.getX() + 0.5d, entry.pos.getY() + 0.5d,
                 entry.pos.getZ() + 0.5d, SoundEvents.STONE_PLACE, SoundSource.BLOCKS,
-                0.4f, 0.5f + level.random.nextFloat() * 0.2f);
+                0.3f, 0.5f + level.random.nextFloat() * 0.2f);
         if (level.random.nextInt(3) == 0) {
             level.sendParticles(ParticleTypes.CLOUD,
                     entry.pos.getX() + 0.5d, entry.pos.getY() + 0.5d, entry.pos.getZ() + 0.5d,

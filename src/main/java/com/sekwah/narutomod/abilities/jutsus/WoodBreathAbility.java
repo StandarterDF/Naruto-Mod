@@ -115,4 +115,10 @@ public class WoodBreathAbility extends AbstractBreathAbility {
         growable.performBonemeal(level, level.random, pos, state);
         return true;
     }
+
+    /** The element this technique belongs to, for the caster's innate affinity. */
+    @Override
+    public com.sekwah.narutomod.abilities.Nature nature() {
+        return com.sekwah.narutomod.abilities.Nature.WOOD;
+    }
 }

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:crafting_table" },
+    { "item": "minecraft:paper" },
+    { "item": "minecraft:paper" },
+    { "item": "narutomod:chakra_seal" }
+  ],
+  "result": {
+    "item": "narutomod:scroll_workbench",
+    "count": 1
+  }
+}

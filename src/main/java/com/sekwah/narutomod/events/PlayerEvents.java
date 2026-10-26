@@ -59,6 +59,8 @@ public class PlayerEvents {
 
     @SubscribeEvent
     public static void onEntityUpdate(LivingEvent.LivingTickEvent event) {
+        com.sekwah.narutomod.item.TrainingWeightsItem.applySlowdown((net.minecraft.world.entity.player.Player) event.getEntity());
+
         // Do chakra updates and other stuff here unless handled in capabilities
         if (!(event.getEntity() instanceof Player player) || player.level().isClientSide) {
             return;

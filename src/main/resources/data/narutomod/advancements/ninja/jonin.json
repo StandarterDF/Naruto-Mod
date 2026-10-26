@@ -22,5 +22,11 @@
       }
     }
   },
-  "parent": "narutomod:ninja/chunin"
+  "parent": "narutomod:ninja/chunin",
+  "rewards": {
+    "recipes": [
+      "narutomod:samehada",
+      "narutomod:katana"
+    ]
+  }
 }

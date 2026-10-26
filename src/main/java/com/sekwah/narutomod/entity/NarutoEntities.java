@@ -3,6 +3,7 @@ package com.sekwah.narutomod.entity;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.entity.item.PaperBombEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.ChibakuTenseiEntity;
+import com.sekwah.narutomod.entity.jutsuprojectile.EarthWallEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.FireballJutsuEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.RasenshurikenJutsuEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.WaterBulletJutsuEntity;
@@ -83,12 +84,20 @@ public class NarutoEntities {
             EntityType.Builder.<SmokeBombEntity>of(SmokeBombEntity::new, MobCategory.MISC).sized(0.25F, 0.25F).clientTrackingRange(6).updateInterval(10));
 
     /**
-     * The invisible centre of the Chibaku Tensei ball. It carries no model, so it only needs a box
-     * wide enough to cover the shell of debris it holds, and a tracking range that reaches the
-     * moment the ball comes down.
+     * The invisible centre of the Chibaku Tensei ball. It carries no model and no hitbox work: the
+     * ball around it is drawn by the renderer, so the box only has to be big enough not to matter.
+     * The tracking range is the widest the game allows, because the ball is meant to be seen across
+     * the whole valley it was cast in.
      */
     public static final RegistryObject<EntityType<ChibakuTenseiEntity>> CHIBAKU_TENSEI = register("chibaku_tensei",
-            EntityType.Builder.<ChibakuTenseiEntity>of(ChibakuTenseiEntity::new, MobCategory.MISC).fireImmune().sized(6.0F, 6.0F).clientTrackingRange(10).updateInterval(5));
+            EntityType.Builder.<ChibakuTenseiEntity>of(ChibakuTenseiEntity::new, MobCategory.MISC).fireImmune().sized(6.0F, 6.0F).clientTrackingRange(32).updateInterval(2));
+
+    /**
+     * One visual block of an earth wall climbing out of the ground. It carries no hitbox and is never
+     * summoned by the player: the technique spawns it just before the real block is placed.
+     */
+    public static final RegistryObject<EntityType<EarthWallEntity>> EARTH_WALL = register("earth_wall",
+            EntityType.Builder.<EarthWallEntity>of(EarthWallEntity::new, MobCategory.MISC).fireImmune().noSummon().sized(1.0F, 1.0F).clientTrackingRange(10).updateInterval(10));
 
     private static <T extends Entity> RegistryObject<EntityType<T>> register(String key, EntityType.Builder<T> builder) {
         return ENTITIES.register(key, () -> builder.build(key));

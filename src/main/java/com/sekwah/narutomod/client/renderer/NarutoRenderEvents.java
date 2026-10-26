@@ -52,6 +52,7 @@ public class NarutoRenderEvents {
         event.registerEntityRenderer(NarutoEntities.SMOKE_BOMB.get(), ThrownItemRenderer::new);
 
         event.registerEntityRenderer(NarutoEntities.CHIBAKU_TENSEI.get(), ChibakuTenseiRenderer::new);
+        event.registerEntityRenderer(NarutoEntities.EARTH_WALL.get(), EarthWallBlockRenderer::new);
 
         event.registerEntityRenderer(NarutoEntities.SHADOW_CLONE.get(), ShadowCloneRenderer::new);
 

@@ -78,7 +78,10 @@ public enum SkillBranch {
     RINNEGAN(SkillSection.DOJUTSU, "naruto.gui.skill.branch.rinnegan", 0xFFB39DDB),
 
     /** The Senrigan: the far eye that borrows the sight of the caster's own clones. */
-    SENRIGAN(SkillSection.DOJUTSU, "naruto.gui.skill.branch.senrigan", 0xFFE0C080);
+    SENRIGAN(SkillSection.DOJUTSU, "naruto.gui.skill.branch.senrigan", 0xFFE0C080),
+
+    /** The Sage of Six Paths: the mode, the orbs, the flight and the powers built on it. */
+    SIX_PATHS(SkillSection.DOJUTSU, "naruto.gui.skill.branch.six_paths", 0xFFB0A0FF);
 
     private final SkillSection section;
     private final String translationKey;

@@ -48,6 +48,33 @@ public class NarutoItems {
             -> new SmokeBombItem(new Item.Properties().stacksTo(16)));
 
     /**
+     * A field ration: a full meal in a paper wrap, eaten cold and on the move.
+     */
+    public static final RegistryObject<Item> NINJA_RATION = ITEMS.register("ninja_ration",
+            () -> new NinjaRationItem(new Item.Properties().stacksTo(16)
+                    .food(new FoodProperties.Builder().nutrition(9).saturationMod(0.67f).build())));
+
+    /**
+     * Throwing needles dipped in poison, for the fights where chakra is too precious to spend.
+     */
+    public static final RegistryObject<Item> POISONED_NEEDLES = ITEMS.register("poisoned_needles",
+            () -> new PoisonedNeedleItem(new Item.Properties().stacksTo(16)));
+
+    /**
+     * A crafting table folded into a scroll: the field kit of a ninja who cannot carry a bench.
+     */
+    public static final RegistryObject<Item> SCROLL_WORKBENCH = ITEMS.register("scroll_workbench",
+            () -> new ScrollWorkbenchItem(new Item.Properties().stacksTo(1)));
+
+    /** A scrap of lore found in chests: it tells a story and is then gone. */
+    public static final RegistryObject<Item> NINJA_NOTE = ITEMS.register("ninja_note",
+            () -> new NinjaNoteItem(new Item.Properties().stacksTo(16)));
+
+    /** Training weights: heavier steps and a heavier stamina bill, for the body that wants the work. */
+    public static final RegistryObject<Item> TRAINING_WEIGHTS = ITEMS.register("training_weights",
+            () -> new TrainingWeightsItem(new Item.Properties().stacksTo(2)));
+
+    /**
      * The material the better recipes are built from: a crystal that can be charged with chakra.
      */
     public static final RegistryObject<Item> CHAKRA_CRYSTAL = ITEMS.register("chakra_crystal", ()
@@ -240,7 +267,8 @@ public class NarutoItems {
             () -> new TreasureMapItem(new Item.Properties()));
 
     public static final RegistryObject<Item> KATANA = ITEMS.register("katana", ()
-            -> new SwordItem(NinjaTier.KATANA, 3, -1.95F, new Item.Properties()));
+            -> new ComboSwordItem(NinjaTier.KATANA, 3, -1.95F, new Item.Properties(),
+                    0.35f, 3, 20, 0.0f));
 
     /**
      * Samehada: quick enough for a chain to be kept alive, and it takes chakra off whatever it cuts.

@@ -1,7 +1,7 @@
 # Naruto-Mod
 
 **Порт Sekwah's Naruto Mod на Minecraft 1.20.1 / Forge 47.1.62.**
-Форк [StandarterDF/Naruto-Mod](https://github.com/StandarterDF/Naruto-Mod) (версия `1.8.1-SNAPSHOT`),
+Форк [StandarterDF/Naruto-Mod](https://github.com/StandarterDF/Naruto-Mod) (версия `1.9.0-SNAPSHOT`),
 оригинал — [sekwah41/Naruto-Mod](https://github.com/sekwah41/Naruto-Mod). Цель форка — паритет поведения
 с версией 1.7.10 плюс новые техники.
 

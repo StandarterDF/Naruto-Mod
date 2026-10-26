@@ -22,5 +22,10 @@
       }
     }
   },
-  "parent": "narutomod:ninja/root"
+  "parent": "narutomod:ninja/root",
+  "rewards": {
+    "recipes": [
+      "narutomod:chakra_battery"
+    ]
+  }
 }

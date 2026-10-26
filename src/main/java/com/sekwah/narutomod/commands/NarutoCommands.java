@@ -8,6 +8,7 @@ public class NarutoCommands {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         JutsuCommand.register(dispatcher);
         NarutoDebugCommand.register(dispatcher);
+        NatureCommand.register(dispatcher);
     }
 
 }

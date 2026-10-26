@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:bread" },
+    { "item": "minecraft:cooked_beef" },
+    { "item": "minecraft:dried_kelp" },
+    { "item": "minecraft:paper" }
+  ],
+  "result": {
+    "item": "narutomod:ninja_ration",
+    "count": 2
+  }
+}

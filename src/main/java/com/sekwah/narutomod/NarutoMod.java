@@ -75,6 +75,7 @@ public class NarutoMod {
         NarutoGameEvents.register(eventBus);
         NarutoCreativeTabs.register(eventBus);
         NarutoWorldGen.register(eventBus);
+        com.sekwah.narutomod.world.NarutoPaintings.register(eventBus);
         NarutoMenus.register(eventBus);
         NarutoEffects.register(eventBus);
         NarutoLootModifiers.register(eventBus);

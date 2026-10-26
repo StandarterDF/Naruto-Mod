@@ -51,6 +51,10 @@ public class GenjutsuEvents {
      * @param duration how long the illusion lasts, in ticks.
      */
     public static void apply(Player caster, Mob victim, int duration) {
+        // Kai leaves a short window in which the mind refuses another illusion.
+        if (victim.getPersistentData().getLong("narutomod:kai_immunity_until") > victim.level().getGameTime()) {
+            return;
+        }
         CompoundTag data = victim.getPersistentData();
         data.putLong(END_TAG, victim.level().getGameTime() + duration);
         data.putString(CASTER_TAG, caster.getUUID().toString());

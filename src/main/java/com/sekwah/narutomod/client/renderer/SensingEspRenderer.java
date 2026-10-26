@@ -315,6 +315,10 @@ public final class SensingEspRenderer {
 
     /** Green for ordinary creatures, red for hostile ones, aqua for other people. */
     private static float[] colourOf(LivingEntity entity) {
+        Player self = net.minecraft.client.Minecraft.getInstance().player;
+        if (self != null && entity != self && entity.isAlliedTo(self)) {
+            return new float[]{0.55f, 1.0f, 0.55f};
+        }
         if (entity instanceof Player) {
             return new float[]{0.45f, 0.85f, 1.0f};
         }

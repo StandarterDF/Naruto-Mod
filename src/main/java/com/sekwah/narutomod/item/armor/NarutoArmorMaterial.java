@@ -8,6 +8,7 @@ import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ArmorMaterials;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 
 import java.util.EnumMap;
@@ -24,7 +25,7 @@ public enum NarutoArmorMaterial implements ArmorMaterial {
         type.put(ArmorItem.Type.CHESTPLATE, 7);
         type.put(ArmorItem.Type.HELMET, 2);
     }), 8, SoundEvents.ARMOR_EQUIP_IRON, 2.1F, 0.0F, () -> {
-        return null;//Ingredient.of(Items.LEATHER);
+        return Ingredient.of(Items.LEATHER);
     }),
     FLAK_MAT("flak", 35, Util.make(new EnumMap<>(ArmorItem.Type.class), (type) -> {
         type.put(ArmorItem.Type.BOOTS, 2);
@@ -32,7 +33,7 @@ public enum NarutoArmorMaterial implements ArmorMaterial {
         type.put(ArmorItem.Type.CHESTPLATE, 6);
         type.put(ArmorItem.Type.HELMET, 2);
     }), 8, SoundEvents.ARMOR_EQUIP_IRON, 2.1F, 0.0F, () -> {
-        return null;//Ingredient.of(Items.LEATHER);
+        return Ingredient.of(Items.LEATHER);
     }),
     FLAK_STRONGER_MAT("flak_strong", 35, Util.make(new EnumMap<>(ArmorItem.Type.class), (type) -> {
         type.put(ArmorItem.Type.BOOTS, 2);
@@ -40,7 +41,7 @@ public enum NarutoArmorMaterial implements ArmorMaterial {
         type.put(ArmorItem.Type.CHESTPLATE, 7);
         type.put(ArmorItem.Type.HELMET, 2);
     }), 8, SoundEvents.ARMOR_EQUIP_IRON, 2.1F, 0.0F, () -> {
-        return null;//Ingredient.of(Items.LEATHER);
+        return Ingredient.of(Items.LEATHER);
     }),
     CHARACTER_CLOTHES("character_clothes", 35, Util.make(new EnumMap<>(ArmorItem.Type.class), (type) -> {
         type.put(ArmorItem.Type.BOOTS, 2);
@@ -48,7 +49,7 @@ public enum NarutoArmorMaterial implements ArmorMaterial {
         type.put(ArmorItem.Type.CHESTPLATE, 7);
         type.put(ArmorItem.Type.HELMET, 2);
     }), 8, SoundEvents.ARMOR_EQUIP_LEATHER, 2.1F, 0.0F, () -> {
-        return null;//Ingredient.of(Items.LEATHER);
+        return Ingredient.of(Items.LEATHER);
     }),
     FULL_CHARACTER_CLOTHES("full_character_clothes", 35, Util.make(new EnumMap<>(ArmorItem.Type.class), (type) -> {
         type.put(ArmorItem.Type.BOOTS, 2);
@@ -56,7 +57,7 @@ public enum NarutoArmorMaterial implements ArmorMaterial {
         type.put(ArmorItem.Type.CHESTPLATE, 10);
         type.put(ArmorItem.Type.HELMET, 2);
     }), 6, SoundEvents.ARMOR_EQUIP_LEATHER, 2.1F, 0.0F, () -> {
-        return null;//Ingredient.of(Items.LEATHER);
+        return Ingredient.of(Items.LEATHER);
     }),
     HEADBAND("headband", 35, Util.make(new EnumMap<>(ArmorItem.Type.class), (type) -> {
         type.put(ArmorItem.Type.BOOTS, 2);
@@ -64,7 +65,7 @@ public enum NarutoArmorMaterial implements ArmorMaterial {
         type.put(ArmorItem.Type.CHESTPLATE, 5);
         type.put(ArmorItem.Type.HELMET, 2);
     }), 6, SoundEvents.ARMOR_EQUIP_LEATHER, 2.1F, 0.0F, () -> {
-        return null;//Ingredient.of(Items.LEATHER);
+        return Ingredient.of(Items.LEATHER);
     }),
     ;
 

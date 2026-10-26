@@ -252,6 +252,14 @@ public interface INinjaData extends INBTSerializable<Tag> {
     void setNinjaRank(String rank);
 
     /**
+     * The element this ninja was born to, as a {@code Nature} id, or an empty string before the
+     * choice is made. Synced because the jutsu menu shows the affinity in its prices.
+     */
+    String getNatureAffinity();
+
+    void setNatureAffinity(String affinity);
+
+    /**
      * Whether the starting handbook was already given. Saved, so turning ninja mode off and on again
      * cannot be used to print more copies of it.
      */

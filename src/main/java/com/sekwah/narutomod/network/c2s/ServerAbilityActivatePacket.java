@@ -2,9 +2,13 @@ package com.sekwah.narutomod.network.c2s;
 
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.AbilityUnlocks;
+import com.sekwah.narutomod.abilities.ModeBus;
 import com.sekwah.narutomod.abilities.jutsus.AbstractDojutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.ChakraCloakAbility;
+import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
+import com.sekwah.narutomod.events.ByakuganEvents;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import net.minecraft.ChatFormatting;
@@ -44,6 +48,18 @@ public class ServerAbilityActivatePacket {
         return new ServerAbilityActivatePacket(abilityId);
     }
 
+    /**
+     * @return whether this cast only stops a stance the caster already has running, which is always
+     *         allowed so a seal can never trap a body in an upkeep.
+     */
+    private static boolean closesRunningToggle(INinjaData ninjaData, Ability ability) {
+        if (ability.activationType() != Ability.ActivationType.TOGGLE) {
+            return false;
+        }
+        ResourceLocation id = NarutoRegistries.ABILITIES.getKey(ability);
+        return id != null && ninjaData.getToggleAbilityData().getAbilitiesHashSet().contains(id);
+    }
+
     public static class Handler {
         public static void handle(ServerAbilityActivatePacket msg, Supplier<NetworkEvent.Context> ctx) {
             ctx.get().enqueueWork(() -> {
@@ -76,6 +92,23 @@ public class ServerAbilityActivatePacket {
                                 .withStyle(ChatFormatting.RED), true);
                         return;
                     }
+                    // A Byakugan palm has closed the caster's channels: no technique may start.
+                    // Closing an eye that is already burning is still allowed, or a sealed caster
+                    // would be stuck paying an upkeep they cannot switch off.
+                    if (ByakuganEvents.isSealed(player) && !closesRunningToggle(ninjaData, ability)) {
+                        player.displayClientMessage(Component.translatable("jutsu.fail.tenketsu")
+                                .withStyle(ChatFormatting.RED), true);
+                        return;
+                    }
+                    // The chakra cloak leaves no room in the body for another technique. Switching
+                    // the cloak off (or pulling the tailed cloak over it) is still allowed, or the
+                    // caster would be trapped inside their own shell.
+                    if (!ChakraCloakAbility.leavesRoomFor(player, ability) && !closesRunningToggle(ninjaData, ability)) {
+                        player.displayClientMessage(Component.translatable("jutsu.fail.chakra_cloak.locked",
+                                Component.translatable(ability.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                                .withStyle(ChatFormatting.RED), true);
+                        return;
+                    }
                     if (ability.activationType() == Ability.ActivationType.INSTANT) {
 
                         boolean canTriggerJutsu = true;
@@ -103,6 +136,8 @@ public class ServerAbilityActivatePacket {
                         }
                     } else if(ability.activationType() == Ability.ActivationType.TOGGLE) {
                         ToggleAbilityData abilityTracker = ninjaData.getToggleAbilityData();
+                        // One major mode at a time: the body cannot wear two full transformations.
+                        ModeBus.closeOthers(player, ninjaData, abilityId);
                         HashSet<ResourceLocation> abilities = abilityTracker.getAbilitiesHashSet();
                         NarutoRegistries.ABILITIES.getResourceKey(ability).ifPresent(abilityResourceKey -> {
                             var location = abilityResourceKey.location();

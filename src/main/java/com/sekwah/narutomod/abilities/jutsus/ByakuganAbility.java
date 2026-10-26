@@ -3,6 +3,8 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.config.NarutoConfig;
+import com.sekwah.narutomod.skills.SkillEffect;
+import com.sekwah.narutomod.skills.SkillTree;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -37,8 +39,9 @@ public class ByakuganAbility extends AbstractDojutsuAbility {
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "byakugan");
 
     /**
-     * How far the circular vision reaches, in blocks. Deliberately short: the eye shows everything
-     * in that bubble through walls, so a large number would turn every fight into a map.
+     * How far the circular vision reaches before any training, in blocks. Deliberately short: the eye
+     * shows everything in that bubble through walls, so a large number would turn every fight into a
+     * map. The tree widens it a step at a time; see {@link #visionRadius(INinjaData)}.
      */
     public static final float VISION_RADIUS = 16.0f;
 
@@ -79,6 +82,16 @@ public class ByakuganAbility extends AbstractDojutsuAbility {
                     player.getY() + player.getBbHeight() * 0.92d, player.getZ(),
                     2, 0.2d, 0.05d, 0.2d, 0.005d);
         }
+    }
+
+    /**
+     * How far this caster's circular vision actually reaches: the base bubble plus whatever the two
+     * widening nodes of the branch add. Read on the client by {@code ClientSensingData}, which draws
+     * the picture, so the tree widens the view itself rather than only the numbers on a tooltip.
+     */
+    public static float visionRadius(INinjaData ninjaData) {
+        return VISION_RADIUS + SkillTree.bonus(ninjaData.getSkillData().getUnlocked(),
+                SkillEffect.BYAKUGAN_RANGE);
     }
 
     /** @return whether the caster has the Byakugan open right now. */
