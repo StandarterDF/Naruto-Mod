@@ -28,6 +28,7 @@ SECTION_JAVA = ROOT / "src/main/java/com/sekwah/narutomod/skills/SkillSection.ja
 LANG_EN = ROOT / "src/main/resources/assets/narutomod/lang/en_us.json"
 LANG_RU = ROOT / "src/main/resources/assets/narutomod/lang/ru_ru.json"
 PAGE = ROOT / "docs/skills.html"
+DATA_JS = ROOT / "docs/skills-tree-data.js"
 
 MARK_START = "<!-- SKILLS:START -->"
 MARK_END = "<!-- SKILLS:END -->"
@@ -64,6 +65,7 @@ EFFECT_ORDER = [
     "CLONE_LIFETIME",
     "WORKER_LIFETIME",
     "SOFT_LANDING",
+    "BYAKUGAN_RANGE",
     "SENIN_MANA",
     "SENIN_MANA_REGEN",
     "SAGE_ENTRY",
@@ -99,12 +101,18 @@ FLAVOUR = {
     "звука.",
     "SAGE": "Сендзюцу: запас природной энергии, её сбор и вход в Режим Мудреца. Сначала копится "
     "энергия, потом открывается сам режим.",
-    "SHARINGAN": "Шаринган: каркас ветки. Узлов пока нет — вкладка стоит пустой и ждёт своего "
-    "набора техник.",
-    "BYAKUGAN": "Бьякуган: каркас ветки. Узлов пока нет — вкладка стоит пустой и ждёт своего "
-    "набора техник.",
+    "SHARINGAN": "Шаринган: копирующее колесо, его восприятие, Аматэрасу, Сусаноо и гендзюцу "
+    "глаза. Техники висят на пассивках-подводках, а не друг на друге.",
+    "BYAKUGAN": "Бьякуган: круговой обзор, точные удары, врата и небесные техники клана Хьюга. "
+    "Ветка начинается с самого глаза, поэтому её видно издалека.",
+    "JOUGAN": "Джоуган: глаз, который видит потоки чакры и режет их. Ветка про дальний бой и "
+    "проникновение в чужую технику.",
     "RINNEGAN": "Риннеган: глаз мудреца, его запас чакры и сенин-маны, притяжение с отталкиванием "
     "и Чибаку Тенсэй. Техники висят на пассивках-подводках, а не друг на друге.",
+    "SENRIGAN": "Сенриган: глаз, который смотрит дальше всех. Ветка про обзор, метки и выстрелы "
+    "через полкарты.",
+    "SIX_PATHS": "Шесть Путей: путь боли, звериный путь, голодный путь и остальные стойки "
+    "Риннегана. Каждый путь — отдельная способность, а не пассивка.",
 }
 
 # One line per section (the first row of tabs); a section is only a grouping of branches.
@@ -115,8 +123,8 @@ SECTION_FLAVOUR = {
     "толкались на одной доске.",
     "SPECIAL": "Особые техники: клоны, пространство, разум и сендзюцу. То, что не сводится к одной "
     "стихии.",
-    "DOJUTSU": "Додзюцу: глазные кланы. Риннеган открыт и покупается как стойка; Шаринган и "
-    "Бьякуган пока размечены как каркас на будущее.",
+    "DOJUTSU": "Додзюцу: глазные кланы — Шаринган, Бьякуган, Джоуган, Риннеган, Сенриган и "
+    "Шесть Путей. У каждого глаза своя доска и свой центр.",
 }
 
 # Bases the notes in the totals table refer to; the config defaults they mirror are checked by eye.
@@ -273,6 +281,8 @@ def amount_text(effect: str, amount: float) -> str:
         return "+%s %% к времени жизни рабочих" % clean(amount * 100)
     if effect == "SOFT_LANDING":
         return "−%s %% стамины при мягкой посадке" % clean(amount * 100)
+    if effect == "BYAKUGAN_RANGE":
+        return "+%s блоков обзора Бьякугана" % whole(amount)
     if effect == "SENIN_MANA":
         return "+%s к максимуму сенин-маны" % whole(amount)
     if effect == "SENIN_MANA_REGEN":
@@ -322,6 +332,8 @@ def short_text(effect: str, amount: float) -> str:
         return "+%s %% жизни рабочих" % clean(amount * 100)
     if effect == "SOFT_LANDING":
         return "−%s %% стамины посадки" % clean(amount * 100)
+    if effect == "BYAKUGAN_RANGE":
+        return "+%s блоков обзора" % whole(amount)
     if effect == "SENIN_MANA":
         return "+%s сенин-маны" % whole(amount)
     if effect == "SENIN_MANA_REGEN":
@@ -429,9 +441,81 @@ def totals_note(effect: str, total: float) -> str:
         return "максимум природной энергии, задаётся конфигом"
     if effect == "SENIN_MANA_REGEN":
         return "скорость сбора природной энергии"
+    if effect == "BYAKUGAN_RANGE":
+        return "радиус кругового обзора Бьякугана"
     if effect == "SAGE_ENTRY":
         return "порог входа в Режим Мудреца"
     return ""
+
+
+def unlock_label(unlock: str, lang_ru: dict) -> str:
+    """Human name of what an unlock node teaches: ability, worker shift or mechanic."""
+    kind, _, key = unlock.partition(":")
+    if kind == "ability":
+        return lang_ru.get("narutomod:" + key, key.replace("_", " "))
+    if kind == "worker":
+        return lang_ru.get("naruto.worker." + key, key.replace("_", " "))
+    return ""
+
+
+def build_tree_data(nodes, branches, sections, lang_ru, lang_en) -> str:
+    """The payload for the interactive board on the site (docs/skills-tree.js)."""
+    payload = {
+        "nodes": [
+            {
+                "path": node["path"],
+                "branch": node["branch"],
+                "x": node["x"],
+                "y": node["y"],
+                "cost": node["cost"],
+                "kind": node["kind"],
+                "effect": node["effect"],
+                "amount": node["amount"],
+                "requires": node["requires"],
+                "name": node["name"],
+                "nameEn": lang_en.get(
+                    "naruto.skill." + node["path"] + ".name", node["path"]
+                ),
+                "desc": node["desc"],
+                "gain": (
+                    "Открывает: " + unlock_label(node["unlock"], lang_ru)
+                    if node["kind"] == "unlock"
+                    and unlock_label(node["unlock"], lang_ru)
+                    else (
+                        "Открывает механику"
+                        if node["kind"] == "unlock"
+                        else amount_text(node["effect"], node["amount"])
+                    )
+                ),
+            }
+            for node in nodes
+        ],
+        "branches": {
+            b["name"]: {
+                "section": b["section"],
+                "colour": b["colour"],
+                "label": lang_ru.get(b["lang"], b["name"]),
+                "labelEn": lang_en.get(b["lang"], b["name"]),
+            }
+            for b in branches
+        },
+        "branchList": [b["name"] for b in branches],
+        "sections": {
+            s["name"]: {
+                "colour": s["colour"],
+                "label": lang_ru.get(s["lang"], s["name"]),
+                "labelEn": lang_en.get(s["lang"], s["name"]),
+            }
+            for s in sections
+        },
+        "sectionList": [s["name"] for s in sections],
+    }
+    return (
+        "// Generated by tools/build_docs_skills.py - do not edit by hand.\n"
+        "window.NARUTO_SKILL_TREE = "
+        + json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+        + ";\n"
+    )
 
 
 def build_block(nodes, branches, sections, lang_ru, lang_en, stats) -> str:
@@ -475,6 +559,66 @@ def build_block(nodes, branches, sections, lang_ru, lang_en, stats) -> str:
 
     def line(text: str = "") -> None:
         out.append(pad + text if text else "")
+
+    # --- Interactive board -------------------------------------------------------------------
+    # The markup is generated so a regeneration never loses it; the drawing lives in
+    # docs/skills-tree.js and the data in docs/skills-tree-data.js.
+    line('<section id="tree">')
+    line('  <h2 id="s-tree">Карта дерева</h2>')
+    line(
+        "  <p>Та же доска, что в меню <kbd>J</kbd>, только без покупок: выберите раздел и ветку, "
+        "потяните мышью, покрутите колесо. Узел можно нажать — справа появятся его цена, бонус и "
+        "от чего он зависит. Кнопка <strong>«Вся карта»</strong> раскладывает все %s %s сразу, "
+        "а поиск находит узел по названию, эффекту или id.</p>"
+        % (whole(len(branches)), plural(len(branches), "ветку", "ветки", "веток"))
+    )
+    line('  <div class="tree" id="tree-app" data-tree-app>')
+    line('    <div class="tree__head">')
+    line(
+        '      <div class="tree__tabs" id="tree-sections" role="tablist" aria-label="Разделы дерева"></div>'
+    )
+    line(
+        '      <div class="tree__tabs tree__tabs--sub" id="tree-branches" role="tablist" aria-label="Ветки"></div>'
+    )
+    line("    </div>")
+    line('    <div class="tree__body">')
+    line('      <div class="tree__stage">')
+    line(
+        '        <canvas id="tree-canvas" aria-label="Доска выбранной ветки"></canvas>'
+    )
+    line(
+        '        <div class="tree__hint">Колесо — масштаб · перетаскивание — сдвиг · клик по узлу — подробности</div>'
+    )
+    line('        <div class="tree__tip" id="tree-tip" hidden></div>')
+    line('        <div class="tree__toolbar">')
+    line(
+        '          <button type="button" data-tree-zoom="in" title="Приблизить" aria-label="Приблизить">+</button>'
+    )
+    line(
+        '          <button type="button" data-tree-zoom="out" title="Отдалить" aria-label="Отдалить">−</button>'
+    )
+    line(
+        '          <button type="button" data-tree-zoom="fit" title="Вписать ветку">⤢</button>'
+    )
+    line(
+        '          <button type="button" data-tree-wide title="Развернуть на весь экран" aria-label="Развернуть на весь экран">⛶</button>'
+    )
+    line("        </div>")
+    line("      </div>")
+    line('      <aside class="tree__side">')
+    line(
+        '        <label class="tree__search"><span aria-hidden="true">⌕</span><input id="tree-search" type="search" placeholder="Узел, техника, эффект…" autocomplete="off" aria-label="Поиск по дереву"></label>'
+    )
+    line('        <div class="tree__results" id="tree-results" hidden></div>')
+    line('        <div class="tree__info" id="tree-info"></div>')
+    line("      </aside>")
+    line("    </div>")
+    line("  </div>")
+    line(
+        '  <noscript><p class="small muted">Карта рисуется скриптом; ниже те же узлы собраны таблицами.</p></noscript>'
+    )
+    line("</section>")
+    line()
 
     # --- Totals -----------------------------------------------------------------------------
     line('<section id="totals">')
@@ -597,10 +741,10 @@ def build_block(nodes, branches, sections, lang_ru, lang_en, stats) -> str:
         ]
         if short:
             facts.append(", ".join(short))
-        line('<section id="b-%s">' % name.lower())
+        line('<section id="b-%s">' % name.lower().replace("_", "-"))
         line(
             '  <h2 id="s-b-%s"><span class="bcol" style="background:%s"></span>%s</h2>'
-            % (name.lower(), b["colour"], title)
+            % (name.lower().replace("_", "-"), b["colour"], title)
         )
         line('  <p class="branch-meta">%s</p>' % esc(" · ".join(facts)))
         line("  <p>%s</p>" % esc(FLAVOUR.get(name, "")))
@@ -687,6 +831,7 @@ EFFECT_TITLES = {
     "CLONE_LIFETIME": "Время жизни клонов",
     "WORKER_LIFETIME": "Время жизни рабочих",
     "SOFT_LANDING": "Мягкая посадка",
+    "BYAKUGAN_RANGE": "Обзор Бьякугана",
     "SENIN_MANA": "Сенин-мана",
     "SENIN_MANA_REGEN": "Сбор природной энергии",
     "SAGE_ENTRY": "Порог Режима Мудреца",
@@ -717,6 +862,8 @@ def main() -> int:
     start = page.index(MARK_START) + len(MARK_START)
     end = page.index(MARK_END)
     updated = page[:start] + "\n\n" + block + "\n\n" + page[end:]
+    data_src = build_tree_data(nodes, branches, sections, lang_ru, lang_en)
+    data_old = read(DATA_JS) if DATA_JS.exists() else ""
 
     worker = sum(
         1
@@ -747,14 +894,23 @@ def main() -> int:
     for problem in stats:
         print("  warning: " + problem)
 
-    if updated == page:
-        print("docs/skills.html is already up to date")
+    if updated == page and data_src == data_old:
+        print("docs/skills.html and docs/skills-tree-data.js are already up to date")
         return 0
     if args.check:
-        print("docs/skills.html is OUT OF DATE - run tools/build_docs_skills.py")
+        if updated != page:
+            print("docs/skills.html is OUT OF DATE - run tools/build_docs_skills.py")
+        if data_src != data_old:
+            print(
+                "docs/skills-tree-data.js is OUT OF DATE - run tools/build_docs_skills.py"
+            )
         return 1
-    PAGE.write_text(updated, encoding="utf-8", newline="\n")
-    print("wrote %s" % PAGE)
+    if updated != page:
+        PAGE.write_text(updated, encoding="utf-8", newline="\n")
+        print("wrote %s" % PAGE)
+    if data_src != data_old:
+        DATA_JS.write_text(data_src, encoding="utf-8", newline="\n")
+        print("wrote %s (%d KB)" % (DATA_JS, len(data_src.encode("utf-8")) // 1024))
     return 0
 
 

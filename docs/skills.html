@@ -3,13 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Дерево скилов: все 199 узлов, цены в очках навыка и что они открывают — Naruto Mod</title>
-<meta name="description" content="Дерево скилов Naruto Mod для 1.20.1: два уровня вкладок (раздел и ветка), что открывает каждая ветка, полные таблицы всех 199 узлов с ценами и пассивными бонусами.">
+<title>Дерево скилов: все 347 узлов, интерактивная карта, цены в очках навыка — Naruto Mod</title>
+<meta name="description" content="Дерево скилов Naruto Mod для 1.20.1: интерактивная карта всех 347 узлов, два уровня вкладок (раздел и ветка), полные таблицы с ценами, техниками и пассивными бонусами.">
 <meta name="theme-color" content="#0d0e12">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/favicon.png">
-<link rel="stylesheet" href="style.css?v=90e72a51">
+<link rel="stylesheet" href="style.css?v=784d5948">
 <script src="app.js" defer></script>
+<script src="recipes-data.js" defer></script>
+<script src="craft.js" defer></script>
+<script src="skills-tree-data.js" defer></script>
+<script src="skills-tree.js" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#main">К содержимому</a>
@@ -83,7 +87,7 @@
       </p>
       <div class="doc__meta">
         <span>Покупается за очки навыка</span>
-        <span>4 раздела · 17 веток</span>
+        <span>4 раздела · 19 веток</span>
         <span>Открытия техник и смен рабочих</span>
         <span>Смерть узлы не отбирает</span>
       </div>
@@ -93,6 +97,7 @@
       <div class="page-toc__title">На этой странице</div>
       <ol>
         <li class="toc-l2"><a href="#how">Как это работает</a></li>
+        <li class="toc-l2"><a href="#tree">Карта дерева</a></li>
         <li class="toc-l2"><a href="#totals">Что даёт всё дерево</a></li>
         <li class="toc-l2"><a href="#sec-physical">Физический путь</a></li>
         <li class="toc-l3"><a href="#b-core">Ядро</a></li>
@@ -115,6 +120,8 @@
         <li class="toc-l3"><a href="#b-byakugan">Бьякуган</a></li>
         <li class="toc-l3"><a href="#b-jougan">Джоуган</a></li>
         <li class="toc-l3"><a href="#b-rinnegan">Риннеган</a></li>
+        <li class="toc-l3"><a href="#b-senrigan">Сенриган</a></li>
+        <li class="toc-l3"><a href="#b-six-paths">Шесть Путей</a></li>
       </ol>
     </nav>
 
@@ -197,9 +204,39 @@
 
     <!-- SKILLS:START -->
 
+    <section id="tree">
+      <h2 id="s-tree">Карта дерева</h2>
+      <p>Та же доска, что в меню <kbd>J</kbd>, только без покупок: выберите раздел и ветку, потяните мышью, покрутите колесо. Узел можно нажать — справа появятся его цена, бонус и от чего он зависит. Кнопка <strong>«Вся карта»</strong> раскладывает все 19 веток сразу, а поиск находит узел по названию, эффекту или id.</p>
+      <div class="tree" id="tree-app" data-tree-app>
+        <div class="tree__head">
+          <div class="tree__tabs" id="tree-sections" role="tablist" aria-label="Разделы дерева"></div>
+          <div class="tree__tabs tree__tabs--sub" id="tree-branches" role="tablist" aria-label="Ветки"></div>
+        </div>
+        <div class="tree__body">
+          <div class="tree__stage">
+            <canvas id="tree-canvas" aria-label="Доска выбранной ветки"></canvas>
+            <div class="tree__hint">Колесо — масштаб · перетаскивание — сдвиг · клик по узлу — подробности</div>
+            <div class="tree__tip" id="tree-tip" hidden></div>
+            <div class="tree__toolbar">
+              <button type="button" data-tree-zoom="in" title="Приблизить" aria-label="Приблизить">+</button>
+              <button type="button" data-tree-zoom="out" title="Отдалить" aria-label="Отдалить">−</button>
+              <button type="button" data-tree-zoom="fit" title="Вписать ветку">⤢</button>
+              <button type="button" data-tree-wide title="Развернуть на весь экран" aria-label="Развернуть на весь экран">⛶</button>
+            </div>
+          </div>
+          <aside class="tree__side">
+            <label class="tree__search"><span aria-hidden="true">⌕</span><input id="tree-search" type="search" placeholder="Узел, техника, эффект…" autocomplete="off" aria-label="Поиск по дереву"></label>
+            <div class="tree__results" id="tree-results" hidden></div>
+            <div class="tree__info" id="tree-info"></div>
+          </aside>
+        </div>
+      </div>
+      <noscript><p class="small muted">Карта рисуется скриптом; ниже те же узлы собраны таблицами.</p></noscript>
+    </section>
+
     <section id="totals">
       <h2 id="s-totals">Что даёт всё дерево</h2>
-      <p>Если выкупить дерево целиком: <strong>199</strong> узлов (из них 60 открытий и 139 пассивок) за <strong>5 948</strong> очков навыка. Это верхняя граница билда — на практике ветки выбирают под стиль игры, а покупать их можно в любом порядке.</p>
+      <p>Если выкупить дерево целиком: <strong>347</strong> узлов (из них 192 открытия и 155 пассивок) за <strong>11 626</strong> очков навыка. Это верхняя граница билда — на практике ветки выбирают под стиль игры, а покупать их можно в любом порядке.</p>
       <div class="tbl-wrap">
         <table class="tbl">
           <thead>
@@ -208,9 +245,9 @@
           <tbody>
             <tr>
               <td>Максимум чакры</td>
-              <td class="num">+525</td>
-              <td class="small muted">25 из конфига + 525 с деревом = 550</td>
-              <td class="small">Ядро +125 · Клоны +95 · Сендзюцу +20 · Шаринган +70 · Бьякуган +55 · Джоуган +60 · Риннеган +60 · Сенриган +40</td>
+              <td class="num">+570</td>
+              <td class="small muted">25 из конфига + 570 с деревом = 595</td>
+              <td class="small">Ядро +125 · Клоны +95 · Сендзюцу +20 · Шаринган +70 · Бьякуган +55 · Джоуган +60 · Риннеган +60 · Сенриган +40 · Шесть Путей +45</td>
             </tr>
             <tr>
               <td>Регенерация чакры</td>
@@ -226,45 +263,45 @@
             </tr>
             <tr>
               <td>Регенерация стамины</td>
-              <td class="num">+3,4/с</td>
+              <td class="num">+3,9/с</td>
               <td class="small muted">сверх базовых 0,4 за тик (8 в секунду)</td>
-              <td class="small">Атлетика +2,2 · Тайдзюцу +0,6 · Земля +0,3 · Клоны +0,3</td>
+              <td class="small">Атлетика +2,2 · Тайдзюцу +1,1 · Земля +0,3 · Клоны +0,3</td>
             </tr>
             <tr>
               <td>Здоровье</td>
-              <td class="num">+12 HP</td>
-              <td class="small muted">базовые 20 HP (10 сердец) + 12</td>
-              <td class="small">Ядро +12</td>
+              <td class="num">+16 HP</td>
+              <td class="small muted">базовые 20 HP (10 сердец) + 16</td>
+              <td class="small">Ядро +12 · Шесть Путей +4</td>
             </tr>
             <tr>
               <td>Броня</td>
-              <td class="num">+4</td>
+              <td class="num">+6</td>
               <td class="small muted">полоска брони, складывается с бронёй предметов</td>
-              <td class="small">Ядро +3 · Земля +1</td>
+              <td class="small">Ядро +3 · Земля +1 · Шесть Путей +2</td>
             </tr>
             <tr>
               <td>Урон атаки</td>
-              <td class="num">+8</td>
+              <td class="num">+9</td>
               <td class="small muted">к удару рукой; урон оружия считается отдельно</td>
-              <td class="small">Тайдзюцу +7 · Джоуган +1</td>
+              <td class="small">Атлетика +0 · Тайдзюцу +8 · Джоуган +1</td>
             </tr>
             <tr>
               <td>Скорость передвижения</td>
-              <td class="num">+48 %</td>
+              <td class="num">+78 %</td>
               <td class="small muted">к базовым 0,1 скорости игрока</td>
-              <td class="small">Атлетика +48 %</td>
+              <td class="small">Атлетика +48 % · Ветер +20 % · Шесть Путей +10 %</td>
             </tr>
             <tr>
               <td>Цена техник</td>
-              <td class="num">−57 %</td>
+              <td class="num">−63 %</td>
               <td class="small muted">складывается с освоением, общий предел −90 %</td>
-              <td class="small">Ядро −9 % · Тайдзюцу −2 % · Огонь −4 % · Вода −2 % · Ветер −5 % · Клоны −2 % · Пространство −7 % · Разум −2 % · Шаринган −7 % · Бьякуган −4 % · Джоуган −4 % · Риннеган −3 % · Сенриган −6 %</td>
+              <td class="small">Ядро −9 % · Тайдзюцу −2 % · Огонь −4 % · Вода −2 % · Ветер −5 % · Дерево −2 % · Клоны −2 % · Пространство −7 % · Разум −2 % · Шаринган −7 % · Бьякуган −4 % · Джоуган −4 % · Риннеган −3 % · Сенриган −6 % · Шесть Путей −4 %</td>
             </tr>
             <tr>
               <td>Откат техник</td>
-              <td class="num">−31 %</td>
+              <td class="num">−34 %</td>
               <td class="small muted">складывается с освоением, общий предел −90 %</td>
-              <td class="small">Ядро −12 % · Вода −2 % · Ветер −2 % · Клоны −8 % · Пространство −2 % · Разум −5 %</td>
+              <td class="small">Ядро −12 % · Тайдзюцу −3 % · Вода −2 % · Ветер −2 % · Клоны −8 % · Пространство −2 % · Разум −5 %</td>
             </tr>
             <tr>
               <td>Заряды подмены</td>
@@ -321,10 +358,16 @@
               <td class="small">Атлетика +30 %</td>
             </tr>
             <tr>
+              <td>Обзор Бьякугана</td>
+              <td class="num">+16</td>
+              <td class="small muted">радиус кругового обзора Бьякугана</td>
+              <td class="small">Бьякуган +16</td>
+            </tr>
+            <tr>
               <td>Сенин-мана</td>
-              <td class="num">+150</td>
+              <td class="num">+200</td>
               <td class="small muted">максимум природной энергии, задаётся конфигом</td>
-              <td class="small">Сендзюцу +75 · Джоуган +25 · Риннеган +50</td>
+              <td class="small">Сендзюцу +75 · Джоуган +25 · Риннеган +50 · Шесть Путей +50</td>
             </tr>
             <tr>
               <td>Сбор природной энергии</td>
@@ -340,8 +383,8 @@
             </tr>
             <tr>
               <td>Техники и механики</td>
-              <td class="num">60</td>
-              <td class="small muted">в том числе 5 смен рабочих; закрытые техники видны в меню <kbd>J</kbd></td>
+              <td class="num">192</td>
+              <td class="small muted">в том числе 9 смен рабочих; закрытые техники видны в меню <kbd>J</kbd></td>
               <td class="small">центры всех веток</td>
             </tr>
           </tbody>
@@ -529,7 +572,7 @@
 
     <section id="b-athletics">
       <h2 id="s-b-athletics"><span class="bcol" style="background:#66dd88"></span>Ветка «Атлетика»</h2>
-      <p class="branch-meta">31 узел · 731 очко навыка · +180 стамины, +2,2 стамины/с, +48 % скорости, +4 заряда подмены, +30 % к накоплению, +30 % возврата подмены, +10 тиков невидимости, +60 % высоты прыжка, −30 % стамины посадки</p>
+      <p class="branch-meta">36 узлов · 847 очков навыка · +180 стамины, +2,2 стамины/с, +0 урона, +48 % скорости, +4 заряда подмены, +30 % к накоплению, +30 % возврата подмены, +10 тиков невидимости, +60 % высоты прыжка, −30 % стамины посадки</p>
       <p>Атлетика: скорость, стамина, подмена, двойной прыжок, мягкая посадка, хождение по воде и сцепление чакрой. Сюда же относятся заряды подмены — без этой ветки их не поднять выше одного.</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
@@ -584,6 +627,24 @@
               <td class="num">12</td>
               <td>+0,2 стамины/с</td>
               <td class="muted small">—</td>
+            </tr>
+            <tr>
+              <td>Тень сюрикена</td>
+              <td class="num">20</td>
+              <td><span class="tag tag--unlock">техника</span> Учит бросать две теневые копии сюрикена.</td>
+              <td class="muted small">Выносливость</td>
+            </tr>
+            <tr>
+              <td>Стойка вьюка</td>
+              <td class="num">24</td>
+              <td><span class="tag tag--unlock">техника</span> Учит нести существо на плечах.</td>
+              <td class="muted small">Выносливость</td>
+            </tr>
+            <tr>
+              <td>Мгновенный рывок</td>
+              <td class="num">22</td>
+              <td><span class="tag tag--unlock">техника</span> Учит короткому шагу, что останавливается у первой стены.</td>
+              <td class="muted small">Выносливость</td>
             </tr>
             <tr>
               <td>Хождение по воде</td>
@@ -723,6 +784,18 @@
               <td>−30 % стамины при мягкой посадке</td>
               <td class="muted small">Быстрое накопление</td>
             </tr>
+            <tr>
+              <td>Залп клинков</td>
+              <td class="num">20</td>
+              <td>+0 к урону атаки</td>
+              <td class="muted small">Быстрый шаг</td>
+            </tr>
+            <tr>
+              <td>Дождь клинков</td>
+              <td class="num">30</td>
+              <td><span class="tag tag--unlock">техника</span> Изучить свиток, разворачивающийся в веер из шестнадцати сюрикенов.</td>
+              <td class="muted small">Залп клинков</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -730,7 +803,7 @@
 
     <section id="b-taijutsu">
       <h2 id="s-b-taijutsu"><span class="bcol" style="background:#ff6b6b"></span>Ветка «Тайдзюцу»</h2>
-      <p class="branch-meta">12 узлов · 365 очков навыка · +70 стамины, +0,6 стамины/с, +7 урона, −2 % цены</p>
+      <p class="branch-meta">45 узлов · 1 459 очков навыка · +70 стамины, +1,1 стамины/с, +8 урона, −2 % цены, −3 % отката</p>
       <p>Тайдзюцу: урон рукой, кулак чакры и Восемь врат. Жизнь за врата платится здоровьем, поэтому глубина ветки — это сколько врат кастер выдерживает.</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
@@ -805,6 +878,204 @@
               <td class="muted small">Внутреннее равновесие</td>
             </tr>
             <tr>
+              <td>Прыжок с шестом</td>
+              <td class="num">22</td>
+              <td><span class="tag tag--unlock">техника</span> Учит отталкиваться от клинка или земли.</td>
+              <td class="muted small">Тайдзюцу</td>
+            </tr>
+            <tr>
+              <td>Беззвучное убийство</td>
+              <td class="num">26</td>
+              <td><span class="tag tag--unlock">техника</span> Учит десяти секундам тихих шагов и усиленных ударов со спины.</td>
+              <td class="muted small">Тайдзюцу</td>
+            </tr>
+            <tr>
+              <td>Нуибари: швейная игла</td>
+              <td class="num">26</td>
+              <td><span class="tag tag--unlock">техника</span> Учит нанизывать тела и подтягивать их.</td>
+              <td class="muted small">Тайдзюцу</td>
+            </tr>
+            <tr>
+              <td>Удар плечом</td>
+              <td class="num">24</td>
+              <td><span class="tag tag--unlock">техника</span> Учит толчку, что бьёт сильнее о стену.</td>
+              <td class="muted small">Могучий удар</td>
+            </tr>
+            <tr>
+              <td>Динамичный вход</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Учит удару в прыжке, который пробивает щит.</td>
+              <td class="muted small">Сильный удар</td>
+            </tr>
+            <tr>
+              <td>Рассечение снарядов</td>
+              <td class="num">26</td>
+              <td><span class="tag tag--unlock">техника</span> Учит серпу ветра, что срезает снаряды.</td>
+              <td class="muted small">Ярость</td>
+            </tr>
+            <tr>
+              <td>Пьяный кулак</td>
+              <td class="num">32</td>
+              <td><span class="tag tag--unlock">техника</span> Учит нечитаемому покачиванию.</td>
+              <td class="muted small">Сильный удар</td>
+            </tr>
+            <tr>
+              <td>Отскок от стены</td>
+              <td class="num">24</td>
+              <td><span class="tag tag--unlock">техника</span> Учит отталкиваться от стены в воздухе.</td>
+              <td class="muted small">Ярость</td>
+            </tr>
+            <tr>
+              <td>Блок клинком</td>
+              <td class="num">30</td>
+              <td><span class="tag tag--unlock">техника</span> Учит отводить удар плоскостью клинка.</td>
+              <td class="muted small">Ярость</td>
+            </tr>
+            <tr>
+              <td>Вакуумный клинок</td>
+              <td class="num">32</td>
+              <td><span class="tag tag--unlock">техника</span> Учит полумесяцу ветра с кромки клинка.</td>
+              <td class="muted small">Идеальная форма</td>
+            </tr>
+            <tr>
+              <td>Ладонный блок</td>
+              <td class="num">26</td>
+              <td><span class="tag tag--unlock">техника</span> Учит принимать удар на ладони.</td>
+              <td class="muted small">Внутреннее равновесие</td>
+            </tr>
+            <tr>
+              <td>Внутренний удар</td>
+              <td class="num">32</td>
+              <td><span class="tag tag--unlock">техника</span> Учит короткому удару ладонью, сбивающему канал.</td>
+              <td class="muted small">Внутреннее равновесие</td>
+            </tr>
+            <tr>
+              <td>Восемь врат: Утренний павлин</td>
+              <td class="num">44</td>
+              <td><span class="tag tag--unlock">техника</span> Учит восьми огненным ладоням.</td>
+              <td class="muted small">Основа врат</td>
+            </tr>
+            <tr>
+              <td>Восемь врат: Дневной тигр</td>
+              <td class="num">52</td>
+              <td><span class="tag tag--unlock">техника</span> Учит кулаку сжатого воздуха.</td>
+              <td class="muted small">Основа врат</td>
+            </tr>
+            <tr>
+              <td>Восемь врат: Вечерний слон</td>
+              <td class="num">60</td>
+              <td><span class="tag tag--unlock">техника</span> Учит последней ударной волне.</td>
+              <td class="muted small">Ярость</td>
+            </tr>
+            <tr>
+              <td>Дисциплина точильщика</td>
+              <td class="num">24</td>
+              <td>+0,3 стамины/с</td>
+              <td class="muted small">Блок клинком</td>
+            </tr>
+            <tr>
+              <td>Точильный камень чакры</td>
+              <td class="num">26</td>
+              <td><span class="tag tag--unlock">техника</span> Научиться возвращать кромке форму одной чакрой.</td>
+              <td class="muted small">Дисциплина точильщика</td>
+            </tr>
+            <tr>
+              <td>Срезание травы</td>
+              <td class="num">24</td>
+              <td><span class="tag tag--unlock">техника</span> Научиться низкому плоскому удару, снимающему поле за один проход.</td>
+              <td class="muted small">Дисциплина точильщика</td>
+            </tr>
+            <tr>
+              <td>Разрез кэса</td>
+              <td class="num">26</td>
+              <td><span class="tag tag--unlock">техника</span> Научиться диагональному разрезу от ворота до бедра.</td>
+              <td class="muted small">Дисциплина точильщика</td>
+            </tr>
+            <tr>
+              <td>Стойки меча</td>
+              <td class="num">28</td>
+              <td>+0 к урону атаки</td>
+              <td class="muted small">Блок клинком</td>
+            </tr>
+            <tr>
+              <td>Камаэ</td>
+              <td class="num">30</td>
+              <td><span class="tag tag--unlock">техника</span> Изучить три стойки: верхнюю, среднюю и нижнюю.</td>
+              <td class="muted small">Стойки меча</td>
+            </tr>
+            <tr>
+              <td>Кровоточащий клинок</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Научиться оставлять кромку в ране.</td>
+              <td class="muted small">Стойки меча</td>
+            </tr>
+            <tr>
+              <td>Стихийная кромка</td>
+              <td class="num">46</td>
+              <td><span class="tag tag--unlock">техника</span> Вложить собственную стихию в сталь.</td>
+              <td class="muted small">Стойки меча</td>
+            </tr>
+            <tr>
+              <td>Владение великими клинками</td>
+              <td class="num">40</td>
+              <td>−3 % к откату техник</td>
+              <td class="muted small">Дисциплина точильщика</td>
+            </tr>
+            <tr>
+              <td>Хирамэкарэй</td>
+              <td class="num">48</td>
+              <td><span class="tag tag--unlock">техника</span> Изучить молот-клинок и вес за ним.</td>
+              <td class="muted small">Владение великими клинками</td>
+            </tr>
+            <tr>
+              <td>Сибуки</td>
+              <td class="num">44</td>
+              <td><span class="tag tag--unlock">техника</span> Изучить взрывной меч и туннель его свитка.</td>
+              <td class="muted small">Владение великими клинками</td>
+            </tr>
+            <tr>
+              <td>Течение тела</td>
+              <td class="num">28</td>
+              <td>+0,2 стамины/с</td>
+              <td class="muted small">Внутреннее равновесие</td>
+            </tr>
+            <tr>
+              <td>Огненный кулак</td>
+              <td class="num">30</td>
+              <td><span class="tag tag--unlock">техника</span> Научиться обвивать руку пламенем для серии ударов.</td>
+              <td class="muted small">Течение тела</td>
+            </tr>
+            <tr>
+              <td>Водяная рука</td>
+              <td class="num">26</td>
+              <td><span class="tag tag--unlock">техника</span> Научиться носить воду на руке ради досягаемости и толчка.</td>
+              <td class="muted small">Течение тела</td>
+            </tr>
+            <tr>
+              <td>Захват и бросок</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Научиться хватать тело и давать земле закончить.</td>
+              <td class="muted small">Течение тела</td>
+            </tr>
+            <tr>
+              <td>Размер: полная экспансия</td>
+              <td class="num">44</td>
+              <td><span class="tag tag--unlock">техника</span> Учит доставать дальше, чем должно тело.</td>
+              <td class="muted small">Внутреннее равновесие</td>
+            </tr>
+            <tr>
+              <td>Танец камелии</td>
+              <td class="num">38</td>
+              <td><span class="tag tag--unlock">техника</span> Учит костяному клинку.</td>
+              <td class="muted small">Внутреннее равновесие</td>
+            </tr>
+            <tr>
+              <td>Костяные пули</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Учит стрелять костями пальцев.</td>
+              <td class="muted small">Внутреннее равновесие</td>
+            </tr>
+            <tr>
               <td>Тайдзюцу</td>
               <td class="num">10</td>
               <td>+1 к урону атаки</td>
@@ -817,7 +1088,7 @@
 
     <section id="b-medicine">
       <h2 id="s-b-medicine"><span class="bcol" style="background:#7fd8ff"></span>Ветка «Медицина»</h2>
-      <p class="branch-meta">6 узлов · 229 очков навыка · +0,9 чакры/с</p>
+      <p class="branch-meta">7 узлов · 273 очка навыка · +0,9 чакры/с</p>
       <p>Медицина: регенерация чакрой, питание чакрой, чакра-щит и второе дыхание. Центр ветки даёт немного регенерации чакры, дальше — способы пережить то, что не переживается обычным здоровьем.</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
@@ -859,6 +1130,12 @@
               <td>Второй вздох</td>
               <td class="num">76</td>
               <td><span class="tag tag--unlock">техника</span> Открывает технику второго вздоха.</td>
+              <td class="muted small">Внутренний поток</td>
+            </tr>
+            <tr>
+              <td>Лечебная сеть</td>
+              <td class="num">44</td>
+              <td><span class="tag tag--unlock">техника</span> Изучить поле мудреца-слизня, исцеляющее всех на вашей стороне.</td>
               <td class="muted small">Внутренний поток</td>
             </tr>
           </tbody>
@@ -919,7 +1196,7 @@
 
     <section id="b-water">
       <h2 id="s-b-water"><span class="bcol" style="background:#4fc3f7"></span>Ветка «Вода»</h2>
-      <p class="branch-meta">4 узла · 78 очков навыка · −2 % цены, −2 % отката</p>
+      <p class="branch-meta">6 узлов · 148 очков навыка · −2 % цены, −2 % отката</p>
       <p>Вода: водяная пуля и водяное дыхание. Тушит огонь, мочит губку и отталкивает цель.</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
@@ -950,6 +1227,18 @@
               <td class="num">10</td>
               <td>−2 % к цене техник</td>
               <td class="muted small">—</td>
+            </tr>
+            <tr>
+              <td>Стиль Воды: Полив</td>
+              <td class="num">22</td>
+              <td><span class="tag tag--unlock">техника</span> Учит увлажнять грядки вокруг без источника воды.</td>
+              <td class="muted small">Контроль течения</td>
+            </tr>
+            <tr>
+              <td>Ледяное освобождение: ледяные зеркала</td>
+              <td class="num">48</td>
+              <td><span class="tag tag--unlock">техника</span> Учит драться из кольца зеркал.</td>
+              <td class="muted small">Контроль течения</td>
             </tr>
           </tbody>
         </table>
@@ -1009,7 +1298,7 @@
 
     <section id="b-wind">
       <h2 id="s-b-wind"><span class="bcol" style="background:#9be7a0"></span>Ветка «Ветер»</h2>
-      <p class="branch-meta">6 узлов · 291 очко навыка · −5 % цены, −2 % отката</p>
+      <p class="branch-meta">9 узлов · 377 очков навыка · +20 % скорости, −5 % цены, −2 % отката</p>
       <p>Ветер: ветряное дыхание и расенган с расенсюрикеном. Сдувает, режет и не оставляет огня.</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
@@ -1017,6 +1306,24 @@
             <tr><th>Узел</th><th class="num">Цена</th><th>Что даёт</th><th>Нужны</th></tr>
           </thead>
           <tbody>
+            <tr>
+              <td>Стиль Молнии: режим молнии</td>
+              <td class="num">40</td>
+              <td><span class="tag tag--unlock">техника</span> Учит носить молнию как плащ.</td>
+              <td class="muted small">Фокус спирали</td>
+            </tr>
+            <tr>
+              <td>Поступь ветра</td>
+              <td class="num">20</td>
+              <td>+20 % к скорости</td>
+              <td class="muted small">Контроль ветра</td>
+            </tr>
+            <tr>
+              <td>Стиль Ветра: Поступь ветра</td>
+              <td class="num">26</td>
+              <td><span class="tag tag--unlock">техника</span> Учит стойке, которая меняет силу на скорость.</td>
+              <td class="muted small">Поступь ветра</td>
+            </tr>
             <tr>
               <td>Контроль ветра</td>
               <td class="num">19</td>
@@ -1060,7 +1367,7 @@
 
     <section id="b-wood">
       <h2 id="s-b-wood"><span class="bcol" style="background:#8bc34a"></span>Ветка «Дерево»</h2>
-      <p class="branch-meta">3 узла · 93 очка навыка · +0,6 чакры/с</p>
+      <p class="branch-meta">5 узлов · 137 очков навыка · +0,6 чакры/с, −2 % цены</p>
       <p>Дерево: дыхание роста и всё, что прорастает. Костная мука в конусе вместо урона.</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
@@ -1068,6 +1375,18 @@
             <tr><th>Узел</th><th class="num">Цена</th><th>Что даёт</th><th>Нужны</th></tr>
           </thead>
           <tbody>
+            <tr>
+              <td>Древесный сок</td>
+              <td class="num">18</td>
+              <td>−2 % к цене техник</td>
+              <td class="muted small">Сокодвижение</td>
+            </tr>
+            <tr>
+              <td>Мокутон: Рост</td>
+              <td class="num">26</td>
+              <td><span class="tag tag--unlock">техника</span> Учит продвигать целую грядку на стадию вперёд.</td>
+              <td class="muted small">Древесный сок</td>
+            </tr>
             <tr>
               <td>Цветение</td>
               <td class="num">32</td>
@@ -1099,7 +1418,7 @@
 
     <section id="b-clones">
       <h2 id="s-b-clones"><span class="bcol" style="background:#ffb04d"></span>Ветка «Клоны»</h2>
-      <p class="branch-meta">23 узла · 830 очков навыка · +95 чакры, +20 стамины, +0,3 стамины/с, −2 % цены, −8 % отката, +30 % жизни клонов, +30 % жизни рабочих</p>
+      <p class="branch-meta">31 узел · 1 088 очков навыка · +95 чакры, +20 стамины, +0,3 стамины/с, −2 % цены, −8 % отката, +30 % жизни клонов, +30 % жизни рабочих</p>
       <p>Клоны: теневой, чиби, мультиклон, медитация, возврат клонов, походный сундук и рабочие смены. Между техниками всегда стоит тренировочная пассивка, поэтому путь читается как «техника → практика → техника».</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
@@ -1118,6 +1437,54 @@
               <td class="num">20</td>
               <td><span class="tag tag--unlock">техника</span> Открывает технику теневого клона.</td>
               <td class="muted small">Основы клонирования</td>
+            </tr>
+            <tr>
+              <td>Клоны-приманки</td>
+              <td class="num">22</td>
+              <td><span class="tag tag--unlock">техника</span> Учит оставлять двух иллюзорных клонов, чтобы отвлечь взгляд.</td>
+              <td class="muted small">Тренировка клонов</td>
+            </tr>
+            <tr>
+              <td>Клон-медик</td>
+              <td class="num">30</td>
+              <td><span class="tag tag--unlock">техника</span> Учит оставлять клона, который затягивает ваши раны.</td>
+              <td class="muted small">Тренировка клонов</td>
+            </tr>
+            <tr>
+              <td>Обмен с клоном</td>
+              <td class="num">24</td>
+              <td><span class="tag tag--unlock">техника</span> Учит меняться местами с собственным клоном.</td>
+              <td class="muted small">Основы клонирования</td>
+            </tr>
+            <tr>
+              <td>Водяной клон</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Учит оставлять тело из воды с вашим лицом.</td>
+              <td class="muted small">Тренировка клонов</td>
+            </tr>
+            <tr>
+              <td>Грязевой клон</td>
+              <td class="num">38</td>
+              <td><span class="tag tag--unlock">техника</span> Учит поднимать две копии из плотной грязи.</td>
+              <td class="muted small">Живучесть клонов</td>
+            </tr>
+            <tr>
+              <td>Глиняный клон</td>
+              <td class="num">46</td>
+              <td><span class="tag tag--unlock">техника</span> Учит лепить клона, который взрывается при разрушении.</td>
+              <td class="muted small">Живучесть клонов</td>
+            </tr>
+            <tr>
+              <td>Спарринг с клоном</td>
+              <td class="num">30</td>
+              <td><span class="tag tag--unlock">техника</span> Научиться тренироваться против собственного теневого клона.</td>
+              <td class="muted small">Основы клонирования</td>
+            </tr>
+            <tr>
+              <td>Жертва клоном</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Научиться отдавать клона вместо себя, когда удар смертелен.</td>
+              <td class="muted small">Живучесть клонов</td>
             </tr>
             <tr>
               <td>Тренировка клонов</td>
@@ -1252,7 +1619,7 @@
 
     <section id="b-space">
       <h2 id="s-b-space"><span class="bcol" style="background:#9c8cff"></span>Ветка «Пространство»</h2>
-      <p class="branch-meta">9 узлов · 221 очко навыка · −7 % цены, −2 % отката</p>
+      <p class="branch-meta">10 узлов · 255 очков навыка · −7 % цены, −2 % отката</p>
       <p>Пространство: метка-бревно, чакра-нить, адаптация тела и Камуи. Центр ветки — якорь, без него не открывается ни один пространственный трюк.</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
@@ -1260,6 +1627,12 @@
             <tr><th>Узел</th><th class="num">Цена</th><th>Что даёт</th><th>Нужны</th></tr>
           </thead>
           <tbody>
+            <tr>
+              <td>Печать глушения</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Изучить печать, глотающую силу и землю взрыва.</td>
+              <td class="muted small">Якорь измерения</td>
+            </tr>
             <tr>
               <td>Якорь измерения</td>
               <td class="num">10</td>
@@ -1321,7 +1694,7 @@
 
     <section id="b-mind">
       <h2 id="s-b-mind"><span class="bcol" style="background:#ff77cc"></span>Ветка «Разум»</h2>
-      <p class="branch-meta">11 узлов · 226 очков навыка · +0,2 чакры/с, −2 % цены, −5 % отката</p>
+      <p class="branch-meta">24 узла · 666 очков навыка · +0,2 чакры/с, −2 % цены, −5 % отката</p>
       <p>Разум: чувство чакры и ночное зрение, гендзюцу, хенге, дымовая завеса и подавление звука.</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
@@ -1351,6 +1724,84 @@
               <td>Гендзюцу</td>
               <td class="num">20</td>
               <td><span class="tag tag--unlock">техника</span> Открывает технику гендзюцу.</td>
+              <td class="muted small">Обострённые чувства</td>
+            </tr>
+            <tr>
+              <td>Кай</td>
+              <td class="num">22</td>
+              <td><span class="tag tag--unlock">техника</span> Учит разрывать иллюзию и на миг закрывать разум.</td>
+              <td class="muted small">Цепкий взгляд</td>
+            </tr>
+            <tr>
+              <td>Нэмури: сонное касание</td>
+              <td class="num">26</td>
+              <td><span class="tag tag--unlock">техника</span> Учит усыплять существо касанием.</td>
+              <td class="muted small">Цепкий взгляд</td>
+            </tr>
+            <tr>
+              <td>Маген: Наракуми</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Учит показывать существу его собственный страх.</td>
+              <td class="muted small">Хитрость</td>
+            </tr>
+            <tr>
+              <td>Маген: Джубаку Сацу</td>
+              <td class="num">38</td>
+              <td><span class="tag tag--unlock">техника</span> Учит корням, что держат тело на месте.</td>
+              <td class="muted small">Хитрость</td>
+            </tr>
+            <tr>
+              <td>Утаката</td>
+              <td class="num">28</td>
+              <td><span class="tag tag--unlock">техника</span> Учит персту, что останавливает тело и срывает канал.</td>
+              <td class="muted small">Цепкий взгляд</td>
+            </tr>
+            <tr>
+              <td>Переселение разума</td>
+              <td class="num">46</td>
+              <td><span class="tag tag--unlock">техника</span> Учит переносить разум в другое тело.</td>
+              <td class="muted small">Обострённые чувства</td>
+            </tr>
+            <tr>
+              <td>Гендзюцу: чужой разум</td>
+              <td class="num">36</td>
+              <td><span class="tag tag--unlock">техника</span> Учит обращать иллюзию на другого игрока, если сервер это разрешает.</td>
+              <td class="muted small">Хитрость</td>
+            </tr>
+            <tr>
+              <td>Чтение намерений</td>
+              <td class="num">28</td>
+              <td><span class="tag tag--unlock">рабочий</span> Учит читать, что тело собирается сделать.</td>
+              <td class="muted small">Хитрость</td>
+            </tr>
+            <tr>
+              <td>Маген: Кокони Аразу</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Учит иллюзии, закрывающей комнату.</td>
+              <td class="muted small">Хитрость</td>
+            </tr>
+            <tr>
+              <td>Маген: Кагаами</td>
+              <td class="num">40</td>
+              <td><span class="tag tag--unlock">техника</span> Учит ставить двух зеркальных образов рядом.</td>
+              <td class="muted small">Обострённые чувства</td>
+            </tr>
+            <tr>
+              <td>Маген: Мрак</td>
+              <td class="num">44</td>
+              <td><span class="tag tag--unlock">техника</span> Учит держать тьму вокруг себя.</td>
+              <td class="muted small">Цепкий взгляд</td>
+            </tr>
+            <tr>
+              <td>Подмена лица</td>
+              <td class="num">38</td>
+              <td><span class="tag tag--unlock">техника</span> Учит носить чужое лицо на всех вокруг.</td>
+              <td class="muted small">Цепкий взгляд</td>
+            </tr>
+            <tr>
+              <td>Маген: Мираж</td>
+              <td class="num">26</td>
+              <td><span class="tag tag--unlock">техника</span> Учит оставлять образ на месте, где вы стояли.</td>
               <td class="muted small">Обострённые чувства</td>
             </tr>
             <tr>
@@ -1402,7 +1853,7 @@
 
     <section id="b-sage">
       <h2 id="s-b-sage"><span class="bcol" style="background:#6fd3a0"></span>Ветка «Сендзюцу»</h2>
-      <p class="branch-meta">7 узлов · 302 очка навыка · +20 чакры, +75 сенин-маны, +40 % сбора сенина, −30 % порога входа</p>
+      <p class="branch-meta">18 узлов · 850 очков навыка · +20 чакры, +75 сенин-маны, +40 % сбора сенина, −30 % порога входа</p>
       <p>Сендзюцу: запас природной энергии, её сбор и вход в Режим Мудреца. Сначала копится энергия, потом открывается сам режим.</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
@@ -1410,6 +1861,12 @@
             <tr><th>Узел</th><th class="num">Цена</th><th>Что даёт</th><th>Нужны</th></tr>
           </thead>
           <tbody>
+            <tr>
+              <td>Железный страж</td>
+              <td class="num">48</td>
+              <td><span class="tag tag--unlock">техника</span> Научиться призывать железного стража удерживать место.</td>
+              <td class="muted small">Резерв природы</td>
+            </tr>
             <tr>
               <td>Основа сендзюцу</td>
               <td class="num">20</td>
@@ -1452,6 +1909,66 @@
               <td><span class="tag tag--unlock">техника</span> Открывает режим Мудреца.</td>
               <td class="muted small">Просветление</td>
             </tr>
+            <tr>
+              <td>Проклятая печать: стадия 1</td>
+              <td class="num">40</td>
+              <td><span class="tag tag--unlock">техника</span> Учит первой стадии проклятой печати.</td>
+              <td class="muted small">Основа сендзюцу</td>
+            </tr>
+            <tr>
+              <td>Проклятая печать: стадия 2</td>
+              <td class="num">56</td>
+              <td><span class="tag tag--unlock">техника</span> Учит второй стадии проклятой печати.</td>
+              <td class="muted small">Вход в Режим Мудреца</td>
+            </tr>
+            <tr>
+              <td>Чакра-плащ</td>
+              <td class="num">38</td>
+              <td><span class="tag tag--unlock">техника</span> Учит первой оболочке чакра-плаща.</td>
+              <td class="muted small">Основа сендзюцу</td>
+            </tr>
+            <tr>
+              <td>Хвостатая оболочка</td>
+              <td class="num">52</td>
+              <td><span class="tag tag--unlock">техника</span> Учит оболочке на три хвоста.</td>
+              <td class="muted small">Основа сендзюцу</td>
+            </tr>
+            <tr>
+              <td>Замена тела</td>
+              <td class="num">48</td>
+              <td><span class="tag tag--unlock">техника</span> Учит оставлять израненное тело позади.</td>
+              <td class="muted small">Основа сендзюцу</td>
+            </tr>
+            <tr>
+              <td>Печать Восьми Триграмм</td>
+              <td class="num">52</td>
+              <td><span class="tag tag--unlock">техника</span> Учит чертить клетку для хвостатого зверя.</td>
+              <td class="muted small">Основа сендзюцу</td>
+            </tr>
+            <tr>
+              <td>Разделённый плащ</td>
+              <td class="num">44</td>
+              <td><span class="tag tag--unlock">техника</span> Учит делиться сосудом с союзниками.</td>
+              <td class="muted small">Основа сендзюцу</td>
+            </tr>
+            <tr>
+              <td>Разрыв печати</td>
+              <td class="num">48</td>
+              <td><span class="tag tag--unlock">техника</span> Учит срывать печать.</td>
+              <td class="muted small">Основа сендзюцу</td>
+            </tr>
+            <tr>
+              <td>Совершенный плащ</td>
+              <td class="num">64</td>
+              <td><span class="tag tag--unlock">техника</span> Учит носить чакру зверя по согласию.</td>
+              <td class="muted small">Основа сендзюцу</td>
+            </tr>
+            <tr>
+              <td>Шар хвостатого зверя</td>
+              <td class="num">58</td>
+              <td><span class="tag tag--unlock">техника</span> Учит собирать и бросать чёрную сферу.</td>
+              <td class="muted small">Основа сендзюцу</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -1459,14 +1976,14 @@
 
     <section id="sec-dojutsu">
       <h2 id="s-sec-dojutsu"><span class="bcol" style="background:#ff6b6b"></span>Додзюцу</h2>
-      <p>Додзюцу: глазные кланы. Риннеган открыт и покупается как стойка; Шаринган и Бьякуган пока размечены как каркас на будущее.</p>
-      <p class="branch-meta">Шаринган · Бьякуган · Джоуган · Риннеган · Сенриган</p>
+      <p>Додзюцу: глазные кланы — Шаринган, Бьякуган, Джоуган, Риннеган, Сенриган и Шесть Путей. У каждого глаза своя доска и свой центр.</p>
+      <p class="branch-meta">Шаринган · Бьякуган · Джоуган · Риннеган · Сенриган · Шесть Путей</p>
     </section>
 
     <section id="b-sharingan">
       <h2 id="s-b-sharingan"><span class="bcol" style="background:#e53935"></span>Ветка «Шаринган»</h2>
-      <p class="branch-meta">11 узлов · 432 очка навыка · +70 чакры, +0,35 чакры/с, −7 % цены</p>
-      <p>Шаринган: каркас ветки. Узлов пока нет — вкладка стоит пустой и ждёт своего набора техник.</p>
+      <p class="branch-meta">22 узла · 972 очка навыка · +70 чакры, +0,35 чакры/с, −7 % цены</p>
+      <p>Шаринган: копирующее колесо, его восприятие, Аматэрасу, Сусаноо и гендзюцу глаза. Техники висят на пассивках-подводках, а не друг на друге.</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
           <thead>
@@ -1502,6 +2019,72 @@
               <td class="num">48</td>
               <td><span class="tag tag--unlock">техника</span> Изучить Шаринган. Требуется свиток.</td>
               <td class="muted small">Взгляд сквозь иллюзию</td>
+            </tr>
+            <tr>
+              <td>След чакры</td>
+              <td class="num">30</td>
+              <td><span class="tag tag--unlock">техника</span> Учит метить тело, за которым идёт глаз.</td>
+              <td class="muted small">Прочесть врага</td>
+            </tr>
+            <tr>
+              <td>Внушение</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Учит заставлять существо забыть вас.</td>
+              <td class="muted small">Зрение иллюзий</td>
+            </tr>
+            <tr>
+              <td>Цукуёми</td>
+              <td class="num">60</td>
+              <td><span class="tag tag--unlock">техника</span> Учит держать разум в секунде ада.</td>
+              <td class="muted small">Мангекё</td>
+            </tr>
+            <tr>
+              <td>Маген: Кёдзин</td>
+              <td class="num">36</td>
+              <td><span class="tag tag--unlock">техника</span> Учит конусной иллюзии, что замедляет и сбивает с толку.</td>
+              <td class="muted small">Зрение иллюзий</td>
+            </tr>
+            <tr>
+              <td>Курай</td>
+              <td class="num">42</td>
+              <td><span class="tag tag--unlock">техника</span> Учит гасить свет в одном разуме.</td>
+              <td class="muted small">Зрение иллюзий</td>
+            </tr>
+            <tr>
+              <td>Шаг за спину</td>
+              <td class="num">38</td>
+              <td><span class="tag tag--unlock">техника</span> Учит шагать в пространство за спиной цели.</td>
+              <td class="muted small">Прочесть врага</td>
+            </tr>
+            <tr>
+              <td>Идзанаги</td>
+              <td class="num">64</td>
+              <td><span class="tag tag--unlock">техника</span> Учит тратить глаз, чтобы переписать смерть.</td>
+              <td class="muted small">Мангекё</td>
+            </tr>
+            <tr>
+              <td>Идзанами</td>
+              <td class="num">58</td>
+              <td><span class="tag tag--unlock">техника</span> Учит петле, что замыкается на третьем ударе.</td>
+              <td class="muted small">Мангекё</td>
+            </tr>
+            <tr>
+              <td>Котоамацуками</td>
+              <td class="num">64</td>
+              <td><span class="tag tag--unlock">техника</span> Учит шёпоту, что переворачивает верность существа.</td>
+              <td class="muted small">Зрение иллюзий</td>
+            </tr>
+            <tr>
+              <td>Сусано</td>
+              <td class="num">70</td>
+              <td><span class="tag tag--unlock">техника</span> Учит каркасу, принимающему удары.</td>
+              <td class="muted small">Мангекё</td>
+            </tr>
+            <tr>
+              <td>Иллюзорный двойник</td>
+              <td class="num">44</td>
+              <td><span class="tag tag--unlock">техника</span> Учит невидимой копии, отвлекающей взгляд.</td>
+              <td class="muted small">Огненная ковка</td>
             </tr>
             <tr>
               <td>Тренировка чёрного пламени</td>
@@ -1546,8 +2129,8 @@
 
     <section id="b-byakugan">
       <h2 id="s-b-byakugan"><span class="bcol" style="background:#d7e3ff"></span>Ветка «Бьякуган»</h2>
-      <p class="branch-meta">9 узлов · 312 очков навыка · +55 чакры, +0,35 чакры/с, +15 стамины, −4 % цены</p>
-      <p>Бьякуган: каркас ветки. Узлов пока нет — вкладка стоит пустой и ждёт своего набора техник.</p>
+      <p class="branch-meta">30 узлов · 1 016 очков навыка · +55 чакры, +0,35 чакры/с, +15 стамины, −4 % цены, +16 блоков обзора</p>
+      <p>Бьякуган: круговой обзор, точные удары, врата и небесные техники клана Хьюга. Ветка начинается с самого глаза, поэтому её видно издалека.</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
           <thead>
@@ -1579,6 +2162,18 @@
               <td class="muted small">Всевидящий взгляд</td>
             </tr>
             <tr>
+              <td>Широкий круг</td>
+              <td class="num">34</td>
+              <td>+8 блоков обзора Бьякугана</td>
+              <td class="muted small">Бьякуган</td>
+            </tr>
+            <tr>
+              <td>Всевидящий круг</td>
+              <td class="num">40</td>
+              <td>+8 блоков обзора Бьякугана</td>
+              <td class="muted small">Широкий круг</td>
+            </tr>
+            <tr>
               <td>Мягкий кулак</td>
               <td class="num">30</td>
               <td>+20 к максимуму чакры</td>
@@ -1608,6 +2203,120 @@
               <td>+0,15 чакры/с</td>
               <td class="muted small">Тенкецу</td>
             </tr>
+            <tr>
+              <td>Иглы тенкецу</td>
+              <td class="num">30</td>
+              <td><span class="tag tag--unlock">техника</span> Учит вгонять иглы чакры в тенкецу.</td>
+              <td class="muted small">Мастерство тенкецу</td>
+            </tr>
+            <tr>
+              <td>Удар по каналу: ослепление</td>
+              <td class="num">28</td>
+              <td><span class="tag tag--unlock">техника</span> Учит закрывать каналы у самых глаз.</td>
+              <td class="muted small">Мастерство тенкецу</td>
+            </tr>
+            <tr>
+              <td>Хват каналов</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Учит держать тело за чакру и тянуть из него силу.</td>
+              <td class="muted small">Мастерство тенкецу</td>
+            </tr>
+            <tr>
+              <td>Разрыв узла</td>
+              <td class="num">40</td>
+              <td><span class="tag tag--unlock">техника</span> Учит разрывать тенкецу и останавливать заживление.</td>
+              <td class="muted small">Мастерство тенкецу</td>
+            </tr>
+            <tr>
+              <td>Дальнозоркость</td>
+              <td class="num">30</td>
+              <td><span class="tag tag--unlock">техника</span> Учит приближать мир белым глазом.</td>
+              <td class="muted small">Всевидящий взгляд</td>
+            </tr>
+            <tr>
+              <td>Взгляд сквозь морок</td>
+              <td class="num">28</td>
+              <td><span class="tag tag--unlock">техника</span> Учит видеть невидимых и переодетых.</td>
+              <td class="muted small">Широкий круг</td>
+            </tr>
+            <tr>
+              <td>Взгляд в пустоту</td>
+              <td class="num">36</td>
+              <td><span class="tag tag--unlock">техника</span> Учит видеть полости за камнем.</td>
+              <td class="muted small">Широкий круг</td>
+            </tr>
+            <tr>
+              <td>Зрение механизмов</td>
+              <td class="num">30</td>
+              <td><span class="tag tag--unlock">техника</span> Учит видеть ловушки и тару сквозь стены.</td>
+              <td class="muted small">Широкий круг</td>
+            </tr>
+            <tr>
+              <td>Восемь триграмм: поле</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Учит удерживать круг вокруг тела.</td>
+              <td class="muted small">Мягкий кулак</td>
+            </tr>
+            <tr>
+              <td>Скрытая печать</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Учит оставлять невидимую печать на земле.</td>
+              <td class="muted small">Вращающаяся защита</td>
+            </tr>
+            <tr>
+              <td>Зрение лекаря</td>
+              <td class="num">28</td>
+              <td><span class="tag tag--unlock">техника</span> Учит читать тела сквозь стены.</td>
+              <td class="muted small">Мастерство тенкецу</td>
+            </tr>
+            <tr>
+              <td>Восемь триграмм: шестьдесят четыре ладони</td>
+              <td class="num">44</td>
+              <td><span class="tag tag--unlock">техника</span> Изучить кату, закрывающую шестьдесят четыре тенкецу за одно удержание.</td>
+              <td class="muted small">Мастерство тенкецу</td>
+            </tr>
+            <tr>
+              <td>Метящий глаз</td>
+              <td class="num">24</td>
+              <td><span class="tag tag--unlock">техника</span> Изучить метку, которую глаз оставляет на любом видимом теле.</td>
+              <td class="muted small">Всевидящий взгляд</td>
+            </tr>
+            <tr>
+              <td>Восемь триграмм: пустая ладонь</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Изучить ладонь давления, отбрасывающую тело.</td>
+              <td class="muted small">Мастерство тенкецу</td>
+            </tr>
+            <tr>
+              <td>Восемь триграмм: круговой блок</td>
+              <td class="num">32</td>
+              <td><span class="tag tag--unlock">техника</span> Изучить вращающуюся защиту вокруг тела.</td>
+              <td class="muted small">Основа Бьякугана</td>
+            </tr>
+            <tr>
+              <td>Чистый поток</td>
+              <td class="num">30</td>
+              <td><span class="tag tag--unlock">рабочий</span> Открытый глаз быстрее сгоняет слабость, замедление и тяжесть в конечностях с себя и с ближних союзников, изучивших то же.</td>
+              <td class="muted small">Основа Бьякугана</td>
+            </tr>
+            <tr>
+              <td>Мягкий кулак: кулаки двух львов</td>
+              <td class="num">32</td>
+              <td><span class="tag tag--unlock">техника</span> Учит наполненным чакрой ладоням мягкого кулака.</td>
+              <td class="muted small">Мягкий кулак</td>
+            </tr>
+            <tr>
+              <td>Мягкий кулак: копьё ладони</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Учит рывку ладонью.</td>
+              <td class="muted small">Мастерство тенкецу</td>
+            </tr>
+            <tr>
+              <td>Восемь триграмм: обвал горы</td>
+              <td class="num">48</td>
+              <td><span class="tag tag--unlock">техника</span> Учит волне восьми ладоней, что сминает полосу перед вами.</td>
+              <td class="muted small">Мастерство тенкецу</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -1615,8 +2324,8 @@
 
     <section id="b-jougan">
       <h2 id="s-b-jougan"><span class="bcol" style="background:#64b5f6"></span>Ветка «Джоуган»</h2>
-      <p class="branch-meta">11 узлов · 404 очка навыка · +60 чакры, +0,4 чакры/с, +1 урона, −4 % цены, +25 сенин-маны</p>
-      <p></p>
+      <p class="branch-meta">20 узлов · 702 очка навыка · +60 чакры, +0,4 чакры/с, +1 урона, −4 % цены, +25 сенин-маны</p>
+      <p>Джоуган: глаз, который видит потоки чакры и режет их. Ветка про дальний бой и проникновение в чужую технику.</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
           <thead>
@@ -1660,6 +2369,60 @@
               <td class="muted small">Природа сквозь око</td>
             </tr>
             <tr>
+              <td>Стазис шва</td>
+              <td class="num">38</td>
+              <td><span class="tag tag--unlock">техника</span> Учит замораживать снаряды и падающие вещи на месте.</td>
+              <td class="muted small">Дальнее зрение</td>
+            </tr>
+            <tr>
+              <td>Распутывание морока</td>
+              <td class="num">32</td>
+              <td><span class="tag tag--unlock">техника</span> Учит срывать маски одним взглядом.</td>
+              <td class="muted small">Текущее зрение</td>
+            </tr>
+            <tr>
+              <td>Зашивание портала</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Учит зашивать портал.</td>
+              <td class="muted small">Дальнее зрение</td>
+            </tr>
+            <tr>
+              <td>Шовный карман</td>
+              <td class="num">30</td>
+              <td><span class="tag tag--unlock">техника</span> Учит вырезать эндер-сундук из шва.</td>
+              <td class="muted small">Чистый взгляд</td>
+            </tr>
+            <tr>
+              <td>Шовный замок</td>
+              <td class="num">28</td>
+              <td><span class="tag tag--unlock">техника</span> Учит пришивать дверь к раме.</td>
+              <td class="muted small">Чистый взгляд</td>
+            </tr>
+            <tr>
+              <td>Немой шаг</td>
+              <td class="num">32</td>
+              <td><span class="tag tag--unlock">рабочий</span> Учит ходить так, чтобы мир не слышал шагов.</td>
+              <td class="muted small">Природа сквозь око</td>
+            </tr>
+            <tr>
+              <td>Разрез чакры</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Учит вырезать чакру каждым ударом.</td>
+              <td class="muted small">Слабое место</td>
+            </tr>
+            <tr>
+              <td>Разрез постройки</td>
+              <td class="num">30</td>
+              <td><span class="tag tag--unlock">техника</span> Учит вырезать панель из постройки.</td>
+              <td class="muted small">Текущее зрение</td>
+            </tr>
+            <tr>
+              <td>Проход</td>
+              <td class="num">40</td>
+              <td><span class="tag tag--unlock">техника</span> Учит выходить из фазы с миром.</td>
+              <td class="muted small">Око мира</td>
+            </tr>
+            <tr>
               <td>Разрезающий взгляд</td>
               <td class="num">30</td>
               <td>−4 % к цене техник</td>
@@ -1696,7 +2459,7 @@
 
     <section id="b-rinnegan">
       <h2 id="s-b-rinnegan"><span class="bcol" style="background:#b39ddb"></span>Ветка «Риннеган»</h2>
-      <p class="branch-meta">11 узлов · 410 очков навыка · +60 чакры, +0,2 чакры/с, −3 % цены, +50 сенин-маны</p>
+      <p class="branch-meta">23 узла · 864 очка навыка · +60 чакры, +0,2 чакры/с, −3 % цены, +50 сенин-маны</p>
       <p>Риннеган: глаз мудреца, его запас чакры и сенин-маны, притяжение с отталкиванием и Чибаку Тенсэй. Техники висят на пассивках-подводках, а не друг на друге.</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
@@ -1704,6 +2467,24 @@
             <tr><th>Узел</th><th class="num">Цена</th><th>Что даёт</th><th>Нужны</th></tr>
           </thead>
           <tbody>
+            <tr>
+              <td>Сила притяжения</td>
+              <td class="num">28</td>
+              <td><span class="tag tag--unlock">техника</span> Учит притягивать свободные предметы к руке.</td>
+              <td class="muted small">Сила Ока</td>
+            </tr>
+            <tr>
+              <td>Чёрный стержень</td>
+              <td class="num">32</td>
+              <td><span class="tag tag--unlock">техника</span> Учит вгонять стержень Внешнего пути в землю.</td>
+              <td class="muted small">Ладонное око</td>
+            </tr>
+            <tr>
+              <td>Левитация</td>
+              <td class="num">36</td>
+              <td><span class="tag tag--unlock">техника</span> Учит поднимать тело над землёй.</td>
+              <td class="muted small">Притяжение Ока</td>
+            </tr>
             <tr>
               <td>Основа Риннегана</td>
               <td class="num">24</td>
@@ -1759,6 +2540,60 @@
               <td class="muted small">Притяжение Ока</td>
             </tr>
             <tr>
+              <td>Печать передачи</td>
+              <td class="num">32</td>
+              <td><span class="tag tag--unlock">техника</span> Учит переливать чакру союзнику.</td>
+              <td class="muted small">Ладонное око</td>
+            </tr>
+            <tr>
+              <td>Тяжесть небес</td>
+              <td class="num">34</td>
+              <td><span class="tag tag--unlock">техника</span> Учит прижимать всё вокруг к земле.</td>
+              <td class="muted small">Притяжение Ока</td>
+            </tr>
+            <tr>
+              <td>Остаточная сила</td>
+              <td class="num">30</td>
+              <td><span class="tag tag--unlock">рабочий</span> Следующий удар после техники несёт +5 урона и толчок.</td>
+              <td class="muted small">Сила Ока</td>
+            </tr>
+            <tr>
+              <td>Путь Нарака: двор</td>
+              <td class="num">44</td>
+              <td><span class="tag tag--unlock">техника</span> Учит возводить двор Царя Ада.</td>
+              <td class="muted small">Основа Риннегана</td>
+            </tr>
+            <tr>
+              <td>Путь Животных: стая</td>
+              <td class="num">46</td>
+              <td><span class="tag tag--unlock">техника</span> Учит призывать трёх волков.</td>
+              <td class="muted small">Основа Риннегана</td>
+            </tr>
+            <tr>
+              <td>Путь Асуры: снаряды</td>
+              <td class="num">40</td>
+              <td><span class="tag tag--unlock">техника</span> Учит самонаводящимся снарядам.</td>
+              <td class="muted small">Ладонное око</td>
+            </tr>
+            <tr>
+              <td>Ринбо: Хэнгоку</td>
+              <td class="num">52</td>
+              <td><span class="tag tag--unlock">техника</span> Учит оставлять эхо, повторяющее ваши удары.</td>
+              <td class="muted small">Ладонное око</td>
+            </tr>
+            <tr>
+              <td>Внешний Путь: цепи</td>
+              <td class="num">42</td>
+              <td><span class="tag tag--unlock">техника</span> Учит цепям, что держат тело на месте.</td>
+              <td class="muted small">Основа Риннегана</td>
+            </tr>
+            <tr>
+              <td>Внешний Путь: оболочка</td>
+              <td class="num">38</td>
+              <td><span class="tag tag--unlock">техника</span> Учит оболочке из чакры.</td>
+              <td class="muted small">Ладонное око</td>
+            </tr>
+            <tr>
               <td>Ладонное око</td>
               <td class="num">30</td>
               <td>−3 % к цене техник</td>
@@ -1777,14 +2612,20 @@
 
     <section id="b-senrigan">
       <h2 id="s-b-senrigan"><span class="bcol" style="background:#e0c080"></span>Ветка «Сенриган»</h2>
-      <p class="branch-meta">8 узлов · 308 очков навыка · +40 чакры, +0,2 чакры/с, −6 % цены</p>
-      <p></p>
+      <p class="branch-meta">9 узлов · 348 очков навыка · +40 чакры, +0,2 чакры/с, −6 % цены</p>
+      <p>Сенриган: глаз, который смотрит дальше всех. Ветка про обзор, метки и выстрелы через полкарты.</p>
       <div class="tbl-wrap">
         <table class="tbl tbl--compact">
           <thead>
             <tr><th>Узел</th><th class="num">Цена</th><th>Что даёт</th><th>Нужны</th></tr>
           </thead>
           <tbody>
+            <tr>
+              <td>Эхо смерти</td>
+              <td class="num">40</td>
+              <td><span class="tag tag--unlock">техника</span> Учит помнить место, где пало тело.</td>
+              <td class="muted small">Долгая стража</td>
+            </tr>
             <tr>
               <td>Дальнее зрение</td>
               <td class="num">24</td>
@@ -1832,6 +2673,111 @@
               <td class="num">56</td>
               <td><span class="tag tag--unlock">техника</span> Научиться держаться в воздухе, пока открыт любой глаз.</td>
               <td class="muted small">Невесомый взгляд</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="b-six-paths">
+      <h2 id="s-b-six-paths"><span class="bcol" style="background:#b0a0ff"></span>Ветка «Шесть Путей»</h2>
+      <p class="branch-meta">15 узлов · 908 очков навыка · +45 чакры, +4 HP, +2 брони, +10 % скорости, −4 % цены, +50 сенин-маны</p>
+      <p>Шесть Путей: путь боли, звериный путь, голодный путь и остальные стойки Риннегана. Каждый путь — отдельная способность, а не пассивка.</p>
+      <div class="tbl-wrap">
+        <table class="tbl tbl--compact">
+          <thead>
+            <tr><th>Узел</th><th class="num">Цена</th><th>Что даёт</th><th>Нужны</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Основа Шести Путей</td>
+              <td class="num">40</td>
+              <td>+25 к максимуму чакры</td>
+              <td class="muted small">—</td>
+            </tr>
+            <tr>
+              <td>Полёт Мудреца</td>
+              <td class="num">46</td>
+              <td>+10 % к скорости</td>
+              <td class="muted small">Основа Шести Путей</td>
+            </tr>
+            <tr>
+              <td>Регенерация Мудреца</td>
+              <td class="num">52</td>
+              <td>+4 HP</td>
+              <td class="muted small">Полёт Мудреца</td>
+            </tr>
+            <tr>
+              <td>Шкура Мудреца</td>
+              <td class="num">64</td>
+              <td>+2 к броне</td>
+              <td class="muted small">Регенерация Мудреца</td>
+            </tr>
+            <tr>
+              <td>Инь-Ян: исцеление</td>
+              <td class="num">60</td>
+              <td><span class="tag tag--unlock">техника</span> Учит закрывать раны касанием.</td>
+              <td class="muted small">Основа Шести Путей</td>
+            </tr>
+            <tr>
+              <td>Ритуал Мудреца</td>
+              <td class="num">60</td>
+              <td>+50 к максимуму сенин-маны</td>
+              <td class="muted small">Основа Шести Путей</td>
+            </tr>
+            <tr>
+              <td>Ринне Шаринган</td>
+              <td class="num">64</td>
+              <td><span class="tag tag--unlock">техника</span> Учит третьему глазу.</td>
+              <td class="muted small">Ритуал Мудреца</td>
+            </tr>
+            <tr>
+              <td>Мудрец Шести Путей</td>
+              <td class="num">96</td>
+              <td><span class="tag tag--unlock">техника</span> Учит входить в режим Шести Путей.</td>
+              <td class="muted small">Ритуал Мудреца</td>
+            </tr>
+            <tr>
+              <td>Пустота между</td>
+              <td class="num">52</td>
+              <td>−4 % к цене техник</td>
+              <td class="muted small">Ритуал Мудреца</td>
+            </tr>
+            <tr>
+              <td>Лимбо: грань</td>
+              <td class="num">72</td>
+              <td><span class="tag tag--unlock">техника</span> Учит оставлять тень в параллельном мире.</td>
+              <td class="muted small">Пустота между</td>
+            </tr>
+            <tr>
+              <td>Аменоминака</td>
+              <td class="num">80</td>
+              <td><span class="tag tag--unlock">техника</span> Учит переносить мир в карман.</td>
+              <td class="muted small">Пустота между</td>
+            </tr>
+            <tr>
+              <td>Шары Истины</td>
+              <td class="num">48</td>
+              <td>+20 к максимуму чакры</td>
+              <td class="muted small">Ритуал Мудреца</td>
+            </tr>
+            <tr>
+              <td>Шар: запуск</td>
+              <td class="num">58</td>
+              <td><span class="tag tag--unlock">техника</span> Учит бросать шар Истины.</td>
+              <td class="muted small">Шары Истины</td>
+            </tr>
+            <tr>
+              <td>Шар: защита</td>
+              <td class="num">54</td>
+              <td><span class="tag tag--unlock">техника</span> Учит держать шары щитом.</td>
+              <td class="muted small">Шары Истины</td>
+            </tr>
+            <tr>
+              <td>Шар: форма</td>
+              <td class="num">62</td>
+              <td><span class="tag tag--unlock">техника</span> Учит превращать шар в оружие.</td>
+              <td class="muted small">Шары Истины</td>
             </tr>
           </tbody>
         </table>
