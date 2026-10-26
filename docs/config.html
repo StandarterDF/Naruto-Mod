@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Настройки сервера: config/naruto-mod.toml — Naruto Mod</title>
-<meta name="description" content="Все 41 опция Naruto Mod для Minecraft 1.20.1 в одном файле config/naruto-mod.toml: чакра и стамина, освоение, чувство чакры, копание, взрывы, Камуи и восемь дизайнов полоски — с точными значениями по умолчанию.">
+<meta name="description" content="Все 63 опции Naruto Mod для Minecraft 1.20.1 в одном файле config/naruto-mod.toml: чакра и стамина, освоение, чувство чакры, копание, взрывы, Камуи, додзюцу и восемь дизайнов полоски — с точными значениями по умолчанию.">
 <meta name="theme-color" content="#0d0e12">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/favicon.png">
@@ -74,13 +74,13 @@
       <h1>Настройки</h1>
       <p class="doc__lead">
         Весь мод настраивается <strong>одним файлом</strong> <code>config/naruto-mod.toml</code> —
-        в нём 43 опции. Здесь перечислены все, по разделам, с точными значениями по умолчанию.
+        в нём 63 опции. Здесь перечислены все, по разделам, с точными значениями по умолчанию.
         Цены и длительности самих техник в конфиг не выведены: это константы кода, их правят только
         в сборке.
       </p>
       <div class="doc__meta">
-        <span>1 файл · 43 опции</span>
-        <span>9 разделов</span>
+        <span>1 файл · 63 опции</span>
+        <span>11 разделов</span>
         <span>Правки — без перезапуска</span>
         <span>Ключи: C / V / B / X / J</span>
       </div>
@@ -121,9 +121,9 @@
             <tr><th>Раздел в файле</th><th class="nowrap">Опций</th><th>О чём</th></tr>
           </thead>
           <tbody>
-            <tr><td class="mono">[server.player.energy_bars]</td><td class="num">9</td>
+            <tr><td class="mono">[server.player.energy_bars]</td><td class="num">10</td>
               <td>Чакра, стамина, замены, сенин-мана, хенге.</td></tr>
-            <tr><td class="mono">[server.player.mastery]</td><td class="num">14</td>
+            <tr><td class="mono">[server.player.mastery]</td><td class="num">13</td>
               <td>Кривая освоения, скидки, штраф за смерть, медитация.</td></tr>
             <tr><td class="mono">[server.player.sensing]</td><td class="num">2</td>
               <td>Радиус сенсорики и цена ночного зрения.</td></tr>
@@ -131,11 +131,13 @@
               <td>Широкий прокоп и чутьё руды.</td></tr>
             <tr><td class="mono">[server.player.techniques]</td><td class="num">5</td>
               <td>Сцепление, адаптация, дым, тишина.</td></tr>
+            <tr><td class="mono">[server.player.world]</td><td class="num">14</td>
+              <td>Погода и стихии, сон, шум техник, добыча, печати, ранги, иллюзии на игроков.</td></tr>
             <tr><td class="mono">[server.weapons]</td><td class="num">6</td>
               <td>Радиусы взрывов и пороги клавиш каста.</td></tr>
             <tr><td class="mono">[server.kamui]</td><td class="num">2</td>
               <td>Карманное измерение.</td></tr>
-            <tr><td class="mono">[server.dojutsu]</td><td class="num">6</td>
+            <tr><td class="mono">[server.dojutsu]</td><td class="num">7</td>
               <td>Пять глаз и Чибаку Тенсэй: Риннеган, Шаринган, Бьякуган, Джоуган, Сенриган.</td></tr>
             <tr><td class="mono">[server.friends]</td><td class="num">1</td>
               <td>Система друзей.</td></tr>
@@ -620,6 +622,13 @@
               <td>Существуют ли звания Генин→S-ранг. Ранг считается по изученным узлам дерева и вехам за
                 боссов и открывается как ачивка; выключение убирает всю лестницу.</td>
             </tr>
+            <tr>
+              <td class="mono">genjutsuOnPlayers</td>
+              <td class="num">false</td>
+              <td>Разрешает гендзюцу на других <strong>игроков</strong>: чужой разум, подмена лица.
+                По умолчанию выключено — это отбирает управление у живого человека. На мобов иллюзии
+                работают всегда.</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -686,7 +695,14 @@
               <td class="mono">chibakuTenseiEnabled</td>
               <td class="num">true</td>
               <td>Разрешает Чибаку Тенсэй отдельно от глаза: можно оставить Риннеган игрокам, но
-                убрать самую разрушительную технику.</td>
+                убрать самую тяжёлую технику.</td>
+            </tr>
+            <tr>
+              <td class="mono">chibakuTenseiRadius</td>
+              <td class="num">16 <span class="muted small">(6–32)</span></td>
+              <td>Максимальный радиус шара Чибаку Тенсэй в блоках; тап даёт пятую часть этого.
+                Размер меняет только картинку, дальность притяжения и вес удара — блоки техника не
+                ломает.</td>
             </tr>
             <tr>
               <td class="mono">sharinganEnabled</td>
@@ -715,9 +731,10 @@
       </div>
       <div class="callout callout--note">
         <div class="callout__title">Блоки не страдают</div>
-        <p>Взрывы Чибаку Тенсэй всегда идут с <code>ExplosionInteraction.NONE</code>: техника вырывает
-          землю и швыряет её, но не подрывает постройки. Это не настройка, а решение кода — иначе одна
-          каст-цепочка стирала бы деревню.</p>
+        <p>Чибаку Тенсэй вообще не трогает мир: шар собирается из местного грунта только на картинке,
+          ни один блок не вынимается и не ломается, а на месте падения остаются пыль и урон, но не
+          воронка. Это не настройка, а решение кода — техника должна быть эпичной, а не стирать
+          деревню.</p>
       </div>
     </section>
 
