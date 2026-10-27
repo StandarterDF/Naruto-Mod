@@ -36,7 +36,7 @@ public class ChakraShearAbility extends Ability implements Ability.Toggled, Abil
     }
 
     /** B V V C V V - the Jougan (B V V C) and two more keys. */
-    public static final long COMBO = 322311L;
+    public static final long COMBO = 1132L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_shear");
 

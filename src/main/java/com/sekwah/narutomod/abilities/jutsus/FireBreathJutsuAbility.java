@@ -50,7 +50,7 @@ import java.util.Optional;
 public class FireBreathJutsuAbility extends Ability implements Ability.Channeled {
 
     /** C V B C */
-    public static final long COMBO = 1231L;
+    public static final long COMBO = 1323L;
 
     /** Chakra burned for every tick the flame is held. */
     private static final float CHAKRA_PER_TICK = 0.5f;

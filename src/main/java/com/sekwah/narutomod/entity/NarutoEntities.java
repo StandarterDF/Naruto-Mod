@@ -6,6 +6,8 @@ import com.sekwah.narutomod.entity.jutsuprojectile.ChibakuTenseiEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.EarthWallEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.FireballJutsuEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.RasenshurikenJutsuEntity;
+import com.sekwah.narutomod.entity.jutsuprojectile.TailedBallEntity;
+import com.sekwah.narutomod.entity.jutsuprojectile.TravellingArcEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.WaterBulletJutsuEntity;
 import com.sekwah.narutomod.entity.projectile.ExplosiveKunaiEntity;
 import com.sekwah.narutomod.entity.projectile.KunaiEntity;
@@ -55,6 +57,20 @@ public class NarutoEntities {
 
     public static final RegistryObject<EntityType<RasenshurikenJutsuEntity>> RASENSHURIKEN_JUTSU = register("rasenshuriken_jutsu",
             EntityType.Builder.<RasenshurikenJutsuEntity>of(RasenshurikenJutsuEntity::new, MobCategory.MISC).fireImmune().sized(0.6F, 0.6F).clientTrackingRange(6).updateInterval(10));
+
+    /**
+     * The thrown Tailed Beast Bomb. Sized to hold the largest sphere it can draw: a full charge
+     * throws a ball a block across.
+     */
+    public static final RegistryObject<EntityType<TailedBallEntity>> TAILED_BALL = register("tailed_ball",
+            EntityType.Builder.<TailedBallEntity>of(TailedBallEntity::new, MobCategory.MISC).fireImmune().sized(1.2F, 1.2F).clientTrackingRange(8).updateInterval(10));
+
+    /**
+     * The travelling wind arc. It never moves and draws nothing itself - the front is a function
+     * of its age and the crescent is particles - so the box only has to exist for the dispatcher.
+     */
+    public static final RegistryObject<EntityType<TravellingArcEntity>> TRAVELLING_ARC = register("travelling_arc",
+            EntityType.Builder.<TravellingArcEntity>of(TravellingArcEntity::new, MobCategory.MISC).sized(0.5F, 0.5F).clientTrackingRange(8).updateInterval(10));
 
 
     public static final RegistryObject<EntityType<SubstitutionLogEntity>> SUBSTITUTION_LOG = register("substitution_log",

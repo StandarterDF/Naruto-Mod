@@ -42,7 +42,7 @@ public class HiddenSealAbility extends Ability implements Ability.Cooldown {
     }
 
     /** V B V B V V - the eye's seal with the last key doubled, as a seal is pressed twice. */
-    public static final long COMBO = 232322L;
+    public static final long COMBO = 11313L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "hidden_seal");
 

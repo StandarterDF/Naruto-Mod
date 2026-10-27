@@ -34,7 +34,7 @@ import net.minecraft.world.phys.Vec3;
 public class IronGuardianAbility extends Ability implements Ability.Cooldown {
 
     /** V C V C B C - the clone seal walked up into the summoning keys. */
-    public static final long COMBO = 212131L;
+    public static final long COMBO = 2123L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "iron_guardian");
 

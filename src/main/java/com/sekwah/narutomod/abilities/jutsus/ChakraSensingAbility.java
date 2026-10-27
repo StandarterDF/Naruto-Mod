@@ -64,7 +64,7 @@ public class ChakraSensingAbility extends Ability implements Ability.Channeled {
 
 
     /** C B C C */
-    public static final long COMBO = 1311L;
+    public static final long COMBO = 32L;
 
     /** The registry id of this technique, which is also the key its mastery is stored under. */
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_sensing");

@@ -27,7 +27,7 @@ public class ChakraFeedingAbility extends Ability implements Ability.Toggled, Ab
 
 
     /** C B B. */
-    public static final long COMBO = 122L;
+    public static final long COMBO = 3331L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_feeding");
 

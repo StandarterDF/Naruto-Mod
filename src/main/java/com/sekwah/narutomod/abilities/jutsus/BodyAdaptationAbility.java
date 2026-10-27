@@ -35,7 +35,7 @@ public class BodyAdaptationAbility extends Ability implements Ability.Toggled, A
 
 
     /** B V V. */
-    public static final long COMBO = 233L;
+    public static final long COMBO = 11133L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "body_adaptation");
 

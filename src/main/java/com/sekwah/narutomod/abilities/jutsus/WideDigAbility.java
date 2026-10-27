@@ -36,7 +36,7 @@ public class WideDigAbility extends Ability implements Ability.Toggled, Ability.
 
 
     /** C V V. */
-    public static final long COMBO = 133L;
+    public static final long COMBO = 3233L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "wide_dig");
 

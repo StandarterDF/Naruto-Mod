@@ -3,8 +3,9 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
-import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -34,13 +35,21 @@ public class CurseSealTwoAbility extends Ability implements Ability.Toggled, Abi
         return 0;
     }
 
-    /** C C B A A B - the curse mark's second stage. */
-    public static final long COMBO = 332112L;
+    /**
+     * The second stage has no key of its own: it is reached by pressing the first stage's key again,
+     * see {@link CurseSealOneAbility#onRetoggle}.
+     */
+    public static final long COMBO = -1L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "curse_seal_two");
 
     /** The mark that says the second stage is open, refreshed every active tick. */
     public static final String UNTIL_TAG = "narutomod:curse_seal_two_until";
+
+    /** Tick the flight is kept; the seal's wings lift the bearer while the mark is up. */
+    public static final String FLIGHT_TAG = "narutomod:curse_seal_two_flight";
+    private static final String MAYFLY_TAG = "mayfly";
+    private static final String FLYING_TAG = "flying";
 
     /**
      * The mark that carries the slow fall. The mark itself does nothing; the listener in
@@ -119,6 +128,13 @@ public class CurseSealTwoAbility extends Ability implements Ability.Toggled, Abi
         player.getPersistentData().putLong(UNTIL_TAG, now + MARK_GRACE);
         player.getPersistentData().putLong(SLOW_FALL_TAG, now + MARK_GRACE);
 
+        // The seal's wings lift the body: creative flight while the mark is up, shift to descend.
+        if (player.isShiftKeyDown()) {
+            releaseFlight(player);
+        } else {
+            grantFlight(player);
+        }
+
         if (player.level() instanceof ServerLevel level) {
             if (opening) {
                 level.sendParticles(ParticleTypes.SOUL, player.getX(),
@@ -155,9 +171,39 @@ public class CurseSealTwoAbility extends Ability implements Ability.Toggled, Abi
     public void handleAbilityEnded(Player player, INinjaData ninjaData, int ticksActive) {
         player.getPersistentData().remove(UNTIL_TAG);
         player.getPersistentData().remove(SLOW_FALL_TAG);
+        releaseFlight(player);
         player.removeEffect(MobEffects.DAMAGE_BOOST);
         player.removeEffect(MobEffects.MOVEMENT_SPEED);
         player.removeEffect(MobEffects.JUMP);
         player.removeEffect(MobEffects.SLOW_FALLING);
+    }
+
+    /** Hands the caster their wings, remembering what they had before so the seal can give it back. */
+    private static void grantFlight(Player player) {
+        CompoundTag tag = player.getPersistentData();
+        if (!tag.contains(FLIGHT_TAG)) {
+            CompoundTag saved = new CompoundTag();
+            saved.putBoolean(MAYFLY_TAG, player.getAbilities().mayfly);
+            saved.putBoolean(FLYING_TAG, player.getAbilities().flying);
+            tag.put(FLIGHT_TAG, saved);
+        }
+        if (!player.getAbilities().mayfly || !player.getAbilities().flying) {
+            player.getAbilities().mayfly = true;
+            player.getAbilities().flying = true;
+            player.onUpdateAbilities();
+        }
+    }
+
+    /** Puts the flight state back exactly as it was before the seal. Safe when nothing was lent. */
+    private static void releaseFlight(Player player) {
+        CompoundTag tag = player.getPersistentData();
+        if (!tag.contains(FLIGHT_TAG)) {
+            return;
+        }
+        CompoundTag saved = tag.getCompound(FLIGHT_TAG);
+        tag.remove(FLIGHT_TAG);
+        player.getAbilities().mayfly = saved.getBoolean(MAYFLY_TAG);
+        player.getAbilities().flying = saved.getBoolean(FLYING_TAG);
+        player.onUpdateAbilities();
     }
 }

@@ -68,7 +68,8 @@ public class NinjaCapabilityHandler {
                             if(ability.handleCost(player, data)) {
                                 ability.performServer(player, data);
                             } else {
-                                data.getToggleAbilityData().removeAbilityEnded(player, data, ability);
+                                // Silent: handleCost has already shown the reason on the action bar.
+                                data.getToggleAbilityData().removeAbilityEndedSilently(player, data, ability);
                             }
                         }
                     }

@@ -2,14 +2,15 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.AbilityUnlocks;
+import com.sekwah.narutomod.abilities.NarutoAbilities;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.friends.Friends;
 import com.sekwah.narutomod.util.Targeting;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -36,7 +37,7 @@ import net.minecraft.world.phys.Vec3;
  * the blade swung into the stone opens a short tunnel without bringing a pickaxe. The stone is
  * broken out with its drops, because a tunnel that leaves nothing behind is a hole, not a passage.</p>
  */
-public class ShibukiAbility extends Ability implements Ability.Cooldown {
+public class ShibukiAbility extends Ability {
 
     /** A detonation is heard across a village. */
     @Override
@@ -44,10 +45,13 @@ public class ShibukiAbility extends Ability implements Ability.Cooldown {
         return 20;
     }
 
-    /** 1 3 2 3 3 2 - the kenjutsu seals and the two keys of the blast swing. */
-    public static final long COMBO = 132332L;
+    /** No combo: the blast lives on the sword's right-click. */
+    public static final long COMBO = -1L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "shibuki");
+
+    /** Game time before which the scroll cannot be set off again. */
+    public static final String READY_TAG = "narutomod:shibuki_ready";
 
     /** How far in front of the caster the charge is set off, and how far down the look a block is read. */
     private static final double RANGE = 4.0d;
@@ -80,32 +84,45 @@ public class ShibukiAbility extends Ability implements Ability.Cooldown {
     }
 
     @Override
-    public int getCooldown() {
-        return COOLDOWN;
-    }
-
-    @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        float cost = this.masteryCost(ninjaData, COST);
-        if (ninjaData.getStamina() < cost) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.notenoughstamina",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
-            return false;
-        }
-        ninjaData.useStamina(cost, STAMINA_REGEN_DELAY);
-        return true;
+        return false;
     }
 
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
-        if (!(player.level() instanceof ServerLevel level)) {
-            return;
+    }
+
+    /**
+     * Sets the scroll off from the sword's right-click: a burst in front, or a short tunnel when
+     * sneaking. The node on the kenjutsu branch is the gate and stamina is the price.
+     *
+     * @return true when the charge went off.
+     */
+    public static boolean swing(Player player) {
+        INinjaData ninjaData = player.getCapability(
+                com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
+        if (ninjaData == null || !AbilityUnlocks.isUnlocked(ninjaData, ID)) {
+            return false;
         }
-        if (player.isShiftKeyDown()) {
-            dig(level, player);
-        } else {
-            burst(level, player);
+        long now = player.level().getGameTime();
+        if (now < player.getPersistentData().getLong(READY_TAG)) {
+            return false;
         }
+        float cost = Mastery.cost(ninjaData, NarutoAbilities.SHIBUKI.get(), COST);
+        if (ninjaData.getStamina() < cost) {
+            return false;
+        }
+        ninjaData.useStamina(cost, STAMINA_REGEN_DELAY);
+        player.getPersistentData().putLong(READY_TAG, now + COOLDOWN);
+        player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+        if (player.level() instanceof ServerLevel level) {
+            if (player.isShiftKeyDown()) {
+                dig(level, player);
+            } else {
+                burst(level, player);
+            }
+        }
+        return true;
     }
 
     /** The charge set off in front of the caster: bodies thrown, the world left as it was. */

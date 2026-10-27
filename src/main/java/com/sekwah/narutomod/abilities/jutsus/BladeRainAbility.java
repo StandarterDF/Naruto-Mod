@@ -30,7 +30,7 @@ import net.minecraft.world.phys.Vec3;
 public class BladeRainAbility extends Ability implements Ability.Cooldown {
 
     /** V C V C B B - the summoning keys of the guardian, with the last two turned. */
-    public static final long COMBO = 212132L;
+    public static final long COMBO = 1122L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "blade_rain");
 

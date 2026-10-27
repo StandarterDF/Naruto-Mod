@@ -48,7 +48,7 @@ public class MechanismSightAbility extends Ability implements Ability.Cooldown {
     }
 
     /** V B V B C B - the eye's seal ending on the builder's key. */
-    public static final long COMBO = 232313L;
+    public static final long COMBO = 11322L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "mechanism_sight");
 

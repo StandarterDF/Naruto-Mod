@@ -25,6 +25,7 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.level.ExplosionEvent;
 import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -268,6 +269,7 @@ public final class SummonMedicineEvents {
             return;
         }
         event.getAffectedBlocks().clear();
+        event.getAffectedEntities().clear();
     }
 
     /** Seals do not travel between saves; a stopped server takes its live arrays with it. */
@@ -276,6 +278,47 @@ public final class SummonMedicineEvents {
         if (event.getLevel() instanceof ServerLevel level && level.dimension() == Level.OVERWORLD) {
             ZONES.clear();
         }
+    }
+
+    /**
+     * Draws the edge of every live seal so the caster can see where it works. The array is anchored
+     * on the ground, so the ring is sent to the clients at ground height every half second: server
+     * particles are broadcast to everyone nearby by vanilla, which is exactly the audience that needs
+     * to know they are standing inside a silenced field.
+     */
+    @SubscribeEvent
+    public static void onLevelTick(TickEvent.LevelTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level)) {
+            return;
+        }
+        long now = level.getGameTime();
+        ZONES.removeIf(zone -> zone.until() <= now);
+        if (now % 10 != 0L) {
+            return;
+        }
+        for (SilencerZone zone : ZONES) {
+            if (!zone.dimension().equals(level.dimension())) {
+                continue;
+            }
+            drawZoneEdge(level, zone.centre());
+        }
+    }
+
+    /** A ring of sealing glyphs around the edge, with a dim column at the anchor. */
+    private static void drawZoneEdge(ServerLevel level, Vec3 centre) {
+        double radius = ExplosionSilencerAbility.ZONE_RADIUS;
+        int points = 36;
+        for (int i = 0; i < points; i++) {
+            double angle = Math.PI * 2.0d * i / points;
+            double x = centre.x + Math.cos(angle) * radius;
+            double z = centre.z + Math.sin(angle) * radius;
+            level.sendParticles(ParticleTypes.ENCHANT, x, centre.y + 0.15d, z, 1, 0.0d, 0.0d, 0.0d, 0.0d);
+            if (i % 3 == 0) {
+                level.sendParticles(ParticleTypes.END_ROD, x, centre.y + 0.4d, z, 1, 0.0d, 0.0d, 0.0d, 0.0d);
+            }
+        }
+        level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, centre.x, centre.y + 0.1d, centre.z,
+                3, 0.08d, 0.1d, 0.08d, 0.0d);
     }
 
     /**

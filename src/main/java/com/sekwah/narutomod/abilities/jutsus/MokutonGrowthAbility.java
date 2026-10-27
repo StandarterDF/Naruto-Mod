@@ -34,7 +34,7 @@ import net.minecraft.world.phys.BlockHitResult;
 public class MokutonGrowthAbility extends Ability implements Ability.Cooldown {
 
     /** B A V B A - the wood release seal, simplest of the elemental forms. */
-    public static final long COMBO = 12111L;
+    public static final long COMBO = 11331L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "mokuton_growth");
 

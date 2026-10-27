@@ -31,7 +31,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public class WateringAbility extends Ability implements Ability.Cooldown {
 
     /** B A V A A - water release, the second of the basic elements. */
-    public static final long COMBO = 12311L;
+    public static final long COMBO = 12211L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "suiton_watering");
 

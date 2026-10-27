@@ -38,7 +38,7 @@ public class CloneRecallAbility extends Ability implements Ability.Cooldown {
 
 
     /** V C C */
-    public static final long COMBO = 211L;
+    public static final long COMBO = 11122L;
 
     /** Chakra for one call. */
     private static final float CHAKRA_COST = 30.0f;

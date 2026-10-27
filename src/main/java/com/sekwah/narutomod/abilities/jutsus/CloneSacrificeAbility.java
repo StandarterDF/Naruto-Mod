@@ -26,7 +26,7 @@ import net.minecraft.world.entity.player.Player;
 public class CloneSacrificeAbility extends Ability implements Ability.Toggled, Ability.HandleEnded {
 
     /** V C V B - the clone seal with the last key turned. */
-    public static final long COMBO = 2123L;
+    public static final long COMBO = 1223L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "clone_sacrifice");
 

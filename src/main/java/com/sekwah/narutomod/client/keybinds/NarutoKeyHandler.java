@@ -229,7 +229,7 @@ public class NarutoKeyHandler {
             Minecraft mc = Minecraft.getInstance();
             if(mc.player != null ) {
                 LOGGER.debug("Casting jutsu {}", currentJutsuCombo);
-                if(!NarutoAbilities.triggerAbility(currentJutsuCombo)) {
+                if(!NarutoAbilities.triggerAbility(currentJutsuCombo, mc.player)) {
                     mc.player.displayClientMessage((Component.translatable("jutsu.error.notfound", currentJutsuCombo)).withStyle(ChatFormatting.RED), true);
                 } else {
                     //mc.player.sendMessage(Component.translatable("trying.jutsu", currentJutsuCombo), true);

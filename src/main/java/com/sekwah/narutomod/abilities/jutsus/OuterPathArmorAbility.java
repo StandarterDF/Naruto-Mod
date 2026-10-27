@@ -36,7 +36,7 @@ public class OuterPathArmorAbility extends Ability implements Ability.Toggled, A
     }
 
     /** 2 3 3 3 1 3 - the last key of the outer run. */
-    public static final long COMBO = 233313L;
+    public static final long COMBO = 2322L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "outer_armor");
 

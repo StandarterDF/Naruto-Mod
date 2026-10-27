@@ -42,7 +42,7 @@ public class MudCloneAbility extends Ability implements Ability.Cooldown {
     }
 
     /** B A B A A C - the clone seal followed by the earth sign. */
-    public static final long COMBO = 212113L;
+    public static final long COMBO = 1312L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "mud_clone");
 

@@ -45,7 +45,7 @@ public class VoidCastAbility extends Ability implements Ability.Cooldown {
     }
 
     /** V B V B C V - the eye's own seal with a turn of the wrist at the end. */
-    public static final long COMBO = 232312L;
+    public static final long COMBO = 12212L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "void_cast");
 

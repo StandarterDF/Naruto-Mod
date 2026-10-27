@@ -18,6 +18,9 @@ public enum SkillSection {
     /** The body: raw pools, mobility, hand-to-hand combat and medical ninjutsu. */
     PHYSICAL("naruto.gui.skill.section.physical", 0xFFE8E8E8),
 
+    /** The Eight Gates: the inner gates and the techniques that open them, on their own board. */
+    GATES("naruto.gui.skill.section.gates", 0xFF8B0000),
+
     /** The five natures. Each element is its own board so it can grow without crowding the others. */
     NINJUTSU("naruto.gui.skill.section.ninjutsu", 0xFFFFB04D),
 

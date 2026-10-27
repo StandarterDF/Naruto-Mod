@@ -48,11 +48,10 @@ import java.util.UUID;
 @Mod.EventBusSubscriber(modid = NarutoMod.MOD_ID)
 public final class SixPathsEvents {
 
-    /**
-     * The marker that says this mod is the one holding gravity off the caster. Without it, releasing
-     * the mode would also cancel a levitation someone else is running.
-     */
+    /** Flight state saved so the stance can put it back the way it found it. */
     public static final String FLIGHT_TAG = "narutomod:six_paths_flight";
+    private static final String MAYFLY_TAG = "mayfly";
+    private static final String FLYING_TAG = "flying";
 
     /** A stable id, so the speed bonus is added and taken off rather than stacking. */
     private static final UUID SPEED_MODIFIER_ID = UUID.fromString("b3e5d9a2-4c17-4f6b-8a90-2d7e1c6f5b48");
@@ -98,6 +97,7 @@ public final class SixPathsEvents {
         // The orb count is kept honest here rather than trusted from the techniques that spend it.
         int orbs = Mth.clamp(data.getInt(SixPathsModeAbility.ORBS_TAG), 0, SixPathsModeAbility.MAX_ORBS);
         data.putInt(SixPathsModeAbility.ORBS_TAG, orbs);
+        ninjaData.setSixPathsOrbs(orbs);
 
         boolean stillRunning = ninjaData.getToggleAbilityData().getAbilitiesHashSet()
                 .contains(SixPathsModeAbility.ID);
@@ -111,13 +111,11 @@ public final class SixPathsEvents {
         }
 
         // Sneaking is how a sage chooses to come down. Letting go of the mark takes the flight with
-        // it; the mod only ever gives gravity back if it was the one holding it off.
+        // it; the mod only ever gives wings if it was the one lending them.
         if (player.isShiftKeyDown()) {
-            player.setNoGravity(false);
+            releaseFlight(player, data);
         } else {
-            data.putBoolean(FLIGHT_TAG, true);
-            player.setNoGravity(true);
-            player.fallDistance = 0.0f;
+            grantFlight(player, data);
         }
         applySpeed(player);
 
@@ -143,10 +141,34 @@ public final class SixPathsEvents {
         if (speed != null && speed.getModifier(SPEED_MODIFIER_ID) != null) {
             speed.removeModifier(SPEED_MODIFIER_ID);
         }
-        if (data.getBoolean(FLIGHT_TAG)) {
-            data.remove(FLIGHT_TAG);
-            player.setNoGravity(false);
+        releaseFlight(player, data);
+    }
+
+    /** Hands the caster their wings, remembering what they had before so the stance can give it back. */
+    private static void grantFlight(Player player, CompoundTag data) {
+        if (!data.contains(FLIGHT_TAG)) {
+            CompoundTag saved = new CompoundTag();
+            saved.putBoolean(MAYFLY_TAG, player.getAbilities().mayfly);
+            saved.putBoolean(FLYING_TAG, player.getAbilities().flying);
+            data.put(FLIGHT_TAG, saved);
         }
+        if (!player.getAbilities().mayfly || !player.getAbilities().flying) {
+            player.getAbilities().mayfly = true;
+            player.getAbilities().flying = true;
+            player.onUpdateAbilities();
+        }
+    }
+
+    /** Puts the flight state back exactly as it was before the stance. Safe when nothing was lent. */
+    private static void releaseFlight(Player player, CompoundTag data) {
+        if (!data.contains(FLIGHT_TAG)) {
+            return;
+        }
+        CompoundTag saved = data.getCompound(FLIGHT_TAG);
+        data.remove(FLIGHT_TAG);
+        player.getAbilities().mayfly = saved.getBoolean(MAYFLY_TAG);
+        player.getAbilities().flying = saved.getBoolean(FLYING_TAG);
+        player.onUpdateAbilities();
     }
 
     /** Re-applied every tick so a modifier lost to a reload or a respawn comes back with the mode. */

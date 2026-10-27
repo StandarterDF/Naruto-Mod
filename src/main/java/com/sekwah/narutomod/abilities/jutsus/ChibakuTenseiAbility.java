@@ -44,7 +44,7 @@ public class ChibakuTenseiAbility extends Ability implements Ability.Channeled {
     }
 
     /** V B B C V B C - the long seal chain, as it is in 1.7.10. */
-    public static final long COMBO = 2331231L;
+    public static final long COMBO = 111111L;
 
     /** Ticks of holding at which the ball is as big as it gets. */
     public static final int FULL_CHARGE = 160;

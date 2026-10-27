@@ -40,7 +40,7 @@ public class GatePeacockAbility extends Ability implements Ability.Cooldown {
     }
 
     /** 2 3 3 3 3 1 - the gates' seal with the peacock's tail. */
-    public static final long COMBO = 233331L;
+    public static final long COMBO = 1332L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "gate_peacock");
 

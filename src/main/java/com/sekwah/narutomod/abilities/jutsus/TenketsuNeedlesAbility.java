@@ -43,7 +43,7 @@ public class TenketsuNeedlesAbility extends Ability implements Ability.Channeled
     }
 
     /** V B V V B B - the Byakugan, then two keys for the thrown strike. */
-    public static final long COMBO = 232211L;
+    public static final long COMBO = 3223L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "tenketsu_needles");
 

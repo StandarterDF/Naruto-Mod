@@ -39,7 +39,7 @@ public class WaterCloneAbility extends Ability implements Ability.Cooldown {
     }
 
     /** B A B A A B - the clone seal followed by the water sign. */
-    public static final long COMBO = 212112L;
+    public static final long COMBO = 1311L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "water_clone");
 

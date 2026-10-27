@@ -43,7 +43,7 @@ public class TsukuyomiAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C V V B B C B - the Sharingan combo (C V V B), then the heaviest illusion on the branch. */
-    public static final long COMBO = 122321L;
+    public static final long COMBO = 3231L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "tsukuyomi");
 

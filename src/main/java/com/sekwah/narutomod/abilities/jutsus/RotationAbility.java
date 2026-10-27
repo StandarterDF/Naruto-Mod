@@ -45,7 +45,7 @@ public class RotationAbility extends Ability implements Ability.Cooldown {
     }
 
     /** V B V V B - the Byakugan, then one more key. */
-    public static final long COMBO = 23223L;
+    public static final long COMBO = 2333L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "rotation");
 

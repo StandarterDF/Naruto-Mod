@@ -35,7 +35,7 @@ public class HeavenWeightAbility extends Ability implements Ability.Cooldown {
     }
 
     /** V V C B V - the Rinnegan stance and one more key. */
-    public static final long COMBO = 23322L;
+    public static final long COMBO = 11312L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "heaven_weight");
 

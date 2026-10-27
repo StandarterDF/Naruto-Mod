@@ -32,7 +32,7 @@ import java.util.UUID;
 public class BeastCarryAbility extends Ability implements Ability.Toggled, Ability.HandleEnded {
 
     /** C C A B - the wind branch's beast seal. */
-    public static final long COMBO = 3312L;
+    public static final long COMBO = 3323L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "beast_carry");
 

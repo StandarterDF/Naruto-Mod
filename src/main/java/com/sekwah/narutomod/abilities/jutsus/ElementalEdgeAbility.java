@@ -38,7 +38,7 @@ public class ElementalEdgeAbility extends Ability implements Ability.Toggled, Ab
     }
 
     /** 1 3 2 2 5 2 in the brief; 1 3 2 3 1 2 1 here, because a combo has only three keys. */
-    public static final long COMBO = 1323121L;
+    public static final long COMBO = 231L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "elemental_edge");
 

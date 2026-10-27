@@ -9,6 +9,7 @@ public class NarutoCommands {
         JutsuCommand.register(dispatcher);
         NarutoDebugCommand.register(dispatcher);
         NatureCommand.register(dispatcher);
+        StorageCommand.register(dispatcher);
     }
 
 }

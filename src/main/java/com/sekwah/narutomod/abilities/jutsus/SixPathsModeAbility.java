@@ -44,8 +44,8 @@ public class SixPathsModeAbility extends Ability
         return 24;
     }
 
-    /** C C C C B B - the Six Paths seal, the branch's last key. */
-    public static final long COMBO = 333311L;
+    /** B B B B C C - the Six Paths seal, the branch's last key. */
+    public static final long COMBO = 33333L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "six_paths_mode");
 
@@ -94,33 +94,45 @@ public class SixPathsModeAbility extends Ability
     }
 
     /**
-     * The ritual is paid once, at the opening; the upkeep is paid every tick after that. The
-     * difference matters: while the mode is up its own tags are the source of truth, so the
-     * hundred nature energy is checked and taken exactly once.
+     * Refuses the switch-on before the stance is ever added, so a ritual that cannot be paid leaves
+     * no toggle, no mark and no cooldown behind. Without this the mode was switched on first and
+     * checked a tick later, and a refused attempt looked like it had opened for one tick before
+     * closing.
      */
     @Override
-    public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
+    public boolean canStartToggle(Player player, INinjaData ninjaData) {
+        return hasStarted(player) || checkRitual(player, ninjaData);
+    }
+
+    /** The one-off price of opening: the eye, the wait since the last ritual and the nature energy. */
+    private boolean checkRitual(Player player, INinjaData ninjaData) {
         if (!NarutoConfig.rinneganEnabled) {
             player.displayClientMessage(Component.translatable("jutsu.fail.rinnegan.disabled")
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }
-        if (!hasStarted(player)) {
-            if (!RinneganAbility.isActive(ninjaData)) {
-                player.displayClientMessage(Component.translatable("jutsu.fail.rinnegan.required",
-                        Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
-                        .withStyle(ChatFormatting.RED), true);
-                return false;
-            }
-            if (this.checkCooldown(player, ninjaData, this.getTranslationKey(ninjaData))) {
-                return false;
-            }
-            if (ninjaData.getSeninMana() < RITUAL_SENIN) {
-                player.displayClientMessage(Component.translatable("jutsu.fail.senin.notenough",
-                        Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW),
-                        (int) RITUAL_SENIN).withStyle(ChatFormatting.RED), true);
-                return false;
-            }
+        if (!RinneganAbility.isActive(ninjaData)) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.rinnegan.required",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        if (this.checkCooldown(player, ninjaData, this.getTranslationKey(ninjaData))) {
+            return false;
+        }
+        if (ninjaData.getSeninMana() < RITUAL_SENIN) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.senin.notenough",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW),
+                    (int) RITUAL_SENIN).withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
+        if (!hasStarted(player) && !checkRitual(player, ninjaData)) {
+            return false;
         }
         float cost = this.masteryCost(ninjaData, CHAKRA_PER_TICK);
         if (ninjaData.getChakra() < cost) {
@@ -152,7 +164,7 @@ public class SixPathsModeAbility extends Ability
         data.putLong(UNTIL_TAG, now + DURATION);
         data.putLong(STARTED_TAG, now);
         data.putInt(ORBS_TAG, MAX_ORBS);
-        ninjaData.setSeninMana(ninjaData.getSeninMana() - RITUAL_SENIN);
+        ninjaData.setSixPathsOrbs(MAX_ORBS);        ninjaData.setSeninMana(ninjaData.getSeninMana() - RITUAL_SENIN);
         ninjaData.setEyeChakraBonus(BONUS_CHAKRA);
         if (player.level() instanceof ServerLevel level) {
             level.sendParticles(ParticleTypes.END_ROD, player.getX(),
@@ -179,12 +191,23 @@ public class SixPathsModeAbility extends Ability
         // Only state and tags are kept; the client reads them through the ordinary sync.
     }
 
-    /** Closing the mode takes the ritual's leftovers with it: the tags, the orbs and the pool. */
+    /**
+     * Closing the mode takes the ritual's leftovers with it: the tags, the orbs and the pool.
+     *
+     * <p>The cooldown belongs to a ritual that actually happened. The toggle is switched on first
+     * and paid for on the next tick, so a cast refused for a missing eye, an empty nature-energy
+     * pool or a lack of chakra also ends here - and charging it the five minutes anyway turned one
+     * bad moment into a lockout, which every further attempt then refreshed. Only a mode that was
+     * really opened earns the wait.</p>
+     */
     @Override
     public void handleAbilityEnded(Player player, INinjaData ninjaData, int ticksActive) {
+        boolean wasOpened = hasStarted(player);
         clear(player, ninjaData);
-        // The minute was the whole allowance; a second ritual has to wait for the eye to recover.
-        this.registerCooldown(player, ninjaData, this.getTranslationKey(ninjaData));
+        if (wasOpened) {
+            // The minute was the whole allowance; a second ritual has to wait for the eye to recover.
+            this.registerCooldown(player, ninjaData, this.getTranslationKey(ninjaData));
+        }
     }
 
     /**
@@ -197,6 +220,7 @@ public class SixPathsModeAbility extends Ability
         data.remove(UNTIL_TAG);
         data.remove(STARTED_TAG);
         data.remove(ORBS_TAG);
+        ninjaData.setSixPathsOrbs(0);
         // If the eye is still open its own upkeep writes its bonus back this same tick, so the pool
         // never dips on the way out. With no eye left there is nothing to keep.
         if (!RinneganAbility.isActive(ninjaData)) {
@@ -221,7 +245,10 @@ public class SixPathsModeAbility extends Ability
 
     /** Writes the orb count, keeping any other code from putting more out than the mode gave. */
     public static void setOrbs(Player player, int orbs) {
-        player.getPersistentData().putInt(ORBS_TAG, Mth.clamp(orbs, 0, MAX_ORBS));
+        int clamped = Mth.clamp(orbs, 0, MAX_ORBS);
+        player.getPersistentData().putInt(ORBS_TAG, clamped);
+        player.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA)
+                .ifPresent(ninjaData -> ninjaData.setSixPathsOrbs(clamped));
     }
 
     /** Spends one orb and @return how many are left. */

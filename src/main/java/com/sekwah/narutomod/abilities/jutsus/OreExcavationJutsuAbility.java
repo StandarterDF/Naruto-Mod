@@ -61,7 +61,7 @@ public class OreExcavationJutsuAbility extends Ability {
 
 
     /** C V V C */
-    public static final long COMBO = 1221L;
+    public static final long COMBO = 2311L;
 
     /** How far, in blocks, the technique reaches for the first block of a vein. */
     private static final int RADIUS = 5;

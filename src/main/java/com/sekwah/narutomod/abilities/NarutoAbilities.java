@@ -28,6 +28,7 @@ import com.sekwah.narutomod.abilities.jutsus.EarthWallJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.KamuiJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.KamuiPhaseAbility;
 import com.sekwah.narutomod.abilities.jutsus.OreExcavationJutsuAbility;
+import com.sekwah.narutomod.abilities.jutsus.OreVeinMiningAbility;
 import com.sekwah.narutomod.abilities.jutsus.OreSenseAbility;
 import com.sekwah.narutomod.abilities.jutsus.WideDigAbility;
 import com.sekwah.narutomod.abilities.jutsus.KirinAbility;
@@ -47,21 +48,12 @@ import com.sekwah.narutomod.abilities.jutsus.SharinganAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraTrailAbility;
 import com.sekwah.narutomod.abilities.jutsus.SuggestionAbility;
 import com.sekwah.narutomod.abilities.jutsus.TsukuyomiAbility;
-import com.sekwah.narutomod.abilities.jutsus.KyoujinAbility;
 import com.sekwah.narutomod.abilities.jutsus.KuraiAbility;
-import com.sekwah.narutomod.abilities.jutsus.StepBehindAbility;
 import com.sekwah.narutomod.abilities.jutsus.IzanagiAbility;
 import com.sekwah.narutomod.abilities.jutsus.IzanamiAbility;
 import com.sekwah.narutomod.abilities.jutsus.KotoamatsukamiAbility;
-import com.sekwah.narutomod.abilities.jutsus.NarakumiAbility;
-import com.sekwah.narutomod.abilities.jutsus.JubakuSatsuAbility;
-import com.sekwah.narutomod.abilities.jutsus.UtakataAbility;
 import com.sekwah.narutomod.abilities.jutsus.PlayerGenjutsuAbility;
-import com.sekwah.narutomod.abilities.jutsus.KokoniArazuAbility;
-import com.sekwah.narutomod.abilities.jutsus.KagaamiAbility;
-import com.sekwah.narutomod.abilities.jutsus.MrakAbility;
 import com.sekwah.narutomod.abilities.jutsus.FaceSwapAbility;
-import com.sekwah.narutomod.abilities.jutsus.MirageAbility;
 import com.sekwah.narutomod.abilities.jutsus.ParryAbility;
 import com.sekwah.narutomod.abilities.jutsus.VacuumBladeAbility;
 import com.sekwah.narutomod.abilities.jutsus.PalmBlockAbility;
@@ -86,7 +78,6 @@ import com.sekwah.narutomod.abilities.jutsus.KusaGiriAbility;
 import com.sekwah.narutomod.abilities.jutsus.KesaGiriAbility;
 import com.sekwah.narutomod.abilities.jutsus.FlameFistAbility;
 import com.sekwah.narutomod.abilities.jutsus.WaterHandAbility;
-import com.sekwah.narutomod.abilities.jutsus.GrabThrowAbility;
 import com.sekwah.narutomod.abilities.jutsus.HiramekareiAbility;
 import com.sekwah.narutomod.abilities.jutsus.ShibukiAbility;
 import com.sekwah.narutomod.abilities.jutsus.BleedingBladeAbility;
@@ -97,7 +88,6 @@ import com.sekwah.narutomod.abilities.jutsus.ByakuganAbility;
 import com.sekwah.narutomod.abilities.jutsus.RotationAbility;
 import com.sekwah.narutomod.abilities.jutsus.JouganAbility;
 import com.sekwah.narutomod.abilities.jutsus.KaiAbility;
-import com.sekwah.narutomod.abilities.jutsus.SleepTouchAbility;
 import com.sekwah.narutomod.abilities.jutsus.JouganStasisAbility;
 import com.sekwah.narutomod.abilities.jutsus.JouganUnweaveAbility;
 import com.sekwah.narutomod.abilities.jutsus.TenketsuNeedlesAbility;
@@ -119,6 +109,7 @@ import com.sekwah.narutomod.abilities.jutsus.StorageChestAbility;
 import com.sekwah.narutomod.abilities.jutsus.DecoyCloneAbility;
 import com.sekwah.narutomod.abilities.jutsus.MedicCloneAbility;
 import com.sekwah.narutomod.abilities.jutsus.ShurikenShadowAbility;
+import com.sekwah.narutomod.abilities.jutsus.ShadowGrabAbility;
 import com.sekwah.narutomod.abilities.jutsus.MokutonGrowthAbility;
 import com.sekwah.narutomod.abilities.jutsus.WateringAbility;
 import com.sekwah.narutomod.abilities.jutsus.WindStepAbility;
@@ -127,14 +118,12 @@ import com.sekwah.narutomod.abilities.jutsus.CloneSwapAbility;
 import com.sekwah.narutomod.abilities.jutsus.WaterCloneAbility;
 import com.sekwah.narutomod.abilities.jutsus.MudCloneAbility;
 import com.sekwah.narutomod.abilities.jutsus.ClayCloneAbility;
-import com.sekwah.narutomod.abilities.jutsus.PoleVaultAbility;
-import com.sekwah.narutomod.abilities.jutsus.SilentKillAbility;
-import com.sekwah.narutomod.abilities.jutsus.NuibariAbility;
-import com.sekwah.narutomod.abilities.jutsus.StrongShoulderAbility;
-import com.sekwah.narutomod.abilities.jutsus.DynamicEntryAbility;
+import com.sekwah.narutomod.abilities.jutsus.CombatStanceAbility;
+import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
+import net.minecraft.world.entity.player.Player;
+import com.sekwah.narutomod.abilities.jutsus.CombatStanceAbility;
 import com.sekwah.narutomod.abilities.jutsus.ProjectileCutAbility;
 import com.sekwah.narutomod.abilities.jutsus.DrunkenFistAbility;
-import com.sekwah.narutomod.abilities.jutsus.WallBounceAbility;
 import com.sekwah.narutomod.abilities.jutsus.LimboAbility;
 import com.sekwah.narutomod.abilities.jutsus.AmenominakaAbility;
 import com.sekwah.narutomod.abilities.jutsus.YinYangHealingAbility;
@@ -144,11 +133,11 @@ import com.sekwah.narutomod.abilities.jutsus.ChakraCloakAbility;
 import com.sekwah.narutomod.abilities.jutsus.TailedCloakAbility;
 import com.sekwah.narutomod.abilities.jutsus.LightningModeAbility;
 import com.sekwah.narutomod.abilities.jutsus.OrochimaruBodyAbility;
-import com.sekwah.narutomod.abilities.jutsus.IceMirrorsAbility;
 import com.sekwah.narutomod.abilities.jutsus.MindTransferAbility;
 import com.sekwah.narutomod.abilities.jutsus.SizeExpansionAbility;
 import com.sekwah.narutomod.abilities.jutsus.CamelliaDanceAbility;
 import com.sekwah.narutomod.abilities.jutsus.BoneBulletsAbility;
+import com.sekwah.narutomod.abilities.jutsus.BoneToolsAbility;
 import com.sekwah.narutomod.abilities.jutsus.SixPathsModeAbility;
 import com.sekwah.narutomod.abilities.jutsus.GudodamaLaunchAbility;
 import com.sekwah.narutomod.abilities.jutsus.GudodamaGuardAbility;
@@ -163,10 +152,8 @@ import com.sekwah.narutomod.abilities.jutsus.JouganPhaseAbility;
 import com.sekwah.narutomod.abilities.jutsus.BlackRodAbility;
 import com.sekwah.narutomod.abilities.jutsus.ItemAttractionAbility;
 import com.sekwah.narutomod.abilities.jutsus.RinneganLevitationAbility;
-import com.sekwah.narutomod.abilities.jutsus.SenriganEchoAbility;
 import com.sekwah.narutomod.abilities.jutsus.VoidCastAbility;
 import com.sekwah.narutomod.abilities.jutsus.MechanismSightAbility;
-import com.sekwah.narutomod.abilities.jutsus.EightTrigramsFieldAbility;
 import com.sekwah.narutomod.abilities.jutsus.HiddenSealAbility;
 import com.sekwah.narutomod.abilities.jutsus.DoctorSightAbility;
 import com.sekwah.narutomod.abilities.jutsus.SixtyFourPalmsAbility;
@@ -271,11 +258,6 @@ public class NarutoAbilities {
     public static final RegistryObject<ChakraShieldAbility> CHAKRA_SHIELD =
             ABILITY.register("chakra_shield", ChakraShieldAbility::new);
 
-    /**
-     * Buys one escape from death with the whole chakra bar. See {@link SecondBreathAbility}.
-     */
-    public static final RegistryObject<SecondBreathAbility> SECOND_BREATH =
-            ABILITY.register("second_breath", SecondBreathAbility::new);
 
     /**
      * Closes wounds with chakra and food rather than saturation. See
@@ -289,6 +271,13 @@ public class NarutoAbilities {
      */
     public static final RegistryObject<OreExcavationJutsuAbility> ORE_EXCAVATION =
             ABILITY.register("ore_excavation", OreExcavationJutsuAbility::new);
+
+    /**
+     * The mastered mining stance: every ore broken by hand pulls its whole vein out for chakra.
+     * See {@link OreVeinMiningAbility}.
+     */
+    public static final RegistryObject<OreVeinMiningAbility> ORE_VEIN_MINING =
+            ABILITY.register("ore_vein_mining", OreVeinMiningAbility::new);
 
     /**
      * Widens every swing into a three by three plane of blocks while the stance is held. See
@@ -364,17 +353,18 @@ public class NarutoAbilities {
             ABILITY.register("genjutsu", GenjutsuJutsuAbility::new);
 
     /**
+     * The shadow that roots a body where it stands while the seal is held. See
+     * {@link ShadowGrabAbility}.
+     */
+    public static final RegistryObject<ShadowGrabAbility> SHADOW_GRAB =
+            ABILITY.register("shadow_grab", ShadowGrabAbility::new);
+
+    /**
      * The release word that breaks an illusion on the caster and everyone standing with them. See
      * {@link KaiAbility}.
      */
     public static final RegistryObject<KaiAbility> KAI =
             ABILITY.register("kai", KaiAbility::new);
-
-    /**
-     * A touch that puts an ordinary body to sleep for eight seconds. See {@link SleepTouchAbility}.
-     */
-    public static final RegistryObject<SleepTouchAbility> NEMURI =
-            ABILITY.register("nemuri", SleepTouchAbility::new);
 
     /**
      * Wearing somebody else's face: a cosmetic disguise that copies another player's skin and name.
@@ -557,17 +547,9 @@ public class NarutoAbilities {
     public static final RegistryObject<TsukuyomiAbility> TSUKUYOMI =
             ABILITY.register("tsukuyomi", TsukuyomiAbility::new);
 
-    /** The cone illusion that slows and disorients. See {@link KyoujinAbility}. */
-    public static final RegistryObject<KyoujinAbility> KYOUJIN =
-            ABILITY.register("kyoujin", KyoujinAbility::new);
-
     /** The look that puts out the lights in one mind. See {@link KuraiAbility}. */
     public static final RegistryObject<KuraiAbility> KURAI =
             ABILITY.register("kurai", KuraiAbility::new);
-
-    /** The step that trades the ground under the feet for the space behind a target. */
-    public static final RegistryObject<StepBehindAbility> STEP_BEHIND =
-            ABILITY.register("step_behind", StepBehindAbility::new);
 
     /** The eye spent to rewrite a death. See {@link IzanagiAbility}. */
     public static final RegistryObject<IzanagiAbility> IZANAGI =
@@ -582,41 +564,13 @@ public class NarutoAbilities {
     public static final RegistryObject<KotoamatsukamiAbility> KOTOAMATSUKAMI =
             ABILITY.register("kotoamatsukami", KotoamatsukamiAbility::new);
 
-    /** The fear that turns a creature away from its own hunt. See {@link NarakumiAbility}. */
-    public static final RegistryObject<NarakumiAbility> NARAKUMI =
-            ABILITY.register("narakumi", NarakumiAbility::new);
-
-    /** The roots that hold a body still. See {@link JubakuSatsuAbility}. */
-    public static final RegistryObject<JubakuSatsuAbility> JUBAKU_SATSU =
-            ABILITY.register("jubaku_satsu", JubakuSatsuAbility::new);
-
-    /** The pointed finger that stops a body and breaks its hold. See {@link UtakataAbility}. */
-    public static final RegistryObject<UtakataAbility> UTAKATA =
-            ABILITY.register("utakata", UtakataAbility::new);
-
     /** The illusion turned on another player, behind a server flag. See {@link PlayerGenjutsuAbility}. */
     public static final RegistryObject<PlayerGenjutsuAbility> PLAYER_GENJUTSU =
             ABILITY.register("player_genjutsu", PlayerGenjutsuAbility::new);
 
-    /** The illusion that makes the room look closed. See {@link KokoniArazuAbility}. */
-    public static final RegistryObject<KokoniArazuAbility> KOKONI_ARAZU =
-            ABILITY.register("kokoni_arazu", KokoniArazuAbility::new);
-
-    /** The two mirror images. See {@link KagaamiAbility}. */
-    public static final RegistryObject<KagaamiAbility> KAGAAMI =
-            ABILITY.register("kagaami", KagaamiAbility::new);
-
-    /** The dark. See {@link MrakAbility}. */
-    public static final RegistryObject<MrakAbility> MRAK =
-            ABILITY.register("mrak", MrakAbility::new);
-
     /** The face the victim sees on everyone. See {@link FaceSwapAbility}. */
     public static final RegistryObject<FaceSwapAbility> FACE_SWAP =
             ABILITY.register("face_swap", FaceSwapAbility::new);
-
-    /** The shape left where the caster was standing. See {@link MirageAbility}. */
-    public static final RegistryObject<MirageAbility> MIRAGE =
-            ABILITY.register("mirage", MirageAbility::new);
 
     /** A sword held ready. See {@link ParryAbility}. */
     public static final RegistryObject<ParryAbility> BLADE_PARRY =
@@ -708,9 +662,6 @@ public class NarutoAbilities {
     /** Registered technique. See {@link WaterHandAbility}. */
     public static final RegistryObject<WaterHandAbility> WATER_HAND =
             ABILITY.register("water_hand", WaterHandAbility::new);
-    /** Registered technique. See {@link GrabThrowAbility}. */
-    public static final RegistryObject<GrabThrowAbility> GRAB_THROW =
-            ABILITY.register("grab_throw", GrabThrowAbility::new);
     /** Registered technique. See {@link HiramekareiAbility}. */
     public static final RegistryObject<HiramekareiAbility> HIRAMEKAREI =
             ABILITY.register("hiramekarei", HiramekareiAbility::new);
@@ -872,9 +823,6 @@ public class NarutoAbilities {
     public static final RegistryObject<WateringAbility> SUITON_WATERING =
             ABILITY.register("suiton_watering", WateringAbility::new);
 
-    /** The wind footwork stance: speed for strength. See {@link WindStepAbility}. */
-    public static final RegistryObject<WindStepAbility> WIND_STEP =
-            ABILITY.register("wind_step", WindStepAbility::new);
 
     /** The shoulder carry stance. See {@link BeastCarryAbility}. */
     public static final RegistryObject<BeastCarryAbility> BEAST_CARRY =
@@ -896,29 +844,16 @@ public class NarutoAbilities {
     public static final RegistryObject<ClayCloneAbility> CLAY_CLONE =
             ABILITY.register("clay_clone", ClayCloneAbility::new);
 
+    /**
+     * The combat focus stance: with it up, two keys reach the long physical techniques.
+     * See {@link CombatStanceAbility}.
+     */
+    public static final RegistryObject<CombatStanceAbility> COMBAT_STANCE =
+            ABILITY.register("combat_stance", CombatStanceAbility::new);
+
     // ----------------------------------------------------------------------------------------
     // Taijutsu and kenjutsu: the physical techniques traded for stamina.
     // ----------------------------------------------------------------------------------------
-
-    /** Vaulting off a blade or the ground. See {@link PoleVaultAbility}. */
-    public static final RegistryObject<PoleVaultAbility> POLE_VAULT =
-            ABILITY.register("pole_vault", PoleVaultAbility::new);
-
-    /** Ten seconds of silent feet and harder blows from behind. See {@link SilentKillAbility}. */
-    public static final RegistryObject<SilentKillAbility> SILENT_KILL =
-            ABILITY.register("silent_kill", SilentKillAbility::new);
-
-    /** The sewing needle that threads bodies and reels them in. See {@link NuibariAbility}. */
-    public static final RegistryObject<NuibariAbility> NUIBARI =
-            ABILITY.register("nuibari", NuibariAbility::new);
-
-    /** The body check that hits harder into a wall. See {@link StrongShoulderAbility}. */
-    public static final RegistryObject<StrongShoulderAbility> STRONG_SHOULDER =
-            ABILITY.register("strong_shoulder", StrongShoulderAbility::new);
-
-    /** The flying kick that ignores a raised shield. See {@link DynamicEntryAbility}. */
-    public static final RegistryObject<DynamicEntryAbility> DYNAMIC_ENTRY =
-            ABILITY.register("dynamic_entry", DynamicEntryAbility::new);
 
     /** The wind scythe that cuts projectiles out of the air. See {@link ProjectileCutAbility}. */
     public static final RegistryObject<ProjectileCutAbility> PROJECTILE_CUT =
@@ -928,10 +863,6 @@ public class NarutoAbilities {
     public static final RegistryObject<DrunkenFistAbility> DRUNKEN_FIST =
             ABILITY.register("drunken_fist", DrunkenFistAbility::new);
 
-    /** Kicking off a wall in mid-air. See {@link WallBounceAbility}. */
-    public static final RegistryObject<WallBounceAbility> WALL_BOUNCE =
-            ABILITY.register("wall_bounce", WallBounceAbility::new);
-
     // ----------------------------------------------------------------------------------------
     // Modes, seals and the Six Paths esoterica.
     // ----------------------------------------------------------------------------------------
@@ -940,9 +871,6 @@ public class NarutoAbilities {
     public static final RegistryObject<LimboAbility> LIMBO =
             ABILITY.register("limbo", LimboAbility::new);
 
-    /** The world swapped out from under everyone. See {@link AmenominakaAbility}. */
-    public static final RegistryObject<AmenominakaAbility> AMENOMINAKA =
-            ABILITY.register("amenominaka", AmenominakaAbility::new);
 
     /** The Six Paths seal that mends an ally. See {@link YinYangHealingAbility}. */
     public static final RegistryObject<YinYangHealingAbility> YIN_YANG_HEAL =
@@ -972,10 +900,6 @@ public class NarutoAbilities {
     public static final RegistryObject<OrochimaruBodyAbility> OROCHIMARU_BODY =
             ABILITY.register("orochimaru_body", OrochimaruBodyAbility::new);
 
-    /** The ring of ice. See {@link IceMirrorsAbility}. */
-    public static final RegistryObject<IceMirrorsAbility> ICE_MIRRORS =
-            ABILITY.register("ice_mirrors", IceMirrorsAbility::new);
-
     /** The Yamanaka transfer. See {@link MindTransferAbility}. */
     public static final RegistryObject<MindTransferAbility> MIND_TRANSFER =
             ABILITY.register("mind_transfer", MindTransferAbility::new);
@@ -991,6 +915,10 @@ public class NarutoAbilities {
     /** Five shards of bone. See {@link BoneBulletsAbility}. */
     public static final RegistryObject<BoneBulletsAbility> BONE_BULLETS =
             ABILITY.register("bone_bullets", BoneBulletsAbility::new);
+
+    /** Grows a full set of bone tools. See {@link BoneToolsAbility}. */
+    public static final RegistryObject<BoneToolsAbility> BONE_TOOLS =
+            ABILITY.register("bone_tools", BoneToolsAbility::new);
 
     /** The sage's body opened all the way. See {@link SixPathsModeAbility}. */
     public static final RegistryObject<SixPathsModeAbility> SIX_PATHS_MODE =
@@ -1008,9 +936,6 @@ public class NarutoAbilities {
     public static final RegistryObject<GudodamaFormAbility> GUDODAMA_FORM =
             ABILITY.register("gudodama_form", GudodamaFormAbility::new);
 
-    /** The third eye. See {@link RinneSharinganAbility}. */
-    public static final RegistryObject<RinneSharinganAbility> RINNE_SHARINGAN =
-            ABILITY.register("rinne_sharingan", RinneSharinganAbility::new);
 
     /** Sewing every portal shut for half a minute. See {@link SealPortalAbility}. */
     public static final RegistryObject<SealPortalAbility> SEAL_PORTAL =
@@ -1048,10 +973,6 @@ public class NarutoAbilities {
     public static final RegistryObject<RinneganLevitationAbility> RINNEGAN_LEVITATION =
             ABILITY.register("rinnegan_levitation", RinneganLevitationAbility::new);
 
-    /** The eye's memory of a death. See {@link SenriganEchoAbility}. */
-    public static final RegistryObject<SenriganEchoAbility> SENRIGAN_ECHO =
-            ABILITY.register("senrigan_echo", SenriganEchoAbility::new);
-
     /** Seeing the hollows behind the stone. See {@link VoidCastAbility}. */
     public static final RegistryObject<VoidCastAbility> VOID_CAST =
             ABILITY.register("void_cast", VoidCastAbility::new);
@@ -1059,10 +980,6 @@ public class NarutoAbilities {
     /** Seeing plates, tripwires, charges and containers through walls. See {@link MechanismSightAbility}. */
     public static final RegistryObject<MechanismSightAbility> MECHANISM_SIGHT =
             ABILITY.register("mechanism_sight", MechanismSightAbility::new);
-
-    /** The eight-trigram field: reach and heavier palms. See {@link EightTrigramsFieldAbility}. */
-    public static final RegistryObject<EightTrigramsFieldAbility> EIGHT_TRIGRAMS_FIELD =
-            ABILITY.register("eight_trigrams_field", EightTrigramsFieldAbility::new);
 
     /** The invisible trap left on the ground. See {@link HiddenSealAbility}. */
     public static final RegistryObject<HiddenSealAbility> HIDDEN_SEAL =
@@ -1092,17 +1009,11 @@ public class NarutoAbilities {
     public static final RegistryObject<NarakaPathAbility> NARAKA_PATH =
             ABILITY.register("naraka_path", NarakaPathAbility::new);
 
-    /** The three wolves. See {@link AnimalPathAbility}. */
-    public static final RegistryObject<AnimalPathAbility> ANIMAL_PATH =
-            ABILITY.register("animal_path", AnimalPathAbility::new);
 
     /** The three seekers. See {@link AsuraMissilesAbility}. */
     public static final RegistryObject<AsuraMissilesAbility> ASURA_MISSILES =
             ABILITY.register("asura_missiles", AsuraMissilesAbility::new);
 
-    /** The invisible echo. See {@link RinboHengokuAbility}. */
-    public static final RegistryObject<RinboHengokuAbility> RINBO_HENGOKU =
-            ABILITY.register("rinbo_hengoku", RinboHengokuAbility::new);
 
     /** The chakra chains. See {@link OuterPathChainsAbility}. */
     public static final RegistryObject<OuterPathChainsAbility> OUTER_CHAINS =
@@ -1173,6 +1084,23 @@ public class NarutoAbilities {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Resolves a short seal through the combat stance before the global combo map. The stance only
+     * changes what the keys mean for the caster who has it up; the server still checks the unlock on
+     * the ability that comes out of it.
+     */
+    public static boolean triggerAbility(long combo, Player player) {
+        if (player != null) {
+            var data = player.getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
+            var alias = CombatStanceAbility.resolve(player, data, combo);
+            if (alias != null) {
+                triggerAbility(alias);
+                return true;
+            }
+        }
+        return triggerAbility(combo);
     }
 
 

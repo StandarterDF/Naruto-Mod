@@ -12,7 +12,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 
 /**
@@ -25,7 +28,9 @@ import net.minecraft.world.entity.player.Player;
  * bending, measured by a body that can take a hundred points of punishment, shrugs it off.</p>
  *
  * <p>The window is for walking away or for setting up the next technique, and it closes the moment
- * the caster spoils it by attacking: the mark left here is what the caster's own blows clear.</p>
+ * the caster spoils it by attacking: the mark left here is what the caster's own blows clear. On a
+ * trader the same whisper buys a better price instead: the merchant is left under a long
+ * hero-of-the-village bargain while the creature's mind is untouched.</p>
  */
 public class SuggestionAbility extends Ability implements Ability.Cooldown {
 
@@ -36,7 +41,7 @@ public class SuggestionAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C V V B B C - the Sharingan combo (C V V B) and two more keys. */
-    public static final long COMBO = 122312L;
+    public static final long COMBO = 3212L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "suggestion");
 
@@ -55,6 +60,9 @@ public class SuggestionAbility extends Ability implements Ability.Cooldown {
 
     /** How long the creature forgets the caster - the same 8 seconds the tag stores, in ticks. */
     private static final int FORGET_TICKS = 160;
+
+    /** How long a trader keeps the suggested price: a full minute of haggling. */
+    private static final int DISCOUNT_TICKS = 20 * 60;
 
     /**
      * Where a body stops being a mind that can be nudged. Anything that can absorb a hundred points
@@ -124,6 +132,22 @@ public class SuggestionAbility extends Ability implements Ability.Cooldown {
         }
         // The look was paid for a moment ago; the mob can have died or wandered out of reach since.
         if (!isValidTarget(mob) || isTooStrong(mob)) {
+            return;
+        }
+
+        // A trader is not a fighter: the same whisper is spent on a better price instead of on a
+        // lost target. The vanilla hero-of-the-village effect is exactly the haggling discount the
+        // suggestion is meant to produce, so it is applied as a long, quiet bargain.
+        if (mob instanceof AbstractVillager merchant) {
+            merchant.addEffect(new MobEffectInstance(MobEffects.HERO_OF_THE_VILLAGE, DISCOUNT_TICKS, 0, true, false));
+            player.displayClientMessage(Component.translatable("jutsu.suggestion.discount",
+                    merchant.getDisplayName().copy().withStyle(ChatFormatting.LIGHT_PURPLE))
+                    .withStyle(ChatFormatting.DARK_PURPLE), true);
+            level.sendParticles(ParticleTypes.ENCHANT, merchant.getX(),
+                    merchant.getY() + merchant.getBbHeight() + 0.2d, merchant.getZ(),
+                    18, 0.35d, 0.25d, 0.35d, 0.4d);
+            level.playSound(null, merchant.getX(), merchant.getY(), merchant.getZ(),
+                    SoundEvents.VILLAGER_YES, SoundSource.PLAYERS, 0.9f, 0.9f);
             return;
         }
 

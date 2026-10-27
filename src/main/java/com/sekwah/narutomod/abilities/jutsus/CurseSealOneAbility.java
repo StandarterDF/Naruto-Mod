@@ -2,6 +2,8 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.AbilityUnlocks;
+import com.sekwah.narutomod.abilities.NarutoAbilities;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -29,7 +31,7 @@ import net.minecraft.world.entity.player.Player;
  * second stage, {@link CurseSealTwoAbility}, is built on top of this one and lets go the moment this
  * one does.</p>
  */
-public class CurseSealOneAbility extends Ability implements Ability.Toggled, Ability.HandleEnded {
+public class CurseSealOneAbility extends Ability implements Ability.Toggled, Ability.HandleEnded, Ability.Retoggle {
 
     /** The seal is a quiet thing; nothing about opening it carries through the world. */
     @Override
@@ -37,8 +39,8 @@ public class CurseSealOneAbility extends Ability implements Ability.Toggled, Abi
         return 0;
     }
 
-    /** C C B A A A - the curse mark's first stage. */
-    public static final long COMBO = 332111L;
+    /** C C B - one seal, one key: the same press opens the first stage and deepens it to the second. */
+    public static final long COMBO = 11123L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "curse_seal_one");
 
@@ -163,5 +165,25 @@ public class CurseSealOneAbility extends Ability implements Ability.Toggled, Abi
         player.removeEffect(MobEffects.DAMAGE_BOOST);
         player.removeEffect(MobEffects.MOVEMENT_SPEED);
         player.removeEffect(MobEffects.DAMAGE_RESISTANCE);
+    }
+
+    /**
+     * The same key deepens the seal instead of closing it: first stage, then second, then let go.
+     * Sneaking with the key always lets go, so a caster is never stuck in a stage they no longer
+     * want. The second stage is only available once its node has been learned.
+     */
+    @Override
+    public boolean onRetoggle(Player player, INinjaData ninjaData) {
+        if (player.isShiftKeyDown()) {
+            return false;
+        }
+        if (ninjaData.getToggleAbilityData().getAbilitiesHashSet().contains(CurseSealTwoAbility.ID)) {
+            return false;
+        }
+        if (!AbilityUnlocks.isUnlocked(ninjaData, CurseSealTwoAbility.ID)) {
+            return false;
+        }
+        ninjaData.getToggleAbilityData().addAbilityStarted(player, ninjaData, NarutoAbilities.CURSE_SEAL_TWO.get());
+        return true;
     }
 }

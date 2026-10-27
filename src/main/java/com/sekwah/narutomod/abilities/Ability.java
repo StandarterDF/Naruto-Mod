@@ -85,6 +85,20 @@ public abstract class Ability {
     }
 
     /**
+     * Whether a toggle may be switched on right now, checked on the server before the stance joins
+     * the toggle set. A refusal here costs nothing and leaves no mark or cooldown behind, which is
+     * what a mode with a one-off ritual price wants: the reason is shown at the moment the keys are
+     * pressed instead of the stance flicking on and straight back off.
+     *
+     * <p>Most toggles pay purely per tick and need no check; the default allows every one of them.</p>
+     *
+     * @return false to refuse the switch-on; the implementation is expected to have told the player why.
+     */
+    public boolean canStartToggle(Player player, INinjaData ninjaData) {
+        return true;
+    }
+
+    /**
      * If the ability should say its status in chat
      * @return
      */
@@ -309,6 +323,21 @@ public abstract class Ability {
          * @param ninjaData
          */
         void handleAbilityEnded(Player player, INinjaData ninjaData, int ticksActive);
+    }
+
+    /**
+     * A toggle that does something more interesting than switching off when its key is pressed while
+     * it is already running. The curse seal is the first of these: the same key opens the first
+     * stage, deepens it to the second and lets go.
+     */
+    public interface Retoggle {
+
+        /**
+         * Called instead of turning the toggle off. A false result lets the ordinary switch-off run.
+         *
+         * @return true when the press was consumed and the toggle must stay in the active set.
+         */
+        boolean onRetoggle(Player player, INinjaData ninjaData);
     }
 
     /**

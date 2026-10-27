@@ -45,7 +45,7 @@ public class NodeRuptureAbility extends Ability implements Ability.Cooldown {
      * V B V V B B B - the needles' seal and then the strike. The tag it leaves is
      * {@code narutomod:node_rupture_until}; see {@link #RUPTURE_UNTIL_TAG}.
      */
-    public static final long COMBO = 232221L;
+    public static final long COMBO = 2233L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "node_rupture");
 

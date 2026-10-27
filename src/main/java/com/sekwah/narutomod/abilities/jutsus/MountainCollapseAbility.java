@@ -48,7 +48,7 @@ public class MountainCollapseAbility extends Ability implements Ability.Cooldown
     }
 
     /** V B V V B B - the seal of the soft fist, doubled at the end. */
-    public static final long COMBO = 232233L;
+    public static final long COMBO = 1322L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "eight_trigrams_collapse");
 

@@ -4,6 +4,7 @@ import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.events.GenjutsuEvents;
+import com.sekwah.narutomod.friends.Friends;
 import com.sekwah.narutomod.util.Targeting;
 import com.sekwah.narutomod.world.WorldEnvironment;
 import net.minecraft.ChatFormatting;
@@ -12,6 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.TamableAnimal;
@@ -27,10 +29,14 @@ import net.minecraft.world.entity.player.Player;
  * pointed at the nearest other mob, which it attacks with whatever it normally attacks with. The
  * actual behaviour lives in {@link GenjutsuEvents}; this class is only the cast.</p>
  *
+ * <p>A mastered genjutsu is no longer a single target: once half the technique has been learned the
+ * seal can be held, and everything inside the caster's cone of sight is caught at once. The hold also
+ * deepens the illusion, so a long seal leaves its victims confused for longer after it is released.</p>
+ *
  * <p>It is deliberately not a combat technique on its own: a genjutsu ninja does not kill with it,
  * they make a fight break out somewhere else and walk away from it.</p>
  */
-public class GenjutsuJutsuAbility extends Ability implements Ability.Cooldown {
+public class GenjutsuJutsuAbility extends Ability implements Ability.Channeled {
     /**
      * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
      */
@@ -57,11 +63,22 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Cooldown {
     /** How long the illusion lasts, in ticks. */
     public static final int DURATION = 20 * 30;
 
-    private static final int COOLDOWN = 20 * 10;
+    /** Mastery from which the seal can be held to catch everything in the caster's sight. */
+    public static final float MASS_MASTERY = 0.5f;
+
+    /** Extra duration a held mass illusion earns per tick, and the ceiling it can reach. */
+    private static final int HELD_BONUS_PER_TICK = 5;
+    private static final int HELD_BONUS_MAX = 20 * 20;
+
+    /** The most minds one mass cast will hold at once. */
+    private static final int MAX_MASS_TARGETS = 8;
+
+    /** Chakra burnt for every tick past the opening one. */
+    private static final float UPKEEP = 0.8f;
 
     @Override
     public ActivationType activationType() {
-        return ActivationType.INSTANT;
+        return ActivationType.CHANNELED;
     }
 
     @Override
@@ -71,69 +88,83 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Cooldown {
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
+        boolean mass = this.masteryLevel(ninjaData) >= MASS_MASTERY;
         Mob target = findTarget(player);
-        if (target == null) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.genjutsu.notarget",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
-                    .withStyle(ChatFormatting.RED), true);
+        boolean opening = chargeAmount <= 0;
+        if (target == null && !(mass && !findTargets(player, player.isShiftKeyDown() ? 1 : MAX_MASS_TARGETS).isEmpty())) {
+            if (opening) {
+                player.displayClientMessage(Component.translatable("jutsu.fail.genjutsu.notarget",
+                        Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                        .withStyle(ChatFormatting.RED), true);
+            }
             return false;
         }
-        if (GenjutsuEvents.isUnderGenjutsu(target)) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.genjutsu.active",
-                    target.getDisplayName().copy().withStyle(ChatFormatting.YELLOW)).withStyle(ChatFormatting.RED), true);
+        if (target != null && GenjutsuEvents.isUnderGenjutsu(target) && !mass) {
+            if (opening) {
+                player.displayClientMessage(Component.translatable("jutsu.fail.genjutsu.active",
+                        target.getDisplayName().copy().withStyle(ChatFormatting.YELLOW)).withStyle(ChatFormatting.RED), true);
+            }
             return false;
         }
-        float cost = this.masteryCost(ninjaData, CHAKRA_COST);
+        float cost = this.masteryCost(ninjaData, opening ? CHAKRA_COST : UPKEEP);
         if (ninjaData.getChakra() < cost) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
-                    .withStyle(ChatFormatting.RED), true);
+            if (opening) {
+                player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
+                        Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                        .withStyle(ChatFormatting.RED), true);
+            }
             return false;
         }
         ninjaData.useChakra(cost, 20);
         return true;
     }
 
+    /**
+     * The illusion is laid while the seal is held. A caster below half mastery only reaches the one
+     * mob under the crosshair; a mastered caster holds the seal and catches everything in the cone
+     * of their sight, and the longer the seal is kept the longer the illusion clings afterwards.
+     */
     @Override
-    public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
-        // A mastered illusion does not stop at one mind: the caster can lead up to three creatures
-        // that are standing together, which is what turns the technique from a duel trick into a
-        // way to break a patrol.
-        float mastery = this.masteryLevel(ninjaData);
-        int limit = 1 + (mastery >= 0.3f ? 1 : 0) + (mastery >= 0.6f ? 1 : 0);
-        java.util.List<Mob> targets = findTargets(player, limit);
-        if (targets.isEmpty()) {
-            // The check in handleCost already passed, so this should not happen; refund nothing, the
-            // cast simply fizzles rather than charging for nothing.
+    public void handleChannelling(Player player, INinjaData ninjaData, int ticksChanneled) {
+        if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
-        for (Mob target : targets) {
-            GenjutsuEvents.apply(player, target, DURATION);
-            // A mind that is already held can be led: a beast comes out of the illusion as the ninja's own.
+        this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
+        if (ticksChanneled % 10 != 0) {
+            return;
+        }
+        boolean mass = this.masteryLevel(ninjaData) >= MASS_MASTERY;
+        int limit = mass ? MAX_MASS_TARGETS : 1;
+        int duration = DURATION + (mass ? Math.min(HELD_BONUS_MAX, ticksChanneled * HELD_BONUS_PER_TICK) : 0);
+        for (Mob target : findTargets(player, limit)) {
+            GenjutsuEvents.apply(player, target, duration);
             tryTame(player, target);
-
             player.displayClientMessage(Component.translatable("jutsu.genjutsu.cast",
                     target.getDisplayName().copy().withStyle(ChatFormatting.LIGHT_PURPLE))
                     .withStyle(ChatFormatting.DARK_PURPLE), true);
-
-            if (target.level() instanceof ServerLevel level) {
-                level.sendParticles(ParticleTypes.ENCHANT, target.getX(),
-                        target.getY() + target.getBbHeight(), target.getZ(),
-                        30, 0.5d, 0.4d, 0.5d, 0.4d);
-                level.playSound(null, target.getX(), target.getY(), target.getZ(),
-                        SoundEvents.ILLUSIONER_CAST_SPELL, net.minecraft.sounds.SoundSource.PLAYERS, 0.8f, 0.7f);
-            }
+            level.sendParticles(ParticleTypes.ENCHANT, target.getX(),
+                    target.getY() + target.getBbHeight(), target.getZ(),
+                    30, 0.5d, 0.4d, 0.5d, 0.4d);
+            level.playSound(null, target.getX(), target.getY(), target.getZ(),
+                    SoundEvents.ILLUSIONER_CAST_SPELL, SoundSource.PLAYERS, 0.8f, 0.7f);
         }
     }
 
-    /** The looked-at mob first, then the nearest others sharing roughly the same line of sight. */
+    /** A tap lays one illusion; a hold is handled tick by tick. */
+    @Override
+    public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
+        if (ticksActive < 0) {
+            handleChannelling(player, ninjaData, 0);
+        }
+    }
+
+    /** The looked-at mob first, then every other mob sharing roughly the same line of sight. */
     private static java.util.List<Mob> findTargets(Player player, int limit) {
         java.util.List<Mob> found = new java.util.ArrayList<>();
         Mob aimed = findTarget(player);
-        if (aimed == null) {
-            return found;
+        if (aimed != null && !Friends.areFriends(player, aimed)) {
+            found.add(aimed);
         }
-        found.add(aimed);
         double range = RANGE * (1.0d + MOON_RANGE_BONUS * WorldEnvironment.moonClarity(player));
         var look = player.getLookAngle();
         java.util.List<Mob> nearby = player.level().getEntitiesOfClass(Mob.class,
@@ -143,6 +174,9 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Cooldown {
         for (Mob mob : nearby) {
             if (found.size() >= limit) {
                 break;
+            }
+            if (Friends.areFriends(player, mob)) {
+                continue;
             }
             var toMob = mob.position().subtract(player.position());
             if (toMob.lengthSqr() < 1.0e-4d) {
@@ -154,11 +188,6 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Cooldown {
             found.add(mob);
         }
         return found;
-    }
-
-    @Override
-    public int getCooldown() {
-        return COOLDOWN;
     }
 
     /** @return the mob the ninja is looking at, or null when they are looking at anything else. */

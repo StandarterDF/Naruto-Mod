@@ -35,7 +35,7 @@ public class GudodamaGuardAbility extends Ability implements Ability.Toggled, Ab
     }
 
     /** C C C C B C, one key on from the throw. */
-    public static final long COMBO = 333313L;
+    public static final long COMBO = 2111L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "gudodama_guard");
 

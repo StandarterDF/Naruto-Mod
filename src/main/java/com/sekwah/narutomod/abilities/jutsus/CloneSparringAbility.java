@@ -36,7 +36,7 @@ import java.util.UUID;
 public class CloneSparringAbility extends Ability implements Ability.Channeled {
 
     /** V C V V - the shadow clone seal (C B B V) bent towards the training branch. */
-    public static final long COMBO = 2122L;
+    public static final long COMBO = 1222L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "clone_sparring");
 

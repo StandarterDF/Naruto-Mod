@@ -42,7 +42,7 @@ public class AsuraMissilesAbility extends Ability implements Ability.Cooldown {
     }
 
     /** 2 3 3 2 3 3 - one key past the animal path. */
-    public static final long COMBO = 233233L;
+    public static final long COMBO = 1113L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "asura_missiles");
 

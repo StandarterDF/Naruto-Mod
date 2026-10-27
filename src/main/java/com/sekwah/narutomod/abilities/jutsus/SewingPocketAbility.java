@@ -40,7 +40,7 @@ public class SewingPocketAbility extends Ability implements Ability.Cooldown {
     }
 
     /** B V V V V V - the last of the Jougan's sewing branch. */
-    public static final long COMBO = 322222L;
+    public static final long COMBO = 12132L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "sewing_pocket");
 

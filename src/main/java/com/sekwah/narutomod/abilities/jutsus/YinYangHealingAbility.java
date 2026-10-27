@@ -46,7 +46,7 @@ public class YinYangHealingAbility extends Ability implements Ability.Channeled 
     }
 
     /** C C C C C C with the last key turned again - the seal that closes the Six Paths block. */
-    public static final long COMBO = 333333L;
+    public static final long COMBO = 3322L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "yin_yang_heal");
 
@@ -62,8 +62,11 @@ public class YinYangHealingAbility extends Ability implements Ability.Channeled 
     private static final int CHAKRA_REGEN_DELAY = 20;
 
     /** Health restored per pulse, and how many ticks apart the pulses are. */
-    private static final float HEAL_AMOUNT = 2.0f;
-    private static final int HEAL_INTERVAL = 20;
+    private static final float HEAL_AMOUNT = 4.0f;
+    private static final int HEAL_INTERVAL = 10;
+
+    /** The share of the pulse the caster takes for themselves while mending somebody else. */
+    private static final float SELF_SHARE = 0.5f;
 
     /** The ailments the seal peels off the ally, every tick it is held. */
     private static final List<MobEffect> CURED = List.of(
@@ -148,6 +151,11 @@ public class YinYangHealingAbility extends Ability implements Ability.Channeled 
         }
         if (ticksChanneled % HEAL_INTERVAL == 0) {
             ally.heal(HEAL_AMOUNT);
+            // The seal runs through the caster as well: mending somebody else no longer leaves the
+            // healer bleeding beside them.
+            if (ally != player) {
+                player.heal(HEAL_AMOUNT * SELF_SHARE);
+            }
             level.playSound(null, ally.getX(), ally.getY(), ally.getZ(),
                     SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.4f, 1.4f);
         }
@@ -165,20 +173,19 @@ public class YinYangHealingAbility extends Ability implements Ability.Channeled 
     }
 
     /**
-     * Who the seal is meant for: the caster themselves while sneaking, otherwise the living ally
-     * under the crosshair. Anyone else is not a patient.
+     * Who the seal is meant for: the living ally under the crosshair, or the caster themselves when
+     * there is nobody there or they are sneaking. The caster is always a valid patient, so the seal
+     * can be turned on their own wounds without hunting for a target.
      */
     private static LivingEntity patient(Player caster) {
         if (caster.isShiftKeyDown()) {
             return caster;
         }
-        if (!(Targeting.lookedAtEntity(caster, RANGE) instanceof LivingEntity aimed)) {
-            return null;
+        if (Targeting.lookedAtEntity(caster, RANGE) instanceof LivingEntity aimed
+                && aimed.isAlive() && !aimed.isSpectator() && Friends.isOwnSide(caster, aimed)) {
+            return aimed;
         }
-        if (!aimed.isAlive() || aimed.isSpectator() || !Friends.isOwnSide(caster, aimed)) {
-            return null;
-        }
-        return aimed;
+        return caster;
     }
 
     /**

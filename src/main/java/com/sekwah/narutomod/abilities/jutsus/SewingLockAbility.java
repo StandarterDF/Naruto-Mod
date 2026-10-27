@@ -47,7 +47,7 @@ public class SewingLockAbility extends Ability implements Ability.Cooldown {
     }
 
     /** B V V V V V V. */
-    public static final long COMBO = 322223L;
+    public static final long COMBO = 12131L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "sewing_lock");
 

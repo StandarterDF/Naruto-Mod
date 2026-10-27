@@ -39,7 +39,7 @@ public class SoshikenAbility extends Ability implements Ability.Channeled {
     }
 
     /** V B V V B B - the Byakugan, then the seal of the soft fist. */
-    public static final long COMBO = 232231L;
+    public static final long COMBO = 3133L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "soshiken");
 

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PPP",
+    "PIP",
+    " S "
+  ],
+  "key": {
+    "P": { "item": "narutomod:paper_bomb" },
+    "I": { "item": "minecraft:iron_block" },
+    "S": { "item": "minecraft:stick" }
+  },
+  "result": {
+    "item": "narutomod:shibuki",
+    "count": 1
+  }
+}

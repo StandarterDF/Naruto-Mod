@@ -41,7 +41,7 @@ import java.util.List;
 public class KagutsuchiAbility extends Ability implements Ability.Cooldown {
 
     /** C V V B B - one key past Amaterasu. */
-    public static final long COMBO = 12232L;
+    public static final long COMBO = 2212L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "kagutsuchi");
 

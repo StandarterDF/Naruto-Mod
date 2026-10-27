@@ -39,7 +39,7 @@ public class LightningModeAbility extends Ability implements Ability.Toggled, Ab
     }
 
     /** C C B C A B - the lightning mode seal. */
-    public static final long COMBO = 332131L;
+    public static final long COMBO = 2231L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "lightning_mode");
 
@@ -75,7 +75,12 @@ public class LightningModeAbility extends Ability implements Ability.Toggled, Ab
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        float cost = this.masteryCost(ninjaData, UPKEEP);
+        float base = UPKEEP;
+        // The mode is cheap while the sky is already doing the work; otherwise it drains fast.
+        if (!(player.level() instanceof ServerLevel level) || !level.isThundering()) {
+            base *= 3.0f;
+        }
+        float cost = this.masteryCost(ninjaData, base);
         if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);

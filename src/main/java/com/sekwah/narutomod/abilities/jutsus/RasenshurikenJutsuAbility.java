@@ -38,7 +38,7 @@ public class RasenshurikenJutsuAbility extends Ability implements Ability.Channe
 
 
     /** C B B C B V - the rasengan's seals, then one more to shape it. */
-    public static final long COMBO = 133132L;
+    public static final long COMBO = 31233L;
 
     /** Ticks of channelling before the disc is worth throwing. */
     private static final int MIN_CHARGE = 20;
@@ -75,7 +75,14 @@ public class RasenshurikenJutsuAbility extends Ability implements Ability.Channe
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        float cost = this.masteryCost(ninjaData, CHAKRA_PER_TICK);
+        if (ninjaData.getSeninMana() <= 0.0f) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.senin.notenough",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW),
+                    1).withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        float factor = Math.max(0.3f, 1.0f - (ninjaData.getSeninMana() / Math.max(1.0f, ninjaData.getMaxSeninMana())) * 0.7f);
+        float cost = this.masteryCost(ninjaData, CHAKRA_PER_TICK * factor);
         if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
@@ -117,7 +124,8 @@ public class RasenshurikenJutsuAbility extends Ability implements Ability.Channe
             level.playSound(null, player, SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.5f, 1.4f);
             return;
         }
-        float releaseCost = this.masteryCost(ninjaData, RELEASE_COST);
+        float releaseFactor = Math.max(0.3f, 1.0f - (ninjaData.getSeninMana() / Math.max(1.0f, ninjaData.getMaxSeninMana())) * 0.7f);
+        float releaseCost = this.masteryCost(ninjaData, RELEASE_COST * releaseFactor);
         if (ninjaData.getChakra() < releaseCost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);

@@ -34,7 +34,7 @@ public class CircularBlockAbility extends Ability implements Ability.Toggled, Ab
     }
 
     /** V B V V B V B V - the eye's seal, then the four keys of the circle. */
-    public static final long COMBO = 232323L;
+    public static final long COMBO = 11112L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "circular_block");
 

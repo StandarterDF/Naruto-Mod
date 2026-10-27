@@ -3,19 +3,16 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
-import com.sekwah.narutomod.friends.Friends;
-import com.sekwah.narutomod.util.Targeting;
+import com.sekwah.narutomod.entity.projectile.ShurikenEntity;
+import com.sekwah.narutomod.events.ShadowShurikenEvents;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 
 /**
  * Shadow shuriken: one thrown blade becomes two.
@@ -25,20 +22,18 @@ import net.minecraft.world.phys.Vec3;
  * blade, so the technique is not a way to throw twice as hard; it is a way to make a single opening
  * count, because a target cannot see which of the two is worth blocking.</p>
  *
- * <p>The copies follow the crosshair rather than the physical world: a target the caster can see is
- * hit twice, and an empty line of air gets two lines of sparks so it is plain where the blades went.
- * The cost is deliberately small and the cooldown short - this is the cheap tool of the throwing
- * branch, not a finishing move.</p>
+ * <p>The copies follow the crosshair: two real spinning blades leave the caster's hand along the
+ * same line, so a target sees steel coming rather than an instant wound. The first blade carries the
+ * real trick - wherever it lands, it vanishes and leaves a one-health shadow clone standing in its
+ * place, armed with whatever the caster is holding at that moment. The copy fights like any combat
+ * clone; it is not a worker and does not run off to a job.</p>
  */
 public class ShurikenShadowAbility extends Ability implements Ability.Cooldown {
 
     /** B A A V - the throwing branch's blend of the clone and weapon seals. */
-    public static final long COMBO = 2112L;
+    public static final long COMBO = 3123L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "shuriken_shadow");
-
-    /** As far as a thrown blade carries, so the technique never outranges the real thing. */
-    private static final double RANGE = 20.0d;
 
     /**
      * What a thrown shuriken deals, see {@code ShurikenItem}. Kept here rather than taken from the
@@ -56,10 +51,6 @@ public class ShurikenShadowAbility extends Ability implements Ability.Cooldown {
     private static final int COOLDOWN = 80;
 
     private static final int CHAKRA_REGEN_DELAY = 20;
-
-    /** How far and how finely the empty-air sparks are laid out, in blocks per point. */
-    private static final double LINE_STEP = 0.9d;
-    private static final int LINE_STEPS = 12;
 
     @Override
     public int noiseRadius() {
@@ -101,56 +92,20 @@ public class ShurikenShadowAbility extends Ability implements Ability.Cooldown {
 
         level.playSound(null, player, SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 0.9f, 1.2f);
 
-        Entity looked = Targeting.lookedAtEntity(player, RANGE);
-        if (looked instanceof LivingEntity target && isValidTarget(player, target)) {
-            strike(level, player, target);
-        } else {
-            traceBlades(level, player);
-        }
-    }
-
-    /** Both copies land, one after the other on the same body. */
-    private static void strike(ServerLevel level, Player player, LivingEntity target) {
-        float damage = (float) (SHURIKEN_DAMAGE * DAMAGE_FRACTION);
+        // The copies are real flying blades, so they use the mod's own shuriken entity and its
+        // spinning renderer rather than an instant hit. The second one is thrown a hair to the side
+        // so the two are visibly separate in the air.
         for (int i = 0; i < COPIES; i++) {
-            target.hurt(player.damageSources().thrown(player, player), damage);
-            level.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY(0.6d), target.getZ(),
-                    10, 0.3d, 0.3d, 0.3d, 0.05d);
+            ShurikenEntity blade = new ShurikenEntity(level, player);
+            // Each blade leaves its own shadow clone behind.
+            blade.getPersistentData().putBoolean(ShadowShurikenEvents.CLONE_TAG, true);
+            blade.getPersistentData().putString(ShadowShurikenEvents.OWNER_TAG, player.getStringUUID());
+            float spread = i == 0 ? -1.2f : 1.2f;
+            blade.shootFromRotation(player, player.getXRot(), player.getYRot() + spread,
+                    0.0f, 3.0f, 0.6f);
+            blade.setBaseDamage(SHURIKEN_DAMAGE * DAMAGE_FRACTION);
+            blade.pickup = AbstractArrow.Pickup.CREATIVE_ONLY;
+            level.addFreshEntity(blade);
         }
-    }
-
-    /**
-     * Nothing to hit: the blade lines are drawn so the caster can see where the throw went, which is
-     * also the only feedback a miss gets.
-     */
-    private static void traceBlades(ServerLevel level, Player player) {
-        Vec3 eye = player.getEyePosition();
-        Vec3 look = player.getViewVector(1.0f);
-
-        // A horizontal side vector to split the two lines with; a straight-down look has no
-        // horizontal facing, so that case falls back to a fixed axis rather than a zero vector.
-        Vec3 forward = new Vec3(look.x, 0.0d, look.z);
-        forward = forward.lengthSqr() < 1.0E-4d ? new Vec3(0.0d, 0.0d, 1.0d) : forward.normalize();
-        Vec3 side = new Vec3(-forward.z, 0.0d, forward.x);
-
-        for (int copy = 0; copy < COPIES; copy++) {
-            double offset = copy == 0 ? 0.25d : -0.25d;
-            Vec3 shift = side.scale(offset);
-            for (int step = 1; step <= LINE_STEPS; step++) {
-                Vec3 point = eye.add(shift).add(look.scale(step * LINE_STEP));
-                level.sendParticles(ParticleTypes.CRIT, point.x, point.y, point.z, 1, 0.0d, 0.0d, 0.0d, 0.0d);
-            }
-        }
-    }
-
-    /** A technique, not a betrayal: the caster and their friends are never the target. */
-    private static boolean isValidTarget(Player caster, LivingEntity target) {
-        if (target == caster || !target.isAlive() || target.isSpectator()) {
-            return false;
-        }
-        if (target instanceof Player other && other.isCreative()) {
-            return false;
-        }
-        return !target.isAlliedTo(caster) && !Friends.areFriends(caster, target);
     }
 }

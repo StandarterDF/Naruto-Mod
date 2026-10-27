@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "IDI",
+    " S "
+  ],
+  "key": {
+    "I": { "item": "minecraft:iron_block" },
+    "D": { "item": "minecraft:diamond" },
+    "S": { "item": "minecraft:stick" }
+  },
+  "result": {
+    "item": "narutomod:hiramekarei",
+    "count": 1
+  }
+}

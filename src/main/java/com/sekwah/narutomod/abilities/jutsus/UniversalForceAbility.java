@@ -23,17 +23,17 @@ import java.util.List;
 /**
  * The Rinnegan's plainest power: one hand pulls, the other pushes.
  *
- * <p>Tapped, it takes hold of whatever the caster is looking at and drags it off its feet towards
- * them, which is the opening half of the usual trick of following it up with a rising blow. Held
- * with sneak, the same hand sweeps outward instead and throws everything standing around the caster
- * away from them, which is the answer to being surrounded. Both are the same power read in opposite
- * directions, so they share one key and one cooldown.</p>
+ * <p>Tapped and held, it takes hold of whatever the caster is looking at and drags it off its feet
+ * towards them every tick the key is down, which is the opening half of the usual trick of following
+ * it up with a rising blow. Held with sneak, the same hand sweeps outward once instead and throws
+ * everything standing around the caster away from them, which is the answer to being surrounded.
+ * Both are the same power read in opposite directions, so they share one key.</p>
  *
  * <p>It is not a technique of its own: the eye has to be open, see {@link RinneganAbility}. The
  * shackle is deliberate - a caster who cannot pay for the eye has lost the powers that come with
  * it.</p>
  */
-public class UniversalForceAbility extends Ability implements Ability.Cooldown {
+public class UniversalForceAbility extends Ability implements Ability.Channeled {
 
     /**
      * How far a cast of this technique carries as a game event. The push is heard a good way off.
@@ -44,7 +44,7 @@ public class UniversalForceAbility extends Ability implements Ability.Cooldown {
     }
 
     /** B V B V - short, and not a prefix of the Rinnegan stance or of Chibaku Tensei. */
-    public static final long COMBO = 2121L;
+    public static final long COMBO = 3232L;
 
     /** How far the pull can reach, measured along the ray the caster is looking down. */
     private static final double PULL_RANGE = 28.0d;
@@ -52,19 +52,20 @@ public class UniversalForceAbility extends Ability implements Ability.Cooldown {
     /** How far around the caster the push sweeps. */
     private static final double PUSH_RADIUS = 12.0d;
 
-    /** What the pull and the push cost, and how long the hand needs before it can do either again. */
+    /** What opening the pull and the push cost, and what the held pull burns each further tick. */
     private static final float PULL_COST = 25.0f;
     private static final float PUSH_COST = 35.0f;
-    private static final int COOLDOWN = 100;
+    private static final float PULL_UPKEEP = 2.0f;
+    private static final int CHAKRA_REGEN_DELAY = 20;
 
     /**
      * The impulse a pulled target leaves with. The eye is meant to be a battlefield-scale power, not
      * a tug: a pulled body crosses most of the gap in a couple of ticks.
      */
-    private static final double PULL_BASE_SPEED = 0.75d;
-    private static final double PULL_SPEED_PER_BLOCK = 0.05d;
-    private static final double PULL_MAX_SPEED = 2.2d;
-    private static final double PULL_LIFT = 0.55d;
+    private static final double PULL_BASE_SPEED = 1.1d;
+    private static final double PULL_SPEED_PER_BLOCK = 0.08d;
+    private static final double PULL_MAX_SPEED = 3.0d;
+    private static final double PULL_LIFT = 0.65d;
 
     /** The impulse the push gives everything around the caster. */
     private static final double PUSH_SPEED = 2.4d;
@@ -74,9 +75,12 @@ public class UniversalForceAbility extends Ability implements Ability.Cooldown {
     private static final float PULL_DAMAGE = 6.0f;
     private static final float PUSH_DAMAGE = 4.0f;
 
+    /** How often the held pull lands its damage, so holding the key does not shred a body instantly. */
+    private static final int PULL_DAMAGE_INTERVAL = 10;
+
     @Override
     public ActivationType activationType() {
-        return ActivationType.INSTANT;
+        return ActivationType.CHANNELED;
     }
 
     @Override
@@ -85,57 +89,86 @@ public class UniversalForceAbility extends Ability implements Ability.Cooldown {
     }
 
     @Override
-    public int getCooldown() {
-        return COOLDOWN;
-    }
-
-    @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
         if (!NarutoConfig.rinneganEnabled) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.rinnegan.disabled",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
-                    .withStyle(ChatFormatting.RED), true);
+            if (chargeAmount == 0) {
+                player.displayClientMessage(Component.translatable("jutsu.fail.rinnegan.disabled",
+                        Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                        .withStyle(ChatFormatting.RED), true);
+            }
             return false;
         }
         if (!RinneganAbility.isActive(ninjaData)) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.rinnegan.required",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
-                    .withStyle(ChatFormatting.RED), true);
+            if (chargeAmount == 0) {
+                player.displayClientMessage(Component.translatable("jutsu.fail.rinnegan.required",
+                        Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                        .withStyle(ChatFormatting.RED), true);
+            }
             return false;
         }
 
         boolean pushing = player.isShiftKeyDown();
-        if (!pushing && !(Targeting.lookedAtEntity(player, PULL_RANGE) instanceof LivingEntity)) {
+        boolean opening = chargeAmount <= 0;
+        if (!pushing && opening
+                && !(Targeting.lookedAtEntity(player, PULL_RANGE) instanceof LivingEntity)) {
             player.displayClientMessage(Component.translatable("jutsu.fail.force.notarget",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }
 
-        float cost = this.masteryCost(ninjaData, pushing ? PUSH_COST : PULL_COST);
+        float base = opening ? (pushing ? PUSH_COST : PULL_COST) : PULL_UPKEEP;
+        float cost = this.masteryCost(ninjaData, base);
         if (ninjaData.getChakra() < cost) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
+            if (opening) {
+                player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
+                        Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
+            }
             return false;
         }
-        ninjaData.useChakra(cost, 20);
+        ninjaData.useChakra(cost, CHAKRA_REGEN_DELAY);
         return true;
     }
 
+    /** A tap pulls once; a hold is handled tick by tick. */
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
-        if (!(player.level() instanceof ServerLevel level)) {
+        if (ticksActive >= 0 || !(player.level() instanceof ServerLevel level)) {
             return;
         }
         if (player.isShiftKeyDown()) {
             repel(level, player);
         } else {
-            pull(level, player);
+            pull(level, player, 0);
         }
     }
 
+    /**
+     * The pull is a hold, not a tap: while the key is down the looked-at body is dragged towards the
+     * caster every tick, and the push is spent once at the start of a sneaking hold.
+     */
+    @Override
+    public void handleChannelling(Player player, INinjaData ninjaData, int ticksChanneled) {
+        if (!(player.level() instanceof ServerLevel level)) {
+            return;
+        }
+        if (player.isShiftKeyDown()) {
+            if (ticksChanneled == 0) {
+                repel(level, player);
+            }
+        } else {
+            pull(level, player, ticksChanneled);
+        }
+        this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
+    }
+
+    /** A held stance is mastered by holding it, not by opening it. */
+    @Override
+    public void recordMastery(Player player, INinjaData ninjaData) {
+    }
+
     /** Drags the looked-at creature to the caster, holding it up a little on the way. */
-    private void pull(ServerLevel level, Player player) {
+    private void pull(ServerLevel level, Player player, int ticksChanneled) {
         Entity lookedAt = Targeting.lookedAtEntity(player, PULL_RANGE);
         if (!(lookedAt instanceof LivingEntity target) || !canAffect(player, target)) {
             return;
@@ -152,12 +185,16 @@ public class UniversalForceAbility extends Ability implements Ability.Cooldown {
         target.setDeltaMovement(impulse.x, Math.max(impulse.y, 0.0d) + PULL_LIFT, impulse.z);
         target.hurtMarked = true;
         target.fallDistance = 0.0f;
-        target.hurt(level.damageSources().indirectMagic(player, player), PULL_DAMAGE);
+        if (ticksChanneled % PULL_DAMAGE_INTERVAL == 0) {
+            target.hurt(level.damageSources().indirectMagic(player, player), PULL_DAMAGE);
+        }
 
-        level.playSound(null, target.getX(), target.getY(), target.getZ(),
-                SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0f, 0.6f);
+        if (ticksChanneled % 4 == 0) {
+            level.playSound(null, target.getX(), target.getY(), target.getZ(),
+                    SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.7f, 0.6f);
+        }
         level.sendParticles(ParticleTypes.REVERSE_PORTAL, chest.x, chest.y, chest.z,
-                20, 0.4d, 0.4d, 0.4d, 0.15d);
+                6, 0.4d, 0.4d, 0.4d, 0.15d);
     }
 
     /** Throws everything standing around the caster outwards, friend and foe alike excluded by side. */

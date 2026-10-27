@@ -82,21 +82,22 @@ public final class RinneganExtraEvents {
                 zones.remove();
                 continue;
             }
+            double radius = NarakaPathAbility.radiusAt(zone, now);
             if (now % RING_INTERVAL == 0L) {
-                NarakaPathAbility.drawRing(zone.level(), zone.centre());
+                NarakaPathAbility.drawRing(zone.level(), zone.centre(), radius);
             }
             if (now % NarakaPathAbility.JUDGEMENT_INTERVAL == 0L) {
-                judge(zone.level(), caster, zone.centre());
+                judge(zone.level(), caster, zone.centre(), radius);
             }
         }
     }
 
     /** One judgement: allies are mended and cleansed, everyone else is weakened. */
-    private static void judge(ServerLevel level, Player caster, Vec3 centre) {
-        AABB court = new AABB(centre, centre).inflate(NarakaPathAbility.RADIUS);
+    private static void judge(ServerLevel level, Player caster, Vec3 centre, double radius) {
+        AABB court = new AABB(centre, centre).inflate(radius);
         List<LivingEntity> inside = level.getEntitiesOfClass(LivingEntity.class, court,
                 entity -> entity.isAlive() && !entity.isSpectator()
-                        && entity.distanceToSqr(centre) <= NarakaPathAbility.RADIUS * NarakaPathAbility.RADIUS);
+                        && entity.distanceToSqr(centre) <= radius * radius);
 
         for (LivingEntity target : inside) {
             if (Friends.isOwnSide(caster, target)) {

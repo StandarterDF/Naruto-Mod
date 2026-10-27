@@ -59,6 +59,9 @@ public class NarutoConfig {
     private static final ForgeConfigSpec.BooleanValue CONFIG_PAPERBOMB_BLOCK_DAMAGE;
     public static boolean paperbombBlockDamage;
 
+    private static final ForgeConfigSpec.BooleanValue CONFIG_TAILED_BALL_BLOCK_DAMAGE;
+    public static boolean tailedBallBlockDamage;
+
     private static final ForgeConfigSpec.IntValue CONFIG_JUTSU_KEYBIND_HOLD_THRESHOLD;
     public static int jutsuKeybindHoldThreshold;
 
@@ -103,6 +106,12 @@ public class NarutoConfig {
 
     private static final ForgeConfigSpec.BooleanValue CONFIG_SAGE_MODE_ENABLED;
     public static boolean sageModeEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_SAGE_BUFFS_ENABLED;
+    public static boolean sageBuffsEnabled;
+
+    private static final ForgeConfigSpec.BooleanValue CONFIG_SAGE_KATA_ENABLED;
+    public static boolean sageKataEnabled;
 
     private static final ForgeConfigSpec.BooleanValue CONFIG_HENGE_ENABLED;
     public static boolean hengeEnabled;
@@ -261,6 +270,14 @@ public class NarutoConfig {
 
         CONFIG_SAGE_MODE_ENABLED = configBuilder.comment("Can players gather nature energy and enter sage mode?")
                 .define("sageModeEnabled", true);
+
+        CONFIG_SAGE_BUFFS_ENABLED = configBuilder.comment("Do the sage mode body perks apply: hunger stillness,"
+                        + " free landings, halved stamina costs, periodic cleansing and senjutsu perception?")
+                .define("sageBuffsEnabled", true);
+
+        CONFIG_SAGE_KATA_ENABLED = configBuilder.comment("Does the frog kata strike around a sage's blows, and"
+                        + " does sage mode lengthen melee reach?")
+                .define("sageKataEnabled", true);
 
         CONFIG_HENGE_ENABLED = configBuilder.comment("Can players copy another player's skin and name with henge?")
                 .define("hengeEnabled", true);
@@ -446,6 +463,9 @@ public class NarutoConfig {
         CONFIG_PAPERBOMB_BLOCK_DAMAGE = configBuilder.comment("Paper Bomb block damage")
                 .define("paperBombExplosionBreakBlocks", true);
 
+        CONFIG_TAILED_BALL_BLOCK_DAMAGE = configBuilder.comment("Tailed Beast Bomb block damage. Off by default: the bomb wounds but breaks nothing. An operator can flip it mid-game with '/naruto debug bomb'.")
+                .define("tailedBallExplosionBreakBlocks", false);
+
         CONFIG_JUTSU_KEYBIND_HOLD_THRESHOLD = configBuilder.comment("Key hold threshold in ticks (20 per second)")
                 .defineInRange("jutsuKeyHoldThreshold", 15, 0, Integer.MAX_VALUE);
 
@@ -528,6 +548,7 @@ public class NarutoConfig {
         kunaiExplosionRadius = CONFIG_KUNAI_EXPLOSION_RADIUS.get().floatValue();
         paperbombExplosionRadius = CONFIG_PAPERBOMB_EXPLOSION_RADIUS.get().floatValue();
         paperbombBlockDamage = CONFIG_PAPERBOMB_BLOCK_DAMAGE.get();
+        tailedBallBlockDamage = CONFIG_TAILED_BALL_BLOCK_DAMAGE.get();
         jutsuKeybindHoldThreshold = CONFIG_JUTSU_KEYBIND_HOLD_THRESHOLD.get();
         chakraBarDesign = CONFIG_CHAKRA_BAR_DESIGN.get();
         jutsuCastDelay = CONFIG_JUTSU_CAST_DELAY
@@ -544,6 +565,8 @@ public class NarutoConfig {
         friendsEnabled = CONFIG_FRIENDS_ENABLED.get();
         maxSeninMana = CONFIG_MAX_SENIN_MANA.get().floatValue();
         sageModeEnabled = CONFIG_SAGE_MODE_ENABLED.get();
+        sageBuffsEnabled = CONFIG_SAGE_BUFFS_ENABLED.get();
+        sageKataEnabled = CONFIG_SAGE_KATA_ENABLED.get();
         hengeEnabled = CONFIG_HENGE_ENABLED.get();
         hengeReactionsEnabled = CONFIG_HENGE_REACTIONS_ENABLED.get();
         masteryEnabled = CONFIG_MASTERY_ENABLED.get();
@@ -588,6 +611,15 @@ public class NarutoConfig {
     @SubscribeEvent
     public static void onLoad(final ModConfigEvent.Loading configEvent) {
         loadVariables();
+    }
+
+    /**
+     * Flips the bomb's block damage mid-game, for the '/naruto debug bomb' command. Writes the
+     * spec value as well as the baked one, so a later config save keeps the choice.
+     */
+    public static void setTailedBallBlockDamage(boolean breaksBlocks) {
+        CONFIG_TAILED_BALL_BLOCK_DAMAGE.set(breaksBlocks);
+        tailedBallBlockDamage = breaksBlocks;
     }
 
     @SubscribeEvent

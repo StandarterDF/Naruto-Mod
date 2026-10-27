@@ -36,7 +36,7 @@ public class ClayCloneAbility extends Ability implements Ability.Cooldown {
     }
 
     /** B A B A B A - the clone seal with the clay sign on the end. */
-    public static final long COMBO = 212121L;
+    public static final long COMBO = 1313L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "clay_clone");
 

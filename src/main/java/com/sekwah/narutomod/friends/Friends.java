@@ -5,10 +5,13 @@ import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import com.sekwah.narutomod.network.PacketHandler;
 import com.sekwah.narutomod.network.s2c.ClientboundFriendNoticePacket;
 import com.sekwah.narutomod.network.s2c.ClientboundFriendsPacket;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
@@ -100,6 +103,48 @@ public final class Friends {
             return true;
         }
         return areFriends(source, candidate);
+    }
+
+    /** How long a landed blow marks its author as an aggressor, in ticks. */
+    public static final long ATTACKER_MEMORY_TICKS = 200L;
+
+    private static final String LAST_ATTACKER_ID = "narutomod:last_attacker_id";
+    private static final String LAST_ATTACKED_AT = "narutomod:last_attacked_at";
+
+    /**
+     * Remembers who landed a blow on the player, so retaliation knows whom to answer. Server side
+     * only; the mark lives in the victim's own data and is read by {@link #isAggressor}.
+     */
+    public static void rememberAttacker(Player victim, @Nullable Entity attacker) {
+        if (victim.level().isClientSide || attacker == null || attacker == victim) {
+            return;
+        }
+        victim.getPersistentData().putInt(LAST_ATTACKER_ID, attacker.getId());
+        victim.getPersistentData().putLong(LAST_ATTACKED_AT, victim.level().getGameTime());
+    }
+
+    /**
+     * Whether {@code target} is going for {@code player} and may be answered in kind: a mob
+     * hunting them right now, or whoever struck them moments ago. Everyone else - bystanders,
+     * villagers, livestock, allies - is not, so cloak arms built on this never sweep a crowd.
+     * Server side only.
+     */
+    public static boolean isAggressor(Player player, @Nullable LivingEntity target) {
+        if (player == null || target == null || !target.isAlive() || target == player) {
+            return false;
+        }
+        if (target instanceof Player other && (other.isCreative() || other.isSpectator())) {
+            return false;
+        }
+        if (isOwnSide(player, target)) {
+            return false;
+        }
+        if (target instanceof Mob mob && mob.getTarget() == player) {
+            return true;
+        }
+        CompoundTag data = player.getPersistentData();
+        return data.getInt(LAST_ATTACKER_ID) == target.getId()
+                && player.level().getGameTime() - data.getLong(LAST_ATTACKED_AT) <= ATTACKER_MEMORY_TICKS;
     }
 
     /** @return true when this damage came from a mod technique rather than an ordinary blow. */

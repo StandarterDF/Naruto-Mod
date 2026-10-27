@@ -34,7 +34,7 @@ import java.util.List;
 public class KatsuyuNetworkAbility extends Ability implements Ability.Channeled {
 
     /** V C V B C V - the silencing seal with the last key turned, so the two seals sit side by side. */
-    public static final long COMBO = 212312L;
+    public static final long COMBO = 11321L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "katsuyu_network");
 

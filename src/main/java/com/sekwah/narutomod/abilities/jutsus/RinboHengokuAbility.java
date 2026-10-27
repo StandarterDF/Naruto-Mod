@@ -37,7 +37,7 @@ public class RinboHengokuAbility extends Ability implements Ability.Cooldown {
     }
 
     /** 2 3 3 3 1 1 - the Rinnegan stance with a different tail to the outer paths. */
-    public static final long COMBO = 233311L;
+    public static final long COMBO = 2332L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "rinbo_hengoku");
 

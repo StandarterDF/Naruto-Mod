@@ -40,7 +40,7 @@ public class SizeExpansionAbility extends Ability implements Ability.Toggled, Ab
     }
 
     /** B C B B A B - the taijutsu branch's body seal with the shape key. */
-    public static final long COMBO = 132212L;
+    public static final long COMBO = 3131L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "size_expansion");
 

@@ -46,7 +46,7 @@ public class DividedCloakAbility extends Ability implements Ability.Toggled, Abi
     }
 
     /** C C B B A B - the seal, then one more key for the sharing. */
-    public static final long COMBO = 332212L;
+    public static final long COMBO = 11131L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "divided_cloak");
 
@@ -88,6 +88,21 @@ public class DividedCloakAbility extends Ability implements Ability.Toggled, Abi
     @Override
     public long defaultCombo() {
         return COMBO;
+    }
+
+    /**
+     * Refuses the switch-on before the stance joins the set when there is no vessel to share.
+     * Without this the cloak flicks on and straight back off on the next upkeep tick.
+     */
+    @Override
+    public boolean canStartToggle(Player player, INinjaData ninjaData) {
+        if (SealVesselAbility.integrity(player) <= 0) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.seal_vessel.required",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -183,9 +198,10 @@ public class DividedCloakAbility extends Ability implements Ability.Toggled, Abi
         }
     }
 
-    /** Takes the cloak off the caster's attributes and drops its mark. */
+    /** Takes the cloak off the caster's attributes and drops its mark and its speed with it. */
     public static void clear(Player player) {
         player.getPersistentData().remove(UNTIL_TAG);
+        player.removeEffect(MobEffects.MOVEMENT_SPEED);
         AttributeInstance armour = player.getAttribute(Attributes.ARMOR);
         if (armour != null) {
             armour.removeModifier(ARMOUR_MODIFIER_ID);

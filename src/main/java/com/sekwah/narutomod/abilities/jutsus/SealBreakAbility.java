@@ -37,7 +37,7 @@ public class SealBreakAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C C B B B A - the seal, then the three keys that break it. */
-    public static final long COMBO = 332221L;
+    public static final long COMBO = 3111L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "seal_break");
 
@@ -53,7 +53,7 @@ public class SealBreakAbility extends Ability implements Ability.Cooldown {
     /** What the frenzy throws out every second and how far it reaches. */
     public static final int SWEEP_INTERVAL = 20;
     public static final double SWEEP_RADIUS = 2.0d;
-    public static final float SWEEP_DAMAGE = 5.0f;
+    public static final float SWEEP_DAMAGE = 8.0f;
 
     /** What the body pays when it is handed back, and what the vessel loses. */
     public static final float BACKLASH = 6.0f;

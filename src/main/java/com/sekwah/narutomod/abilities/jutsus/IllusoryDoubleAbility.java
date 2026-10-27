@@ -34,7 +34,7 @@ import net.minecraft.world.phys.Vec3;
 public class IllusoryDoubleAbility extends Ability implements Ability.Cooldown {
 
     /** C V V B C C C - the Sharingan (C V V B) and the cheap end of the eye's tricks. */
-    public static final long COMBO = 1223111L;
+    public static final long COMBO = 2122L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "illusory_double");
 
@@ -51,8 +51,11 @@ public class IllusoryDoubleAbility extends Ability implements Ability.Cooldown {
     private static final float COST = 40.0f;
     private static final int COOLDOWN = 240;
 
-    /** Six seconds of standing where the caster is not: long enough to break a chase. */
-    private static final int DURATION = 120;
+    /** Fifteen seconds of standing where the caster is not: long enough to break a chase for good. */
+    private static final int DURATION = 20 * 15;
+
+    /** The illusion has no armour, so it is given a deep enough pool to soak a few blows. */
+    private static final float HEALTH = 40.0f;
 
     /** How far in front of the caster the double steps out. */
     private static final double SPAWN_OFFSET = 1.6d;
@@ -136,7 +139,11 @@ public class IllusoryDoubleAbility extends Ability implements Ability.Cooldown {
     private ShadowCloneEntity spawnDouble(ServerLevel level, Player player) {
         ShadowCloneEntity phantom = new ShadowCloneEntity(NarutoEntities.SHADOW_CLONE.get(), level);
         phantom.setOwner(player);
-        phantom.setHealth(1.0f);
+        var maxHealth = phantom.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+        if (maxHealth != null) {
+            maxHealth.setBaseValue(HEALTH);
+        }
+        phantom.setHealth(HEALTH);
         // Nothing is drawn of the illusion: it exists to be looked at by something that cannot tell
         // the difference between a smear of chakra and a person, and to be labelled by an eye that can.
         phantom.setInvisible(true);

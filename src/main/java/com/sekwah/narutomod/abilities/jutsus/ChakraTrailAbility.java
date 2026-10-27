@@ -42,7 +42,7 @@ public class ChakraTrailAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C V V B B B - the Sharingan combo (C V V B) and two more keys, next to Amaterasu. */
-    public static final long COMBO = 122311L;
+    public static final long COMBO = 1133L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_trail");
 

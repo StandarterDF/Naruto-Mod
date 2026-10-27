@@ -43,7 +43,7 @@ public class ChakraSeverAbility extends Ability implements Ability.Cooldown {
     }
 
     /** B V V C V - the Jougan combo (B V V C) and one more key. */
-    public static final long COMBO = 32212L;
+    public static final long COMBO = 1131L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_sever");
 

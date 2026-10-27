@@ -43,7 +43,7 @@ import net.minecraft.world.phys.Vec3;
 public class WindBreathAbility extends AbstractBreathAbility {
 
     /** C V B B */
-    public static final long COMBO = 1233L;
+    public static final long COMBO = 3312L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "wind_breath");
 

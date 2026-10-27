@@ -35,7 +35,7 @@ public class DoctorSightAbility extends Ability implements Ability.Toggled, Abil
     }
 
     /** V B V B C C - the eye's seal with the last key doubled, as a doctor looks twice. */
-    public static final long COMBO = 232311L;
+    public static final long COMBO = 11232L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "doctor_sight");
 

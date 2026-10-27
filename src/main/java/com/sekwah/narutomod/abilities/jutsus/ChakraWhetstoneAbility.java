@@ -22,7 +22,8 @@ import net.minecraft.world.phys.Vec3;
  * <p>A blade that has been carried through a campaign is a blade with a chipped edge, and a ninja
  * who only ever takes a grindstone out of the pouch cannot repair the one thing they rely on
  * without a bench and an anvil. This is the field answer: chakra run along the steel, which pulls
- * the nicks closed and leaves a quarter of the blade's life in the metal again.</p>
+ * the nicks closed. A novice closes a few of them - a twentieth of the blade's life - and only a
+ * caster who has practised the pass reaches the quarter the technique is known for.</p>
  *
  * <p>It is deliberately slow to come back - ten seconds of work on a weapon worth carrying - and it
  * refuses quietly: a caster with nothing damageable in hand is turned away before any stamina is
@@ -37,7 +38,7 @@ public class ChakraWhetstoneAbility extends Ability implements Ability.Cooldown 
     }
 
     /** 1 3 2 2 2 1 - the kenjutsu seals and the two keys of the whetstone. */
-    public static final long COMBO = 132221L;
+    public static final long COMBO = 1211L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_whetstone");
 
@@ -46,8 +47,11 @@ public class ChakraWhetstoneAbility extends Ability implements Ability.Cooldown 
     private static final int STAMINA_REGEN_DELAY = 10;
     private static final int COOLDOWN = 600;
 
-    /** How much of the blade's life one pass puts back, as a share of its full durability. */
-    private static final float REPAIR_SHARE = 0.25f;
+    /** How much of the blade's life one pass puts back at no mastery, as a share of its full durability. */
+    private static final float REPAIR_SHARE_MIN = 0.05f;
+
+    /** How much more the pass mends at full mastery: the fabled quarter comes only with practice. */
+    private static final float REPAIR_SHARE_MAX = 0.25f;
 
     private static final int REPAIR_PARTICLES = 24;
 
@@ -102,7 +106,7 @@ public class ChakraWhetstoneAbility extends Ability implements Ability.Cooldown 
         if (!held.isDamageableItem() || held.getDamageValue() <= 0) {
             return;
         }
-        int mended = Math.round(held.getMaxDamage() * REPAIR_SHARE);
+        int mended = Math.round(held.getMaxDamage() * repairShare(ninjaData));
         // The damage value is the wear on the blade, so a repair subtracts from it and never goes
         // below an untouched edge.
         held.setDamageValue(Math.max(0, held.getDamageValue() - mended));
@@ -112,5 +116,15 @@ public class ChakraWhetstoneAbility extends Ability implements Ability.Cooldown 
                 REPAIR_PARTICLES, 0.3d, 0.2d, 0.3d, 0.4d);
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.7f, 1.6f);
+    }
+
+    /**
+     * How much of the edge one pass restores. A novice closes a few nicks and a master restores a
+     * quarter, so the technique grows with the caster instead of handing the best result from the
+     * first press.
+     */
+    private float repairShare(INinjaData ninjaData) {
+        float mastery = this.masteryLevel(ninjaData);
+        return REPAIR_SHARE_MIN + (REPAIR_SHARE_MAX - REPAIR_SHARE_MIN) * mastery;
     }
 }

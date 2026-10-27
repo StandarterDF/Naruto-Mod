@@ -11,6 +11,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
+import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import com.sekwah.narutomod.skills.Skill;
 import com.sekwah.narutomod.skills.SkillTree;
@@ -92,6 +93,12 @@ public final class NarutoDebugCommand {
         debug.then(Commands.literal("scrolls").executes(NarutoDebugCommand::learnScrolls));
 
         debug.then(Commands.literal("cooldowns").executes(NarutoDebugCommand::clearCooldowns));
+
+        // The bomb's griefing switch: safe by default, an operator's word to arm it.
+        debug.then(Commands.literal("bomb")
+                .executes(NarutoDebugCommand::showBomb)
+                .then(Commands.literal("grief").executes(ctx -> setBomb(ctx, true)))
+                .then(Commands.literal("safe").executes(ctx -> setBomb(ctx, false))));
 
         dispatcher.register(Commands.literal("naruto").then(debug).then(MenuClickCommand.node()));
     }
@@ -237,6 +244,22 @@ public final class NarutoDebugCommand {
         data.getCooldownEvents().clear();
         ctx.getSource().sendSuccess(() -> Component.translatable(
                 "commands.narutomod.debug.cooldowns", cleared), true);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int showBomb(CommandContext<CommandSourceStack> ctx) {
+        boolean grief = NarutoConfig.tailedBallBlockDamage;
+        ctx.getSource().sendSuccess(() -> Component.translatable(grief
+                ? "commands.narutomod.debug.bomb.status.grief"
+                : "commands.narutomod.debug.bomb.status.safe"), false);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int setBomb(CommandContext<CommandSourceStack> ctx, boolean grief) {
+        NarutoConfig.setTailedBallBlockDamage(grief);
+        ctx.getSource().sendSuccess(() -> Component.translatable(grief
+                ? "commands.narutomod.debug.bomb.grief"
+                : "commands.narutomod.debug.bomb.safe"), true);
         return Command.SINGLE_SUCCESS;
     }
 

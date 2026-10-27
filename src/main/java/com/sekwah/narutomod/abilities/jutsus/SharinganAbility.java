@@ -32,7 +32,7 @@ public class SharinganAbility extends AbstractDojutsuAbility {
     }
 
     /** C V V B - free, and one key away from Amaterasu. */
-    public static final long COMBO = 1223L;
+    public static final long COMBO = 31L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "sharingan");
 

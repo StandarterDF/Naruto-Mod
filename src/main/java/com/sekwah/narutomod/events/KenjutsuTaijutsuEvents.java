@@ -71,9 +71,8 @@ public final class KenjutsuTaijutsuEvents {
             return;
         }
         Entity direct = event.getSource().getDirectEntity();
-        LivingEntity attacker = direct instanceof LivingEntity living
-                && event.getSource().getEntity() == living
-                && living != victim
+        Entity sourceEntity = event.getSource().getEntity();
+        LivingEntity attacker = sourceEntity instanceof LivingEntity living && living != victim
                 ? living
                 : null;
         boolean projectile = direct instanceof Projectile;
@@ -83,10 +82,12 @@ public final class KenjutsuTaijutsuEvents {
 
         // The sword first, because it is the better guard when it is up; the two can never both be
         // up at once, since one needs a blade in the hand and the other needs the hands empty.
+        // A raised blade is a deliberate move: it turns the next blow aside outright and is then
+        // spent, so timing matters rather than luck.
         if (ParryAbility.isActive(victim) && ParryAbility.hasSword(victim)
-                && victim.getRandom().nextFloat() < ParryAbility.BLOCK_CHANCE
                 && payBlock(victim, ParryAbility.ID, ParryAbility.BLOCK_STAMINA,
                 ParryAbility.BLOCK_REGEN_DELAY)) {
+            ParryAbility.consume(victim);
             event.setCanceled(true);
             guardSparks(victim, true);
             if (attacker != null && attacker.isAlive()) {

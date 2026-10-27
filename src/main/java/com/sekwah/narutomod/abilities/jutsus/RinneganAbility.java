@@ -32,8 +32,8 @@ public class RinneganAbility extends AbstractDojutsuAbility {
         return 0;
     }
 
-    /** C V V C - free, and not a prefix of any technique that builds on the eye. */
-    public static final long COMBO = 2332L;
+    /** V B B V - free, and not a prefix of any technique that builds on the eye. */
+    public static final long COMBO = 321L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "rinnegan");
 

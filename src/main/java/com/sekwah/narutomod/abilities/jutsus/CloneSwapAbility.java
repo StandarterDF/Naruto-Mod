@@ -43,7 +43,7 @@ public class CloneSwapAbility extends Ability implements Ability.Cooldown {
     }
 
     /** B A B A A A - the clone seal, then the two keys that turn it on its head. */
-    public static final long COMBO = 212111L;
+    public static final long COMBO = 1231L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "clone_swap");
 

@@ -3,31 +3,35 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
-import com.sekwah.narutomod.friends.Friends;
+import com.sekwah.narutomod.entity.jutsuprojectile.TravellingArcEntity;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 
 /**
- * A crescent of wind thrown off the edge of the blade.
+ * A crescent of wind thrown off the edge of the blade - and it carries.
  *
  * <p>Every sword in the mod is a short weapon, and the answer to a spear, a bow or simply a body
- * that will not close the gap is to cut the air itself. The caster draws the edge across in front of
- * them and the cut carries: everything standing in the shallow cone in front of the blade is opened,
- * and the wound keeps bleeding after the blade has moved on.</p>
+ * that will not close the gap is to cut the air itself. The caster draws the edge across in front
+ * of them and the cut travels: a crescent that crosses the ground ahead, widening a little as it
+ * goes, opening everything the front passes through, and the wound keeps bleeding after the blade
+ * has moved on.</p>
  *
  * <p>A quarter of the cut is not the edge at all but the vacuum behind it, which no plate stops.
  * The technique needs the sword as much as it needs the arm; without one there is no edge to draw
- * the air from.</p>
+ * the air from. The flight itself lives in {@code TravellingArcEntity}: this class only pays for
+ * the draw and lets it go.</p>
  */
 public class VacuumBladeAbility extends Ability implements Ability.Cooldown {
 
@@ -38,7 +42,7 @@ public class VacuumBladeAbility extends Ability implements Ability.Cooldown {
     }
 
     /** 1 3 2 3 1 2 - the kenjutsu guard seal with the cut added. */
-    public static final long COMBO = 132312L;
+    public static final long COMBO = 123L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "vacuum_blade");
 
@@ -58,12 +62,17 @@ public class VacuumBladeAbility extends Ability implements Ability.Cooldown {
     private static final float DAMAGE = 6.0f;
     private static final float MAGIC_SHARE = 0.25f;
 
+    /**
+     * The wooden sword's share of the edge: three points of attack on the stack. A wooden blade
+     * throws the cut as written; anything sharper throws it harder, in proportion.
+     */
+    private static final float WOOD_REFERENCE = 3.0f;
+
+    /** What each level of Sharpness on the blade adds to its share, in the same points. */
+    private static final float SHARPNESS_PER_LEVEL = 0.5f;
+
     /** How long the wound keeps bleeding, on the same mark the bone blade leaves. */
     private static final int BLEED_TICKS = 60;
-
-    /** How the crescent is drawn: three rings of sweep motes across the cone. */
-    private static final int RINGS = 3;
-    private static final int ARC_POINTS = 5;
 
     @Override
     public ActivationType activationType() {
@@ -103,79 +112,31 @@ public class VacuumBladeAbility extends Ability implements Ability.Cooldown {
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
-        Vec3 eye = player.getEyePosition();
-        Vec3 look = player.getViewVector(1.0f).normalize();
-
-        for (Entity entity : level.getEntities(player, player.getBoundingBox().inflate(RANGE))) {
-            if (!(entity instanceof LivingEntity target) || !canHit(player, target)) {
-                continue;
-            }
-            Vec3 to = target.position().add(0.0d, target.getBbHeight() * 0.5d, 0.0d).subtract(eye);
-            if (to.lengthSqr() > RANGE * RANGE || to.lengthSqr() < 1.0E-4d) {
-                continue;
-            }
-            if (to.normalize().dot(look) < CONE_DOT) {
-                continue;
-            }
-            cut(level, player, target);
-        }
-
-        drawCrescent(level, eye, look);
+        TravellingArcEntity wave = new TravellingArcEntity(level, player, RANGE, CONE_DOT,
+                DAMAGE * swordPower(player) / WOOD_REFERENCE,
+                TravellingArcEntity.KIND_VACUUM, false, BLEED_TICKS, MAGIC_SHARE);
+        level.addFreshEntity(wave);
         level.playSound(null, player, SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.2f);
     }
 
-    /** One body in the cone: the edge, the vacuum behind it, and the wound that stays open. */
-    private static void cut(ServerLevel level, Player caster, LivingEntity target) {
-        float physical = DAMAGE * (1.0f - MAGIC_SHARE);
-        float magic = DAMAGE * MAGIC_SHARE;
-
-        target.hurt(caster.damageSources().playerAttack(caster), physical);
-        if (!target.isAlive()) {
-            return;
+    /**
+     * How much edge the held blade lends the cut: its attack attribute in the hand, plus a share
+     * per level of Sharpness. Read off the stack, so any sword works - vanilla tiers, the mod's own
+     * blades, and whatever another mod adds. A wooden blade reads 3 and throws the cut as written;
+     * diamond reads 6 and throws it twice as hard.
+     */
+    private static float swordPower(Player player) {
+        ItemStack held = player.getMainHandItem();
+        if (!(held.getItem() instanceof SwordItem)) {
+            return WOOD_REFERENCE;
         }
-        // The vacuum is a separate, unblockable hit taken in the same instant. A body still inside
-        // the invulnerability window of the edge would shrug it off, so the window is cleared rather
-        // than letting the second half of the cut go missing.
-        target.invulnerableTime = 0;
-        target.hurt(caster.damageSources().magic(), magic);
-
-        target.getPersistentData().putLong(CamelliaDanceAbility.BLEED_TAG,
-                level.getGameTime() + BLEED_TICKS);
-        level.sendParticles(ParticleTypes.CRIT, target.getX(),
-                target.getY() + target.getBbHeight() * 0.6d, target.getZ(),
-                6, 0.2d, 0.3d, 0.2d, 0.05d);
-    }
-
-    /** A fan of sweep motes across the cone, so the space the cut took is visible. */
-    private static void drawCrescent(ServerLevel level, Vec3 eye, Vec3 look) {
-        Vec3 flat = new Vec3(look.x, 0.0d, look.z);
-        if (flat.lengthSqr() < 1.0E-4d) {
-            return;
+        double attack = 0.0d;
+        for (AttributeModifier modifier : held.getAttributeModifiers(EquipmentSlot.MAINHAND)
+                .get(Attributes.ATTACK_DAMAGE)) {
+            attack += modifier.getAmount();
         }
-        flat = flat.normalize();
-        for (int ring = 1; ring <= RINGS; ring++) {
-            double distance = RANGE * ring / RINGS;
-            for (int point = 0; point <= ARC_POINTS; point++) {
-                double share = point / (double) ARC_POINTS;
-                double angle = Math.toRadians((share - 0.5d) * CONE_DEGREES);
-                double cos = Math.cos(angle);
-                double sin = Math.sin(angle);
-                Vec3 direction = new Vec3(flat.x * cos - flat.z * sin, 0.0d, flat.x * sin + flat.z * cos);
-                Vec3 at = eye.add(direction.scale(distance)).add(0.0d, -0.3d, 0.0d);
-                level.sendParticles(ParticleTypes.SWEEP_ATTACK, at.x, at.y, at.z,
-                        1, 0.0d, 0.0d, 0.0d, 0.0d);
-            }
-        }
-    }
-
-    /** Anything alive is fair game except the caster, their allies and the untouchable. */
-    private static boolean canHit(Player caster, LivingEntity target) {
-        if (target == caster || target.isRemoved() || !target.isAlive() || target.isSpectator()) {
-            return false;
-        }
-        if (target instanceof Player other && (other.isCreative() || other.isSpectator())) {
-            return false;
-        }
-        return !target.isAlliedTo(caster) && !Friends.areFriends(caster, target);
+        attack += SHARPNESS_PER_LEVEL
+                * EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SHARPNESS, held);
+        return (float) Math.max(1.0d, attack);
     }
 }

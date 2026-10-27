@@ -52,7 +52,7 @@ public class SixtyFourPalmsAbility extends Ability implements Ability.Channeled,
     }
 
     /** V B V V B B V - the eye's seal, then the palm's, then one key for the whole kata. */
-    public static final long COMBO = 232331L;
+    public static final long COMBO = 3132L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "sixty_four_palms");
 

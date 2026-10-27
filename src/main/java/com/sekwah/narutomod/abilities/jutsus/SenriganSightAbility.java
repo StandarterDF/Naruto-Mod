@@ -50,7 +50,7 @@ import java.util.List;
 public class SenriganSightAbility extends Ability {
 
     /** B V B B C - the eye, then one more key. */
-    public static final long COMBO = 32331L;
+    public static final long COMBO = 3121L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "senrigan_sight");
 

@@ -43,7 +43,7 @@ public class NarakaPathAbility extends Ability implements Ability.Cooldown {
     }
 
     /** 2 3 3 2 3 1 - the Rinnegan stance (2 3 3 2) with two more keys on the end. */
-    public static final long COMBO = 233231L;
+    public static final long COMBO = 11333L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "naraka_path");
 
@@ -54,15 +54,16 @@ public class NarakaPathAbility extends Ability implements Ability.Cooldown {
     /** How far away the court may be placed, measured along the caster's gaze. */
     private static final double PLACE_RANGE = 16.0d;
 
-    /** The court itself: how wide it reaches and how long it stands. */
+    /** The court itself: how wide it reaches at the start and how long it stands. */
     public static final double RADIUS = 5.0d;
-    public static final int DURATION = 160;
+    public static final double RADIUS_MAX = 12.0d;
+    public static final int DURATION = 400;
 
     /** How often the court judges whoever is standing in it. */
     public static final long JUDGEMENT_INTERVAL = 20L;
 
     /** Health restored to each ally on every judgement. */
-    public static final float HEAL_AMOUNT = 2.0f;
+    public static final float HEAL_AMOUNT = 4.0f;
 
     /** How long the weakness laid on an enemy lasts; it is refreshed by every judgement. */
     public static final int WEAKNESS_DURATION = 40;
@@ -157,15 +158,27 @@ public class NarakaPathAbility extends Ability implements Ability.Cooldown {
      * A ring of soul fire on the ground, which is all the court ever shows of itself.
      */
     public static void drawRing(ServerLevel level, Vec3 centre) {
+        drawRing(level, centre, RADIUS);
+    }
+
+    public static void drawRing(ServerLevel level, Vec3 centre, double radius) {
         for (int i = 0; i < 32; i++) {
             double angle = (Math.PI * 2.0d / 32.0d) * i;
-            double x = centre.x + Math.cos(angle) * RADIUS;
-            double z = centre.z + Math.sin(angle) * RADIUS;
+            double x = centre.x + Math.cos(angle) * radius;
+            double z = centre.z + Math.sin(angle) * radius;
             level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, x, centre.y + 0.1d, z,
                     1, 0.02d, 0.02d, 0.02d, 0.0d);
         }
         level.sendParticles(ParticleTypes.SOUL, centre.x, centre.y + 0.5d, centre.z,
-                4, RADIUS * 0.4d, 0.3d, RADIUS * 0.4d, 0.01d);
+                4, radius * 0.4d, 0.3d, radius * 0.4d, 0.01d);
+    }
+
+    /** Radius that grows over the court's lifetime. */
+    public static double radiusAt(NarakaZone zone, long now) {
+        double progress = (double) (now - zone.startedAt()) / (double) DURATION;
+        if (progress < 0.0d) progress = 0.0d;
+        if (progress > 1.0d) progress = 1.0d;
+        return RADIUS + (RADIUS_MAX - RADIUS) * progress;
     }
 
     /**

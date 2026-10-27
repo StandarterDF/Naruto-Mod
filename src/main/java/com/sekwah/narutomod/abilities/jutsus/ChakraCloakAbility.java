@@ -41,7 +41,7 @@ public class ChakraCloakAbility extends Ability implements Ability.Toggled, Abil
     }
 
     /** C C B B A A - the cloak seal. */
-    public static final long COMBO = 332121L;
+    public static final long COMBO = 1212L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_cloak");
 
@@ -153,14 +153,24 @@ public class ChakraCloakAbility extends Ability implements Ability.Toggled, Abil
 
     /**
      * Whether the cloak leaves room in the body for another technique to start. There is no room in
-     * a full-body shell except for the shell itself and the tailed cloak pulled over it, so the
-     * parent's cast handlers refuse everything else while {@link #isActive(Player)} is true.
+     * a full-body shell for shaping: the tailed cloak pulled over it, the beast bomb thrown from
+     * that tail, the sage pair that burns nature energy rather than shaping chakra - the charging
+     * and the mode, which the canon wears together with the beast - and the light utility arts
+     * that shape nothing - the charge, the fist, the dash, the leap, the double jump and the water
+     * walk, everything in the utility package. Everything else is refused while
+     * {@link #isActive(Player)} is true, and the parent's cast handlers say which one was turned
+     * away.
      */
     public static boolean leavesRoomFor(Player player, Ability ability) {
         if (!isActive(player)) {
             return true;
         }
-        return ability instanceof ChakraCloakAbility || ability instanceof TailedCloakAbility;
+        return ability instanceof ChakraCloakAbility || ability instanceof TailedCloakAbility
+                || ability instanceof TailedBallAbility
+                || ability instanceof SageModeAbility
+                || ability instanceof SenjutsuChargingAbility
+                || ability.getClass().getPackageName()
+                        .equals("com.sekwah.narutomod.abilities.utility");
     }
 
     /** A stance is mastered by the time it is up, so the credit is paid per tick above. */

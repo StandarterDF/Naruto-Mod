@@ -15,7 +15,9 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.UUID;
 
@@ -24,9 +26,10 @@ import java.util.UUID;
  * arms of it hanging at the caster's sides.
  *
  * <p>This is what a well-kept vessel buys. The cloak of a divided beast is thin; this one is a whole
- * tail's worth of chakra wrapped around one body, and it comes with limbs of its own - the arms strike
- * the closest bodies every second, whether or not the caster is swinging. The ninja is faster, far
- * harder to cut and heavy-handed with anything they touch.</p>
+ * tail's worth of chakra wrapped around one body, and it comes with limbs of its own - the arms
+ * answer whoever is hunting the caster every second, whether or not the caster is swinging. The
+ * ninja is blindingly fast, leaps like the wind, digs through stone like sand, is far harder to
+ * cut and heavy-handed with anything they touch.</p>
  *
  * <p>It asks for a vessel at least two fifths whole and wears it down slowly while it is worn, which
  * is the trade: the form is strong, so a caster cannot simply live in it. The arms and the wear are
@@ -41,7 +44,7 @@ public class PerfectCloakAbility extends Ability implements Ability.Toggled, Abi
     }
 
     /** C C B B B B - the seal, then the whole tail. */
-    public static final long COMBO = 332222L;
+    public static final long COMBO = 12111L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "perfect_cloak");
 
@@ -51,16 +54,16 @@ public class PerfectCloakAbility extends Ability implements Ability.Toggled, Abi
     /** A stable id, so the same modifier is re-applied rather than stacked. */
     private static final UUID DAMAGE_MODIFIER_ID = UUID.fromString("c4e07a83-59b1-42df-8a6e-0d73f2b41c96");
 
-    /** Six points of force, on top of whatever the body already carries. */
-    private static final double DAMAGE_BONUS = 6.0d;
+    /** Ten points of force, on top of whatever the body already carries. */
+    private static final double DAMAGE_BONUS = 10.0d;
 
     /** The vessel has to be at least this whole for the beast to agree to the cloak. */
     public static final int MIN_INTEGRITY = 40;
 
     /** How often the two arms strike, how far they reach and how hard they land. */
     public static final int ARM_INTERVAL = 20;
-    public static final double ARM_RADIUS = 4.0d;
-    public static final float ARM_DAMAGE = 5.0f;
+    public static final double ARM_RADIUS = 5.0d;
+    public static final float ARM_DAMAGE = 8.0f;
 
     /** Chakra paid to settle the cloak, before mastery, and every tick it is worn. */
     private static final float OPEN_COST = 80.0f;
@@ -82,6 +85,21 @@ public class PerfectCloakAbility extends Ability implements Ability.Toggled, Abi
     @Override
     public long defaultCombo() {
         return COMBO;
+    }
+
+    /**
+     * Refuses the switch-on before the stance joins the set when the vessel is too weak for the
+     * beast to agree. Without this the cloak flicks on and straight back off on the next upkeep tick.
+     */
+    @Override
+    public boolean canStartToggle(Player player, INinjaData ninjaData) {
+        if (SealVesselAbility.integrity(player) < MIN_INTEGRITY) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.seal_vessel.weak",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW),
+                    MIN_INTEGRITY).withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -112,7 +130,9 @@ public class PerfectCloakAbility extends Ability implements Ability.Toggled, Abi
         boolean opening = player.getPersistentData().getLong(UNTIL_TAG) <= now;
         applyModifier(player);
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, EFFECT_DURATION, 1, true, false));
-        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, EFFECT_DURATION, 1, true, false));
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, EFFECT_DURATION, 2, true, false));
+        player.addEffect(new MobEffectInstance(MobEffects.JUMP, EFFECT_DURATION, 1, true, false));
+        player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, EFFECT_DURATION, 1, true, false));
         player.getPersistentData().putLong(UNTIL_TAG, now + MARK_GRACE);
 
         if (!(player.level() instanceof ServerLevel level)) {
@@ -128,6 +148,58 @@ public class PerfectCloakAbility extends Ability implements Ability.Toggled, Abi
                     player.getY() + player.getBbHeight() * 0.8d, player.getZ(),
                     3, 0.4d, 0.6d, 0.4d, 0.01d);
         }
+    }
+
+    /** How hard the shockwave throws the struck body. */
+    public static final double KNOCKBACK = 1.6d;
+
+    /** Extra damage dealt when the thrown body hits a wall, as a fraction of the blow. */
+    private static final float WALL_DAMAGE = 0.5f;
+
+    /** How far the caster has to look for a wall behind the target. */
+    private static final double WALL_CHECK = 1.2d;
+
+    /** Every blow the settled cloak lands comes with a burst of beast chakra, so the hit reads as
+     *  one, and the body is thrown hard enough to leave a crater. */
+    public static void onHit(Player player, LivingEntity target) {
+        if (!(player.level() instanceof ServerLevel level)) {
+            return;
+        }
+        level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, target.getX(),
+                target.getY() + target.getBbHeight() * 0.5d, target.getZ(),
+                12, 0.3d, 0.4d, 0.3d, 0.02d);
+        level.sendParticles(ParticleTypes.SWEEP_ATTACK, target.getX(),
+                target.getY() + target.getBbHeight() * 0.5d, target.getZ(),
+                1, 0.0d, 0.0d, 0.0d, 0.0d);
+        level.playSound(null, target.getX(), target.getY(), target.getZ(),
+                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.8f, 0.9f);
+        Vec3 push = target.position().subtract(player.position());
+        if (push.lengthSqr() < 0.0001d) {
+            push = new Vec3(0.0d, 0.0d, 1.0d);
+        }
+        push = push.normalize().scale(KNOCKBACK);
+        target.push(push.x, 0.6d, push.z);
+        target.hurtMarked = true;
+        extraDamageOnWall(level, target, push);
+    }
+
+    /** The rest of the blow, delivered if the thrown body meets a wall on the way out. */
+    private static void extraDamageOnWall(ServerLevel level, LivingEntity target, Vec3 push) {
+        double dx = push.x * WALL_CHECK;
+        double dz = push.z * WALL_CHECK;
+        if (level.noCollision(target, target.getBoundingBox().move(dx, 0.0d, dz))) {
+            return;
+        }
+        float damage = (float) (target.getHealth() * WALL_DAMAGE);
+        if (damage < 1.0f) {
+            damage = 1.0f;
+        }
+        target.hurt(target.damageSources().magic(), damage);
+        level.sendParticles(ParticleTypes.CLOUD, target.getX(),
+                target.getY() + target.getBbHeight() * 0.5d, target.getZ(),
+                12, 0.3d, 0.3d, 0.3d, 0.05d);
+        level.playSound(null, target.getX(), target.getY(), target.getZ(),
+                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.6f, 0.7f);
     }
 
     /** Re-applied every tick so a lost modifier comes back with the stance. */
@@ -147,10 +219,14 @@ public class PerfectCloakAbility extends Ability implements Ability.Toggled, Abi
         }
     }
 
-    /** Takes the cloak off entirely: its mark, its force and its arms with it. */
+    /** Takes the cloak off entirely: its mark, its force, its arms and its boons with it. */
     public static void clear(Player player) {
         player.getPersistentData().remove(UNTIL_TAG);
         removeModifier(player);
+        player.removeEffect(MobEffects.MOVEMENT_SPEED);
+        player.removeEffect(MobEffects.DAMAGE_RESISTANCE);
+        player.removeEffect(MobEffects.JUMP);
+        player.removeEffect(MobEffects.DIG_SPEED);
     }
 
     /** @return whether the cloak is currently settled on the caster. */

@@ -41,7 +41,7 @@ public class KusaGiriAbility extends Ability implements Ability.Cooldown {
     }
 
     /** 1 3 2 2 2 3 - the kenjutsu seals and the two keys of the scythe stroke. */
-    public static final long COMBO = 132223L;
+    public static final long COMBO = 212L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "kusa_giri");
 

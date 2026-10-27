@@ -32,7 +32,7 @@ public class BleedingBladeAbility extends Ability implements Ability.Toggled, Ab
     }
 
     /** 1 3 2 2 5 1 in the brief; 1 3 2 3 3 3 here, because a combo has only three keys. */
-    public static final long COMBO = 132333L;
+    public static final long COMBO = 223L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "bleeding_blade");
 

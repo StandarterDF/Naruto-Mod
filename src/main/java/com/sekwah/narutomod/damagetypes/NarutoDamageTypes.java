@@ -55,6 +55,23 @@ public class NarutoDamageTypes {
      */
     public static final ResourceKey<DamageType> AMATERASU = create("amaterasu");
 
+    /**
+     * What the thrown Tailed Beast Bomb hits with: the direct impact before the blast. Its own
+     * type so the death message can name the technique, see {@code TailedBallEntity}. Like every
+     * other custom type it needs its JSON in {@code data/narutomod/damage_type/} or the server
+     * falls over the first time it lands.
+     */
+    public static final ResourceKey<DamageType> TAILED_BALL = create("tailed_ball");
+
+    /**
+     * What a sage's nature-charged blows carry: the frog kata's invisible strike and every other
+     * hit dealt while sage mode is up. Its own type so the death message can name it, and so that
+     * later work (Six Paths resistance, Truth-Seeking Orbs) can recognise senjutsu and treat it
+     * differently from ordinary chakra. Like every other custom type it needs its JSON in
+     * {@code data/narutomod/damage_type/} or the server falls over the first time it lands.
+     */
+    public static final ResourceKey<DamageType> SENJUTSU = create("senjutsu");
+
     public static ResourceKey<DamageType> create(String name) {
         return ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation(NarutoMod.MOD_ID, name));
     }
@@ -91,5 +108,7 @@ public class NarutoDamageTypes {
         register(context, FIRE_BREATH);
         register(context, CHIBAKU_TENSEI);
         register(context, AMATERASU);
+        register(context, TAILED_BALL);
+        register(context, SENJUTSU);
     }
 }

@@ -49,7 +49,7 @@ import java.util.UUID;
 public class EarthWallJutsuAbility extends Ability implements Ability.Cooldown, Ability.Channeled {
 
     /** B C V. */
-    public static final long COMBO = 312L;
+    public static final long COMBO = 11132L;
 
     /** How wide the wall is, in blocks. */
     private static final int WIDTH = 5;

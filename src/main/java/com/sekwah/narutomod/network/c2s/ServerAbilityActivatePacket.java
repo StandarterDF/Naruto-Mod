@@ -136,21 +136,34 @@ public class ServerAbilityActivatePacket {
                         }
                     } else if(ability.activationType() == Ability.ActivationType.TOGGLE) {
                         ToggleAbilityData abilityTracker = ninjaData.getToggleAbilityData();
-                        // One major mode at a time: the body cannot wear two full transformations.
-                        ModeBus.closeOthers(player, ninjaData, abilityId);
                         HashSet<ResourceLocation> abilities = abilityTracker.getAbilitiesHashSet();
                         NarutoRegistries.ABILITIES.getResourceKey(ability).ifPresent(abilityResourceKey -> {
                             var location = abilityResourceKey.location();
                             if(abilities.contains(location)) {
+                                // A stage-based toggle may consume the re-press (the curse seal
+                                // advances instead of closing) and stay in the set.
+                                if (ability instanceof Ability.Retoggle retoggle
+                                        && retoggle.onRetoggle(player, ninjaData)) {
+                                    return;
+                                }
                                 // Toggle ability off
                                 abilityTracker.removeAbilityEnded(player, ninjaData, ability);
                             } else {
                                 // Toggle ability on. An eye takes the place of the one already
                                 // burning in this same step; letting both sit in the set for a tick
                                 // made their upkeeps close each other, sometimes leaving neither.
+                                // A stance with an entry price (the Six Paths ritual, the cloaks
+                                // built on another stance or on the vessel) is refused here, before
+                                // anything else is touched: refusing after closing the other modes
+                                // would leave the caster with neither the old stance nor the new one.
+                                if (!ability.canStartToggle(player, ninjaData)) {
+                                    return;
+                                }
                                 if (ability instanceof AbstractDojutsuAbility eye) {
                                     eye.switchFrom(player, ninjaData);
                                 }
+                                // One major mode at a time: the body cannot wear two full transformations.
+                                ModeBus.closeOthers(player, ninjaData, abilityId);
                                 abilityTracker.addAbilityStarted(player, ninjaData, ability);
                                 ability.recordMastery(player, ninjaData);
                             }

@@ -40,7 +40,7 @@ public class KamaeAbility extends Ability implements Ability.Toggled, Ability.Ha
     }
 
     /** 1 3 2 2 2 2 - the kenjutsu seals and the two keys of the guard. */
-    public static final long COMBO = 132222L;
+    public static final long COMBO = 221L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "kamae");
 

@@ -31,6 +31,9 @@ public enum SkillBranch {
     /** Medical ninjutsu: feeding, regeneration, the chakra shield and the second breath. */
     MEDICINE(SkillSection.PHYSICAL, "naruto.gui.skill.branch.medicine", 0xFF7FD8FF),
 
+    /** The Eight Gates: the stamina to open them and the gate techniques themselves. */
+    GATES(SkillSection.GATES, "naruto.gui.skill.branch.gates", 0xFFD32F2F),
+
     // -----------------------------------------------------------------------------------------
     // 2. NINJUTSU - one board per nature
     // -----------------------------------------------------------------------------------------

@@ -42,7 +42,7 @@ import java.util.Optional;
 public class WaterBreathAbility extends AbstractBreathAbility {
 
     /** C V B V */
-    public static final long COMBO = 1232L;
+    public static final long COMBO = 3321L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "water_breath");
 

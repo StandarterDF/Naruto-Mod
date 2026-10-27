@@ -68,21 +68,21 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
      * get a squad for free.
      */
     public static final Settings SHADOW_CLONE_SETTINGS =
-            new Settings(1332L, 40f, 1, 1, 4, 20 * 25, false, false, false, 2.0d, 0.3d, 20 * 3, 20 * 2);
+            new Settings(1221L, 40f, 1, 1, 4, 20 * 25, false, false, false, 2.0d, 0.3d, 20 * 3, 20 * 2);
 
     /**
      * C B V V - cheap, small and weak. Also a single clone at the start, growing into a handful of
      * little ones as it is practised.
      */
     public static final Settings CHIBI_SHADOW_CLONE_SETTINGS =
-            new Settings(1322L, 20f, 1, 1, 5, 20 * 15, true, false, false, 1.0d, 0.35d, 20 * 2, 20);
+            new Settings(1213L, 20f, 1, 1, 5, 20 * 15, true, false, false, 1.0d, 0.35d, 20 * 2, 20);
 
     /**
      * C B B V B C - the expensive one, a small army. It starts as a handful and grows to a full ten
      * as the caster masters it, and it burns a chakra seal until then.
      */
     public static final Settings MULTI_SHADOW_CLONE_SETTINGS =
-            new Settings(133231L, 80f, 4, 5, 10, 20 * 25, false, false, true, 2.0d, 0.3d, 20 * 10, 20 * 5);
+            new Settings(111132L, 80f, 4, 5, 10, 20 * 25, false, false, true, 2.0d, 0.3d, 20 * 10, 20 * 5);
 
     /**
      * C B B C - two clones left behind to meditate, see
@@ -92,7 +92,7 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
      * investment, so they outlive every other version of the technique by a wide margin.
      */
     public static final Settings CHAKRA_MEDITATION_SETTINGS =
-            new Settings(1331L, 60f, 2, 2, 0, 20 * 180, false, true, true, 0.0d, 0.0d, 20 * 60, 20 * 3);
+            new Settings(12222L, 60f, 2, 2, 0, 20 * 180, false, true, true, 0.0d, 0.0d, 20 * 60, 20 * 3);
 
     /** Radius of the ring the clones appear in. */
     private static final double SPAWN_RADIUS = 1.6d;

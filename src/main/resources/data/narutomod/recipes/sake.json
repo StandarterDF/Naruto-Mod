@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:honey_bottle" },
+    { "item": "minecraft:sugar" },
+    { "item": "minecraft:wheat" }
+  ],
+  "result": {
+    "item": "narutomod:sake",
+    "count": 1
+  }
+}

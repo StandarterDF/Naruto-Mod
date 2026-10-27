@@ -41,7 +41,7 @@ public class BlackRodAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C V V C V B - the Rinnegan (C V V C) and two more keys. */
-    public static final long COMBO = 233321L;
+    public static final long COMBO = 1121L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "black_rod");
 

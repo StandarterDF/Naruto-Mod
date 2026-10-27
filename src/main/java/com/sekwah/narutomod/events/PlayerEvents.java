@@ -14,6 +14,7 @@ import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.ranks.NinjaRanks;
 import com.sekwah.narutomod.skills.SkillEffect;
 import com.sekwah.narutomod.skills.SkillTree;
+import com.sekwah.narutomod.events.SkillTreeEvents;
 import com.sekwah.sekclib.capabilitysync.capabilitysync.broadcaster.CapabilityBroadcaster;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -59,12 +60,12 @@ public class PlayerEvents {
 
     @SubscribeEvent
     public static void onEntityUpdate(LivingEvent.LivingTickEvent event) {
-        com.sekwah.narutomod.item.TrainingWeightsItem.applySlowdown((net.minecraft.world.entity.player.Player) event.getEntity());
-
         // Do chakra updates and other stuff here unless handled in capabilities
         if (!(event.getEntity() instanceof Player player) || player.level().isClientSide) {
             return;
         }
+        // Training weights slow down whoever wears them, see TrainingWeightsItem.
+        com.sekwah.narutomod.item.TrainingWeightsItem.applySlowdown(player);
         // Two clones sat down to meditate keep their caster topped up and their jutsu coming back
         // twice as fast, see ChakraMeditationJutsuAbility.
         ChakraMeditationJutsuAbility.tickAura(player);
@@ -74,6 +75,10 @@ public class PlayerEvents {
             // Sage mode is fed from the nature energy pool and closes itself when it runs dry, see
             // SageModeAbility.
             SageModeAbility.maintain(player, ninjaData);
+            // Nature energy trickles back on its own, very slowly.
+            if (ninjaData.isNinjaModeEnabled()) {
+                ninjaData.addSeninMana(0.01f);
+            }
             // A disguise is on a plain countdown, see HengeJutsuAbility.
             HengeJutsuAbility.maintain(player, ninjaData);
             // Night vision is fed from the chakra bar and closes itself when it runs dry, see
@@ -192,6 +197,9 @@ public class PlayerEvents {
                 ChakraShieldAbility.removeShield(player);
                 // Death puts the body back together, including out of the phasing stance.
                 KamuiPhaseAbility.release(player, ninjaData);
+                // Respawn with full (skill-boosted) health instead of the base pool.
+                SkillTreeEvents.applyAll(player, ninjaData);
+                player.setHealth(player.getMaxHealth());
             } else if (ninjaData.getShieldPoints() > 0.0f) {
                 ChakraShieldAbility.applyShield(player, ninjaData.getShieldPoints());
             }
@@ -278,6 +286,19 @@ public class PlayerEvents {
         if (event.getEntity() instanceof Player player && !player.level().isClientSide) {
             player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
                 if (!ninjaData.isNinjaModeEnabled()) {
+                    return;
+                }
+
+                // A sage lands on nature itself: no damage and no stamina spent, just dust. The
+                // distance is zeroed rather than cushioned, so the landing never reaches vanilla.
+                if (ninjaData.isSageMode() && NarutoConfig.sageBuffsEnabled) {
+                    event.setDistance(0.0f);
+                    player.resetFallDistance();
+                    if (player.level() instanceof ServerLevel serverLevel) {
+                        serverLevel.sendParticles(ParticleTypes.CLOUD, player.getX(),
+                                player.getY() + 0.1d, player.getZ(),
+                                20, 0.35d, 0.05d, 0.35d, 0.02d);
+                    }
                     return;
                 }
 

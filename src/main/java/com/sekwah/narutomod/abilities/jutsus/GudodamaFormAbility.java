@@ -39,7 +39,7 @@ public class GudodamaFormAbility extends Ability implements Ability.Toggled, Abi
     }
 
     /** C C C C C B - the shaping seal. */
-    public static final long COMBO = 333321L;
+    public static final long COMBO = 2113L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "gudodama_form");
 

@@ -183,6 +183,12 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     @Sync(minTicks = 1)
     private boolean sageMode;
 
+    @Sync(minTicks = 1)
+    private int sixPathsOrbs;
+
+    @Sync(minTicks = 20)
+    private int sealVesselIntegrity;
+
     /**
      * Reach of the held chakra sense, or zero while it is not up. Synced because the client is what
      * draws the sense - the glow on creatures and the structure markers - and never written to disk:
@@ -192,9 +198,11 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private float sensingRadius;
 
     /**
-     * Chakra funded night vision left, in ticks. Server side only and not written to disk, exactly
-     * like {@link #sageMode}: the client sees the vanilla effect the server keeps refreshed.
+     * Chakra funded night vision left, in ticks. Not written to disk, like {@link #sageMode}; it is
+     * synced at a slow cadence so the jutsu menu can show the sensing row as active while the tap is
+     * running, even though the effect itself is a vanilla one the client already sees.
      */
+    @Sync(minTicks = 20)
     private int nightVisionTicks;
 
     /**
@@ -242,7 +250,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     @Sync(minTicks = 1)
     private int ticksChanneled;
 
-    @Sync
+    @Sync(syncGlobally = true)
     private ToggleAbilityData toggleAbilityData;
 
     /**
@@ -666,6 +674,26 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     }
 
     @Override
+    public int getSixPathsOrbs() {
+        return this.sixPathsOrbs;
+    }
+
+    @Override
+    public void setSixPathsOrbs(int orbs) {
+        this.sixPathsOrbs = orbs;
+    }
+
+    @Override
+    public int getSealVesselIntegrity() {
+        return this.sealVesselIntegrity;
+    }
+
+    @Override
+    public void setSealVesselIntegrity(int integrity) {
+        this.sealVesselIntegrity = integrity;
+    }
+
+    @Override
     public float getSensingRadius() {
         return this.sensingRadius;
     }
@@ -926,41 +954,56 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
         this.staminaCostMultiplier = com.sekwah.narutomod.item.TrainingWeightsItem
                 .staminaMultiplier(player);
+        // A sage's body is held up by nature: everything costs half the stamina it should.
+        if (this.isSageMode() && NarutoConfig.sageBuffsEnabled) {
+            this.staminaCostMultiplier *= 0.5f;
+        }
         if (this.staminaRegenInfo.canRegen()) {
-            float staminaRegen = NarutoConfig.staminaRegen
-                    + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.STAMINA_REGEN) / 20.0f;
-            // Running dry leaves the body winded for a few seconds: the bar comes back at half rate,
-            // which is what makes spending the last point a decision rather than a formality.
-            if (this.stamina <= 0.0f) {
-                player.getPersistentData().putLong("narutomod:winded_until",
-                        player.level().getGameTime() + 100L);
+            // Open gates burn stamina faster than it can be made back: while any gate is open the
+            // bar only goes down, which is the price of the stance.
+            if (this.getGateCount() <= 0) {
+                float staminaRegen = NarutoConfig.staminaRegen
+                        + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.STAMINA_REGEN) / 20.0f;
+                // Running dry leaves the body winded for a few seconds: the bar comes back at half rate,
+                // which is what makes spending the last point a decision rather than a formality.
+                if (this.stamina <= 0.0f) {
+                    player.getPersistentData().putLong("narutomod:winded_until",
+                            player.level().getGameTime() + 100L);
+                }
+                if (player.getPersistentData().getLong("narutomod:winded_until")
+                        > player.level().getGameTime()) {
+                    staminaRegen *= 0.5f;
+                }
+                // Weight is real: every point of armour takes a little off the recovery. A sage
+                // does not feel the weight - nature carries it - so the penalty is waived in sage mode.
+                if (!(this.isSageMode() && NarutoConfig.sageBuffsEnabled)) {
+                    staminaRegen *= 1.0f - Math.min(0.3f, player.getArmorValue() * 0.01f);
+                }
+                if (player.isCreative()) {
+                    staminaRegen *= CREATIVE_REGEN_MULTIPLIER;
+                }
+                this.stamina += staminaRegen;
             }
-            if (player.getPersistentData().getLong("narutomod:winded_until")
-                    > player.level().getGameTime()) {
-                staminaRegen *= 0.5f;
-            }
-            // Weight is real: every point of armour takes a little off the recovery.
-            staminaRegen *= 1.0f - Math.min(0.3f, player.getArmorValue() * 0.01f);
-            if (player.isCreative()) {
-                staminaRegen *= CREATIVE_REGEN_MULTIPLIER;
-            }
-            this.stamina += staminaRegen;
         }
         if (this.chakraRegenInfo.canRegen()
                 && player.getPersistentData().getLong("narutomod:node_rupture_until")
                 <= player.level().getGameTime()) {
-            float regen = NarutoConfig.chakraRegen
-                    + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.CHAKRA_REGEN) / 20.0f;
-            // A freshly filled pool keeps trickling in faster for a while, which is what makes
-            // topping the bar up before a fight worth the time, see ChakraChargeAbility.
-            if (player.hasEffect(NarutoEffects.CHAKRA_FLOW.get()) && NarutoConfig.chakraFlowEnabled) {
-                regen *= CHAKRA_FLOW_MULTIPLIER;
+            // Open gates burn chakra faster than it can be made back: while any gate is open the
+            // pool only goes down, which is the price of the stance.
+            if (this.getGateCount() <= 0) {
+                float regen = NarutoConfig.chakraRegen
+                        + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.CHAKRA_REGEN) / 20.0f;
+                // A freshly filled pool keeps trickling in faster for a while, which is what makes
+                // topping the bar up before a fight worth the time, see ChakraChargeAbility.
+                if (player.hasEffect(NarutoEffects.CHAKRA_FLOW.get()) && NarutoConfig.chakraFlowEnabled) {
+                    regen *= CHAKRA_FLOW_MULTIPLIER;
+                }
+                // Creative is faster rather than free, see CREATIVE_REGEN_MULTIPLIER.
+                if (player.isCreative()) {
+                    regen *= CREATIVE_REGEN_MULTIPLIER;
+                }
+                this.chakra += regen;
             }
-            // Creative is faster rather than free, see CREATIVE_REGEN_MULTIPLIER.
-            if (player.isCreative()) {
-                regen *= CREATIVE_REGEN_MULTIPLIER;
-            }
-            this.chakra += regen;
         }
         this.substitutions += NarutoConfig.substitutionRegenRate
                 * (1.0f + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.SUBSTITUTION_REGEN));

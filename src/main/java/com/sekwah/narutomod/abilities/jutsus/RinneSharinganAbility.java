@@ -33,7 +33,7 @@ public class RinneSharinganAbility extends Ability implements Ability.Toggled, A
     }
 
     /** C C C C C V - one key on from the shape. */
-    public static final long COMBO = 333322L;
+    public static final long COMBO = 12113L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "rinne_sharingan");
 

@@ -42,7 +42,7 @@ public class FlameFistAbility extends Ability implements Ability.Cooldown {
     }
 
     /** 1 3 2 2 3 2 - the kenjutsu seals and the two keys of the flame fist. */
-    public static final long COMBO = 132232L;
+    public static final long COMBO = 311L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "flame_fist");
 

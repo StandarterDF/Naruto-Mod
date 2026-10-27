@@ -9,6 +9,8 @@ import com.sekwah.narutomod.client.model.jutsu.WaterBulletModel;
 import com.sekwah.narutomod.client.renderer.entity.*;
 import com.sekwah.narutomod.client.renderer.entity.jutsuprojectile.FireballJutsuRenderer;
 import com.sekwah.narutomod.client.renderer.entity.jutsuprojectile.RasenshurikenJutsuRenderer;
+import com.sekwah.narutomod.client.renderer.entity.jutsuprojectile.TailedBallRenderer;
+import com.sekwah.narutomod.client.renderer.entity.jutsuprojectile.TravellingArcRenderer;
 import com.sekwah.narutomod.client.renderer.entity.jutsuprojectile.WaterBulletJutsuRenderer;
 import com.sekwah.narutomod.entity.NarutoEntities;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
@@ -43,6 +45,8 @@ public class NarutoRenderEvents {
         event.registerEntityRenderer(NarutoEntities.FIREBALL_JUTSU.get(), FireballJutsuRenderer::new);
         event.registerEntityRenderer(NarutoEntities.WATER_BULLET_JUTSU.get(), WaterBulletJutsuRenderer::new);
         event.registerEntityRenderer(NarutoEntities.RASENSHURIKEN_JUTSU.get(), RasenshurikenJutsuRenderer::new);
+        event.registerEntityRenderer(NarutoEntities.TAILED_BALL.get(), TailedBallRenderer::new);
+        event.registerEntityRenderer(NarutoEntities.TRAVELLING_ARC.get(), TravellingArcRenderer::new);
 
         event.registerEntityRenderer(NarutoEntities.SUBSTITUTION_LOG.get(), SubstitutionLogRenderer::new);
 
@@ -71,6 +75,13 @@ public class NarutoRenderEvents {
     @SubscribeEvent
     public static void addLayers(EntityRenderersEvent.AddLayers event) {
         HengeRenderEvents.setContext(event.getContext());
+        // The chakra cloak shell over both player models, wide and slim alike.
+        for (String skin : event.getSkins()) {
+            var renderer = event.getSkin(skin);
+            if (renderer instanceof net.minecraft.client.renderer.entity.player.PlayerRenderer playerRenderer) {
+                playerRenderer.addLayer(new ChakraCloakLayer(playerRenderer));
+            }
+        }
     }
 
     @SubscribeEvent

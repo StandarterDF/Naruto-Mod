@@ -41,7 +41,7 @@ public class KuraiAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C V V B B C C C - the Sharingan combo (C V V B), then the quietest of its illusions. */
-    public static final long COMBO = 122323L;
+    public static final long COMBO = 2223L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "kurai");
 

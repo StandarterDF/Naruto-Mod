@@ -3,6 +3,9 @@ package com.sekwah.narutomod.item;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tier;
@@ -96,6 +99,18 @@ public class ComboSwordItem extends SwordItem {
      */
     public float getBonusDamage(int combo) {
         return this.damagePerStep * combo;
+    }
+
+    /**
+     * Right-click raises the blade guard. Every one of the great swords is heavy enough to turn a
+     * blow; the move is the same one the tree teaches, so a sword is a shield as well as a weapon.
+     */
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        if (hand == InteractionHand.MAIN_HAND && !level.isClientSide) {
+            com.sekwah.narutomod.abilities.jutsus.ParryAbility.raiseGuard(player);
+        }
+        return InteractionResultHolder.success(player.getItemInHand(hand));
     }
 
     @Override

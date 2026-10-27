@@ -39,7 +39,7 @@ public class GateTigerAbility extends Ability implements Ability.Cooldown {
     }
 
     /** 2 3 3 3 3 2 - the gates' seal with the tiger's claw. */
-    public static final long COMBO = 233332L;
+    public static final long COMBO = 1333L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "gate_tiger");
 

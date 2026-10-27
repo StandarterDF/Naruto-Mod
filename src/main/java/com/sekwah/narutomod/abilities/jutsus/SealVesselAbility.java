@@ -42,7 +42,7 @@ public class SealVesselAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C C B B A A - the seal that holds the beast. */
-    public static final long COMBO = 332211L;
+    public static final long COMBO = 3112L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "seal_vessel");
 

@@ -10,15 +10,25 @@ import com.sekwah.narutomod.skills.SkillEffect;
 import com.sekwah.narutomod.skills.SkillTree;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.common.ForgeMod;
+
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Sage mode: the gathered nature energy is opened up and burned, turning the caster into something
@@ -42,8 +52,11 @@ public class SageModeAbility extends Ability {
     }
 
 
-    /** V B V */
-    public static final long COMBO = 232L;
+    /**
+     * V B V B C V - sage mode is the deep end of the branch, so it asks for a longer seal than the
+     * gathering that feeds it. The old three-key combination now belongs to the chakra shield.
+     */
+    public static final long COMBO = 331L;
 
     /** The registry id of this technique, which is also the key its mastery is stored under. */
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "sage_mode");
@@ -86,6 +99,44 @@ public class SageModeAbility extends Ability {
     private static final float RESISTANCE_AT = 0.35f;
     private static final float JUMP_AT = 0.5f;
     private static final float REGENERATION_AT = 0.7f;
+
+    /** How much further a sage's arm reaches while the mode is up. */
+    private static final double REACH_BONUS = 1.0d;
+
+    /** Stable id, so the same reach modifier is added and taken off rather than stacking. */
+    private static final UUID REACH_MODIFIER_ID = UUID.fromString("7a3f1c2e-9b4d-4e6a-8c5f-1a2b3c4d5e6f");
+
+    /** How often the body shrugs off a lingering ailment, in ticks. */
+    private static final int CLEANSE_INTERVAL = 40;
+
+    /** How often the senjutsu perception repaints its targets, in ticks. */
+    private static final int SENSE_INTERVAL = 20;
+
+    /** How long the perception glow lasts; refreshed every {@link #SENSE_INTERVAL}. */
+    private static final int SENSE_DURATION = 40;
+
+    /** Base perception radius, wider once the mode is nearly mastered. */
+    private static final double SENSE_RADIUS = 24.0d;
+    private static final double SENSE_RADIUS_MASTER = 32.0d;
+
+    /** Mastery at which the perception widens to its full reach. */
+    private static final float SENSE_UP_AT = 0.85f;
+
+    /** Standing still this long counts as rooted, doubling the perception radius. */
+    private static final int STILL_TICKS = 20;
+
+    /** Squared distance per tick under which the caster counts as not moving. */
+    private static final double STILL_SLOP_SQR = 0.0225d;
+
+    private static final String STILL_X_TAG = "narutomod:sage_still_x";
+    private static final String STILL_Z_TAG = "narutomod:sage_still_z";
+    private static final String STILL_TICKS_TAG = "narutomod:sage_still_ticks";
+
+    /** Ailments nature does not tolerate, shrugged off one at a time. */
+    private static final MobEffect[] CLEANSE_EFFECTS = {
+            MobEffects.POISON, MobEffects.WITHER, MobEffects.BLINDNESS,
+            MobEffects.CONFUSION, MobEffects.MOVEMENT_SLOWDOWN, MobEffects.WEAKNESS
+    };
 
     @Override
     public ActivationType activationType() {
@@ -180,6 +231,15 @@ public class SageModeAbility extends Ability {
     }
 
     /**
+     * Nature energy burned every tick the mode is up, for the caster's current mastery. Shared with
+     * the HUD, which turns it into the "seconds left" the bar is really about.
+     */
+    public static float currentDrain(INinjaData ninjaData) {
+        float mastery = Mastery.level(ninjaData, ID);
+        return DRAIN_PER_TICK * Mth.lerp(mastery, BEGINNER_DRAIN_MULTIPLIER, 1.0f);
+    }
+
+    /**
      * Keeps a sage a sage: drained, fed, buffed and lit up, every server tick.
      *
      * <p>How long a sage lasts and how much they get out of the mode both ride on mastery. The burn
@@ -193,7 +253,7 @@ public class SageModeAbility extends Ability {
             return;
         }
         float mastery = Mastery.level(ninjaData, ID);
-        float drain = DRAIN_PER_TICK * Mth.lerp(mastery, BEGINNER_DRAIN_MULTIPLIER, 1.0f);
+        float drain = currentDrain(ninjaData);
         ninjaData.addSeninMana(-drain);
         if (ninjaData.getSeninMana() <= 0.0f) {
             ninjaData.setSeninMana(0.0f);
@@ -203,12 +263,62 @@ public class SageModeAbility extends Ability {
 
         ninjaData.addChakra(Mth.lerp(mastery, CHAKRA_PER_TICK_MIN, CHAKRA_PER_TICK_MAX));
         applyPerks(player, mastery);
+        if (NarutoConfig.sageBuffsEnabled) {
+            applyBody(player, ninjaData, mastery);
+        }
+        if (NarutoConfig.sageKataEnabled) {
+            applyReach(player);
+        } else {
+            removeReach(player);
+        }
         // Mastery is paid for the time the mode is actually held, not for the act of opening it.
         NarutoAbilities.SAGE_MODE.get().recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
 
         if (player.tickCount % 4 == 0 && player.level() instanceof ServerLevel level) {
             level.sendParticles(ParticleTypes.HAPPY_VILLAGER, player.getX(),
                     player.getY() + 1.0d, player.getZ(), 4, 0.4d, 0.7d, 0.4d, 0.02d);
+        }
+    }
+
+    /**
+     * The body a sage wears: hunger held still, ailments shrugged off and monsters felt through
+     * walls. All of it is in the mode and none of it survives it - the food bar is pinned rather
+     * than filled, so nothing is gained to keep.
+     */
+    private static void applyBody(Player player, INinjaData ninjaData, float mastery) {
+        // Nature feeds its own: exhaustion never accumulates and the bar never drops below the line
+        // vanilla healing needs, so a sage can fight on rations they already ate.
+        player.getFoodData().setExhaustion(0.0f);
+        if (player.getFoodData().getFoodLevel() < 18) {
+            player.getFoodData().setFoodLevel(18);
+        }
+
+        trackStillness(player);
+
+        // Poison does not live in a sage: one lingering ailment every two seconds, never the fire.
+        if (player.tickCount % CLEANSE_INTERVAL == 0) {
+            for (MobEffect effect : CLEANSE_EFFECTS) {
+                if (player.hasEffect(effect)) {
+                    player.removeEffect(effect);
+                    break;
+                }
+            }
+        }
+
+        // Senjutsu perception: hostile monsters glow through walls. Standing rooted doubles the
+        // reach of the feeling, which is what makes holding ground a decision rather than a habit.
+        if (player.tickCount % SENSE_INTERVAL == 0 && player.level() instanceof ServerLevel level) {
+            double radius = mastery >= SENSE_UP_AT ? SENSE_RADIUS_MASTER : SENSE_RADIUS;
+            if (stillTicks(player) >= STILL_TICKS) {
+                radius *= 2.0d;
+            }
+            List<Mob> felt = level.getEntitiesOfClass(Mob.class,
+                    player.getBoundingBox().inflate(radius),
+                    mob -> mob.isAlive()
+                            && mob.getType().getCategory() == MobCategory.MONSTER);
+            for (Mob mob : felt) {
+                mob.addEffect(new MobEffectInstance(MobEffects.GLOWING, SENSE_DURATION, 0, false, false));
+            }
         }
     }
 
@@ -241,5 +351,56 @@ public class SageModeAbility extends Ability {
         player.removeEffect(MobEffects.DAMAGE_RESISTANCE);
         player.removeEffect(MobEffects.JUMP);
         player.removeEffect(MobEffects.REGENERATION);
+        removeReach(player);
+    }
+
+    /**
+     * A sage's arm is a block longer than it should be. A transient attribute, re-applied every
+     * tick so a lost modifier comes back, and taken off with everything else when the mode ends.
+     */
+    private static void applyReach(Player player) {
+        AttributeInstance reach = player.getAttribute(ForgeMod.ENTITY_REACH.get());
+        if (reach != null && reach.getModifier(REACH_MODIFIER_ID) == null) {
+            reach.addTransientModifier(new AttributeModifier(REACH_MODIFIER_ID,
+                    "narutomod:sage_reach", REACH_BONUS, AttributeModifier.Operation.ADDITION));
+        }
+    }
+
+    /** Takes the longer arm back off when the mode ends or is switched off in the config. */
+    private static void removeReach(Player player) {
+        AttributeInstance reach = player.getAttribute(ForgeMod.ENTITY_REACH.get());
+        if (reach != null) {
+            reach.removeModifier(REACH_MODIFIER_ID);
+        }
+    }
+
+    /**
+     * Counts how long the caster has stood on one spot, for the rooted perception. Movement over a
+     * sixth of a block resets the count; anything under it lets it grow, capped well past caring.
+     */
+    private static void trackStillness(Player player) {
+        CompoundTag data = player.getPersistentData();
+        double x = player.getX();
+        double z = player.getZ();
+        if (!data.contains(STILL_X_TAG)) {
+            data.putDouble(STILL_X_TAG, x);
+            data.putDouble(STILL_Z_TAG, z);
+            data.putInt(STILL_TICKS_TAG, 0);
+            return;
+        }
+        double dx = x - data.getDouble(STILL_X_TAG);
+        double dz = z - data.getDouble(STILL_Z_TAG);
+        if (dx * dx + dz * dz > STILL_SLOP_SQR) {
+            data.putDouble(STILL_X_TAG, x);
+            data.putDouble(STILL_Z_TAG, z);
+            data.putInt(STILL_TICKS_TAG, 0);
+        } else if (data.getInt(STILL_TICKS_TAG) < 72000) {
+            data.putInt(STILL_TICKS_TAG, data.getInt(STILL_TICKS_TAG) + 1);
+        }
+    }
+
+    /** @return ticks since the caster last moved, for anything that rewards holding ground. */
+    static int stillTicks(Player player) {
+        return player.getPersistentData().getInt(STILL_TICKS_TAG);
     }
 }

@@ -44,7 +44,7 @@ public class OuterPathChainsAbility extends Ability implements Ability.Channeled
     }
 
     /** 2 3 3 3 1 2 - the outer run, one key past the Rinbo echo. */
-    public static final long COMBO = 233312L;
+    public static final long COMBO = 2323L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "outer_chains");
 

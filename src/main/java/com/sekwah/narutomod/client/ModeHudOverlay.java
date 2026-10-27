@@ -132,6 +132,10 @@ public final class ModeHudOverlay {
         if (toggles.contains(TailedCloakAbility.ID)) {
             labels.add(label("tailed_cloak"));
         }
+        if (ninjaData.getSealVesselIntegrity() > 0) {
+            labels.add(Component.translatable("naruto.gui.mode.vessel",
+                    ninjaData.getSealVesselIntegrity()));
+        }
         if (toggles.contains(LightningModeAbility.ID)) {
             labels.add(label("lightning_mode"));
         }

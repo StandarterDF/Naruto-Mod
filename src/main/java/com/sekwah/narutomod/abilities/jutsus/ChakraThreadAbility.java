@@ -49,7 +49,7 @@ public class ChakraThreadAbility extends Ability implements Ability.Channeled {
 
 
     /** V V C */
-    public static final long COMBO = 331L;
+    public static final long COMBO = 11111L;
 
     /** How far the thread can be thrown, in blocks. */
     private static final double RANGE = 32.0d;

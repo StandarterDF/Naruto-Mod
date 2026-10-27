@@ -1,6 +1,7 @@
 package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
+import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.skills.SkillEffect;
 import com.sekwah.narutomod.skills.SkillTree;
@@ -38,6 +39,23 @@ public class SkillTreeEvents {
     private static final String ARMOR_NAME = "narutomod.skill.armor";
     private static final String SPEED_NAME = "narutomod.skill.speed";
     private static final String DAMAGE_NAME = "narutomod.skill.damage";
+
+    /** Applies all skill attribute bonuses immediately, used on respawn/clone. */
+    public static void applyAll(Player player, INinjaData ninjaData) {
+        if (player.level().isClientSide) {
+            return;
+        }
+        Set<ResourceLocation> unlocked = ninjaData.getSkillData().getUnlocked();
+        float rounded = SkillTree.bonus(unlocked, SkillEffect.ALL_ROUNDED);
+        apply(player, Attributes.MAX_HEALTH, HEALTH_ID, HEALTH_NAME,
+                SkillTree.bonus(unlocked, SkillEffect.MAX_HEALTH) + rounded);
+        apply(player, Attributes.ARMOR, ARMOR_ID, ARMOR_NAME,
+                SkillTree.bonus(unlocked, SkillEffect.ARMOR));
+        apply(player, Attributes.MOVEMENT_SPEED, SPEED_ID, SPEED_NAME,
+                SkillTree.bonus(unlocked, SkillEffect.MOVEMENT_SPEED));
+        apply(player, Attributes.ATTACK_DAMAGE, DAMAGE_ID, DAMAGE_NAME,
+                SkillTree.bonus(unlocked, SkillEffect.ATTACK_DAMAGE));
+    }
 
     @SubscribeEvent
     public static void onLivingTick(LivingEvent.LivingTickEvent event) {

@@ -39,7 +39,7 @@ public class GateElephantAbility extends Ability implements Ability.Cooldown {
     }
 
     /** 2 3 3 3 3 3 - the gates' seal, closed at the far end. */
-    public static final long COMBO = 233333L;
+    public static final long COMBO = 1331L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "gate_elephant");
 

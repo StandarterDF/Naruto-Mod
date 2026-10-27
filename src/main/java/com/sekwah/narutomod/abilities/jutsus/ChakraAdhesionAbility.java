@@ -40,12 +40,15 @@ public class ChakraAdhesionAbility extends Ability implements Ability.Channeled 
 
 
     /** C C V. */
-    public static final long COMBO = 113L;
+    public static final long COMBO = 11222L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_adhesion");
 
     /** Chakra burnt for every tick the hold is kept. */
     private static final float CHAKRA_PER_TICK = 0.15f;
+    /** Stamina burnt for every tick the hold is kept. */
+    private static final float STAMINA_PER_TICK = 0.1f;
+    private static final int STAMINA_REGEN_DELAY = 10;
 
     private static final int CHAKRA_REGEN_DELAY = 10;
 
@@ -87,7 +90,14 @@ public class ChakraAdhesionAbility extends Ability implements Ability.Channeled 
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }
+        if (ninjaData.getStamina() < STAMINA_PER_TICK) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.notenoughstamina",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
         ninjaData.useChakra(cost, CHAKRA_REGEN_DELAY);
+        ninjaData.useStamina(STAMINA_PER_TICK, STAMINA_REGEN_DELAY);
         return true;
     }
 

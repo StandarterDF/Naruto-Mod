@@ -44,7 +44,7 @@ public class HengeJutsuAbility extends Ability implements Ability.Cooldown {
 
 
     /** V C V */
-    public static final long COMBO = 212L;
+    public static final long COMBO = 2121L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "henge");
 

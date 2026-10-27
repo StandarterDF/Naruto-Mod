@@ -34,7 +34,7 @@ public class ByakuganFarsightAbility extends Ability implements Ability.Toggled,
     }
 
     /** V B V V B B - the needles' seal with the last key swapped for the eye's own. */
-    public static final long COMBO = 232222L;
+    public static final long COMBO = 11212L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "byakugan_farsight");
 

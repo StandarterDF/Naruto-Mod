@@ -49,7 +49,7 @@ public class ChakraGripAbility extends Ability implements Ability.Channeled {
     }
 
     /** V B V V B V - the third seal of the branch, one key on from the palm. */
-    public static final long COMBO = 232213L;
+    public static final long COMBO = 3333L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_grip");
 

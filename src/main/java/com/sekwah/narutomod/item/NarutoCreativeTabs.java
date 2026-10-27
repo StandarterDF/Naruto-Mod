@@ -35,6 +35,10 @@ public class NarutoCreativeTabs {
                 output.accept(NarutoItems.KATANA.get());
                 output.accept(NarutoItems.SAMEHADA.get());
                 output.accept(NarutoItems.KUBIKIRIBOCHO.get());
+                output.accept(NarutoItems.BONE_BLADE.get());
+                output.accept(NarutoItems.HIRAMEKAREI.get());
+                output.accept(NarutoItems.SHIBUKI.get());
+                output.accept(NarutoItems.SAKE.get());
             }).title(Component.translatable("narutomod_weapons"))::build);
     public static RegistryObject<CreativeModeTab> NINJA_ARMOR = CREATIVE_MODE_TABS.register("narutomod_armor", CreativeModeTab.builder()
             .icon(() -> NarutoItems.RED_ANBU_MASK.get().getDefaultInstance())

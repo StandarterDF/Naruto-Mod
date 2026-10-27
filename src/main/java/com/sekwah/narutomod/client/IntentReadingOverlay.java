@@ -2,6 +2,7 @@ package com.sekwah.narutomod.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.sekwah.narutomod.NarutoMod;
+import com.sekwah.narutomod.abilities.jutsus.SharinganAbility;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.skills.IntentReading;
@@ -33,11 +34,12 @@ import java.util.List;
  *
  * <p>The passive is about the one thing a fight is decided by and a caster cannot see - intent. A
  * mob that has already picked the caster out of the crowd faces and reads exactly like one that has
- * not until it is on top of them, and a swing gives no warning at all. So every body inside the
- * reading's reach carries a small dot: red when it is aimed at the caster or already swinging,
- * yellow when it is busy with somebody else, white when it has no quarrel at all. Only the two
- * coloured cases get a word, because those are the two a player has to react to; a white dot is
- * simply a body that is not a threat, and a screen of words would bury the ones that matter.</p>
+ * not until it is on top of them, and a swing gives no warning at all. So while the Sharingan is
+ * open every body inside the reading's reach carries a small dot: red when it is aimed at the caster
+ * or already swinging, yellow when it is busy with somebody else, white when it has no quarrel at
+ * all. Only the two coloured cases get a word, because those are the two a player has to react to; a
+ * white dot is simply a body that is not a threat, and a screen of words would bury the ones that
+ * matter.</p>
  *
  * <p>Nothing here decides anything: the swing is the vanilla swing animation and the aim is where the
  * body's head is actually pointed, so the client is only reading state the server already ticked. A
@@ -124,7 +126,8 @@ public final class IntentReadingOverlay {
             return;
         }
         INinjaData ninjaData = self.getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
-        if (!IntentReading.has(ninjaData)) {
+        // The reading is the copy wheel's work: without the eye open there is nothing to read.
+        if (!IntentReading.has(ninjaData) || !SharinganAbility.isActive(ninjaData)) {
             return;
         }
 

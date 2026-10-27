@@ -1,6 +1,7 @@
 package com.sekwah.narutomod.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.sekwah.narutomod.abilities.jutsus.SageModeAbility;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.util.ColorUtil;
@@ -8,6 +9,7 @@ import com.sekwah.narutomod.util.GuiUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
@@ -39,6 +41,12 @@ public class SeninGUI implements PlayerGUI {
     private float maxSeninMana;
     private boolean sageMode;
     private boolean enabled;
+
+    /** Nature burned per tick at the caster's current mastery, for the seconds-left readout. */
+    private float sageDrain;
+
+    /** Nature needed to open the mode, drawn as a tick on the bar while it is closed. */
+    private float entryThreshold;
 
     public SeninGUI(Minecraft minecraft) {
         this.minecraft = minecraft;
@@ -88,9 +96,24 @@ public class SeninGUI implements PlayerGUI {
                 (int) (SENIN_COLOR.getRed() * 0.25f),
                 (int) (SENIN_COLOR.getGreen() * 0.25f),
                 (int) (SENIN_COLOR.getBlue() * 0.25f))).getValue();
-        String text = (int) this.seninMana + "/" + (int) this.maxSeninMana;
+        String text;
+        if (this.sageMode && this.sageDrain > 0.0f) {
+            int seconds = (int) (this.seninMana / (this.sageDrain * 20.0f));
+            String time = Component.translatable("gui.narutomod.senin.seconds", seconds).getString();
+            text = (int) this.seninMana + "/" + (int) this.maxSeninMana + " (" + time + ")";
+        } else {
+            text = (int) this.seninMana + "/" + (int) this.maxSeninMana;
+        }
         GuiUtils.centeredTextOutlined(guiGraphics, this.minecraft.font, text,
                 screenMid - OFFSET - (barWidth / 2), y - 4, color, darker);
+
+        // The entry price, drawn as a tick while the mode is closed: filling past it means the
+        // cast will go through.
+        if (!this.sageMode && this.entryThreshold > 0.0f && this.entryThreshold < this.maxSeninMana) {
+            int barLeft = screenMid - OFFSET - (WIDTH - xOffset);
+            int tickX = barLeft + (int) (barWidth * (this.entryThreshold / this.maxSeninMana));
+            guiGraphics.fill(tickX, y, tickX + 1, y + 22, 0xBFFFFFFF);
+        }
     }
 
     private void setColor(Color color) {
@@ -107,6 +130,10 @@ public class SeninGUI implements PlayerGUI {
             this.seninMana = ninjaData.getSeninMana();
             this.maxSeninMana = ninjaData.getMaxSeninMana();
             this.sageMode = ninjaData.isSageMode();
+            // Mastery and skill data arrive synced, so the drain and the threshold the server runs
+            // on can be recomputed here without a packet of their own.
+            this.sageDrain = SageModeAbility.currentDrain(ninjaData);
+            this.entryThreshold = SageModeAbility.entryThreshold(ninjaData);
         });
     }
 }

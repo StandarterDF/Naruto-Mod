@@ -29,7 +29,7 @@ import net.minecraft.world.entity.player.Player;
 public class SenriganFlightAbility extends Ability implements Ability.Toggled, Ability.HandleEnded {
 
     /** B V B B B - one key past the sight. */
-    public static final long COMBO = 32332L;
+    public static final long COMBO = 12123L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "senrigan_flight");
 

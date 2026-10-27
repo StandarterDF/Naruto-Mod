@@ -40,7 +40,7 @@ public class KaiAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C B C C C - the genjutsu combination (C B C) and two more keys. */
-    public static final long COMBO = 13111L;
+    public static final long COMBO = 2213L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "kai");
 

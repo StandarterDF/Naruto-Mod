@@ -30,7 +30,7 @@ import net.minecraft.world.phys.Vec3;
 public class MomoshikiAbsorptionAbility extends Ability implements Ability.Channeled {
 
     /** B V B V - one key off the eye itself, and easy to reach in a fight. */
-    public static final long COMBO = 3232L;
+    public static final long COMBO = 11332L;
 
     public static final ResourceLocation ID =
             new ResourceLocation(NarutoMod.MOD_ID, "momoshiki_absorption");

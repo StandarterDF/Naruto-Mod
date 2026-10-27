@@ -19,6 +19,9 @@ import com.sekwah.narutomod.network.c2s.ServerAbilityChannelPacket;
 import com.sekwah.narutomod.network.c2s.ServerToggleAbilityDisabledPacket;
 import com.sekwah.narutomod.network.c2s.ServerToggleNinjaPacket;
 import com.sekwah.narutomod.registries.NarutoRegistries;
+import com.sekwah.narutomod.skills.Skill;
+import com.sekwah.narutomod.skills.SkillBranch;
+import com.sekwah.narutomod.skills.SkillTree;
 import com.sekwah.narutomod.util.GuiUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
@@ -27,8 +30,11 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -63,6 +69,12 @@ public class JutsuScreen extends Screen {
     /** How many lines fit on one page before the arrows have to be used. */
     private static final int ROWS_PER_PAGE = 10;
     private static final int ROW_HEIGHT = 11;
+
+    /**
+     * Width a hover description is wrapped to. Narrow enough to stay a tooltip rather than a wall
+     * of text, wide enough that a normal sentence still fits on one line.
+     */
+    private static final int TOOLTIP_WIDTH = 190;
 
     /** Smallest width the panel will take, and how far the list runs from the middle of it. */
     private static final int MIN_PANEL_HALF_WIDTH = 132;
@@ -110,23 +122,31 @@ public class JutsuScreen extends Screen {
     private static final int LIST_PADDING = 10;
 
     /**
-     * The groups the list is broken into, in the order they are shown. A technique whose id is not in
-     * {@link #CATEGORIES} falls into {@link #OTHER} rather than disappearing, so a new technique is
-     * never missing from the menu just because nobody filed it yet.
+     * The groups the list is broken into, in the order they are shown. A technique that has its own
+     * entry in {@link #CATEGORIES} goes there; everything else follows the branch of its skill-tree
+     * node through {@link #BRANCHES}, so filing a technique in the tree also files it in this menu.
+     * Only a technique with neither - a stray id nobody placed anywhere - falls into {@link #OTHER},
+     * which keeps it visible instead of dropping it from the menu.
      */
     private enum Category {
         BASICS("naruto.gui.jutsu.category.basics"),
-        CLONES("naruto.gui.jutsu.category.clones"),
+        BODY("naruto.gui.jutsu.category.body"),
         DEFENCE("naruto.gui.jutsu.category.defence"),
         ELEMENTAL("naruto.gui.jutsu.category.elemental"),
+        TAIJUTSU("naruto.gui.jutsu.category.taijutsu"),
+        CLONES("naruto.gui.jutsu.category.clones"),
         SPACE("naruto.gui.jutsu.category.space"),
-        BODY("naruto.gui.jutsu.category.body"),
+        GATES("naruto.gui.jutsu.category.gates"),
         ILLUSION("naruto.gui.jutsu.category.illusion"),
         SHARINGAN("naruto.gui.jutsu.category.sharingan"),
         BYAKUGAN("naruto.gui.jutsu.category.byakugan"),
         JOUGAN("naruto.gui.jutsu.category.jougan"),
         SENRIGAN("naruto.gui.jutsu.category.senrigan"),
         RINNEGAN("naruto.gui.jutsu.category.rinnegan"),
+        SIX_PATHS("naruto.gui.jutsu.category.six_paths"),
+        SAGE("naruto.gui.jutsu.category.sage"),
+        CURSE_SEAL("naruto.gui.jutsu.category.curse_seal"),
+        TAILED("naruto.gui.jutsu.category.tailed"),
         OTHER("naruto.gui.jutsu.category.other");
 
         private final String translationKey;
@@ -141,15 +161,18 @@ public class JutsuScreen extends Screen {
             Map.entry("chakra_charge", Category.BASICS),
             Map.entry("water_walk", Category.BASICS),
             Map.entry("chakra_fist", Category.BASICS),
+            Map.entry("leap", Category.BASICS),
+            Map.entry("blade_rain", Category.TAIJUTSU),
 
             Map.entry("shadow_clone", Category.CLONES),
             Map.entry("chibi_shadow_clone", Category.CLONES),
             Map.entry("multi_shadow_clone", Category.CLONES),
             Map.entry("chakra_meditation", Category.CLONES),
             Map.entry("clone_recall", Category.CLONES),
+            Map.entry("shuriken_shadow", Category.CLONES),
 
             Map.entry("chakra_shield", Category.DEFENCE),
-            Map.entry("second_breath", Category.DEFENCE),
+
             Map.entry("chakra_regeneration", Category.DEFENCE),
 
             Map.entry("fireball", Category.ELEMENTAL),
@@ -172,15 +195,26 @@ public class JutsuScreen extends Screen {
             Map.entry("kamui_phasing", Category.SPACE),
             Map.entry("chakra_thread", Category.SPACE),
 
-            Map.entry("senjutsu_charging", Category.BODY),
-            Map.entry("sage_mode", Category.BODY),
+            Map.entry("senjutsu_charging", Category.SAGE),
+            Map.entry("sage_mode", Category.SAGE),
             Map.entry("chakra_sensing", Category.BODY),
             Map.entry("ore_sense", Category.BODY),
-            Map.entry("eight_gates", Category.BODY),
+            Map.entry("eight_gates", Category.GATES),
             Map.entry("storage_chest", Category.BODY),
             Map.entry("chakra_adhesion", Category.BODY),
             Map.entry("body_adaptation", Category.BODY),
+            Map.entry("bone_tools", Category.BODY),
+            Map.entry("curse_seal_one", Category.CURSE_SEAL),
+            Map.entry("curse_seal_two", Category.CURSE_SEAL),
             Map.entry("chakra_feeding", Category.BODY),
+
+            Map.entry("chakra_cloak", Category.TAILED),
+            Map.entry("tailed_cloak", Category.TAILED),
+            Map.entry("seal_vessel", Category.TAILED),
+            Map.entry("seal_break", Category.TAILED),
+            Map.entry("divided_cloak", Category.TAILED),
+            Map.entry("perfect_cloak", Category.TAILED),
+            Map.entry("tailed_ball", Category.TAILED),
 
             Map.entry("genjutsu", Category.ILLUSION),
             Map.entry("henge", Category.ILLUSION),
@@ -207,6 +241,96 @@ public class JutsuScreen extends Screen {
             Map.entry("senrigan_sight", Category.SENRIGAN),
             Map.entry("senrigan_flight", Category.SENRIGAN)
     );
+
+    /**
+     * Where a technique goes when it has no entry of its own in {@link #CATEGORIES}: the branch of
+     * the node that teaches it. That is the same board the caster learns it on, so the menu and the
+     * tree never disagree - a technique filed under Taijutsu in the tree is listed under Taijutsu
+     * here. Branches that already share a group (the five natures, the three physical pools) map to
+     * one category, and a technique that needs a different home despite its branch keeps an entry in
+     * {@link #CATEGORIES} to override this.
+     */
+    private static final Map<SkillBranch, Category> BRANCHES = Map.ofEntries(
+            Map.entry(SkillBranch.CORE, Category.BASICS),
+            Map.entry(SkillBranch.ATHLETICS, Category.BASICS),
+            Map.entry(SkillBranch.TAIJUTSU, Category.TAIJUTSU),
+            Map.entry(SkillBranch.GATES, Category.GATES),
+            Map.entry(SkillBranch.MEDICINE, Category.DEFENCE),
+
+            Map.entry(SkillBranch.FIRE, Category.ELEMENTAL),
+            Map.entry(SkillBranch.WATER, Category.ELEMENTAL),
+            Map.entry(SkillBranch.EARTH, Category.ELEMENTAL),
+            Map.entry(SkillBranch.WIND, Category.ELEMENTAL),
+            Map.entry(SkillBranch.WOOD, Category.ELEMENTAL),
+
+            Map.entry(SkillBranch.CLONES, Category.CLONES),
+            Map.entry(SkillBranch.SPACE, Category.SPACE),
+            Map.entry(SkillBranch.MIND, Category.ILLUSION),
+            Map.entry(SkillBranch.SAGE, Category.BODY),
+
+            Map.entry(SkillBranch.SHARINGAN, Category.SHARINGAN),
+            Map.entry(SkillBranch.BYAKUGAN, Category.BYAKUGAN),
+            Map.entry(SkillBranch.JOUGAN, Category.JOUGAN),
+            Map.entry(SkillBranch.SENRIGAN, Category.SENRIGAN),
+            Map.entry(SkillBranch.RINNEGAN, Category.RINNEGAN),
+            Map.entry(SkillBranch.SIX_PATHS, Category.SIX_PATHS)
+    );
+
+    /** Files a technique by its explicit entry first, then by the branch that teaches it. */
+    private static Category categoryOf(ResourceLocation id) {
+        Category explicit = CATEGORIES.get(id.getPath());
+        if (explicit != null) {
+            return explicit;
+        }
+        Skill node = SkillTree.byUnlock("ability:" + id.getPath());
+        Category fromBranch = node == null ? null : BRANCHES.get(node.branch());
+        return fromBranch == null ? Category.OTHER : fromBranch;
+    }
+
+    /**
+     * Chains that read base-first no matter what their combos say: the cloak before the tail, the
+     * gates opened before their arts, the mode before its orbs, the charging before the sage form,
+     * the eye before its gaze. Numbers only order within one group - a 0 in one group and a 0 in
+     * another never meet, because the group itself sorts first. Anything without an entry keeps the
+     * combo order it always had.
+     */
+    private static final Map<String, Integer> ORDER_OVERRIDES = Map.ofEntries(
+            Map.entry("chakra_cloak", 0),
+            Map.entry("tailed_cloak", 1),
+            Map.entry("seal_vessel", 2),
+            Map.entry("seal_break", 3),
+            Map.entry("divided_cloak", 4),
+            Map.entry("perfect_cloak", 5),
+            Map.entry("tailed_ball", 6),
+
+            Map.entry("eight_gates", 0),
+            Map.entry("gate_peacock", 1),
+            Map.entry("gate_tiger", 2),
+            Map.entry("gate_elephant", 3),
+
+            Map.entry("six_paths_mode", 0),
+            Map.entry("gudodama_launch", 1),
+            Map.entry("gudodama_guard", 2),
+            Map.entry("gudodama_form", 3),
+            Map.entry("yin_yang_heal", 4),
+            Map.entry("limbo", 5),
+
+            Map.entry("senjutsu_charging", 0),
+            Map.entry("sage_mode", 1),
+
+            Map.entry("jougan", 0),
+
+            Map.entry("curse_seal_one", 0),
+            Map.entry("curse_seal_two", 1)
+    );
+
+    /** A technique's place in its group: the chain order above, or the combo order after it. */
+    private static int orderOf(Entry entry) {
+        String key = entry.nameKey();
+        int colon = key.indexOf(':');
+        String path = colon < 0 ? key : key.substring(colon + 1);
+        return ORDER_OVERRIDES.getOrDefault(path, Integer.MAX_VALUE);
+    }
 
     private Button becomeANinja;
     private Button changeBack;
@@ -469,8 +593,9 @@ public class JutsuScreen extends Screen {
     private static List<Entry> buildEntries() {
         List<Entry> result = new ArrayList<>();
         NarutoAbilities.COMBO_MAP.forEach((combo, id) ->
-                result.add(new Entry(id.toString(), combo, CATEGORIES.getOrDefault(id.getPath(), Category.OTHER))));
+                result.add(new Entry(id.toString(), combo, categoryOf(id))));
         result.sort(Comparator.comparingInt((Entry entry) -> entry.category().ordinal())
+                .thenComparingInt(JutsuScreen::orderOf)
                 .thenComparingLong(Entry::combo));
         return result;
     }
@@ -568,7 +693,7 @@ public class JutsuScreen extends Screen {
         if (ninjaData.isSageMode()) {
             active.add(SageModeAbility.ID);
         }
-        if (ninjaData.getSensingRadius() > 0f) {
+        if (ninjaData.getSensingRadius() > 0f || ninjaData.getNightVisionTicks() > 0) {
             active.add(ChakraSensingAbility.ID);
         }
         return active;
@@ -779,9 +904,13 @@ public class JutsuScreen extends Screen {
     }
 
     /**
-     * The usage hints for the row under the pointer: left click casts or toggles the technique, right
-     * click puts it aside. Drawn as a tooltip rather than a permanent line so the list stays readable
-     * and the hints appear exactly where they apply.
+     * The reference card for the row under the pointer: what the technique is, how it is cast, and
+     * what the row itself cannot say - the activation type and the click hints. Drawn as a tooltip
+     * rather than permanent lines so the list stays readable and the explanation appears exactly
+     * where it applies.
+     *
+     * <p>Locked techniques are described too. A new ninja needs to know what a node is worth before
+     * spending points on it, and hiding the text until it is bought made the tree a row of names.</p>
      */
     private void renderHoverTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (!this.ninjaModeEnabled || this.pages == null || this.entries == null) {
@@ -795,22 +924,70 @@ public class JutsuScreen extends Screen {
         if (row.isHeader()) {
             return;
         }
+        ResourceLocation id = ResourceLocation.tryParse(row.entry().nameKey());
+        Ability ability = id == null ? null : NarutoRegistries.ABILITIES.getValue(id);
         boolean locked = !this.isUnlocked(row.entry());
-        if (locked || !this.isClickable(row.entry())) {
-            return;
-        }
         boolean controllable = this.isControllable(row.entry());
         boolean off = controllable && this.isDisabled(row.entry());
-        List<Component> lines = new ArrayList<>();
-        lines.add(Component.translatable(off ? "naruto.gui.jutsu.hint.enable"
-                : "naruto.gui.jutsu.hint.cast").withStyle(ChatFormatting.GRAY));
-        // Only techniques that stay on can be put aside; with click-any-technique on, a fireball is
-        // clickable to cast but has nothing to switch off, so it gets no second hint.
-        if (controllable) {
-            lines.add(Component.translatable(off ? "naruto.gui.jutsu.hint.enabled"
-                    : "naruto.gui.jutsu.hint.disable").withStyle(ChatFormatting.DARK_GRAY));
+
+        List<FormattedText> lines = new ArrayList<>();
+        lines.add(Component.translatable(row.entry().nameKey())
+                .withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD));
+        if (ability != null) {
+            lines.add(Component.translatable(switch (ability.activationType()) {
+                        case INSTANT -> "naruto.gui.jutsu.hover.instant";
+                        case TOGGLE -> "naruto.gui.jutsu.hover.toggle";
+                        case CHANNELED -> "naruto.gui.jutsu.hover.channeled";
+                    }).withStyle(ChatFormatting.AQUA));
         }
-        guiGraphics.renderComponentTooltip(this.font, lines, mouseX, mouseY);
+        Component description = this.descriptionOf(id);
+        if (description != null) {
+            lines.add(Component.empty());
+            lines.addAll(this.font.getSplitter().splitLines(description.getString(), TOOLTIP_WIDTH,
+                    Style.EMPTY.withColor(ChatFormatting.GRAY)));
+        }
+        if (locked) {
+            lines.add(Component.empty());
+            lines.add(Component.translatable("naruto.gui.jutsu.hover.locked")
+                    .withStyle(ChatFormatting.RED));
+        } else if (this.isClickable(row.entry())) {
+            lines.add(Component.empty());
+            lines.add(Component.translatable(off ? "naruto.gui.jutsu.hint.enable"
+                    : "naruto.gui.jutsu.hint.cast").withStyle(ChatFormatting.GRAY));
+            // Only techniques that stay on can be put aside; with click-any-technique on, a
+            // fireball is clickable to cast but has nothing to switch off, so it gets no second
+            // hint.
+            if (controllable) {
+                lines.add(Component.translatable(off ? "naruto.gui.jutsu.hint.enabled"
+                        : "naruto.gui.jutsu.hint.disable").withStyle(ChatFormatting.DARK_GRAY));
+            }
+        }
+        guiGraphics.renderComponentTooltip(this.font, lines, mouseX, mouseY, ItemStack.EMPTY);
+    }
+
+    /**
+     * The explanation for a technique, preferring the combat description over the skill-tree line.
+     * The tree line is only a lesson title ("Learn the Fireball technique"), so it is a fallback
+     * for a technique that has no description of its own yet, not the normal reading.
+     *
+     * @return the description, or null when neither the technique nor its node has one.
+     */
+    private Component descriptionOf(ResourceLocation id) {
+        if (id == null) {
+            return null;
+        }
+        String abilityKey = "narutomod:" + id.getPath() + ".desc";
+        Component description = Component.translatable(abilityKey);
+        if (!description.getString().equals(abilityKey)) {
+            return description;
+        }
+        Skill node = SkillTree.byUnlock("ability:" + id.getPath());
+        if (node == null) {
+            return null;
+        }
+        String nodeKey = node.descriptionKey();
+        Component fallback = Component.translatable(nodeKey);
+        return fallback.getString().equals(nodeKey) ? null : fallback;
     }
 
     /**

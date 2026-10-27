@@ -38,7 +38,7 @@ public class OrochimaruBodyAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C C B C A B - the body replacement. */
-    public static final long COMBO = 332132L;
+    public static final long COMBO = 2321L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "orochimaru_body");
 

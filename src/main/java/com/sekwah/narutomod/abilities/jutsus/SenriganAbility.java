@@ -28,7 +28,7 @@ public class SenriganAbility extends AbstractDojutsuAbility {
     }
 
     /** B V B B - the eye, and one key away from the sight technique. */
-    public static final long COMBO = 3233L;
+    public static final long COMBO = 323L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "senrigan");
 

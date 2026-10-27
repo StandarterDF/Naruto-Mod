@@ -54,7 +54,7 @@ public class OreSenseAbility extends Ability implements Ability.Cooldown {
 
 
     /** C C B. */
-    public static final long COMBO = 112L;
+    public static final long COMBO = 2312L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "ore_sense");
 

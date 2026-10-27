@@ -40,7 +40,7 @@ public class InnerStrikeAbility extends Ability implements Ability.Cooldown {
     }
 
     /** 1 3 2 3 2 2 - the palm seal doubled. */
-    public static final long COMBO = 132322L;
+    public static final long COMBO = 113L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "inner_strike");
 

@@ -35,7 +35,7 @@ public class SecondBreathAbility extends Ability implements Ability.Cooldown {
 
 
     /** V V B */
-    public static final long COMBO = 223L;
+    public static final long COMBO = 3113L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "second_breath");
 
@@ -96,7 +96,7 @@ public class SecondBreathAbility extends Ability implements Ability.Cooldown {
         ninjaData.setSecondBreathArmed(false);
         // Mastery dulls the price: a seasoned caster comes back with their sight mostly intact
         // rather than half blind for a full minute, down to half that at the top of the curve.
-        float mastery = Mastery.level(ninjaData, NarutoAbilities.SECOND_BREATH.get());
+        float mastery = 0.0f;
         int darkness = Math.round(DARKNESS_DURATION * (1.0f - 0.5f * mastery));
         player.addEffect(new MobEffectInstance(MobEffects.DARKNESS, darkness, 0));
     }

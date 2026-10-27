@@ -30,7 +30,7 @@ import net.minecraft.world.entity.player.Player;
 public class MedicCloneAbility extends Ability implements Ability.Cooldown {
 
     /** B A A C - the shadow clone seal with the medical hand on the end. */
-    public static final long COMBO = 2113L;
+    public static final long COMBO = 11121L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "clone_medic");
 

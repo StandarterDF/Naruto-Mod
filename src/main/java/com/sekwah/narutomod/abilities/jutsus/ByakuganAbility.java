@@ -34,7 +34,7 @@ public class ByakuganAbility extends AbstractDojutsuAbility {
     }
 
     /** V B V V - free, and one key away from Rotation. */
-    public static final long COMBO = 2322L;
+    public static final long COMBO = 313L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "byakugan");
 

@@ -49,7 +49,7 @@ public class PalmLanceAbility extends Ability implements Ability.Cooldown {
     }
 
     /** V B V V B B - the stance's seal, narrowed to a single thrust. */
-    public static final long COMBO = 232232L;
+    public static final long COMBO = 2331L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "palm_lance");
 

@@ -15,6 +15,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.player.Player;
 
 /**
@@ -42,7 +44,7 @@ public class KotoamatsukamiAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C V V B B B - the Sharingan combo (C V V B), then the deepest suggestion on the branch. */
-    public static final long COMBO = 122333L;
+    public static final long COMBO = 111121L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "kotoamatsukami");
 
@@ -53,14 +55,14 @@ public class KotoamatsukamiAbility extends Ability implements Ability.Cooldown {
     public static final String SOURCE_TAG = "narutomod:koto_source";
 
     /** Above this much health a mind is too set in its ways to be talked around. */
-    private static final float BOSS_HEALTH = 100.0f;
+    private static final float BOSS_HEALTH = 60.0f;
 
     /** How far down the look ray the suggestion can be planted. Walls stop it, as they stop every eye. */
     private static final double RANGE = 10.0d;
 
     /** What it costs and how long before the eye can plant another belief. */
     private static final float COST = 120.0f;
-    private static final int COOLDOWN = 800;
+    private static final int COOLDOWN = 400;
 
     /** Six seconds of misplaced trust: enough to walk past a guard, not enough to fight beside one. */
     private static final int DURATION = 120;
@@ -101,7 +103,7 @@ public class KotoamatsukamiAbility extends Ability implements Ability.Cooldown {
         }
         // Checked before the chakra is taken: a player looking at a boss should lose nothing for
         // the attempt, and finding out afterwards that it was never possible is the worse surprise.
-        if (target.getMaxHealth() >= BOSS_HEALTH) {
+        if (isTooStrong(target)) {
             player.displayClientMessage(Component.translatable("jutsu.fail.kotoamatsukami.boss",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
                     .withStyle(ChatFormatting.RED), true);
@@ -127,7 +129,7 @@ public class KotoamatsukamiAbility extends Ability implements Ability.Cooldown {
             return;
         }
         // The look was paid for a moment ago; the body can have died or been swapped since.
-        if (!isValidTarget(player, target) || target.getMaxHealth() >= BOSS_HEALTH) {
+        if (!isValidTarget(player, target) || isTooStrong(target)) {
             return;
         }
 
@@ -156,5 +158,16 @@ public class KotoamatsukamiAbility extends Ability implements Ability.Cooldown {
             return false;
         }
         return !target.isAlliedTo(caster) && !Friends.areFriends(caster, target);
+    }
+
+    /**
+     * A boss is not a mind that can be talked around: its will is the point of it. The health line
+     * catches the strong ordinary creatures, and the two named bosses are refused outright even if
+     * a datapack gives them a smaller pool.
+     */
+    private static boolean isTooStrong(LivingEntity target) {
+        return target.getHealth() >= 100.0f
+                || target instanceof EnderDragon
+                || target instanceof WitherBoss;
     }
 }

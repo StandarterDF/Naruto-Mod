@@ -35,7 +35,7 @@ public class SenjutsuChargingAbility extends Ability implements Ability.Channele
 
 
     /** V B C */
-    public static final long COMBO = 231L;
+    public static final long COMBO = 3122L;
 
     /** Nature energy gathered per tick of perfect stillness. */
     private static final float CHARGE_PER_TICK = 0.5f;

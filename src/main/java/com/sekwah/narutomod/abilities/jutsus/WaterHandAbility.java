@@ -39,7 +39,7 @@ public class WaterHandAbility extends Ability implements Ability.Toggled, Abilit
     }
 
     /** 1 3 2 2 3 3 - the kenjutsu seals and the two keys of the water hand. */
-    public static final long COMBO = 132233L;
+    public static final long COMBO = 233L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "water_hand");
 

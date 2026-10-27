@@ -36,7 +36,7 @@ public class SilenceAbility extends Ability implements Ability.Toggled, Ability.
 
 
     /** V V V. */
-    public static final long COMBO = 333L;
+    public static final long COMBO = 12133L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "silence");
 

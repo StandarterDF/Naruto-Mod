@@ -30,7 +30,7 @@ public class PalmBlockAbility extends Ability implements Ability.Toggled, Abilit
     }
 
     /** 1 3 2 3 2 1 - the taijutsu branch's palm seal. */
-    public static final long COMBO = 132321L;
+    public static final long COMBO = 122L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "palm_block");
 

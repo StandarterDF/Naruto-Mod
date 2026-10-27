@@ -2,10 +2,9 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
-import com.sekwah.narutomod.abilities.JutsuEffects;
 import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.entity.jutsuprojectile.TailedBallEntity;
 import com.sekwah.narutomod.friends.Friends;
-import com.sekwah.narutomod.util.Targeting;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -14,26 +13,22 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.List;
-
 /**
- * The tailed beast bomb: the beast's chakra packed into a black sphere and thrown.
+ * The tailed beast bomb: the beast's chakra packed into a black sphere, grown in the hand and
+ * thrown.
  *
- * <p>Nothing about it is shaped. There is no element, no seal and no technique on top of it - the
- * sphere is simply as much chakra as the caster can hold in one place, and it is thrown at whatever
- * they are looking at. Three seconds of gathering is the price of the sphere; it then crosses the
- * field faster than a tick and comes apart in a four block blast that leaves the ground exactly as it
- * found it. Only bodies are touched, which is the one discipline the technique has.</p>
+ * <p>Three seconds of holding grows the sphere from a marble to a barrel: black motes gather onto
+ * a shell around the hand that swells as the charge fills. Letting go throws whatever grew - a
+ * short hold still throws, only smaller - and a full hold throws itself the moment the third
+ * second is up. The thrown bomb is a {@link TailedBallEntity}: it flies where the caster looked
+ * and comes apart in a genuine explosion that breaks blocks, sized by the charge behind it.</p>
  *
- * <p>It only exists on top of a cloak - either the settled cloak of an agreement or the crack of a
- * broken seal - because the caster needs the beast's chakra already in the body to have that much of
- * it to gather.</p>
+ * <p>It only exists on top of a cloak - either the tail drawn over the plain chakra shell or one
+ * of the sealed vessel's cloaks - or on the crack of a broken seal, because the caster needs the
+ * beast's chakra already in the body to have that much of it to gather.</p>
  */
 public class TailedBallAbility extends Ability implements Ability.Channeled {
 
@@ -44,7 +39,7 @@ public class TailedBallAbility extends Ability implements Ability.Channeled {
     }
 
     /** C C B B C A - the seal, then the three keys that gather it. */
-    public static final long COMBO = 332231L;
+    public static final long COMBO = 3213L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "tailed_ball");
 
@@ -54,28 +49,24 @@ public class TailedBallAbility extends Ability implements Ability.Channeled {
 
     private static final int CHAKRA_REGEN_DELAY = 20;
 
-    /** Three seconds of gathering before the sphere is worth throwing. */
+    /** Three seconds of gathering before the sphere is worth throwing at full size. */
     public static final int CHARGE_TICKS = 60;
 
-    /** How far down the look the sphere can be thrown. A wall stops it, as a wall stops anything. */
-    private static final double RANGE = 30.0d;
+    /** One second of gathering before a let-go throws anything at all; shorter is a fizzle. */
+    private static final int MIN_CHARGE = 20;
 
-    /** What the blast reaches, and what it deals at the heart of it and at the rim. */
-    private static final double BLAST_RADIUS = 4.0d;
-    private static final float MIN_DAMAGE = 12.0f;
-    private static final float MAX_DAMAGE = 30.0f;
+    /** Sphere shell radius while gathering, from a marble to a barrel. */
+    private static final double MIN_SPHERE = 0.2d;
+    private static final double MAX_SPHERE = 1.0d;
 
-    /** How much of the damage the rim of the blast loses, as a fraction of the whole. */
-    private static final float FALLOFF = 0.6f;
-
-    /** How hard the blast throws what it does not kill. */
-    private static final double KNOCKBACK = 0.8d;
-
-    /** How far out the gathering motes are drawn in from. */
-    private static final double GATHER_RADIUS = 2.0d;
-
-    /** How finely the path of the sphere is dotted, in blocks per mote. */
-    private static final double PATH_STEP = 0.5d;
+    /**
+     * How far ahead of the chest the sphere starts gathering, how much further out it drifts as
+     * it grows, and at what height. The drift keeps the swelling shell off the body: the caster's
+     * surface is ~0.3 out and the shell reaches 1.0, so the centre rides out ahead of the growth.
+     */
+    private static final double CHARGE_AHEAD_MIN = 0.8d;
+    private static final double CHARGE_AHEAD_GROWTH = 1.2d;
+    private static final double CHARGE_HEIGHT = 1.35d;
 
     @Override
     public ActivationType activationType() {
@@ -98,7 +89,7 @@ public class TailedBallAbility extends Ability implements Ability.Channeled {
         if (chargeAmount < 0) {
             return false;
         }
-        if (!PerfectCloakAbility.isActive(player) && !SealBreakAbility.isActive(player)) {
+        if (!hasBeastChakra(player)) {
             player.displayClientMessage(Component.translatable("jutsu.fail.tailed_ball.required",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
                     .withStyle(ChatFormatting.RED), true);
@@ -115,9 +106,9 @@ public class TailedBallAbility extends Ability implements Ability.Channeled {
     }
 
     /**
-     * The gathering. Motes are drawn in towards the hand from a ring that closes as the sphere fills,
-     * and at the third second the sphere leaves and the channel ends where it stands - the caster does
-     * not have to let go of the keys for the throw to happen.
+     * The gathering. A shell of black motes swells around the hand as the charge fills, and at the
+     * third second the grown sphere leaves on its own - the caster does not have to let go of the
+     * keys for the throw to happen.
      */
     @Override
     public void handleChannelling(Player player, INinjaData ninjaData, int ticksChanneled) {
@@ -126,10 +117,7 @@ public class TailedBallAbility extends Ability implements Ability.Channeled {
         }
         this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
 
-        Vec3 hand = JutsuEffects.handPosition(player);
-        level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, hand.x, hand.y, hand.z,
-                5, 0.2d, 0.2d, 0.2d, 0.01d);
-        drawGathering(level, player, ticksChanneled);
+        drawGrowingSphere(level, player, ticksChanneled);
 
         if (ticksChanneled >= CHARGE_TICKS) {
             this.fire(player, level, ticksChanneled);
@@ -138,71 +126,78 @@ public class TailedBallAbility extends Ability implements Ability.Channeled {
     }
 
     /**
-     * Throws the sphere: the wall in front of the caster decides where it lands, and everything caught
-     * in the blast that is not on the caster's side takes it. Nothing is broken, nothing is set alight.
+     * Where the sphere is gathered: ahead of the caster at mouth height, along the flat facing
+     * direction rather than the gaze, so looking down does not bury it in the floor. The centre
+     * rides further out as the shell swells, so the growth never touches the caster; this point
+     * is what the bomb is thrown from too, so it leaves from where it grew.
+     *
+     * @param filled how grown the sphere is, 0 to 1
      */
-    private void fire(Player player, ServerLevel level, int ticksChanneled) {
-        Vec3 eye = player.getEyePosition();
-        Vec3 look = player.getViewVector(1.0f).normalize();
-        BlockHitResult block = Targeting.lookedAtBlock(player, RANGE);
-        Vec3 impact = block != null ? block.getLocation() : eye.add(look.scale(RANGE));
-
-        drawPath(level, JutsuEffects.handPosition(player), impact);
-
-        float charge = Mth.clamp(ticksChanneled / (float) CHARGE_TICKS, 0.0f, 1.0f);
-        float power = Mth.lerp(charge, MIN_DAMAGE, MAX_DAMAGE);
-        List<LivingEntity> caught = level.getEntitiesOfClass(LivingEntity.class,
-                new AABB(impact, impact).inflate(BLAST_RADIUS),
-                target -> target.isAlive() && target != player && !target.isSpectator());
-        for (LivingEntity target : caught) {
-            if (Friends.isOwnSide(player, target)) {
-                continue;
-            }
-            double distance = Math.sqrt(target.distanceToSqr(impact.x, impact.y, impact.z));
-            // Full at the heart of the blast, twelve points at the rim: the sphere is a point of
-            // chakra, so it is the centre that is meant to be stood in.
-            float falloff = 1.0f - FALLOFF * (float) Math.min(1.0d, distance / BLAST_RADIUS);
-            target.hurt(player.damageSources().magic(), power * falloff);
-            target.knockback(KNOCKBACK, target.getX() - impact.x, target.getZ() - impact.z);
-        }
-
-        level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, impact.x, impact.y, impact.z, 1, 0.0d, 0.0d, 0.0d, 0.0d);
-        level.sendParticles(ParticleTypes.SQUID_INK, impact.x, impact.y, impact.z,
-                80, BLAST_RADIUS * 0.4d, BLAST_RADIUS * 0.4d, BLAST_RADIUS * 0.4d, 0.06d);
-        level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, impact.x, impact.y, impact.z,
-                50, BLAST_RADIUS * 0.4d, BLAST_RADIUS * 0.4d, BLAST_RADIUS * 0.4d, 0.04d);
-        level.playSound(null, impact.x, impact.y, impact.z,
-                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 4.0f, 0.7f);
-    }
-
-    /** Motes drawn in from a ring that closes as the sphere fills. */
-    private static void drawGathering(ServerLevel level, Player player, int ticksChanneled) {
-        float filled = Mth.clamp(ticksChanneled / (float) CHARGE_TICKS, 0.0f, 1.0f);
-        double radius = GATHER_RADIUS * (1.0d - filled * 0.8d);
-        double y = player.getY() + player.getBbHeight() * 0.6d;
-        int points = 6;
-        for (int i = 0; i < points; i++) {
-            double angle = Math.PI * 2.0d * i / points + ticksChanneled * 0.35d;
-            level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME,
-                    player.getX() + Math.cos(angle) * radius,
-                    y + Math.sin(ticksChanneled * 0.2d) * 0.3d,
-                    player.getZ() + Math.sin(angle) * radius,
-                    1, 0.0d, 0.0d, 0.0d, 0.0d);
-        }
+    private static Vec3 chargeCenter(Player player, float filled) {
+        Vec3 look = player.getLookAngle();
+        Vec3 flat = new Vec3(look.x, 0.0d, look.z);
+        flat = flat.lengthSqr() < 1.0E-4d ? new Vec3(0.0d, 0.0d, 1.0d) : flat.normalize();
+        double ahead = CHARGE_AHEAD_MIN + CHARGE_AHEAD_GROWTH * filled;
+        return player.position().add(flat.scale(ahead)).add(0.0d, CHARGE_HEIGHT, 0.0d);
     }
 
     /**
-     * The path of the sphere, dotted from the hand to where it came apart. It crosses the field in
-     * less than a tick, so there is no flight to animate - the line is the whole of its travel.
+     * The shell the bomb is gathered into: black motes on latitude rings around the gathering
+     * point ahead of the caster, the whole shell swelling with the charge and slowly turning,
+     * with beast-fire licking through it.
      */
-    private static void drawPath(ServerLevel level, Vec3 from, Vec3 to) {
-        Vec3 span = to.subtract(from);
-        int points = Math.max(1, (int) (span.length() / PATH_STEP));
-        for (int i = 0; i <= points; i++) {
-            Vec3 at = from.add(span.scale(i / (double) points));
-            level.sendParticles(ParticleTypes.SQUID_INK, at.x, at.y, at.z, 1, 0.05d, 0.05d, 0.05d, 0.0d);
-            level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, at.x, at.y, at.z, 1, 0.05d, 0.05d, 0.05d, 0.0d);
+    private static void drawGrowingSphere(ServerLevel level, Player player, int ticksChanneled) {
+        float filled = Mth.clamp(ticksChanneled / (float) CHARGE_TICKS, 0.0f, 1.0f);
+        double radius = MIN_SPHERE + (MAX_SPHERE - MIN_SPHERE) * filled;
+        Vec3 center = chargeCenter(player, filled);
+
+        int rings = 3 + (int) (filled * 3.0f);
+        int points = 6 + (int) (filled * 6.0f);
+        double spin = ticksChanneled * 0.25d;
+        for (int ring = 0; ring <= rings; ring++) {
+            double theta = Math.PI * ring / rings;
+            double ringRadius = Math.sin(theta) * radius;
+            double y = center.y + Math.cos(theta) * radius;
+            for (int i = 0; i < points; i++) {
+                double angle = Math.PI * 2.0d * i / points + spin;
+                level.sendParticles(ParticleTypes.SQUID_INK,
+                        center.x + Math.cos(angle) * ringRadius, y, center.z + Math.sin(angle) * ringRadius,
+                        1, 0.0d, 0.0d, 0.0d, 0.0d);
+            }
         }
+        level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, center.x, center.y, center.z,
+                3, radius * 0.5d, radius * 0.5d, radius * 0.5d, 0.01d);
+    }
+
+    /**
+     * Throws whatever grew: a full charge at full size, a shorter hold smaller. The size, the
+     * direct hit and the blast all ride in the entity, scaled by the charge.
+     */
+    private void fire(Player player, ServerLevel level, int ticksChanneled) {
+        float power = Mth.clamp(ticksChanneled / (float) CHARGE_TICKS, 0.0f, 1.0f);
+        TailedBallEntity bomb = new TailedBallEntity(player, 1.0d, power);
+        Vec3 center = chargeCenter(player, power);
+        bomb.setPos(center.x, center.y, center.z);
+        level.addFreshEntity(bomb);
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.0f, 0.8f);
+    }
+
+    /**
+     * The beast's chakra has to be in the body already: any tailed cloak will do, from the first
+     * drawn tail through the divided and perfect cloaks, or the crack a broken seal leaves open.
+     */
+    private static boolean hasBeastChakra(Player player) {
+        if (PerfectCloakAbility.isActive(player) || SealBreakAbility.isActive(player)) {
+            return true;
+        }
+        var data = player.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA)
+                .resolve().orElse(null);
+        if (data == null) {
+            return false;
+        }
+        var active = data.getToggleAbilityData().getAbilitiesHashSet();
+        return active.contains(TailedCloakAbility.ID) || active.contains(DividedCloakAbility.ID);
     }
 
     /**
@@ -213,12 +208,22 @@ public class TailedBallAbility extends Ability implements Ability.Channeled {
     public void recordMastery(Player player, INinjaData ninjaData) {
     }
 
-    /** A short hold that never gathered anything leaves nothing behind but the chakra it burned. */
+    /**
+     * Letting go early throws the smaller sphere that had time to grow; letting go at once fizzles.
+     * A full hold never reaches here - it throws itself in {@link #handleChannelling}.
+     */
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
-        if (ticksActive >= CHARGE_TICKS || !(player.level() instanceof ServerLevel level)) {
+        if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
-        level.playSound(null, player, SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.5f, 1.4f);
+        if (ticksActive >= CHARGE_TICKS) {
+            return;
+        }
+        if (ticksActive < MIN_CHARGE) {
+            level.playSound(null, player, SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.5f, 1.4f);
+            return;
+        }
+        this.fire(player, level, ticksActive);
     }
 }

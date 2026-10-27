@@ -36,7 +36,7 @@ public class ByakuganMistSightAbility extends Ability implements Ability.Toggled
     }
 
     /** V B V V B C C - the needles' seal and the palm's, doubled at the end. */
-    public static final long COMBO = 232223L;
+    public static final long COMBO = 11213L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "byakugan_mist_sight");
 

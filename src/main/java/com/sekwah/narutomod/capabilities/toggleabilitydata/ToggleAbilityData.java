@@ -58,6 +58,21 @@ public class ToggleAbilityData {
         return false;
     }
 
+    /**
+     * Drops a stance that can no longer pay its upkeep, without the generic "deactivated" line. The
+     * upkeep check ({@code handleCost}) has already told the player the actual reason - no chakra,
+     * a lost prerequisite, a spent vessel - on the same action bar, and the generic line would
+     * overwrite it in the same tick, leaving only "deactivated" with no reason.
+     */
+    public boolean removeAbilityEndedSilently(Player player, INinjaData ninjaData, Ability ability) {
+        if(ability instanceof Ability.HandleEnded endedAbility) endedAbility.handleAbilityEnded(player, ninjaData, 0);
+        var registryName = NarutoRegistries.ABILITIES.getResourceKey(ability).orElse(null);
+        if (registryName != null) {
+            return this.removeAbility(registryName.location());
+        }
+        return false;
+    }
+
     public boolean removeAbility(ResourceLocation ability) {
         return this.abilities.remove(ability);
     }

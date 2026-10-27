@@ -42,7 +42,7 @@ public class ByakuganMarkAbility extends Ability implements Ability.Cooldown {
     }
 
     /** V B V V B B C - the eye's seal, then two keys for the fingertip. */
-    public static final long COMBO = 232332L;
+    public static final long COMBO = 1123L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "byakugan_mark");
 

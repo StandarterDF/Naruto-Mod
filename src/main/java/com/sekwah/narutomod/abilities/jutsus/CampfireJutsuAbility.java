@@ -42,7 +42,7 @@ public class CampfireJutsuAbility extends Ability {
 
 
     /** B C B */
-    public static final long COMBO = 313L;
+    public static final long COMBO = 11221L;
 
     /** How far the caster reaches for a log, in blocks. */
     private static final double REACH = 8.0d;
@@ -76,6 +76,11 @@ public class CampfireJutsuAbility extends Ability {
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)).withStyle(ChatFormatting.RED), true);
             return false;
         }
+        if (this.covered(player)) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.campfire.covered",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)).withStyle(ChatFormatting.RED), true);
+            return false;
+        }
         ninjaData.useChakra(cost, CHAKRA_REGEN_DELAY);
         return true;
     }
@@ -85,7 +90,7 @@ public class CampfireJutsuAbility extends Ability {
         // Looked up again rather than remembered between the two calls: the cost and the effect are
         // separate steps, and the caster may have turned away or the log may be gone in between.
         BlockHitResult hit = this.lookedAtLog(player);
-        if (hit == null || !(player.level() instanceof ServerLevel level)) {
+        if (hit == null || this.covered(player) || !(player.level() instanceof ServerLevel level)) {
             return;
         }
         BlockPos pos = hit.getBlockPos();
@@ -113,6 +118,15 @@ public class CampfireJutsuAbility extends Ability {
             return null;
         }
         return hit;
+    }
+
+    /**
+     * Whether the log has something solid sitting on it. A fire cannot be lit under a roof of stone:
+     * the block above has to be air or something replaceable, or the log is left alone.
+     */
+    private boolean covered(Player player) {
+        BlockHitResult hit = Targeting.lookedAtBlock(player, REACH);
+        return hit != null && !player.level().getBlockState(hit.getBlockPos().above()).canBeReplaced();
     }
 
     /** The element this technique belongs to, for the caster's innate affinity. */

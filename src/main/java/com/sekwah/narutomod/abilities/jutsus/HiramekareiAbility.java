@@ -2,12 +2,13 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.AbilityUnlocks;
 import com.sekwah.narutomod.abilities.JutsuEffects;
+import com.sekwah.narutomod.abilities.NarutoAbilities;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
@@ -27,11 +28,11 @@ import net.minecraft.world.phys.Vec3;
  * long enough to matter can also swing it into the ground, and anything standing on stone or ore
  * loses the ground it was standing on.</p>
  *
- * <p>The hammer is paid for once, when it is raised, and held in the hands rather than worn: the
- * caster has to keep the channel up, and the mark it writes is what the melee hook reads. It is
- * deliberately heavy on chakra and light on finesse.</p>
+ * <p>The technique belongs to the sword now: right-clicking a Hiramekarei raises it for ten seconds,
+ * and the node on the tree is what teaches the move. There is no combo to remember and no row in
+ * the jutsu menu.</p>
  */
-public class HiramekareiAbility extends Ability implements Ability.Channeled, Ability.Cooldown {
+public class HiramekareiAbility extends Ability {
 
     /** A slab of a blade coming down is heard across a courtyard. */
     @Override
@@ -39,8 +40,8 @@ public class HiramekareiAbility extends Ability implements Ability.Channeled, Ab
         return 14;
     }
 
-    /** 1 3 2 3 2 3 - the kenjutsu seals and the two keys of the hammer. */
-    public static final long COMBO = 132323L;
+    /** No combo: the move lives on the sword's right-click. */
+    public static final long COMBO = -1L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "hiramekarei");
 
@@ -50,32 +51,15 @@ public class HiramekareiAbility extends Ability implements Ability.Channeled, Ab
     /** What the hammer does to a blow: the weight behind it. */
     public static final float DAMAGE_FACTOR = 1.5f;
 
-    /** What raising it costs. */
+    /** What raising it costs, and how long the arm can keep it up. */
     private static final float OPEN_COST = 50.0f;
-
-    /**
-     * What holding it costs. The hammer is paid for once, in the raising; the hold itself is the
-     * arm doing the work, and a caster who is out of chakra still has to be able to swing.
-     */
-    private static final float UPKEEP = 0.0f;
+    private static final int HOLD_TICKS = 200;
 
     private static final int CHAKRA_REGEN_DELAY = 20;
 
-    /** How long the arm needs before the blade can be shouldered again. */
-    private static final int COOLDOWN = 20;
-
-    /**
-     * How far ahead the mark is kept. It only has to outlive the tick it was written on, but the
-     * small grace lets a blow resolved a moment after the hammer drops still land heavy.
-     */
-    private static final int MARK_GRACE = 5;
-
-    private static final int PARTICLE_INTERVAL = 4;
-    private static final int PARTICLE_COUNT = 4;
-
     @Override
     public ActivationType activationType() {
-        return ActivationType.CHANNELED;
+        return ActivationType.INSTANT;
     }
 
     @Override
@@ -84,68 +68,50 @@ public class HiramekareiAbility extends Ability implements Ability.Channeled, Ab
     }
 
     @Override
-    public int getCooldown() {
-        return COOLDOWN;
-    }
-
-    @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        if (!(player.getMainHandItem().getItem() instanceof SwordItem)) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.hiramekarei.sword",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
-                    .withStyle(ChatFormatting.RED), true);
-            return false;
-        }
-        // The first tick of the hold is the raising, and it is the one that carries the price.
-        boolean opening = chargeAmount <= 0;
-        float cost = this.masteryCost(ninjaData, opening ? OPEN_COST + UPKEEP : UPKEEP);
-        if (ninjaData.getChakra() < cost) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
-            return false;
-        }
-        if (cost > 0.0f) {
-            ninjaData.useChakra(cost, CHAKRA_REGEN_DELAY);
-        }
-        return true;
+        return false;
     }
 
-    @Override
-    public void handleChannelling(Player player, INinjaData ninjaData, int ticksChanneled) {
-        // A hold is mastered by the time it is held, not by the act of raising it.
-        this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
-        player.getPersistentData().putLong(UNTIL_TAG, player.level().getGameTime() + MARK_GRACE);
-
-        if (player.level() instanceof ServerLevel level && ticksChanneled % PARTICLE_INTERVAL == 0) {
-            Vec3 hand = JutsuEffects.handPosition(player);
-            level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, hand.x, hand.y, hand.z,
-                    PARTICLE_COUNT, 0.2d, 0.25d, 0.2d, 0.01d);
-        }
-    }
-
-    /** The channel ends: the hammer comes down and the mark goes with it. */
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
-        player.getPersistentData().remove(UNTIL_TAG);
+    }
+
+    /**
+     * Raises the hammer from the sword's right-click. The node on the kenjutsu branch is the gate,
+     * and the price is paid once for the whole ten-second hold.
+     *
+     * @return true when the blade actually went up.
+     */
+    public static boolean raise(Player player) {
+        INinjaData ninjaData = player.getCapability(
+                com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
+        if (ninjaData == null || !AbilityUnlocks.isUnlocked(ninjaData, ID)) {
+            return false;
+        }
+        if (!(player.getMainHandItem().getItem() instanceof SwordItem) || isUp(player)) {
+            return false;
+        }
+        float cost = Mastery.cost(ninjaData, NarutoAbilities.HIRAMEKAREI.get(), OPEN_COST);
+        if (ninjaData.getChakra() < cost) {
+            return false;
+        }
+        ninjaData.useChakra(cost, CHAKRA_REGEN_DELAY);
+        player.getPersistentData().putLong(UNTIL_TAG, player.level().getGameTime() + HOLD_TICKS);
+        player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
         if (player.level() instanceof ServerLevel level) {
             Vec3 hand = JutsuEffects.handPosition(player);
-            level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, hand.x, hand.y - 0.5d, hand.z,
-                    8, 0.3d, 0.1d, 0.3d, 0.02d);
+            level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, hand.x, hand.y, hand.z,
+                    18, 0.3d, 0.4d, 0.3d, 0.02d);
+            level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    net.minecraft.sounds.SoundEvents.ANVIL_LAND,
+                    net.minecraft.sounds.SoundSource.PLAYERS, 0.8f, 0.6f);
         }
-        // Only a hold that actually ran is worth a cooldown; a tap that never raised the blade is not.
-        if (ticksActive > 0) {
-            this.registerCooldown(player, ninjaData, this.getTranslationKey(ninjaData));
-        }
+        return true;
     }
 
     /** @return whether the hammer is up right now, asked by the melee hook. */
     public static boolean isUp(Player player) {
         return player.getPersistentData().getLong(UNTIL_TAG) > player.level().getGameTime();
-    }
-
-    /** The hold is mastered by the time it is held, so raising it records nothing on its own. */
-    @Override
-    public void recordMastery(Player player, INinjaData ninjaData) {
     }
 
     /**

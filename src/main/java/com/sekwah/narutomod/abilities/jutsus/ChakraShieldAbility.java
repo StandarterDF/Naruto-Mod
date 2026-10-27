@@ -42,8 +42,8 @@ public class ChakraShieldAbility extends Ability {
     }
 
 
-    /** B V B */
-    public static final long COMBO = 323L;
+    /** V B V - the short seal sage mode used to hold, now spent on the shield. */
+    public static final long COMBO = 232L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_shield");
 

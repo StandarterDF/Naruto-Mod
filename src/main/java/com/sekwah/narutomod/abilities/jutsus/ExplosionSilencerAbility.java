@@ -26,7 +26,7 @@ import net.minecraft.world.entity.player.Player;
 public class ExplosionSilencerAbility extends Ability implements Ability.Cooldown {
 
     /** V C V B C C - the sealing line, one step past the sacrifice. */
-    public static final long COMBO = 212311L;
+    public static final long COMBO = 11233L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "explosion_silencer");
 

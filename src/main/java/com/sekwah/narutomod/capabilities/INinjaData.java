@@ -146,6 +146,21 @@ public interface INinjaData extends INBTSerializable<Tag> {
     void setSageMode(boolean sage);
 
     /**
+     * How many Truth-Seeking Orbs the Six Paths mode has left. Synced, because the orbs are drawn
+     * around the caster on the client. See {@code SixPathsModeAbility}.
+     */
+    int getSixPathsOrbs();
+    void setSixPathsOrbs(int orbs);
+
+    /**
+     * Integrity left in the Eight Trigrams vessel, or zero when there is none. Synced, because the
+     * HUD reads the vessel from it. Written by the server tick from the vessel's own mark, see
+     * {@code TailedBeastEvents}. See {@code SealVesselAbility}.
+     */
+    int getSealVesselIntegrity();
+    void setSealVesselIntegrity(int integrity);
+
+    /**
      * How far the caster's chakra sense reaches, or zero when it is not up. Synced, because the whole
      * technique is a picture drawn on the client: the glow around creatures and the structure markers
      * are rendered from this, see {@code ChakraSensingAbility}.

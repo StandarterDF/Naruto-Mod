@@ -19,17 +19,17 @@ import java.util.List;
 /**
  * The Rinnegan's pull turned on loose things rather than on bodies.
  *
- * <p>The same hand that drags a person off their feet also gathers what a fight leaves on the
- * ground: everything within twelve blocks comes to the caster in one sweep, and the delay that
- * normally keeps a fresh drop from being picked up is dropped with it. That delay is the whole
- * point - without it a caster would pull a pile to their feet and still have to wait for the items
- * to become theirs.</p>
+ * <p>It works like a magnet rather than a sweep: while the stance is on, everything within twelve
+ * blocks is dragged to the caster every tick, and the delay that normally keeps a fresh drop from
+ * being picked up is dropped with it. That delay is the whole point - without it a caster would pull
+ * a pile to their feet and still have to wait for the items to become theirs. The stance is paid for
+ * by what it moves: every item in the field costs chakra each tick, so a full chest of loot is a
+ * real drain and an empty field is nearly free.</p>
  *
  * <p>It moves only items. A body is the work of {@link UniversalForceAbility}; a thrown item is a
- * smaller, cheaper application of the same attraction, which is why it shares the eye and not the
- * cooldown.</p>
+ * smaller application of the same attraction, which is why it shares the eye and not the cooldown.</p>
  */
-public class ItemAttractionAbility extends Ability implements Ability.Cooldown {
+public class ItemAttractionAbility extends Ability implements Ability.Toggled {
 
     /** A pull that gathers a field is heard a short way off. */
     @Override
@@ -38,7 +38,7 @@ public class ItemAttractionAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C V V C V V - the Rinnegan (C V V C) and two more keys. */
-    public static final long COMBO = 233322L;
+    public static final long COMBO = 2131L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "item_attraction");
 
@@ -51,13 +51,17 @@ public class ItemAttractionAbility extends Ability implements Ability.Cooldown {
     /** How many motes are drawn along each item's path, and how far apart they sit. */
     private static final int TRAIL_POINTS = 8;
 
-    /** What it costs and how long before the hand can sweep the ground again. */
-    private static final float COST = 15.0f;
-    private static final int COOLDOWN = 60;
+    /** Chakra burnt per item held in the field each tick. */
+    private static final float COST_PER_ITEM = 0.5f;
+
+    /** Chakra burnt even when the field is empty, so the stance is not left on for free. */
+    private static final float IDLE_COST = 0.1f;
+
+    private static final int CHAKRA_REGEN_DELAY = 10;
 
     @Override
     public ActivationType activationType() {
-        return ActivationType.INSTANT;
+        return ActivationType.TOGGLE;
     }
 
     @Override
@@ -66,12 +70,7 @@ public class ItemAttractionAbility extends Ability implements Ability.Cooldown {
     }
 
     @Override
-    public int getCooldown() {
-        return COOLDOWN;
-    }
-
-    @Override
-    public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
+    public boolean canStartToggle(Player player, INinjaData ninjaData) {
         if (!NarutoConfig.rinneganEnabled) {
             player.displayClientMessage(Component.translatable("jutsu.fail.rinnegan.disabled",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
@@ -84,19 +83,24 @@ public class ItemAttractionAbility extends Ability implements Ability.Cooldown {
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }
-        if (nearbyItems(player).isEmpty()) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.item_attraction.nothing",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
-                    .withStyle(ChatFormatting.RED), true);
+        return true;
+    }
+
+    @Override
+    public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
+        if (!NarutoConfig.rinneganEnabled || !RinneganAbility.isActive(ninjaData)) {
             return false;
         }
-        float cost = this.masteryCost(ninjaData, COST);
+        int items = nearbyItems(player).size();
+        float cost = this.masteryCost(ninjaData, IDLE_COST + COST_PER_ITEM * items);
         if (ninjaData.getChakra() < cost) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
+            if (player.tickCount % 20 == 0) {
+                player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
+                        Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
+            }
             return false;
         }
-        ninjaData.useChakra(cost, 20);
+        ninjaData.useChakra(cost, CHAKRA_REGEN_DELAY);
         return true;
     }
 
@@ -121,6 +125,11 @@ public class ItemAttractionAbility extends Ability implements Ability.Cooldown {
         level.sendParticles(ParticleTypes.END_ROD, player.getX(),
                 player.getY() + player.getBbHeight() * 0.6d, player.getZ(),
                 10, 0.4d, 0.4d, 0.4d, 0.02d);
+    }
+
+    @Override
+    public void performToggleClient(Player player, INinjaData ninjaData) {
+        // The stance is synced; the pull itself happens on the server.
     }
 
     /** Every loose item close enough to be gathered, with the caster's own drops included. */

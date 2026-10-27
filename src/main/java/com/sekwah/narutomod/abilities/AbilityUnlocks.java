@@ -24,7 +24,8 @@ public final class AbilityUnlocks {
     private static final Set<String> BASIC = Set.of(
             "chakra_charge",
             "substitution",
-            "leap");
+            "leap",
+            "bone_tools");
 
     /**
      * Techniques that are never on the skill tree and are learned from a scroll alone. See

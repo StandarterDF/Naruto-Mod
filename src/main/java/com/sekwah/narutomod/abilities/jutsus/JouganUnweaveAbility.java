@@ -41,7 +41,7 @@ public class JouganUnweaveAbility extends Ability implements Ability.Cooldown {
     }
 
     /** B V V V C V. */
-    public static final long COMBO = 322212L;
+    public static final long COMBO = 2211L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "jougan_unweave");
 

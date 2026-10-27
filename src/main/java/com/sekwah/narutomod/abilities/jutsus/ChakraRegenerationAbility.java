@@ -38,7 +38,7 @@ public class ChakraRegenerationAbility extends Ability implements Ability.Toggle
 
 
     /** V B B C */
-    public static final long COMBO = 2331L;
+    public static final long COMBO = 3332L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_regeneration");
 

@@ -45,7 +45,7 @@ public class GudodamaLaunchAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C C C C B C - the orb seal. */
-    public static final long COMBO = 333312L;
+    public static final long COMBO = 2112L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "gudodama_launch");
 

@@ -2,20 +2,16 @@ package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.jutsus.CamelliaDanceAbility;
-import com.sekwah.narutomod.abilities.jutsus.IceMirrorsAbility;
 import com.sekwah.narutomod.abilities.jutsus.MindTransferAbility;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.Display;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -26,24 +22,19 @@ import java.util.UUID;
 
 /**
  * The consequences of the clan techniques that cannot live inside them: what a landed blow does to a
- * body made of bone, to an empty body, and to a ring of ice.
+ * body made of bone and to an empty body.
  *
  * <p>A technique knows how to start and how to stop; it does not know when somebody hits it. The
  * bloodline techniques here are all read from the hit that lands - the Camellia Dance sharpens a
- * blow that has already been swung, a transferred mind doubles the harm its abandoned body takes,
- * and a mirror ring shatters the moment the caster is caught in it. Those three are decided here,
- * on the server, from the marks the abilities leave behind; the abilities themselves stay
- * self-contained.</p>
+ * blow that has already been swung and a transferred mind doubles the harm its abandoned body takes.
+ * Those two are decided here, on the server, from the marks the abilities leave behind; the
+ * abilities themselves stay self-contained.</p>
  *
- * <p>Everything that has to be undone eventually is also undone here: a ring that outlived its
- * caster, a mind that has to come home when the creature it was in dies, a caster who left the
- * world mid-technique.</p>
+ * <p>Everything that has to be undone eventually is also undone here: a mind that has to come home
+ * when the creature it was in dies, a caster who left the world mid-technique.</p>
  */
 @Mod.EventBusSubscriber(modid = NarutoMod.MOD_ID)
 public final class ClanTechniqueEvents {
-
-    /** How often the mirror panes are swept for the ones that have melted. */
-    private static final int SWEEP_INTERVAL = 10;
 
     /** A body nobody is in takes twice the harm it would have taken with a mind in it. */
     private static final float ABANDONED_BODY_MULTIPLIER = 2.0f;
@@ -54,8 +45,7 @@ public final class ClanTechniqueEvents {
     }
 
     /**
-     * Every blow is read here: the ring of ice is broken by the first one that lands on the caster,
-     * an empty body takes it twice over, and a bone blade adds its own cut.
+     * Every blow is read here: an empty body takes it twice over, and a bone blade adds its own cut.
      */
     @SubscribeEvent
     public static void onLivingHurt(LivingHurtEvent event) {
@@ -64,11 +54,6 @@ public final class ClanTechniqueEvents {
             return;
         }
         long now = victim.level().getGameTime();
-
-        // Sent to catch the caster, a mirror ring is worth nothing: the ice goes with the first hit.
-        if (victim instanceof Player caster && IceMirrorsAbility.hasMirrors(caster)) {
-            IceMirrorsAbility.breakMirrors(caster);
-        }
 
         // A mind that is elsewhere cannot defend the body it left.
         if (victim instanceof Player body && MindTransferAbility.isTransferred(body)) {
@@ -119,6 +104,10 @@ public final class ClanTechniqueEvents {
             return;
         }
         if (dead instanceof Mob mob) {
+            // Most mobs never carried a mind: no tag means nothing to release, not a missing owner.
+            if (!mob.getPersistentData().hasUUID(MindTransferAbility.OWNER_TAG)) {
+                return;
+            }
             UUID owner = mob.getPersistentData().getUUID(MindTransferAbility.OWNER_TAG);
             if (!owner.equals(NO_ENTITY)) {
                 Player caster = mob.level().getServer() == null ? null
@@ -135,41 +124,14 @@ public final class ClanTechniqueEvents {
         }
     }
 
-    /** A caster who leaves mid-technique takes the ring down and brings the mind home with them. */
+    /** A caster who leaves mid-technique brings the mind home with them. */
     @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         Player player = event.getEntity();
         if (player.level().isClientSide) {
             return;
         }
-        IceMirrorsAbility.breakMirrors(player);
         // Unconditional: a cast that was refused before its first tick still left a mark behind.
         MindTransferAbility.release(player);
-    }
-
-    /**
-     * Takes the melted panes off the field. A ring is only meant to stand for fifteen seconds, and
-     * the displays must not be left behind if the hold that raised them ended without a chance to
-     * clean up - a crash, a chunk reloaded with the ring still in it.
-     */
-    @SubscribeEvent
-    public static void onLevelTick(TickEvent.LevelTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level)) {
-            return;
-        }
-        long now = level.getGameTime();
-        if (now % SWEEP_INTERVAL != 0L) {
-            return;
-        }
-        for (Entity entity : level.getEntities().getAll()) {
-            if (!(entity instanceof Display.BlockDisplay pane)) {
-                continue;
-            }
-            CompoundTag data = pane.getPersistentData();
-            if (data.getBoolean(IceMirrorsAbility.MIRROR_TAG)
-                    && now >= data.getLong(IceMirrorsAbility.UNTIL_TAG)) {
-                pane.discard();
-            }
-        }
     }
 }

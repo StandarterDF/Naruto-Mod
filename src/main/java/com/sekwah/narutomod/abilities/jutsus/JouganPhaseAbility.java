@@ -41,7 +41,7 @@ public class JouganPhaseAbility extends Ability implements Ability.Toggled, Abil
     }
 
     /** B V V C V C - the Jougan (B V V C) and two more keys. */
-    public static final long COMBO = 322313L;
+    public static final long COMBO = 2132L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "jougan_phase");
 

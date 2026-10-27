@@ -58,6 +58,11 @@ public final class SkillTree {
         return PREREQUISITES.get(skill);
     }
 
+    /** @return the node that teaches the given unlock key, or null when nothing teaches it. */
+    public static Skill byUnlock(String unlockKey) {
+        return unlockKey == null ? null : BY_UNLOCK.get(unlockKey);
+    }
+
     public static boolean isUnlocked(Set<ResourceLocation> unlocked, Skill skill) {
         return unlocked.contains(skill.id());
     }

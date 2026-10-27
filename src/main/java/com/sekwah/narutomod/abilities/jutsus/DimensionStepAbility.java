@@ -35,7 +35,7 @@ public class DimensionStepAbility extends Ability implements Ability.Cooldown {
     }
 
     /** B V V C B - the Jougan, then one more key. */
-    public static final long COMBO = 32213L;
+    public static final long COMBO = 1321L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "dimension_step");
 

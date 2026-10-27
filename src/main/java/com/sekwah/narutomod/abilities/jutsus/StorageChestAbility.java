@@ -32,7 +32,7 @@ public class StorageChestAbility extends Ability {
 
 
     /** B V C - kept short, since it is opened often. */
-    public static final long COMBO = 321L;
+    public static final long COMBO = 33L;
 
     @Override
     public ActivationType activationType() {

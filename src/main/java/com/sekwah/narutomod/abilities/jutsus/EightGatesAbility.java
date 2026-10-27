@@ -2,16 +2,22 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.registries.NarutoRegistries;
 import com.sekwah.narutomod.damagetypes.NarutoDamageTypes;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * The eight inner gates, opened one at a time and sealed again with the same bind.
@@ -46,7 +52,7 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
 
 
     /** V B B B - tap to open the next gate, hold the last key to seal them again. */
-    public static final long COMBO = 2333L;
+    public static final long COMBO = 332L;
 
     public static final int MAX_GATES = 8;
 
@@ -155,6 +161,29 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
         int gates = ninjaData.getGateCount() + 1;
         ninjaData.setGateCount(gates);
 
+        // Gate of Healing: the body re-energises, so a quarter of the missing stamina comes back.
+        if (gates == 2) {
+            ninjaData.addStamina(ninjaData.getMaxStamina() * 0.25f);
+        }
+        // Gate of Pain: muscle tissue tears on opening.
+        if (gates == 4) {
+            player.hurt(player.damageSources().magic(), 1.0f);
+        }
+        // Dojutsu cannot burn alongside the gates: the eye is closed for the duration.
+        if (gates == 1) {
+            for (ResourceLocation eyeId : new ResourceLocation[] {
+                    com.sekwah.narutomod.abilities.NarutoAbilities.SHARINGAN.getId(),
+                    com.sekwah.narutomod.abilities.NarutoAbilities.BYAKUGAN.getId(),
+                    com.sekwah.narutomod.abilities.NarutoAbilities.JOUGAN.getId(),
+                    com.sekwah.narutomod.abilities.NarutoAbilities.RINNEGAN.getId(),
+                    com.sekwah.narutomod.abilities.NarutoAbilities.SENRIGAN.getId()}) {
+                Ability eye = NarutoRegistries.ABILITIES.getValue(eyeId);
+                if (eye != null && ninjaData.getToggleAbilityData().getAbilitiesHashSet().contains(eyeId)) {
+                    ninjaData.getToggleAbilityData().removeAbilityEnded(player, ninjaData, eye);
+                }
+            }
+        }
+
         // A burst coloured by how far the caster has pushed it.
         level.sendParticles(ParticleTypes.FLAME, player.getX(),
                 player.getY() + player.getBbHeight() / 2.0d, player.getZ(),
@@ -209,6 +238,123 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
                 Component.translatable("narutomod:eight_gates").withStyle(ChatFormatting.YELLOW)), true);
     }
 
+    /** How hard the shockwave throws the struck body, per open gate (push grows with the gate). */
+    public static double knockbackFor(int gates) {
+        if (gates <= 1) return 1.0d;
+        if (gates == 2) return 1.2d;
+        if (gates == 3) return 1.4d;
+        if (gates == 4) return 1.65d;
+        if (gates == 5) return 1.9d;
+        if (gates == 6) return 2.2d;
+        if (gates == 7) return 2.5d;
+        return 2.9d;
+    }
+
+    /** Vertical lift of the shockwave, per open gate. */
+    public static double liftFor(int gates) {
+        if (gates <= 1) return 0.35d;
+        if (gates == 2) return 0.40d;
+        if (gates == 3) return 0.45d;
+        if (gates == 4) return 0.50d;
+        if (gates == 5) return 0.55d;
+        if (gates == 6) return 0.60d;
+        if (gates == 7) return 0.65d;
+        return 0.75d;
+    }
+
+    /** Particle count of the burst, per open gate. */
+    public static int burstParticlesFor(int gates) {
+        if (gates <= 1) return 8;
+        if (gates == 2) return 10;
+        if (gates == 3) return 12;
+        if (gates == 4) return 15;
+        if (gates == 5) return 18;
+        if (gates == 6) return 22;
+        if (gates == 7) return 26;
+        return 32;
+    }
+
+    /** Wall check distance, per open gate. */
+    public static double wallCheckFor(int gates) {
+        return 1.0d + 0.05d * (gates - 1);
+    }
+
+    /** Wall bonus damage (flat), per open gate, capped at a fraction of max health. */
+    public static float wallBonusFor(int gates) {
+        if (gates <= 1) return 2.0f;
+        if (gates == 2) return 3.0f;
+        if (gates == 3) return 4.0f;
+        if (gates == 4) return 5.0f;
+        if (gates == 5) return 6.0f;
+        if (gates == 6) return 8.0f;
+        if (gates == 7) return 10.0f;
+        return 14.0f;
+    }
+
+    /** Cap on wall bonus as fraction of max health, per open gate. */
+    public static float wallCapFor(int gates) {
+        return 0.20f + 0.01875f * (gates - 1);
+    }
+
+    /** Every blow the eighth-gate caster lands comes with a burst, so the power reads as one, and the
+     *  body is thrown hard enough to leave a crater. The strength scales with the open gate. */
+    public static void onHit(Player player, LivingEntity target) {
+        if (!(player.level() instanceof ServerLevel level)) {
+            return;
+        }
+        int gates = Math.max(1, player.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA)
+                .resolve().map(com.sekwah.narutomod.capabilities.INinjaData::getGateCount).orElse(1));
+        double push = knockbackFor(gates);
+        double lift = liftFor(gates);
+        int particles = burstParticlesFor(gates);
+
+        level.sendParticles(ParticleTypes.CRIT, target.getX(),
+                target.getY() + target.getBbHeight() * 0.5d, target.getZ(),
+                particles, 0.3d, 0.4d, 0.3d, 0.05d);
+        level.sendParticles(ParticleTypes.FLAME, target.getX(),
+                target.getY() + target.getBbHeight() * 0.5d, target.getZ(),
+                particles / 2, 0.2d, 0.3d, 0.2d, 0.02d);
+        float volume = 0.5f + 0.05f * gates;
+        float pitch = 0.9f + 0.05f * gates;
+        SoundEvent sound = gates >= 4 ? SoundEvents.GENERIC_EXPLODE : SoundEvents.PLAYER_ATTACK_SWEEP;
+        level.playSound(null, target.getX(), target.getY(), target.getZ(),
+                sound, SoundSource.PLAYERS, volume, pitch);
+        if (gates >= 8) {
+            level.playSound(null, target.getX(), target.getY(), target.getZ(),
+                    SoundEvents.RAVAGER_ROAR, SoundSource.PLAYERS, 0.6f, 1.0f);
+        }
+
+        Vec3 swing = target.position().subtract(player.position());
+        if (swing.lengthSqr() < 0.0001d) {
+            swing = new Vec3(0.0d, 0.0d, 1.0d);
+        }
+        Vec3 pushVec = swing.normalize().scale(push);
+        target.push(pushVec.x, lift, pushVec.z);
+        target.hurtMarked = true;
+        extraDamageOnWall(level, target, pushVec, gates);
+    }
+
+    /** The rest of the blow, delivered if the thrown body meets a wall on the way out. */
+    private static void extraDamageOnWall(ServerLevel level, LivingEntity target, Vec3 push, int gates) {
+        double check = wallCheckFor(gates);
+        double dx = push.x * check;
+        double dz = push.z * check;
+        if (level.noCollision(target, target.getBoundingBox().move(dx, 0.0d, dz))) {
+            return;
+        }
+        float cap = wallCapFor(gates) * target.getMaxHealth();
+        float damage = Math.min(wallBonusFor(gates), cap);
+        if (damage < 1.0f) {
+            damage = 1.0f;
+        }
+        target.hurt(target.damageSources().magic(), damage);
+        level.sendParticles(ParticleTypes.CLOUD, target.getX(),
+                target.getY() + target.getBbHeight() * 0.5d, target.getZ(),
+                12, 0.3d, 0.3d, 0.3d, 0.05d);
+        level.playSound(null, target.getX(), target.getY(), target.getZ(),
+                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.6f, 0.7f);
+    }
+
     /**
      * Keeps the effects of however many gates are open running, and takes the health they cost.
      * Called every tick from {@code PlayerEvents} for every player, so it has to be cheap when there
@@ -227,6 +373,36 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, shortDuration, (gates - 1) / 2, true, false));
         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, shortDuration, (gates - 1) / 3, true, false));
         player.addEffect(new MobEffectInstance(MobEffects.JUMP, shortDuration, Math.min(gates - 1, 3), true, false));
+
+        // Visual progression: a small dust burst every 40 ticks once the skin starts to redden, coloured
+        // by the gate tier. Gates 1-2 are invisible by canon - only the user notices.
+        if (gates >= 3 && player.tickCount % 40 == 0 && player.level() instanceof ServerLevel level) {
+            double r, g, b;
+            net.minecraft.core.particles.ParticleOptions chosen;
+            if (gates <= 5) {
+                if (gates <= 3) { r = 0.85; g = 0.15; b = 0.1; }
+                else { r = 0.6; g = 0.05; b = 0.02; }
+                chosen = new net.minecraft.core.particles.DustParticleOptions(new org.joml.Vector3f((float) r, (float) g, (float) b), 1.0f);
+            } else if (gates == 6) {
+                chosen = ParticleTypes.HAPPY_VILLAGER;
+            } else if (gates == 7) {
+                chosen = ParticleTypes.BUBBLE;
+            } else {
+                chosen = ParticleTypes.FLAME;
+            }
+            level.sendParticles(chosen, player.getX(), player.getY() + 0.1d, player.getZ(),
+                    4 + gates, 0.6d, 0.2d, 0.6d, 0.02d);
+            if (gates >= 8) {
+                level.sendParticles(ParticleTypes.LARGE_SMOKE, player.getX(),
+                        player.getY() + player.getBbHeight() * 0.5d, player.getZ(),
+                        6, 0.4d, 0.6d, 0.4d, 0.02d);
+            }
+        }
+
+        // Heartbeat on gate 7+: a quiet drum to the caster only.
+        if (gates >= 7 && player.tickCount % 20 == 0 && player instanceof ServerPlayer sp) {
+            sp.playNotifySound(SoundEvents.UI_BUTTON_CLICK.get(), SoundSource.PLAYERS, 0.2f, 0.6f);
+        }
 
         if (player.tickCount % DRAIN_INTERVAL == 0) {
             // Charged in whole points of health, because the health bar is drawn in half hearts and a

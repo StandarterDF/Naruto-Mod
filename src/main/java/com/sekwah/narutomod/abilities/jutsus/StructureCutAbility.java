@@ -43,7 +43,7 @@ public class StructureCutAbility extends Ability implements Ability.Cooldown {
     }
 
     /** B V V C V B - the Jougan (B V V C) and two more keys. */
-    public static final long COMBO = 322312L;
+    public static final long COMBO = 3211L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "structure_cut");
 

@@ -38,7 +38,7 @@ public class AmaterasuAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C V V B C - the Sharingan, then one more key. */
-    public static final long COMBO = 12231L;
+    public static final long COMBO = 1112L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "amaterasu");
 

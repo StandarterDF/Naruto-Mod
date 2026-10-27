@@ -35,7 +35,7 @@ public class JouganAbility extends AbstractDojutsuAbility {
     }
 
     /** B V V C - free, and one key away from both of its techniques. */
-    public static final long COMBO = 3221L;
+    public static final long COMBO = 322L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "jougan");
 

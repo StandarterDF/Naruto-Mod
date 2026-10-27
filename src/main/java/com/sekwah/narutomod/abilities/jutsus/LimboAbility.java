@@ -45,7 +45,7 @@ public class LimboAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C C C C C B - the last key of the Six Paths block. */
-    public static final long COMBO = 333331L;
+    public static final long COMBO = 2232L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "limbo");
 

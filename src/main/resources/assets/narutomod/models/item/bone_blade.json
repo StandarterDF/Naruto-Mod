@@ -1,0 +1,6 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "narutomod:items/weapons/bone_blade"
+  }
+}

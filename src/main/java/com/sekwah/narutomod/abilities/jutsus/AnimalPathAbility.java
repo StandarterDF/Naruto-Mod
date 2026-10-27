@@ -37,7 +37,7 @@ public class AnimalPathAbility extends Ability implements Ability.Cooldown {
     }
 
     /** 2 3 3 2 3 2 - the Rinnegan stance plus two keys, one short of the Asura path. */
-    public static final long COMBO = 233232L;
+    public static final long COMBO = 11211L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "animal_path");
 

@@ -29,7 +29,7 @@ import net.minecraft.world.entity.player.Player;
 public class DecoyCloneAbility extends Ability implements Ability.Cooldown {
 
     /** B A A A - the cheap clone seal, three keys shorter than the shadow clone. */
-    public static final long COMBO = 2111L;
+    public static final long COMBO = 11113L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "clone_decoy");
 

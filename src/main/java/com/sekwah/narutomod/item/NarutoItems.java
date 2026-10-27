@@ -6,6 +6,9 @@ import com.sekwah.narutomod.item.weapons.ExplosiveKunaiItem;
 import com.sekwah.narutomod.item.weapons.KunaiItem;
 import com.sekwah.narutomod.item.weapons.SenbonItem;
 import com.sekwah.narutomod.item.weapons.ShurikenItem;
+import com.sekwah.narutomod.item.weapons.BoneBladeItem;
+import com.sekwah.narutomod.item.weapons.BoneMultitoolItem;
+import com.sekwah.narutomod.item.weapons.TechniqueSwordItem;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -283,6 +286,28 @@ public class NarutoItems {
     public static final RegistryObject<Item> KUBIKIRIBOCHO = ITEMS.register("kubikiribocho",
             () -> new ComboSwordItem(NinjaTier.KATANA, 6, -3.2F, new Item.Properties().stacksTo(1),
                     0.75f, 20, 20 * 5, 0.0f));
+
+    /** The bone blade grown by the Camellia Dance: a handful of cuts, no durability, no enchanting. */
+    public static final RegistryObject<Item> BONE_BLADE = ITEMS.register("bone_blade",
+            () -> new BoneBladeItem(new Item.Properties().stacksTo(1)));
+
+    /** The bone multitool grown by the Bone Tools technique: one implement that digs, fights,
+     * tills, strips and flattens, with a short life of its own. */
+    public static final RegistryObject<Item> BONE_MULTITOOL = ITEMS.register("bone_multitool",
+            () -> new BoneMultitoolItem(NinjaTier.KATANA));
+    /** Hiramekarei: right-click shoulders the hammer for ten seconds of heavier blows. */
+    public static final RegistryObject<Item> HIRAMEKAREI = ITEMS.register("hiramekarei",
+            () -> new TechniqueSwordItem(NinjaTier.KATANA, 5, -2.6F, new Item.Properties().stacksTo(1),
+                    0.75f, 20, 20 * 4, TechniqueSwordItem.Art.HIRAMEKAREI));
+
+    /** Shibuki: right-click sets off the blast scroll; sneak to dig a short tunnel instead. */
+    public static final RegistryObject<Item> SHIBUKI = ITEMS.register("shibuki",
+            () -> new TechniqueSwordItem(NinjaTier.KATANA, 4, -2.4F, new Item.Properties().stacksTo(1),
+                    0.5f, 20, 20 * 4, TechniqueSwordItem.Art.SHIBUKI));
+
+    /** A bottle of rice wine: the price of the Drunken Fist. */
+    public static final RegistryObject<Item> SAKE = ITEMS.register("sake",
+            () -> new SakeItem(new Item.Properties().stacksTo(16)));
 
     // Ninja Masks
 

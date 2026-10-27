@@ -40,7 +40,7 @@ public class TenketsuBlindAbility extends Ability implements Ability.Cooldown {
     }
 
     /** V B V V B C - the needles' seal with one more key, the strike itself. */
-    public static final long COMBO = 232212L;
+    public static final long COMBO = 3222L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "tenketsu_blind");
 

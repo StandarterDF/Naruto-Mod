@@ -3,10 +3,13 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.item.SakeItem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -26,7 +29,8 @@ import java.util.UUID;
  *
  * <p>The stance keeps the caster a shade faster - a drunkard who is somehow always ahead of the
  * blow - and pays for it out of stamina every tick, so it is something to hold for a brawl rather
- * than something to leave on all day.</p>
+ * than something to leave on all day. It can only be entered after a drink: a bottle of sake opens
+ * the window the stance reads, and while the stance is up the world swims with nausea.</p>
  */
 public class DrunkenFistAbility extends Ability implements Ability.Toggled, Ability.HandleEnded {
 
@@ -34,7 +38,7 @@ public class DrunkenFistAbility extends Ability implements Ability.Toggled, Abil
     public static final String UNTIL_TAG = "narutomod:drunken_fist_until";
 
     /** B C B C A A - the taijutsu branch's sway seal. */
-    public static final long COMBO = 132131L;
+    public static final long COMBO = 112L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "drunken_fist");
 
@@ -69,8 +73,35 @@ public class DrunkenFistAbility extends Ability implements Ability.Toggled, Abil
         return COMBO;
     }
 
+    /**
+     * The style is lived, not studied: a caster has to have had a drink recently. A bottle of sake
+     * writes the window the stance reads, and the window is checked before the toggle joins the set
+     * so a sober press costs nothing.
+     */
+    @Override
+    public boolean canStartToggle(Player player, INinjaData ninjaData) {
+        if (!isDrunk(player)) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.drunken_fist.sober",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        return true;
+    }
+
+    /** @return whether the drinker is still inside the window a bottle of sake opened. */
+    public static boolean isDrunk(Player player) {
+        return player.getPersistentData().getLong(SakeItem.DRUNK_TAG) > player.level().getGameTime();
+    }
+
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
+        if (!player.hasEffect(MobEffects.CONFUSION)) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.drunken_fist.sober",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
         float cost = this.masteryCost(ninjaData, COST_PER_TICK);
         if (ninjaData.getStamina() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughstamina",
@@ -86,6 +117,8 @@ public class DrunkenFistAbility extends Ability implements Ability.Toggled, Abil
         // A stance is mastered by the time it is held, not by switching it on.
         this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
         applySpeed(player);
+        // The world swims while the stance is held: the unsteadiness is the style, not a side effect.
+        player.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 40, 0, true, false));
         player.getPersistentData().putLong(UNTIL_TAG,
                 player.level().getGameTime() + MARK_GRACE);
     }
@@ -118,6 +151,7 @@ public class DrunkenFistAbility extends Ability implements Ability.Toggled, Abil
         }
         CompoundTag data = player.getPersistentData();
         data.remove(UNTIL_TAG);
+        player.removeEffect(MobEffects.CONFUSION);
     }
 
     /** Whether the drunkard's walk is currently up, asked by anything that leans on the stance. */

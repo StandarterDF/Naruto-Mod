@@ -34,7 +34,7 @@ public class ChakraTransferAbility extends Ability implements Ability.Channeled 
     }
 
     /** V V C B B - the Rinnegan stance (V V C V) with the last key changed. */
-    public static final long COMBO = 23321L;
+    public static final long COMBO = 11231L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_transfer");
 

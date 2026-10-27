@@ -97,6 +97,10 @@ public class ChakraDashAbility extends Ability implements Ability.Cooldown {
             return;
         }
         player.teleportTo(cursor.x, cursor.y, cursor.z);
+        // Preserve the caster's momentum instead of dropping them to a standstill.
+        Vec3 velocity = player.getDeltaMovement();
+        player.setDeltaMovement(velocity.x + flat.x * 0.4d, velocity.y, velocity.z + flat.z * 0.4d);
+        player.hurtMarked = true;
         player.fallDistance = 0.0f;
         level.sendParticles(ParticleTypes.CLOUD, start.x, start.y + 0.4d, start.z, 12, 0.3d, 0.4d, 0.3d, 0.02d);
         level.sendParticles(ParticleTypes.CLOUD, cursor.x, cursor.y + 0.4d, cursor.z, 12, 0.3d, 0.4d, 0.3d, 0.02d);

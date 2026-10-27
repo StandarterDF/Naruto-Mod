@@ -44,7 +44,7 @@ public class ChakraMarkerJutsuAbility extends Ability implements Ability.Channel
 
 
     /** C B B V C - a deliberately long string of seals for a two way trip between two places. */
-    public static final long COMBO = 13321L;
+    public static final long COMBO = 11223L;
 
     /** Chakra spent leaving a log behind. */
     private static final float PLANT_COST = 25.0f;

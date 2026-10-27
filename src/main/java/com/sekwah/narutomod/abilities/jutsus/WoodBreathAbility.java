@@ -30,7 +30,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public class WoodBreathAbility extends AbstractBreathAbility {
 
     /** C V C C */
-    public static final long COMBO = 1211L;
+    public static final long COMBO = 3313L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "wood_breath");
 

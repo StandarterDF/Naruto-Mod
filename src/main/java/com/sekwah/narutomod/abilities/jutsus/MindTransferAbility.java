@@ -48,7 +48,7 @@ public class MindTransferAbility extends Ability implements Ability.Channeled, A
     }
 
     /** B C B B A A - the Yamanaka seal, then two keys for the transfer. */
-    public static final long COMBO = 132211L;
+    public static final long COMBO = 11323L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "mind_transfer");
 
@@ -197,8 +197,8 @@ public class MindTransferAbility extends Ability implements Ability.Channeled, A
      */
     public static void release(Player caster) {
         CompoundTag body = caster.getPersistentData();
-        UUID mobId = body.getUUID(MOB_TAG);
-        CompoundTag home = body.getCompound(HOME_TAG);
+        UUID mobId = body.hasUUID(MOB_TAG) ? body.getUUID(MOB_TAG) : NO_ENTITY;
+        CompoundTag home = body.contains(HOME_TAG) ? body.getCompound(HOME_TAG) : new CompoundTag();
         boolean transferred = body.getBoolean(BODY_TAG);
 
         body.remove(BODY_TAG);
@@ -215,6 +215,8 @@ public class MindTransferAbility extends Ability implements Ability.Channeled, A
             giveBack(level, mobId);
         }
         goHome(caster, home);
+        caster.displayClientMessage(Component.translatable("jutsu.mind_transfer.end")
+                .withStyle(ChatFormatting.YELLOW), true);
     }
 
     /** @return whether this caster is currently inside another body, asked by the damage hook. */
@@ -253,6 +255,9 @@ public class MindTransferAbility extends Ability implements Ability.Channeled, A
         caster.setInvisible(true);
         pin(caster);
         wreath(level, caster, target);
+        caster.displayClientMessage(Component.translatable("jutsu.mind_transfer.start",
+                Component.translatable(target.getType().getDescriptionId()).withStyle(ChatFormatting.YELLOW))
+                .withStyle(ChatFormatting.GREEN), true);
     }
 
     /** Keeps the two bodies on the same spot for as long as the hold lasts. */
@@ -303,7 +308,7 @@ public class MindTransferAbility extends Ability implements Ability.Channeled, A
     /** Gives a creature back the mind it had, but only if the transfer is what took it. */
     public static void releaseMob(Mob mob) {
         CompoundTag data = mob.getPersistentData();
-        if (data.getUUID(OWNER_TAG).equals(NO_ENTITY)) {
+        if (!data.hasUUID(OWNER_TAG) || data.getUUID(OWNER_TAG).equals(NO_ENTITY)) {
             return;
         }
         if (data.getBoolean(HAD_AI_TAG)) {
@@ -363,14 +368,20 @@ public class MindTransferAbility extends Ability implements Ability.Channeled, A
                     .withStyle(ChatFormatting.RED), true);
             return null;
         }
-        if (!mob.isAlive() || mob.isSpectator() || mob.isRemoved()) {
-            return null;
-        }
         if (mob.isAlliedTo(player) || Friends.areFriends(player, mob)) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.mind_transfer.friendly",
+                    Component.translatable(mob.getType().getDescriptionId()).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
             return null;
         }
         if (mob.getMaxHealth() >= TOO_STRONG_HEALTH) {
             player.displayClientMessage(Component.translatable("jutsu.fail.mind_transfer.toostrong",
+                    Component.translatable(mob.getType().getDescriptionId()).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            return null;
+        }
+        if (!mob.isAlive() || mob.isRemoved()) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.mind_transfer.dead",
                     Component.translatable(mob.getType().getDescriptionId()).withStyle(ChatFormatting.YELLOW))
                     .withStyle(ChatFormatting.RED), true);
             return null;

@@ -168,12 +168,22 @@ public final class SharinganAdvancedEvents {
             return;
         }
 
-        // The ribs of the Susanoo stand between the caster and whatever is coming.
+        INinjaData ninjaData = player.getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
+
+        // The ribs of the Susanoo stand between the caster and whatever is coming: the blow is taken
+        // in full, but the same amount is drawn from chakra instead of health.
         if (data.getLong(SusanooAbility.UNTIL_TAG) > now) {
-            event.setAmount(event.getAmount() * (1.0f - SUSANOO_ABSORB));
+            float damage = event.getAmount();
+            float chakra = (ninjaData == null) ? 0.0f : ninjaData.getChakra();
+            float absorbed = Math.min(damage, chakra);
+            if (ninjaData != null) {
+                ninjaData.useChakra(absorbed, 0);
+            }
+            float leftover = damage - absorbed;
+            // At most half a heart (1 HP) gets through, even when chakra runs out.
+            event.setAmount(Math.min(leftover, 1.0f));
         }
 
-        INinjaData ninjaData = player.getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
         if (ninjaData == null || !SharinganAbility.isActive(ninjaData)) {
             return;
         }

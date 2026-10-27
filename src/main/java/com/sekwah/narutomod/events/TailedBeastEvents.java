@@ -3,9 +3,11 @@ package com.sekwah.narutomod.events;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.jutsus.DividedCloakAbility;
+import com.sekwah.narutomod.abilities.jutsus.EightGatesAbility;
 import com.sekwah.narutomod.abilities.jutsus.PerfectCloakAbility;
 import com.sekwah.narutomod.abilities.jutsus.SealBreakAbility;
 import com.sekwah.narutomod.abilities.jutsus.SealVesselAbility;
+import com.sekwah.narutomod.abilities.jutsus.TailedCloakAbility;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.friends.Friends;
@@ -81,6 +83,9 @@ public final class TailedBeastEvents {
         keepSealBreak(player, data, now);
         keepPerfectCloak(player, data, now);
         clearLostStances(player, ninjaData, data, now);
+        // The vessel's own mark is server-side ink; the HUD reads this copy instead.
+        ninjaData.setSealVesselIntegrity(SealVesselAbility.isSealed(player)
+                ? SealVesselAbility.integrity(player) : 0);
     }
 
     /**
@@ -214,15 +219,24 @@ public final class TailedBeastEvents {
         }
     }
 
-    /** Anything but the caster, their allies and the untouchable. */
+    /** Anything going for the caster: their hunter, or whoever struck them moments ago. */
     private static boolean canStrike(Player caster, LivingEntity target) {
-        if (target == caster || target.isRemoved() || target.isSpectator() || !target.isAlive()) {
-            return false;
+        return Friends.isAggressor(caster, target);
+    }
+
+    /**
+     * Remembers every landed blow on a player, so the cloak arms know whom to answer. One recorder
+     * serves both pairs of arms - the tail's sweep and the settled cloak's strike. Recording the
+     * intent rather than the damage means a blocked hit still counts: they attacked all the same.
+     */
+    @SubscribeEvent
+    public static void onPlayerHurt(LivingHurtEvent event) {
+        if (event.getEntity().level().isClientSide) {
+            return;
         }
-        if (target instanceof Player other && (other.isCreative() || other.isSpectator())) {
-            return false;
+        if (event.getEntity() instanceof Player victim) {
+            Friends.rememberAttacker(victim, event.getSource().getEntity());
         }
-        return !Friends.isOwnSide(caster, target);
     }
 
     /**
@@ -249,7 +263,7 @@ public final class TailedBeastEvents {
      * everything the caster throws lands on whoever it reaches, which is the price of the eight
      * seconds rather than a bug in them.
      */
-    @SubscribeEvent(priority = EventPriority.LOWEST)
+    @SubscribeEvent
     public static void onLivingHurt(LivingHurtEvent event) {
         if (event.getEntity().level().isClientSide) {
             return;
@@ -258,9 +272,28 @@ public final class TailedBeastEvents {
         if (!(attacker instanceof Player caster) || attacker == event.getEntity()) {
             return;
         }
-        if (!SealBreakAbility.isActive(caster) || !event.isCanceled()) {
+        if (SealBreakAbility.isActive(caster) && event.isCanceled()) {
+            event.setCanceled(false);
+        }
+        // Gate 7: muscle fibres ripped - any hit taken deals one extra point.
+        if (caster.getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve()
+                .map(INinjaData::getGateCount).orElse(0) >= 7) {
+            event.setAmount(event.getAmount() + 1.0f);
+        }
+        // Every cloak and the open gates hit hard enough to look like a blow: the mini-burst
+        // lands on the body struck, so the power reads as one instead of a silent stat bump.
+        Entity struck = event.getEntity();
+        if (!(struck instanceof LivingEntity target) || target == caster) {
             return;
         }
-        event.setCanceled(false);
+        if (PerfectCloakAbility.isActive(caster)) {
+            PerfectCloakAbility.onHit(caster, target);
+        } else if (TailedCloakAbility.isActive(caster)) {
+            TailedCloakAbility.onHit(caster, target);
+        }
+        if (caster.getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve()
+                .map(INinjaData::getGateCount).orElse(0) > 0) {
+            EightGatesAbility.onHit(caster, target);
+        }
     }
 }

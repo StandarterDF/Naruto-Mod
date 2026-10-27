@@ -63,7 +63,7 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
 
 
     /** B V V C C */
-    public static final long COMBO = 32211L;
+    public static final long COMBO = 2221L;
 
     /** The pocket dimension, see {@code data/narutomod/dimension/kamui.json}. */
     public static final ResourceKey<Level> KAMUI_DIMENSION =
