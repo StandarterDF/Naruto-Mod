@@ -1,7 +1,7 @@
 # Naruto-Mod
 
 **Порт Sekwah's Naruto Mod на Minecraft 1.20.1 / Forge 47.1.62.**
-Форк [StandarterDF/Naruto-Mod](https://github.com/StandarterDF/Naruto-Mod) (версия `1.9.0-SNAPSHOT`),
+Форк [StandarterDF/Naruto-Mod](https://github.com/StandarterDF/Naruto-Mod) (версия `1.10.0`),
 оригинал — [sekwah41/Naruto-Mod](https://github.com/sekwah41/Naruto-Mod). Цель форка — паритет поведения
 с версией 1.7.10 плюс новые техники.
 
@@ -12,8 +12,11 @@
 ## Установка
 
 1. Minecraft **1.20.1** + **Forge 47.1.62**.
-2. Положи `jar` мода в папку `mods`.
-3. Всё. Для сборки из исходников нужен **JDK 17** (`.\gradlew.bat build`).
+2. **SekCore Lib** (мод `sekclib`) — обязательная библиотека, без неё мод не запустится.
+   Скачать: [Modrinth](https://modrinth.com/mod/sekclib) · [CurseForge](https://www.curseforge.com/minecraft/mc-mods/sekclib) ·
+   [GitHub Releases](https://github.com/sekwah41/SekCLib/releases). Нужен файл `SekCLib-1.20-1.0.2-universal.jar`.
+3. Положи `jar` мода и `jar` библиотеки в папку `mods`.
+4. Всё. Для сборки из исходников нужен **JDK 17** (`.\gradlew.bat build`).
 
 ## Управление
 
