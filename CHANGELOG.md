@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.11.0](https://github.com/StandarterDF/Naruto-Mod/compare/v1.10.0...v1.11.0) (2026-10-28)
+
+### Features
+
+* **Skill tree:** first balance pass on unlock costs - Sage Mode 104 -> 72, Six Paths Mode 96 -> 120 with its follow-up nodes re-priced, Rinnegan 48 -> 64, Rasenshuriken 104 -> 112.
+* **Skill tree:** the Rinnegan node now requires the whole Sharingan branch to be unlocked.
+* **Combos:** Eight Inner Gates lengthened to `1233`, Chakra Thread shortened to `23`, Rasengan moved to `332`.
+* **Mastery:** death no longer takes mastery progress away; the death penalty config options (`deathPenalty*`) are gone.
+* **Kenjutsu and genjutsu:** Elemental Edge, Kesa Cut / Grass-Cutting Sweep and the genjutsu casting path reworked.
+
+### Bug Fixes
+
+* Great swords no longer swallow the right click, so a shield in the off hand raises normally.
+* Build: datagen duplicates in `processResources` and `srcJar` are tolerated (hand-written resources win).
+* Build: Discord and CurseForge upload tasks are skipped when their secret is an empty string instead of failing.
+
+**Full Changelog**: https://github.com/StandarterDF/Naruto-Mod/compare/v1.10.0...v1.11.0
+
 ## [1.9.0](https://github.com/StandarterDF/Naruto-Mod/compare/v1.8.4...v1.9.0) (2026-10-26)
 
 ### Features
