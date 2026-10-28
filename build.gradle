@@ -310,7 +310,7 @@ task discordupload {
     doLast {
         String discordWebhook = System.getenv("DISCORD_WEBHOOK")
 
-        if(discordWebhook != null) {
+        if (discordWebhook != null && !discordWebhook.isEmpty()) {
 
             CloseableHttpClient httpClient = HttpClients.createDefault()
             HttpPost uploadFile = new HttpPost(discordWebhook)
@@ -343,11 +343,11 @@ task discordupload {
     }
 }
 
-tasks.curseforge.enabled = System.getenv("CURSE_API") != null
+tasks.curseforge.enabled = System.getenv("CURSE_API") != null && !System.getenv("CURSE_API").isEmpty()
 
 curseforge {
     logger.info("Curse api: " + System.getenv("CURSE_API"))
-    if (System.getenv("CURSE_API") != null) {
+    if (System.getenv("CURSE_API") != null && !System.getenv("CURSE_API").isEmpty()) {
         apiKey = System.getenv("CURSE_API")
     }
     project {
