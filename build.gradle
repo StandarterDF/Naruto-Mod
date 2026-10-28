@@ -174,10 +174,11 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 // Datagen (runData) regenerates files that are also maintained by hand in
-// src/main/resources (e.g. assets/minecraft/atlases/blocks.json): every CI
-// build runs runData, so both copies land on the resources path. Keep the
-// hand-maintained one (first source dir wins) instead of failing the build.
-processResources {
+// src/main/resources (e.g. assets/minecraft/atlases/blocks.json, data/
+// damage_type/*.json): every CI build runs runData, so both copies land on
+// the resources path. Keep the hand-maintained one (first source dir wins)
+// instead of failing the build.
+tasks.withType(AbstractCopyTask).configureEach {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
