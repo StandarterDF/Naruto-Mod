@@ -3,6 +3,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.JutsuEffects;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.item.weapons.BoneBladeItem;
 import net.minecraft.ChatFormatting;
@@ -48,9 +49,19 @@ public class CamelliaDanceAbility extends Ability implements Ability.Cooldown {
     /** The bleed the dance leaves: a mark for whatever reads it, and a stand-in effect for the harm. */
     public static final String BLEED_TAG = "narutomod:bleed_until";
 
-    /** What a landed blow carries on top of the swing, and how much of the whole cuts past armour. */
+    /**
+     * What a landed blow carries on top of the swing, and how much of the whole cuts past armour.
+     * The bonus grows with mastery of the dance itself: a fresh cut is a shard, a mastered one is a
+     * wound that goes through the body.
+     */
     public static final float BONUS_DAMAGE = 2.0f;
+    public static final float MASTERED_BONUS = 2.0f;
     public static final float ARMOUR_BYPASS = 0.25f;
+
+    /** @return the extra cut of this caster, from the plain bonus to double it at full mastery. */
+    public static float bonusDamage(INinjaData ninjaData) {
+        return BONUS_DAMAGE + MASTERED_BONUS * Mastery.level(ninjaData, ID);
+    }
 
     /** How long a cut keeps bleeding, in ticks. */
     public static final int BLEED_TICKS = 60;

@@ -116,6 +116,23 @@ minecraft {
             }
         }
 
+        client2 {
+            workingDirectory project.file('run2')
+
+            property 'forge.logging.console.level', 'debug'
+
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
+
+            args '--username', 'Dev2'
+
+            mods {
+                "${project.modid}" {
+                    source sourceSets.main
+                }
+            }
+        }
+
         server {
             workingDirectory project.file('run')
 

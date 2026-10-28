@@ -90,7 +90,7 @@ public class WindBreathAbility extends AbstractBreathAbility {
 
     @Override
     protected ParticleOptions secondaryParticle() {
-        return ParticleTypes.SWEEP_ATTACK;
+        return ParticleTypes.CLOUD;
     }
 
     @Override

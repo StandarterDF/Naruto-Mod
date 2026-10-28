@@ -43,7 +43,7 @@ public class NarakaPathAbility extends Ability implements Ability.Cooldown {
     }
 
     /** 2 3 3 2 3 1 - the Rinnegan stance (2 3 3 2) with two more keys on the end. */
-    public static final long COMBO = 11333L;
+    public static final long COMBO = 12333L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "naraka_path");
 

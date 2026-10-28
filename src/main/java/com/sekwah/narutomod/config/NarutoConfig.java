@@ -139,18 +139,6 @@ public class NarutoConfig {
     private static final ForgeConfigSpec.DoubleValue CONFIG_MASTERY_SEAL_FREE;
     public static double masterySealFree;
 
-    private static final ForgeConfigSpec.DoubleValue CONFIG_MASTERY_DEATH_LOW_MIN;
-    public static double masteryDeathLowMin;
-
-    private static final ForgeConfigSpec.DoubleValue CONFIG_MASTERY_DEATH_LOW_MAX;
-    public static double masteryDeathLowMax;
-
-    private static final ForgeConfigSpec.DoubleValue CONFIG_MASTERY_DEATH_HIGH_MIN;
-    public static double masteryDeathHighMin;
-
-    private static final ForgeConfigSpec.DoubleValue CONFIG_MASTERY_DEATH_HIGH_MAX;
-    public static double masteryDeathHighMax;
-
     private static final ForgeConfigSpec.DoubleValue CONFIG_MEDITATION_RADIUS_MAX;
     public static double meditationRadiusMax;
 
@@ -287,8 +275,8 @@ public class NarutoConfig {
                         + " the wearer. Off by default: it changes how the world's AI behaves.")
                 .define("hengeReactionsEnabled", false);
 
-        configBuilder.comment("Technique mastery: every cast makes a technique a little cheaper, and a"
-                + " death sets that progress back, the harder the closer it was to finished").push("mastery");
+        configBuilder.comment("Technique mastery: every cast makes a technique a little cheaper, and"
+                + " mastery is never lost - dying keeps every point of it").push("mastery");
 
         CONFIG_MASTERY_ENABLED = configBuilder.comment("Should techniques get cheaper and faster the more they are used?")
                 .define("masteryEnabled", true);
@@ -309,18 +297,6 @@ public class NarutoConfig {
 
         CONFIG_MASTERY_SEAL_FREE = configBuilder.comment("Mastery at which the chakra seal is no longer needed at all, even for the multi shadow clone")
                 .defineInRange("sealFreeAt", 0.9d, 0d, 1d);
-
-        CONFIG_MASTERY_DEATH_LOW_MIN = configBuilder.comment("Smallest share of progress lost to a death while mastery is at or below half")
-                .defineInRange("deathPenaltyLowMin", 0.03d, 0d, 1d);
-
-        CONFIG_MASTERY_DEATH_LOW_MAX = configBuilder.comment("Largest share of progress lost to a death while mastery is at or below half")
-                .defineInRange("deathPenaltyLowMax", 0.05d, 0d, 1d);
-
-        CONFIG_MASTERY_DEATH_HIGH_MIN = configBuilder.comment("Smallest share of progress lost to a death when mastery is near finished")
-                .defineInRange("deathPenaltyHighMin", 0.10d, 0d, 1d);
-
-        CONFIG_MASTERY_DEATH_HIGH_MAX = configBuilder.comment("Largest share of progress lost to a death when mastery is near finished")
-                .defineInRange("deathPenaltyHighMax", 0.20d, 0d, 1d);
 
         CONFIG_MEDITATION_RADIUS_MAX = configBuilder.comment("How far, in blocks, a fully mastered chakra meditation reaches at most")
                 .defineInRange("meditationRadiusMax", 512d, 8d, 100000d);
@@ -575,10 +551,6 @@ public class NarutoConfig {
         masteryCostReduction = CONFIG_MASTERY_COST_REDUCTION.get();
         masteryCooldownReduction = CONFIG_MASTERY_COOLDOWN_REDUCTION.get();
         masterySealFree = CONFIG_MASTERY_SEAL_FREE.get();
-        masteryDeathLowMin = CONFIG_MASTERY_DEATH_LOW_MIN.get();
-        masteryDeathLowMax = CONFIG_MASTERY_DEATH_LOW_MAX.get();
-        masteryDeathHighMin = CONFIG_MASTERY_DEATH_HIGH_MIN.get();
-        masteryDeathHighMax = CONFIG_MASTERY_DEATH_HIGH_MAX.get();
         meditationRadiusMax = CONFIG_MEDITATION_RADIUS_MAX.get();
         meditationPassiveThreshold = CONFIG_MEDITATION_PASSIVE_THRESHOLD.get();
         meditationPassiveCapacity = CONFIG_MEDITATION_PASSIVE_CAPACITY.get();

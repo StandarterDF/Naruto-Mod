@@ -40,7 +40,7 @@ public class SealPortalAbility extends Ability implements Ability.Cooldown {
     }
 
     /** B V V V V C - the Jougan's stasis branch, one key further on. */
-    public static final long COMBO = 12122L;
+    public static final long COMBO = 12322L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "seal_portal");
 

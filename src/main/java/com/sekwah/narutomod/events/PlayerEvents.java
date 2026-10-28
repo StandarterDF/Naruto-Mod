@@ -1,6 +1,7 @@
 package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
+import com.sekwah.narutomod.abilities.AbilityUnlocks;
 import com.sekwah.narutomod.abilities.jutsus.BodyAdaptationAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraMeditationJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraSensingAbility;
@@ -15,7 +16,6 @@ import com.sekwah.narutomod.ranks.NinjaRanks;
 import com.sekwah.narutomod.skills.SkillEffect;
 import com.sekwah.narutomod.skills.SkillTree;
 import com.sekwah.narutomod.events.SkillTreeEvents;
-import com.sekwah.sekclib.capabilitysync.capabilitysync.broadcaster.CapabilityBroadcaster;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
@@ -75,8 +75,9 @@ public class PlayerEvents {
             // Sage mode is fed from the nature energy pool and closes itself when it runs dry, see
             // SageModeAbility.
             SageModeAbility.maintain(player, ninjaData);
-            // Nature energy trickles back on its own, very slowly.
-            if (ninjaData.isNinjaModeEnabled()) {
+            // Nature energy trickles back on its own, very slowly - but only for a caster who has
+            // learned to gather it at all, see AbilityUnlocks#hasSenjutsu.
+            if (ninjaData.isNinjaModeEnabled() && AbilityUnlocks.hasSenjutsu(ninjaData)) {
                 ninjaData.addSeninMana(0.01f);
             }
             // A disguise is on a plain countdown, see HengeJutsuAbility.
@@ -226,22 +227,6 @@ public class PlayerEvents {
                 ChakraShieldAbility.applyShield(player, ninjaData.getShieldPoints());
             }
         });
-    }
-
-    /**
-     * Brings a newly tracked player up to date on the globally synced state of another player.
-     *
-     * <p>sekclib only sends a field when it changes, and its "started tracking" hook is a no-op, so a
-     * player who comes into view of somebody already wearing a henge disguise sees the plain skin
-     * until the disguise happens to change. Replaying the current globally synced values to that one
-     * viewer fixes the disguise, and any other globally synced state, for late arrivals.</p>
-     */
-    @SubscribeEvent
-    public static void onStartTracking(PlayerEvent.StartTracking event) {
-        if (event.getTarget() instanceof Player tracked
-                && event.getEntity() instanceof ServerPlayer viewer) {
-            CapabilityBroadcaster.broadcastCapToPlayer(tracked, viewer);
-        }
     }
 
     /**

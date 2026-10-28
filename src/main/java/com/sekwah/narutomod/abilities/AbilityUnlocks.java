@@ -24,8 +24,7 @@ public final class AbilityUnlocks {
     private static final Set<String> BASIC = Set.of(
             "chakra_charge",
             "substitution",
-            "leap",
-            "bone_tools");
+            "leap");
 
     /**
      * Techniques that are never on the skill tree and are learned from a scroll alone. See
@@ -41,6 +40,16 @@ public final class AbilityUnlocks {
     /** The skill-tree key a technique is gated behind. */
     public static String unlockKey(ResourceLocation abilityId) {
         return "ability:" + abilityId.getPath();
+    }
+
+    /**
+     * Whether the caster has learned to gather nature energy. The nature energy pool is not part of
+     * a ninja from birth: without this node there is nowhere to put the energy, so
+     * {@link INinjaData#getMaxSeninMana()} stays at zero and the senin bar never appears.
+     */
+    public static boolean hasSenjutsu(INinjaData ninjaData) {
+        return ninjaData != null
+                && isUnlocked(ninjaData, com.sekwah.narutomod.abilities.jutsus.SenjutsuChargingAbility.ID);
     }
 
     /** Whether the caster may use this technique right now. */

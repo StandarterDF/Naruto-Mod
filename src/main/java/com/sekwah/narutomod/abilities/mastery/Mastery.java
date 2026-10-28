@@ -7,12 +7,7 @@ import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Technique mastery: the more a technique is cast, the cheaper and quicker it becomes, and the
@@ -26,18 +21,14 @@ import java.util.List;
  * it starts paying off, while half of it still lands at {@code halfway} casts whatever the exponent.
  * Everything else is derived from that one number, so retuning the curve retunes the whole system at
  * once.</p>
+ *
+ * <p>Mastery only ever grows: dying costs nothing, whatever the {@code keepInventory} game rule says.
+ * A technique that was half learned stays half learned through a respawn.</p>
  */
 public final class Mastery {
 
     private Mastery() {
     }
-
-    /** Below this mastery the death penalty is at its mildest, above {@link #DEATH_HIGH_BAND} at its worst. */
-    private static final float DEATH_LOW_BAND = 0.5f;
-    private static final float DEATH_HIGH_BAND = 0.95f;
-
-    /** A level this close to one is treated as one when turning it back into a cast count. */
-    private static final float LEVEL_CEILING = 0.9995f;
 
     /**
      * The most mastery and skill nodes together may take off a price or cooldown, so a fully built
@@ -90,17 +81,6 @@ public final class Mastery {
         return NarutoRegistries.ABILITIES.getResourceKey(ability)
                 .map(ResourceKey::location)
                 .orElse(null);
-    }
-
-    /** The cast count that would give the given level, undoing the curve. */
-    public static int castsForLevel(float level) {
-        if (level <= 0f) {
-            return 0;
-        }
-        float capped = Math.min(level, LEVEL_CEILING);
-        float halfway = Math.max(1f, NarutoConfig.masteryHalfwayCasts);
-        double ratio = capped / (1.0d - capped);
-        return (int) Math.round(halfway * Math.pow(ratio, 1.0d / exponent()));
     }
 
     /** The curve's exponent, read once per call so a config change takes effect without a restart. */
@@ -201,32 +181,5 @@ public final class Mastery {
         float level = level(ninjaData, ability);
         double max = Math.max(8.0d, NarutoConfig.meditationRadiusMax);
         return (float) (8.0d + (max - 8.0d) * level * level * level);
-    }
-
-    /**
-     * Sets every technique back a little, more the closer it was to finished and with a spread
-     * between deaths. It is deliberately worked on the level rather than the cast count: near the
-     * top of the curve a share of the count barely moves the level, which would not make dying
-     * matter.
-     */
-    public static void applyDeathPenalty(Player player, INinjaData ninjaData) {
-        if (!NarutoConfig.masteryEnabled) {
-            return;
-        }
-        MasteryData data = ninjaData.getMasteryData();
-        List<ResourceLocation> techniques = new ArrayList<>(data.getCasts().keySet());
-        RandomSource random = player.getRandom();
-        for (ResourceLocation id : techniques) {
-            int casts = data.getCasts(id);
-            float level = level(casts);
-            if (level <= 0f) {
-                continue;
-            }
-            float t = Mth.clamp((level - DEATH_LOW_BAND) / (DEATH_HIGH_BAND - DEATH_LOW_BAND), 0f, 1f);
-            float min = (float) Mth.lerp(t, NarutoConfig.masteryDeathLowMin, NarutoConfig.masteryDeathHighMin);
-            float max = (float) Mth.lerp(t, NarutoConfig.masteryDeathLowMax, NarutoConfig.masteryDeathHighMax);
-            float penalty = min + random.nextFloat() * Math.max(0f, max - min);
-            data.setCasts(id, castsForLevel(Math.max(0f, level - penalty)));
-        }
     }
 }

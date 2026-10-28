@@ -41,7 +41,7 @@ import java.util.Set;
 public class KirinAbility extends Ability implements Ability.Cooldown {
 
     /** B B V V. */
-    public static final long COMBO = 111113L;
+    public static final long COMBO = 111213L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "kirin");
 

@@ -10,6 +10,8 @@ import com.sekwah.narutomod.abilities.jutsus.ParryAbility;
 import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
+import com.sekwah.narutomod.entity.ShadowCloneEntity;
+import com.sekwah.narutomod.item.ComboSwordItem;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -63,7 +65,8 @@ public final class KenjutsuTaijutsuEvents {
      */
     @SubscribeEvent
     public static void onLivingHurt(LivingHurtEvent event) {
-        if (!(event.getEntity() instanceof Player victim) || victim.level().isClientSide || !victim.isAlive()) {
+        LivingEntity victim = event.getEntity();
+        if (victim.level().isClientSide || !victim.isAlive()) {
             return;
         }
         // A technique the caster's own hand threw is not something a guard can meet.
@@ -84,29 +87,54 @@ public final class KenjutsuTaijutsuEvents {
         // up at once, since one needs a blade in the hand and the other needs the hands empty.
         // A raised blade is a deliberate move: it turns the next blow aside outright and is then
         // spent, so timing matters rather than luck.
-        if (ParryAbility.isActive(victim) && ParryAbility.hasSword(victim)
-                && payBlock(victim, ParryAbility.ID, ParryAbility.BLOCK_STAMINA,
+        if (victim instanceof Player p && ParryAbility.isActive(p) && ParryAbility.hasSword(p)
+                && payBlock(p, ParryAbility.ID, ParryAbility.BLOCK_STAMINA,
                 ParryAbility.BLOCK_REGEN_DELAY)) {
-            ParryAbility.consume(victim);
+            ParryAbility.consume(p);
             event.setCanceled(true);
-            guardSparks(victim, true);
+            guardSparks(p, true);
             if (attacker != null && attacker.isAlive()) {
                 // The counter is the caster's own cut, so it carries their name rather than nobody's.
-                attacker.hurt(victim.damageSources().thrown(victim, victim), ParryAbility.COUNTER_DAMAGE);
+                attacker.hurt(p.damageSources().thrown(p, p), ParryAbility.COUNTER_DAMAGE);
             }
             return;
         }
 
-        if (attacker == null || !PalmBlockAbility.isActive(victim) || !PalmBlockAbility.hasEmptyHands(victim)
-                || victim.getRandom().nextFloat() >= PalmBlockAbility.BLOCK_CHANCE
-                || !payBlock(victim, PalmBlockAbility.ID, PalmBlockAbility.BLOCK_STAMINA,
+        // Great swords held up in a guard (right mouse button) take the edge off a blow instead of
+        // turning it aside outright. The heavier blades also shrug off more of it and may send an
+        // arrow back the way it came. Clones do the same with a blade in hand.
+        if (victim.getMainHandItem().getItem() instanceof ComboSwordItem) {
+            boolean holding = victim instanceof Player p && p.isUsingItem()
+                    && p.getUseItem().getItem() instanceof ComboSwordItem;
+            boolean cloneBlock = victim instanceof ShadowCloneEntity
+                    && victim.getRandom().nextFloat() < 0.5f;
+            if (holding || cloneBlock) {
+                if (direct instanceof Projectile proj) {
+                    if (victim.getRandom().nextFloat() < 0.35f) {
+                        Vec3 motion = proj.getDeltaMovement();
+                        proj.setDeltaMovement(motion.x * -1.0d, motion.y * -1.0d, motion.z * -1.0d);
+                        proj.setOwner(victim);
+                        event.setCanceled(true);
+                        guardSparks(victim, true);
+                        return;
+                    }
+                }
+                // Absorb most of the hit, but never all of it.
+                event.setAmount(event.getAmount() * 0.35f);
+                guardSparks(victim, true);
+            }
+        }
+
+        if (!(victim instanceof Player p) || attacker == null || !PalmBlockAbility.isActive(p) || !PalmBlockAbility.hasEmptyHands(p)
+                || p.getRandom().nextFloat() >= PalmBlockAbility.BLOCK_CHANCE
+                || !payBlock(p, PalmBlockAbility.ID, PalmBlockAbility.BLOCK_STAMINA,
                 PalmBlockAbility.BLOCK_REGEN_DELAY)) {
             return;
         }
         event.setCanceled(true);
-        guardSparks(victim, false);
+        guardSparks(p, false);
         if (attacker.isAlive()) {
-            attacker.hurt(victim.damageSources().thrown(victim, victim), PalmBlockAbility.COUNTER_DAMAGE);
+            attacker.hurt(p.damageSources().thrown(p, p), PalmBlockAbility.COUNTER_DAMAGE);
         }
     }
 
@@ -167,14 +195,14 @@ public final class KenjutsuTaijutsuEvents {
     }
 
     /** The clash itself: a spark where the blow met the guard, and what a meeting like that sounds like. */
-    private static void guardSparks(Player player, boolean blade) {
+    private static void guardSparks(LivingEntity player, boolean blade) {
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
         // A blade guards at the hand that holds it; a palm guard is both palms, so the spark is
         // thrown from the middle of the chest where the two of them meet.
-        Vec3 guard = blade
-                ? JutsuEffects.handPosition(player)
+        Vec3 guard = blade && player instanceof Player p
+                ? JutsuEffects.handPosition(p)
                 : player.position().add(0.0d, player.getBbHeight() * 0.75d, 0.0d);
         level.sendParticles(ParticleTypes.CRIT, guard.x, guard.y, guard.z,
                 10, blade ? 0.2d : 0.35d, 0.2d, blade ? 0.2d : 0.35d, 0.05d);

@@ -82,7 +82,8 @@ public class RasenshurikenJutsuAbility extends Ability implements Ability.Channe
             return false;
         }
         float factor = Math.max(0.3f, 1.0f - (ninjaData.getSeninMana() / Math.max(1.0f, ninjaData.getMaxSeninMana())) * 0.7f);
-        float cost = this.masteryCost(ninjaData, CHAKRA_PER_TICK * factor);
+        float sageFactor = ninjaData.isSageMode() ? 1.0f : 5.0f;
+        float cost = this.masteryCost(ninjaData, CHAKRA_PER_TICK * factor * sageFactor);
         if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
@@ -126,6 +127,9 @@ public class RasenshurikenJutsuAbility extends Ability implements Ability.Channe
         }
         float releaseFactor = Math.max(0.3f, 1.0f - (ninjaData.getSeninMana() / Math.max(1.0f, ninjaData.getMaxSeninMana())) * 0.7f);
         float releaseCost = this.masteryCost(ninjaData, RELEASE_COST * releaseFactor);
+        if (!ninjaData.isSageMode()) {
+            releaseCost = Math.max(releaseCost, ninjaData.getMaxChakra() * 0.5f);
+        }
         if (ninjaData.getChakra() < releaseCost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);

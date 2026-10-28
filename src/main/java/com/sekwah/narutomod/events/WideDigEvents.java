@@ -5,7 +5,6 @@ import com.sekwah.narutomod.abilities.NarutoAbilities;
 import com.sekwah.narutomod.abilities.jutsus.WideDigAbility;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
-import com.sekwah.narutomod.util.Targeting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -138,7 +137,7 @@ public final class WideDigEvents {
      * taken, which is the side they are standing on.
      */
     private static Direction faceOf(Player player, BlockPos pos) {
-        BlockHitResult looked = Targeting.lookedAtBlock(player, FACE_REACH);
+        BlockHitResult looked = player.pick(FACE_REACH, 1.0F, false) instanceof BlockHitResult bhr ? bhr : null;
         if (looked != null && looked.getBlockPos().equals(pos)) {
             return looked.getDirection();
         }

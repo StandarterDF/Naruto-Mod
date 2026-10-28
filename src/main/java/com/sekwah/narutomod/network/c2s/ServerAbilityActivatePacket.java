@@ -9,6 +9,7 @@ import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
 import com.sekwah.narutomod.events.ByakuganEvents;
+import com.sekwah.narutomod.events.GenjutsuEvents;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import net.minecraft.ChatFormatting;
@@ -74,6 +75,12 @@ public class ServerAbilityActivatePacket {
                     }
                     Ability ability = NarutoRegistries.ABILITIES.getValue(msg.abilityId);
                     if (ability == null) {
+                        return;
+                    }
+                    // A mind held by an illusion cannot draw on its chakra, except to break the illusion.
+                    if (GenjutsuEvents.isUnderGenjutsu(player)
+                            && !"KaiAbility".equals(ability.getClass().getSimpleName())) {
+                        player.displayClientMessage(Component.translatable("jutsu.fail.genjutsu.held").withStyle(ChatFormatting.RED), true);
                         return;
                     }
                     ResourceLocation abilityId = NarutoRegistries.ABILITIES.getResourceKey(ability)

@@ -70,7 +70,7 @@ public class MasteryData {
         }
     }
 
-    /** The live map, for walking every technique (the death penalty) and for saving. */
+    /** The live map, for walking every technique and for saving. */
     public Map<ResourceLocation, Integer> getCasts() {
         return this.casts;
     }

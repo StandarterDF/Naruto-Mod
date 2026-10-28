@@ -4,8 +4,10 @@ import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -18,6 +20,12 @@ import java.util.function.Supplier;
  * Tells the server that the user is entering jutsu keys
  */
 public class ServerJutsuCastingPacket {
+
+    /**
+     * How far a hand seal carries. Vanilla broadcasts a world sound to everyone within sixteen
+     * blocks; the seals keep that range, but only reach people who are inside the system.
+     */
+    private static final double SEAL_HEARING_RANGE = 16.0;
 
     private final int jutsuKey;
 
@@ -54,15 +62,38 @@ public class ServerJutsuCastingPacket {
                             default -> null;
                         };
                         if(playSound != null) {
-                            player.getCommandSenderWorld().playSound(null,
-                                    player.getX(), player.getY(), player.getZ(),
-                                    playSound, SoundSource.PLAYERS, 1.0f, 1.0f);
+                            playSeal(player, playSound);
                             player.level().gameEvent(player, NarutoGameEvents.JUTSU_CASTING.get(), player.position().add(0, player.getEyeHeight() * 0.7, 0));
                         }
                     });
                 }
             });
             ctx.get().setPacketHandled(true);
+        }
+
+        /**
+         * Hand seals are heard only by other ninjas. A world sound would reach every player in
+         * range, and someone who has not become a ninja is not supposed to notice a shinobi's
+         * signs at all. Sculk and the warden still get the game event, so the world itself keeps
+         * reacting to the noise.
+         */
+        private static void playSeal(ServerPlayer caster, SoundEvent sound) {
+            ClientboundSoundPacket packet = new ClientboundSoundPacket(
+                    BuiltInRegistries.SOUND_EVENT.wrapAsHolder(sound), SoundSource.PLAYERS,
+                    caster.getX(), caster.getY(), caster.getZ(), 1.0f, 1.0f,
+                    caster.getRandom().nextLong());
+            double range = SEAL_HEARING_RANGE * SEAL_HEARING_RANGE;
+            for (ServerPlayer listener : caster.serverLevel().players()) {
+                if (listener.distanceToSqr(caster) > range) {
+                    continue;
+                }
+                boolean hears = listener.getCapability(NinjaCapabilityHandler.NINJA_DATA)
+                        .map(data -> data.isNinjaModeEnabled())
+                        .orElse(false);
+                if (hears) {
+                    listener.connection.send(packet);
+                }
+            }
         }
     }
 }

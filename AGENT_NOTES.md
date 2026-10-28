@@ -153,6 +153,15 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
   наблюдатель и игрок из другого измерения фоллоу просто отпускают.
 * `isAlliedTo` намеренно не вызывает `super` (иначе любой моб того же типа стал бы союзником) и влияет
   только на выбор цели: кастер может спокойно попать своего клона.
+* **Распустить клона ударом.** Удар кастера по своему клону гарантированно его распускает:
+  `events/ShadowCloneEvents#onAttackOwnClone` (на `AttackEntityEvent`, `HIGHEST`, только сервер) ловит
+  клик и зовёт `dispel()`, а удар отменяет. Ловить это на уроне нельзя: клон копирует офхенд кастера
+  (`COPIED_SLOTS`), `CloneUseShieldGoal` держит скопированный щит поднятым всё время боя, а
+  заблокированный удар урона не наносит вообще — клон с 1 HP не лопался, и кастер видел «неубиваемого»
+  клона. Вдобавок `ShadowCloneEntity#isDamageSourceBlocked` теперь всегда `false` для удара кастера
+  (`isCasterBlow`: `getEntity()`/`getDirectEntity()` — владелец), чтобы щит не съедал и остальные его
+  попадания. Слабость/нулевой урон (`Player#attack` не зовёт `hurt` при `f <= 0`) тоже больше не мешают.
+  Событие приходит и на клиенте — без проверки `isClientSide` был бы двойной дым и звук.
 * Имя над головой скрыто (`shouldShowName → false`), иначе клон выдаёт себя биркой.
 * Чиби-клон — `scale 0.5` и уменьшенный хитбокс (`CHIBI_DIMENSIONS`).
 * **Медитирующий клон** (флаг `Settings#meditating()`, синг `DATA_MEDITATING`): руки пустые, снаряжение и
@@ -312,6 +321,15 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   остальных ванильных `jutsu.fail.*` русских переводов как не было, так и нет).
 * `getTranslationKey(ninjaData, ticksActive)` добавляет `.mark` при удержании, ровно как у подмены:
   «You cast Chakra Marker» / «... - Log Planted».
+
+### Слышимость печатей
+
+`network/c2s/ServerJutsuCastingPacket` больше не играет звук печати миром: вместо
+`Level#playSound(null, x, y, z, ...)` (это слышали **все** в 16 блоках, включая тех, кто ещё не ниндзя)
+пакет `ClientboundSoundPacket` рассылается вручную по `ServerLevel#players()` только тем, у кого
+`isNinjaModeEnabled()`, радиус — `SEAL_HEARING_RANGE = 16`. Сам кастер в этот список попадает, поэтому
+свои печати слышит. `gameEvent(JUTSU_CASTING)` остался без изменений — sculk/варден реагируют на любого
+кастера. Громкость (`SoundSource.PLAYERS`, 1.0) та же, так что в настройках звука ничего не поменялось.
 
 ## Техники и предметы второго набора
 
@@ -943,9 +961,17 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   единственный, когда цепочку можно прочитать и продлить до расчёта урона. Самехада дополнительно
   «высасывает» 1.5 чакры за удар. Оба меча — 2D-спрайты (`item/handheld`), 3D-модели 1.7.10 пока не
   портированы.
+* **Щит с модовым мечом.** `ComboSwordItem#use` и `TechniqueSwordItem#use` раньше возвращали
+  `InteractionResultHolder.success`, что **поглощало правый клик** и не давало
+  `Minecraft#startUseItem` дойти до офхенда — поэтому с любым из модовых мечей в основной руке щит
+  в левой не поднимался. Теперь оба возвращают `pass`: парирование (`ParryAbility.raiseGuard`,
+  только на сервере) всё равно срабатывает, а щит поднимается как обычно. Серверная сторона
+  (`ServerGamePacketListenerImpl#handleUseItem`) работает по пакету независимо от результата.
 * **Сбор природной энергии и режим Мудреца.** Пул `seninMana` (float, `@Sync`, **пишется** в NBT) живёт
-  в `INinjaData`/`NinjaData`; максимум — конфиг `maxSeninMana` (по умолчанию 100), выключение всей ветки
-  — `sageModeEnabled`. Копит `SenjutsuChargingAbility` (CHANNELED, `V B C`): **0.5/тик и только если
+  в `INinjaData`/`NinjaData`; максимум — конфиг `maxSeninMana` (по умолчанию 100) **плюс** бонусы глаз и
+  узлов `SENIN_MANA`, но только после узла `body_senjutsu`: пока техника сбора не куплена,
+  `getMaxSeninMana()` возвращает 0, полоска не рисуется, пассивный приток и медитация ничего не копят
+  (`AbilityUnlocks#hasSenjutsu`). Выключение всей ветки — `sageModeEnabled`. Копит `SenjutsuChargingAbility` (CHANNELED, `V B C`): **0.5/тик и только если
   `isStill`** (на земле и `getDeltaMovement().horizontalDistanceSqr() < 0.0016`), движение прогресс не
   сбрасывает. Тратит `SageModeAbility` (INSTANT, `V B V`): вход требует 50, дальше `DRAIN_PER_TICK = 0.02`,
   режим **сам гаснет на нуле** (не по таймеру): полный пул в 100 держится ~4 минуты (вход ничего не
@@ -966,6 +992,12 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   зелёной заливкой (семейство частиц сенина) и подписью через `GuiUtils.centeredTextOutlined`, и
   появляется только когда есть что показывать (накоплена мана или идёт режим) — иначе пустая плашка
   была бы мусором. Добавлена в `overlays` в `NarutoInGameGUI`.
+* **Костяные техники (мультитул и клинок).** `BoneMultitoolItem` бьёт по NBT-уровню инструмента:
+  надбавка `ATTACK_DAMAGES = {0, 2, 3.5, 5.5, 7}` (итого 1 / 3 / 4.5 / 6.5 / 8 — только tier 4, с 90%
+  освоения, равен незеритовому мечу), замах `-2.8` (медленнее меча), урон переопределён в
+  `getAttributeModifiers` по стеку (в конструктор передаётся 0 как fallback). `BoneBladeItem` —
+  `SwordItem(KATANA, 7, -1.9)` = 9.5 итого; надбавка `CamelliaDanceAbility#bonusDamage` = 2 + 2×освоение
+  (в `ClanTechniqueEvents#cut` читается из капабилити), 25% урона идёт сквозь броню вторым ударом.
 * **Гендзюцу** (`GenjutsuJutsuAbility`, `C B C`, INSTANT, 35 чакры, КД 10 с) — цель берётся
   `Targeting.lookedAtEntity(player, RANGE=24)` → `Mob` (см. грабли про `player.pick`). Состояние висит **на самой сущности**
   в `getPersistentData()` (`narutomod:genjutsu_until` = `gameTime + DURATION`, `narutomod:genjutsu_caster`),
@@ -1059,6 +1091,10 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   только при изменении, а его собственный хук «начал отслеживать» пустой, поэтому игрок, подошедший
   к уже замаскированному кастеру, видел обычный скин до следующей смены личины. Теперь текущие
   глобально синкаемые значения переигрываются новому наблюдателю при входе в трекинг.
+  **Поправка (1.10.1):** хук sekclib'а `SyncDataCapabilityHandler#playerTracking` не пустой — он
+  делает ровно тот же `broadcastCapToPlayer` во всех версиях 1.0.0–1.0.2, так что собственный
+  `PlayerEvents#onStartTracking` был лишним и удалён (он лишь удваивал пакет и лог). Побочный эффект
+  этого хука описан ниже в граблях про null в синке.
   `isHenged()` истинно, если заполнен любой из двух (target/entityType). Повторный каст снимает
   личину без цели. Клиент (`client/renderer/HengeRenderEvents`, FORGE-шина) в `RenderPlayerEvent.Pre`
   **отменяет ванильный рендер** и рисует вместо него либо копию игрока, либо моба:
@@ -1456,10 +1492,10 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
   `ShadowCloneJutsuAbility#checkCooldown` закрывает каст (сообщение о КД показывает 300 с, со скидкой
   КД от освоения), `registerCooldown` при этом **не** ставит таймер — как только все клоны мертвы, каст
   снова доступен сразу. Рабочие и медитация — на обычном КД.
-* **Смерть** (`NinjaCapabilityHandler#playerClone`, `isWasDeath`): откат прогресса на уровне, а не на
-  счётчике (`Mastery.applyDeathPenalty`), т.к. у верха кривой доля счётчика почти не двигает `m`.
-  `t = clamp((m-0.5)/0.45,0,1)`; `p = rand(lerp(low..), lerp(high..))`; `m' = max(0, m-p)`; назад в
-  счётчик. На `m≈0.5` — 3–5%, на `m≈0.95` — 10–20%, разброс на каждую смерть свой.
+* **Смерть ничего не отнимает.** Прогресс освоения переживает смерть целиком: капабилити копируется
+  на новое тело в `NinjaCapabilityHandler#playerClone` (`deserializeNBT`), а штраф за смерть
+  (`Mastery.applyDeathPenalty` и опции `deathPenalty*`) удалён. Геймрул `keepInventory` на прогресс не
+  влияет никак — он про предметы, а освоение не откатывается ни с ним, ни без него.
 
 ### Медитация (радиус и пассив)
 
@@ -1745,6 +1781,30 @@ Regeneration I на 8 с, плюс `getCooldowns().addCooldown(this, 60*20)` —
 
 ## Грабли, на которые уже наступали
 
+* **sekclib присылает null за ещё не тикнувшие поля.** На `PlayerEvent.StartTracking` sekclib делает
+  `CapabilityBroadcaster.broadcastCapToPlayer`, который собирает **все** глобально синкаемые поля
+  (`collectEntries(entity, true)`), а не только изменённые. У только что вошедшего игрока трекеры ещё
+  не тикали, `sendValue == null`, и пакет кодирует это как «данных нет». Обработчик на клиенте в этом
+  случае всё равно зовёт сеттер через method handle: примитивы падают с
+  `NullPointerException ... unboxBoolean` («There was a problem setting a value» в логе, поле остаётся
+  дефолтным), а **ссылочные поля молча получают null**. Так `toggleAbilityData` пропадал у клиента, и
+  `SixPathsOrbRenderer` ронял игру NPE при подключении второго игрока (1.10.0 → фикс в 1.10.1).
+  Поэтому в `NinjaData` все вложенные данные (`ToggleAbilityData`, `MasteryData`, `SkillData`,
+  `DisabledAbilityData`, `AbsorptionData`, `DoubleJumpData`) берутся только через геттеры, которые
+  пересоздают объект, если поле обнулилось, а строки хенге возвращают `""` вместо null. Не
+  «оптимизируй» это обратно в `return this.field`, и не читай эти поля напрямую в рендере — только
+  через геттер.
+
+* **`minecraft:alternative` не существует — лут-модификаторы молча умирали.** Восемь из десяти
+  `data/narutomod/loot_modifiers/*.json` (`scrolls_tier1..3`, `notes`, `goods`, `relics`,
+  `archaeology_common/rare`) использовали `"condition": "minecraft:alternative"` — это условие из
+  Fabric/NeoForge, в Forge 47.1.x его нет. Загрузчик пишет в лог
+  `Could not decode GlobalLootModifier with json id narutomod:<name> - error: Unknown type
+  'minecraft:alternative'` и **выбрасывает модификатор целиком** (не только условие), так что свитки,
+  записки, товары, реликвии и археология не попадали ни в один сундук. Правильное ванильное
+  объединение «или» — `minecraft:any_of` (тот же массив `terms`; у Forge 47 есть только
+  `forge:loot_table_id` и `forge:can_tool_perform_action`, `forge:alternative` тоже нет). Проверять
+  лут — по этой строке в `latest.log`, ошибка не видна в игре.
 * **Типы урона мода задаются вручную.** Датаген в проект не запускается при сборке
   (`src/generated/resources` пуст), поэтому JSON-ы типов урона (`fireball`, `water_bullet`,
   `gate_backlash`) лежат руками в `src/main/resources/data/narutomod/damage_type/`. Если файла нет,

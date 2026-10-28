@@ -42,7 +42,7 @@ public class CampfireJutsuAbility extends Ability {
 
 
     /** B C B */
-    public static final long COMBO = 11221L;
+    public static final long COMBO = 13221L;
 
     /** How far the caster reaches for a log, in blocks. */
     private static final double REACH = 8.0d;

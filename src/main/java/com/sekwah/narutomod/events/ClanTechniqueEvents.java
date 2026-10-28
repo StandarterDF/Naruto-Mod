@@ -71,10 +71,14 @@ public final class ClanTechniqueEvents {
 
     /**
      * A bone blade's cut: a little more than the blow was worth, a quarter of the whole carried past
-     * armour as a second, unblockable hit, and a wound that keeps bleeding.
+     * armour as a second, unblockable hit, and a wound that keeps bleeding. The extra cut grows with
+     * mastery of the dance, so a practised Kaguya cuts far deeper than a fresh one.
      */
     private static void cut(Player attacker, LivingEntity victim, LivingHurtEvent event) {
-        float total = event.getAmount() + CamelliaDanceAbility.BONUS_DAMAGE;
+        float bonus = attacker.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA)
+                .map(CamelliaDanceAbility::bonusDamage)
+                .orElse(CamelliaDanceAbility.BONUS_DAMAGE);
+        float total = event.getAmount() + bonus;
         event.setAmount(total);
 
         CompoundTag data = victim.getPersistentData();

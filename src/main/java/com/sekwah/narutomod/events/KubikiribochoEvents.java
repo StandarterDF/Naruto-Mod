@@ -1,7 +1,11 @@
 package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
+import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.item.NarutoItems;
+import com.sekwah.narutomod.skills.Skill;
+import com.sekwah.narutomod.skills.SkillBranch;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
@@ -50,7 +54,26 @@ public final class KubikiribochoEvents {
         if (wear <= 0) {
             return;
         }
+        // Kenjutsu mastery makes the blade knit back together faster: every learned
+        // node in the branch adds a little to the repair, so a fully trained swordsman
+        // gets the Executioner's Blade back to shape in a couple of kills.
+        float kenjutsuBonus = 0.0f;
+        // Count unlocked Kenjutsu nodes.
+        if (killer instanceof net.minecraft.world.entity.player.Player) {
+            var opt = killer.getCapability(NinjaCapabilityHandler.NINJA_DATA);
+            INinjaData data = opt.resolve().orElse(null);
+            if (data != null) {
+                int count = 0;
+                for (Skill skill : Skill.all()) {
+                    if (skill.branch() == SkillBranch.KENJUTSU && data.getSkillData().getUnlocked().contains(skill.id())) {
+                        count++;
+                    }
+                }
+                kenjutsuBonus = count * 0.02f;
+            }
+        }
         float share = MIN_REPAIR_SHARE + killer.getRandom().nextFloat() * (MAX_REPAIR_SHARE - MIN_REPAIR_SHARE);
+        share = Math.min(0.9f, share + kenjutsuBonus);
         int mended = Math.round(held.getMaxDamage() * share);
         held.setDamageValue(Math.max(0, wear - mended));
 

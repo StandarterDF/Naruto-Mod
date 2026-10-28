@@ -52,7 +52,7 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
 
 
     /** V B B B - tap to open the next gate, hold the last key to seal them again. */
-    public static final long COMBO = 332L;
+    public static final long COMBO = 1233L;
 
     public static final int MAX_GATES = 8;
 

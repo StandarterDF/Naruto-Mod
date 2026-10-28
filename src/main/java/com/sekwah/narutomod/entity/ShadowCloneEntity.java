@@ -678,6 +678,26 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         return false;
     }
 
+    /**
+     * A clone never blocks its own caster. It copies the caster's offhand, so most clones carry the
+     * same shield the caster does, and {@code CloneUseShieldGoal} keeps it up for as long as the
+     * clone is fighting anything. Without this, a caster walking up to a clone in the middle of a
+     * fight would find every swing eaten by the shield the clone borrowed from them - and a clone
+     * that blocks takes no damage, so it would not pop either. Everything else (a zombie, another
+     * player, a stray arrow) still has to get through the shield the normal way.
+     */
+    @Override
+    public boolean isDamageSourceBlocked(DamageSource damageSource) {
+        return !this.isCasterBlow(damageSource) && super.isDamageSourceBlocked(damageSource);
+    }
+
+    /** Whether this damage is the caster's own hand (or what they are holding) landing on the clone. */
+    private boolean isCasterBlow(DamageSource damageSource) {
+        Entity attacker = damageSource.getEntity();
+        Entity direct = damageSource.getDirectEntity();
+        return this.isOwnedBy(attacker) || this.isOwnedBy(direct);
+    }
+
     @Override
     protected SoundEvent getHurtSound(DamageSource damageSource) {
         return SoundEvents.PLAYER_HURT;

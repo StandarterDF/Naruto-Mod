@@ -45,7 +45,7 @@ public class SixPathsModeAbility extends Ability
     }
 
     /** B B B B C C - the Six Paths seal, the branch's last key. */
-    public static final long COMBO = 33333L;
+    public static final long COMBO = 21333L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "six_paths_mode");
 

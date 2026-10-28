@@ -2,10 +2,12 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.jutsus.RinneganAbility;
+import com.sekwah.narutomod.abilities.jutsus.SharinganAbility;
 import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.events.GenjutsuEvents;
 import com.sekwah.narutomod.friends.Friends;
-import com.sekwah.narutomod.util.Targeting;
 import com.sekwah.narutomod.world.WorldEnvironment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -15,6 +17,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.player.Player;
@@ -90,20 +99,33 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Channeled {
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
         boolean mass = this.masteryLevel(ninjaData) >= MASS_MASTERY;
         Mob target = findTarget(player);
+        Player playerTarget = NarutoConfig.genjutsuOnPlayers ? findPlayerTarget(player) : null;
         boolean opening = chargeAmount <= 0;
-        if (target == null && !(mass && !findTargets(player, player.isShiftKeyDown() ? 1 : MAX_MASS_TARGETS).isEmpty())) {
-            if (opening) {
-                player.displayClientMessage(Component.translatable("jutsu.fail.genjutsu.notarget",
-                        Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
-                        .withStyle(ChatFormatting.RED), true);
-            }
+        boolean tap = chargeAmount < 0;
+        // A tap needs something to take hold of; a held channel stays open even with nothing in
+        // sight yet, so the caster can sweep the illusion across whatever enters their view later.
+        if (tap && target == null && playerTarget == null
+                && !(mass && !findTargets(player, player.isShiftKeyDown() ? 1 : MAX_MASS_TARGETS).isEmpty())) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.genjutsu.notarget",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
             return false;
         }
-        if (target != null && GenjutsuEvents.isUnderGenjutsu(target) && !mass) {
-            if (opening) {
+        LivingEntity activeTarget = playerTarget != null ? playerTarget : target;
+        // A fresh tap on an already-affected mob is refused.
+        if (activeTarget != null && !mass && opening) {
+            boolean under = (activeTarget instanceof Mob mob && GenjutsuEvents.isUnderGenjutsu(mob))
+                    || (activeTarget instanceof Player p && GenjutsuEvents.isUnderGenjutsu(p));
+            if (under) {
                 player.displayClientMessage(Component.translatable("jutsu.fail.genjutsu.active",
-                        target.getDisplayName().copy().withStyle(ChatFormatting.YELLOW)).withStyle(ChatFormatting.RED), true);
+                        activeTarget.getDisplayName().copy().withStyle(ChatFormatting.YELLOW)).withStyle(ChatFormatting.RED), true);
+                return false;
             }
+        }
+        // Holding the seal to sweep several minds is a mastered technique.
+        if (!mass && !opening) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.genjutsu.hold_locked")
+                    .withStyle(ChatFormatting.RED), true);
             return false;
         }
         float cost = this.masteryCost(ninjaData, opening ? CHAKRA_COST : UPKEEP);
@@ -136,6 +158,12 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Channeled {
         boolean mass = this.masteryLevel(ninjaData) >= MASS_MASTERY;
         int limit = mass ? MAX_MASS_TARGETS : 1;
         int duration = DURATION + (mass ? Math.min(HELD_BONUS_MAX, ticksChanneled * HELD_BONUS_PER_TICK) : 0);
+        // An open eye reads the mind it is taking hold of far more deeply.
+        if (RinneganAbility.isActive(ninjaData)) {
+            duration *= 5;
+        } else if (SharinganAbility.isActive(ninjaData)) {
+            duration *= 2;
+        }
         for (Mob target : findTargets(player, limit)) {
             GenjutsuEvents.apply(player, target, duration);
             tryTame(player, target);
@@ -148,6 +176,20 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Channeled {
             level.playSound(null, target.getX(), target.getY(), target.getZ(),
                     SoundEvents.ILLUSIONER_CAST_SPELL, SoundSource.PLAYERS, 0.8f, 0.7f);
         }
+        if (NarutoConfig.genjutsuOnPlayers) {
+            Player aimedPlayer = findPlayerTarget(player);
+            if (aimedPlayer != null && !Friends.areFriends(player, aimedPlayer)) {
+                GenjutsuEvents.apply(player, aimedPlayer, duration);
+                player.displayClientMessage(Component.translatable("jutsu.genjutsu.cast",
+                        aimedPlayer.getDisplayName().copy().withStyle(ChatFormatting.LIGHT_PURPLE))
+                        .withStyle(ChatFormatting.DARK_PURPLE), true);
+                level.sendParticles(ParticleTypes.ENCHANT, aimedPlayer.getX(),
+                        aimedPlayer.getY() + aimedPlayer.getBbHeight(), aimedPlayer.getZ(),
+                        30, 0.5d, 0.4d, 0.5d, 0.4d);
+                level.playSound(null, aimedPlayer.getX(), aimedPlayer.getY(), aimedPlayer.getZ(),
+                        SoundEvents.ILLUSIONER_CAST_SPELL, SoundSource.PLAYERS, 0.8f, 0.7f);
+            }
+        }
     }
 
     /** A tap lays one illusion; a hold is handled tick by tick. */
@@ -158,45 +200,57 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Channeled {
         }
     }
 
-    /** The looked-at mob first, then every other mob sharing roughly the same line of sight. */
+    /** Only the mob the caster is actually looking at: a raycast, not the whole view. */
     private static java.util.List<Mob> findTargets(Player player, int limit) {
         java.util.List<Mob> found = new java.util.ArrayList<>();
         Mob aimed = findTarget(player);
         if (aimed != null && !Friends.areFriends(player, aimed)) {
             found.add(aimed);
         }
-        double range = RANGE * (1.0d + MOON_RANGE_BONUS * WorldEnvironment.moonClarity(player));
-        var look = player.getLookAngle();
-        java.util.List<Mob> nearby = player.level().getEntitiesOfClass(Mob.class,
-                player.getBoundingBox().inflate(range),
-                mob -> mob.isAlive() && mob != aimed && mob.distanceToSqr(player) <= range * range);
-        nearby.sort(java.util.Comparator.comparingDouble(mob -> mob.distanceToSqr(player)));
-        for (Mob mob : nearby) {
-            if (found.size() >= limit) {
-                break;
-            }
-            if (Friends.areFriends(player, mob)) {
-                continue;
-            }
-            var toMob = mob.position().subtract(player.position());
-            if (toMob.lengthSqr() < 1.0e-4d) {
-                continue;
-            }
-            if (look.dot(toMob.normalize()) < 0.5d) {
-                continue;
-            }
-            found.add(mob);
-        }
         return found;
+    }
+
+    /** Same as {@code Targeting.lookedAtEntity}, inlined so the cast never depends on that class. */
+    private static Entity lookedAtEntity(Player player, double range) {
+        Vec3 eye = player.getEyePosition();
+        Vec3 look = player.getViewVector(1.0F);
+        Vec3 reach = eye.add(look.scale(range));
+        BlockHitResult blockHit = player.level().clip(new ClipContext(eye, reach,
+                ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+        double limit = blockHit.getType() == HitResult.Type.MISS
+                ? range
+                : blockHit.getLocation().distanceTo(eye);
+        Vec3 end = eye.add(look.scale(limit));
+        AABB searchBox = player.getBoundingBox().expandTowards(look.scale(limit)).inflate(1.0D);
+        EntityHitResult hit = net.minecraft.world.entity.projectile.ProjectileUtil.getEntityHitResult(
+                player, eye, end, searchBox,
+                entity -> !entity.isSpectator() && entity.isPickable(), limit * limit);
+        return hit != null ? hit.getEntity() : null;
     }
 
     /** @return the mob the ninja is looking at, or null when they are looking at anything else. */
     public static Mob findTarget(Player player) {
         // The full moon makes an illusion reach further; by day or on a new moon it is the plain range.
         double range = RANGE * (1.0d + MOON_RANGE_BONUS * WorldEnvironment.moonClarity(player));
-        Entity lookedAt = Targeting.lookedAtEntity(player, range);
+        Entity lookedAt = lookedAtEntity(player, range);
         if (lookedAt instanceof Mob mob && mob.isAlive()) {
             return mob;
+        }
+        return null;
+    }
+
+    /** @return the player the ninja is looking at, or null when illusions on players are off or the look lands elsewhere. */
+    private Player findPlayerTarget(Player caster) {
+        if (!NarutoConfig.genjutsuOnPlayers) {
+            return null;
+        }
+        double range = RANGE * (1.0d + MOON_RANGE_BONUS * WorldEnvironment.moonClarity(caster));
+        Entity lookedAt = lookedAtEntity(caster, range);
+        if (lookedAt instanceof Player other && other != caster
+                && !other.isCreative() && !other.isSpectator()
+                && !other.isAlliedTo(caster) && !Friends.areFriends(caster, other)
+                && !other.getTags().contains("narutomod:genjutsu_resistant")) {
+            return other;
         }
         return null;
     }

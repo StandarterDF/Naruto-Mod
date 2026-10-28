@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.sekwah.narutomod.abilities.jutsus.SixPathsModeAbility;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
+import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
 import com.sekwah.narutomod.client.model.jutsu.TruthSeekerOrbModel;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -51,7 +52,10 @@ public final class SixPathsOrbRenderer {
             if (ninjaData == null) {
                 continue;
             }
-            if (!ninjaData.getToggleAbilityData().getAbilitiesHashSet().contains(SixPathsModeAbility.ID)) {
+            // Read once: the capability can legitimately arrive empty for a player whose data has
+            // not been synced yet, and this runs every frame for every player in the level.
+            ToggleAbilityData toggles = ninjaData.getToggleAbilityData();
+            if (toggles == null || !toggles.getAbilitiesHashSet().contains(SixPathsModeAbility.ID)) {
                 continue;
             }
             int orbs = ninjaData.getSixPathsOrbs();

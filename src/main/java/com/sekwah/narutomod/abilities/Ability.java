@@ -167,6 +167,9 @@ public abstract class Ability {
     protected float masteryCost(INinjaData ninjaData, float baseCost) {
         float cost = Mastery.cost(ninjaData, this, baseCost);
         Nature element = this.nature();
+        if (ninjaData.isSageMode()) {
+            cost *= 0.8f;
+        }
         if (element != null) {
             String affinity = ninjaData.getNatureAffinity();
             if (affinity != null && !affinity.isEmpty()) {

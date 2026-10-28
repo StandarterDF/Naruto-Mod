@@ -2,6 +2,7 @@ package com.sekwah.narutomod.capabilities;
 
 import com.mojang.logging.LogUtils;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.AbilityUnlocks;
 import com.sekwah.narutomod.abilities.utility.ChakraChargeAbility;
 import com.sekwah.narutomod.capabilities.absorption.AbsorptionData;
 import com.sekwah.narutomod.capabilities.disabledabilitydata.DisabledAbilityData;
@@ -11,6 +12,7 @@ import com.sekwah.narutomod.capabilities.skills.SkillData;
 import com.sekwah.narutomod.capabilities.toggleabilitydata.ToggleAbilityData;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.effect.NarutoEffects;
+import com.sekwah.narutomod.events.GenjutsuEvents;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.item.ChakraBatteryItem;
 import com.sekwah.narutomod.menu.SupplyChestContainer;
@@ -659,6 +661,11 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
     @Override
     public float getMaxSeninMana() {
+        // Nature energy is learned, not innate: with no gathering technique there is no pool, so a
+        // fresh ninja has no senin bar and cannot stock nature energy before buying the sage branch.
+        if (!AbilityUnlocks.hasSenjutsu(this)) {
+            return 0.0f;
+        }
         return NarutoConfig.maxSeninMana + this.eyeSeninBonus
                 + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.SENIN_MANA);
     }
@@ -715,7 +722,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
     @Override
     public String getHengeTarget() {
-        return this.hengeTarget;
+        return this.hengeTarget == null ? "" : this.hengeTarget;
     }
 
     @Override
@@ -725,7 +732,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
     @Override
     public String getHengeEntityType() {
-        return this.hengeEntityType;
+        return this.hengeEntityType == null ? "" : this.hengeEntityType;
     }
 
     @Override
@@ -735,7 +742,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
     @Override
     public String getHengeName() {
-        return this.hengeName;
+        return this.hengeName == null ? "" : this.hengeName;
     }
 
     @Override
@@ -755,11 +762,15 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
     @Override
     public boolean isHenged() {
-        return this.hengeTicks > 0 && (!this.hengeTarget.isEmpty() || !this.hengeEntityType.isEmpty());
+        return this.hengeTicks > 0
+                && (!this.getHengeTarget().isEmpty() || !this.getHengeEntityType().isEmpty());
     }
 
     @Override
     public DoubleJumpData getDoubleJumpData() {
+        if (this.doubleJumpData == null) {
+            this.doubleJumpData = new DoubleJumpData(false);
+        }
         return this.doubleJumpData;
     }
 
@@ -809,28 +820,56 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         this.ticksChanneled = 0;
     }
 
+    /*
+     * The nested data below is contractually never null, and every getter repairs a missing object
+     * instead of handing it out.
+     *
+     * sekclib replays a player's globally synced fields to whoever starts tracking them, and it
+     * replays the raw tracker values - a tracker that has not ticked yet sends "no data", which the
+     * packet spells as null. The client handler then writes that null straight into the field through
+     * a method handle, so a player who logs in during the same tick another player starts watching
+     * them arrives with these objects wiped. A null here used to fall straight into a renderer and
+     * take the game down (see SixPathsOrbRenderer). Starting from an empty object is safe: the next
+     * real update of the field replaces it.
+     */
+
     @Override
     public ToggleAbilityData getToggleAbilityData() {
+        if (this.toggleAbilityData == null) {
+            this.toggleAbilityData = new ToggleAbilityData();
+        }
         return this.toggleAbilityData;
     }
 
     @Override
     public MasteryData getMasteryData() {
+        if (this.masteryData == null) {
+            this.masteryData = new MasteryData();
+        }
         return this.masteryData;
     }
 
     @Override
     public SkillData getSkillData() {
+        if (this.skillData == null) {
+            this.skillData = new SkillData();
+        }
         return this.skillData;
     }
 
     @Override
     public AbsorptionData getAbsorptionData() {
+        if (this.absorptionData == null) {
+            this.absorptionData = new AbsorptionData();
+        }
         return this.absorptionData;
     }
 
     @Override
     public DisabledAbilityData getDisabledAbilityData() {
+        if (this.disabledAbilityData == null) {
+            this.disabledAbilityData = new DisabledAbilityData();
+        }
         return this.disabledAbilityData;
     }
 
@@ -987,7 +1026,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         }
         if (this.chakraRegenInfo.canRegen()
                 && player.getPersistentData().getLong("narutomod:node_rupture_until")
-                <= player.level().getGameTime()) {
+                <= player.level().getGameTime()
+                && !GenjutsuEvents.isUnderGenjutsu(player)) {
             // Open gates burn chakra faster than it can be made back: while any gate is open the
             // pool only goes down, which is the price of the stance.
             if (this.getGateCount() <= 0) {
@@ -1208,6 +1248,9 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
                     this.skillData.learnScroll(knowledge);
                 }
             }
+            // Clamped once the learned nodes are back: without the gathering technique the pool is
+            // zero, so a value saved by an older build cannot linger as a bar a fresh ninja owns.
+            this.setSeninMana(this.seninMana);
             this.claimedBossMilestones.clear();
             CompoundTag bossTag = compoundTag.getCompound(BOSS_MILESTONES_TAG);
             for (String boss : bossTag.getAllKeys()) {

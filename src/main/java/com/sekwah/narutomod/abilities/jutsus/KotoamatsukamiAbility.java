@@ -44,7 +44,7 @@ public class KotoamatsukamiAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C V V B B B - the Sharingan combo (C V V B), then the deepest suggestion on the branch. */
-    public static final long COMBO = 111121L;
+    public static final long COMBO = 111321L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "kotoamatsukami");
 

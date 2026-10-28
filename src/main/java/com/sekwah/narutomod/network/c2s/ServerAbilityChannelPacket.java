@@ -6,6 +6,7 @@ import com.sekwah.narutomod.abilities.AbilityUnlocks;
 import com.sekwah.narutomod.abilities.jutsus.ChakraCloakAbility;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.events.ByakuganEvents;
+import com.sekwah.narutomod.events.GenjutsuEvents;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import net.minecraft.ChatFormatting;
@@ -62,6 +63,11 @@ public class ServerAbilityChannelPacket {
                 player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
                     if(!ninjaData.isNinjaModeEnabled()) {
                         player.displayClientMessage(Component.translatable("jutsu.not_a_ninja").withStyle(ChatFormatting.RED), true);
+                        return;
+                    }
+                    // A mind held by an illusion cannot start a hold; releasing one already running stays possible.
+                    if (GenjutsuEvents.isUnderGenjutsu(player) && msg.status != ChannelStatus.STOP) {
+                        player.displayClientMessage(Component.translatable("jutsu.fail.genjutsu.held").withStyle(ChatFormatting.RED), true);
                         return;
                     }
                     Ability ability = NarutoRegistries.ABILITIES.getValue(msg.abilityResource);

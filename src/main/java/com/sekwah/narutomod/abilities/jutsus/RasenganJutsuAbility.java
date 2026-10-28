@@ -35,7 +35,7 @@ public class RasenganJutsuAbility extends Ability implements Ability.Channeled {
 
 
     /** C B B C B */
-    public static final long COMBO = 23L;
+    public static final long COMBO = 332L;
 
     /** Ticks of channelling before the sphere is worth throwing. */
     private static final int MIN_CHARGE = 20;

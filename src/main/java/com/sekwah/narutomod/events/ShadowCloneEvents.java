@@ -7,6 +7,8 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -30,6 +32,32 @@ import java.util.List;
  */
 @Mod.EventBusSubscriber(modid = NarutoMod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ShadowCloneEvents {
+
+    /**
+     * A caster's own swing pops their clone: it is the quickest way to dismiss one that is in the
+     * way, and it is how clones were cleared in 1.7.10.
+     *
+     * <p>This runs off the click rather than off the damage so it cannot be swallowed on the way.
+     * A clone copies the caster's offhand and keeps that shield up while it fights, and a blocked
+     * blow deals no damage at all - so a caster trying to dismiss a clone that was busy would find
+     * every swing stopped by their own shield. Weakness or a hit that works out to zero would skip
+     * the damage call the same way. Popping the clone here means the gesture always works.</p>
+     *
+     * <p>The event also fires on the client; only the server may pop anything, or the smoke and the
+     * poof sound would play twice.</p>
+     */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onAttackOwnClone(AttackEntityEvent event) {
+        Player caster = event.getEntity();
+        if (caster.level().isClientSide) {
+            return;
+        }
+        if (!(event.getTarget() instanceof ShadowCloneEntity clone) || !clone.isOwnedBy(caster)) {
+            return;
+        }
+        event.setCanceled(true);
+        clone.dispel();
+    }
 
     @SubscribeEvent
     public static void onExperienceDrop(LivingExperienceDropEvent event) {

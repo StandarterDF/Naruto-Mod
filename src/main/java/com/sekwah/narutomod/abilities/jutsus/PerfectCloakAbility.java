@@ -44,7 +44,7 @@ public class PerfectCloakAbility extends Ability implements Ability.Toggled, Abi
     }
 
     /** C C B B B B - the seal, then the whole tail. */
-    public static final long COMBO = 12111L;
+    public static final long COMBO = 32111L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "perfect_cloak");
 

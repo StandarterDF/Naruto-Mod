@@ -2,7 +2,7 @@
   "type": "narutomod:add_loot",
   "conditions": [
     {
-      "condition": "minecraft:alternative",
+      "condition": "minecraft:any_of",
       "terms": [
         { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:archaeology/trail_ruins_common" },
         { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:archaeology/desert_pyramid" },

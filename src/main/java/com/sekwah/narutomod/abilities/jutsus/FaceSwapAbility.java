@@ -40,7 +40,7 @@ public class FaceSwapAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C B C C A B - the genjutsu combination (C B C), then the branch's fourth step. */
-    public static final long COMBO = 11311L;
+    public static final long COMBO = 12311L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "face_swap");
 

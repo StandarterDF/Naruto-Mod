@@ -40,7 +40,7 @@ public class ChakraAdhesionAbility extends Ability implements Ability.Channeled 
 
 
     /** C C V. */
-    public static final long COMBO = 11222L;
+    public static final long COMBO = 13222L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_adhesion");
 

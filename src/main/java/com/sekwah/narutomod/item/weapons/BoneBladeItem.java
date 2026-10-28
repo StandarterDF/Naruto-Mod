@@ -32,7 +32,10 @@ public class BoneBladeItem extends SwordItem {
     public static final int MAX_CHARGES = 8;
 
     public BoneBladeItem(Properties properties) {
-        super(NinjaTier.KATANA, 3, -1.9f, properties);
+        // 1 (the body) + 1.5 (the tier) + 7 here = 9.5, past a netherite sword's 8, and the dance's
+        // own cut on top of that. The blade is the Kaguya weapon and is meant to be the strongest
+        // thing a bone can do; the multitool tops out at a netherite sword's equal and never above.
+        super(NinjaTier.KATANA, 7, -1.9f, properties);
     }
 
     @Override

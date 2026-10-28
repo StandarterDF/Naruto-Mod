@@ -25,14 +25,14 @@ public enum SkillBranch {
     /** Mobility and stamina: speed, the substitution, the double jump, water walking. */
     ATHLETICS(SkillSection.PHYSICAL, "naruto.gui.skill.branch.athletics", 0xFF66DD88),
 
-    /** Hand-to-hand: unarmed damage, the chakra fist and the Eight Gates. */
+    /** Hand-to-hand: unarmed damage, the chakra fist and the blade techniques. */
     TAIJUTSU(SkillSection.PHYSICAL, "naruto.gui.skill.branch.taijutsu", 0xFFFF6B6B),
+
+    /** Swordsmanship: blade techniques and the stances that train them. */
+    KENJUTSU(SkillSection.PHYSICAL, "naruto.gui.skill.branch.kenjutsu", 0xFFFF8A65),
 
     /** Medical ninjutsu: feeding, regeneration, the chakra shield and the second breath. */
     MEDICINE(SkillSection.PHYSICAL, "naruto.gui.skill.branch.medicine", 0xFF7FD8FF),
-
-    /** The Eight Gates: the stamina to open them and the gate techniques themselves. */
-    GATES(SkillSection.GATES, "naruto.gui.skill.branch.gates", 0xFFD32F2F),
 
     // -----------------------------------------------------------------------------------------
     // 2. NINJUTSU - one board per nature
@@ -63,6 +63,9 @@ public enum SkillBranch {
 
     /** Nature energy, its gathering and Sage Mode. */
     SAGE(SkillSection.SPECIAL, "naruto.gui.skill.branch.sage", 0xFF6FD3A0),
+
+    /** The Eight Gates: the stamina to open them and the gate techniques themselves. */
+    GATES(SkillSection.SPECIAL, "naruto.gui.skill.branch.gates", 0xFFD32F2F),
 
     // -----------------------------------------------------------------------------------------
     // 4. DOJUTSU - the eye bloodlines, reserved for later

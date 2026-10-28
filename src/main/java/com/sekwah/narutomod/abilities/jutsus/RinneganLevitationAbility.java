@@ -43,7 +43,7 @@ public class RinneganLevitationAbility extends Ability implements Ability.Channe
     }
 
     /** C V V C V C - the Rinnegan (C V V C) and two more keys. */
-    public static final long COMBO = 12121L;
+    public static final long COMBO = 12321L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "rinnegan_levitation");
 

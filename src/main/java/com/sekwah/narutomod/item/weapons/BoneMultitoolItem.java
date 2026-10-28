@@ -1,5 +1,7 @@
 package com.sekwah.narutomod.item.weapons;
 
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -9,7 +11,11 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
@@ -47,6 +53,17 @@ public class BoneMultitoolItem extends DiggerItem {
     /** Dig speeds per tier, matching wood through netherite - and past it at the top. */
     private static final float[] SPEEDS = {2.0f, 4.0f, 6.0f, 8.0f, 12.0f};
 
+    /**
+     * What the tool adds to the wielder's own fist, per tier: a fresh bone tool is barely a club,
+     * the top tier matches a netherite sword exactly (1 base + 7 = 8). The swing is slower than a
+     * sword's, so even at the top it is a workman's answer rather than a replacement for a blade -
+     * that is what the Camellia Dance is for.
+     */
+    private static final float[] ATTACK_DAMAGES = {0.0f, 2.0f, 3.5f, 5.5f, 7.0f};
+
+    /** How fast the tool swings: slower than a sword, it is first of all a tool. */
+    private static final float SWING_SPEED = -2.8f;
+
     /** Uses per tier: a practised hand grows a tool that lasts. */
     private static final int[] USES = {32, 48, 64, 96, 256};
 
@@ -70,16 +87,37 @@ public class BoneMultitoolItem extends DiggerItem {
         return SPEEDS[Math.max(0, Math.min(SPEEDS.length - 1, tier))];
     }
 
+    /** @return the attack bonus of a tier, on top of the wielder's own fist. */
+    public static float attackFor(int tier) {
+        return ATTACK_DAMAGES[Math.max(0, Math.min(ATTACK_DAMAGES.length - 1, tier))];
+    }
+
     /** @return the full life of a tier. */
     public static int maxUsesFor(int tier) {
         return USES[Math.max(0, Math.min(USES.length - 1, tier))];
     }
 
-    /** What the tool hits for, on top of the wielder's own fist. */
-    private static final float ATTACK_DAMAGE = 4.0f;
-
     public BoneMultitoolItem(Tier tier) {
-        super(ATTACK_DAMAGE, -2.4f, tier, BlockTags.MINEABLE_WITH_PICKAXE, new Properties().stacksTo(1));
+        // The damage the constructor is given is only the fallback: the real value lives in the
+        // stack's grown tier, see getAttributeModifiers below.
+        super(0.0f, SWING_SPEED, tier, BlockTags.MINEABLE_WITH_PICKAXE, new Properties().stacksTo(1));
+    }
+
+    /**
+     * The tool hits as hard as its grown tier, not as hard as its item type: a wood-like multitool
+     * is nearly harmless, and only the top tier, grown at 90% mastery, is a netherite sword's equal.
+     */
+    @Override
+    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlot slot, ItemStack stack) {
+        if (slot != EquipmentSlot.MAINHAND) {
+            return super.getAttributeModifiers(slot, stack);
+        }
+        ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
+        builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_UUID,
+                "Bone tool damage", attackFor(tierOf(stack)), AttributeModifier.Operation.ADDITION));
+        builder.put(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_UUID,
+                "Bone tool speed", SWING_SPEED, AttributeModifier.Operation.ADDITION));
+        return builder.build();
     }
 
     @Override

@@ -4,7 +4,6 @@ import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.jutsus.SenriganFlightAbility;
 import com.sekwah.narutomod.abilities.jutsus.SenriganSightAbility;
-import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import com.sekwah.narutomod.item.ChakraBatteryItem;
 import com.sekwah.narutomod.registries.NarutoRegistries;
@@ -94,9 +93,9 @@ public class NinjaCapabilityHandler {
             event.getEntity().getCapability(NINJA_DATA).ifPresent(future -> {
                 future.deserializeNBT(original.serializeNBT());
                 if (event.isWasDeath()) {
-                    // Dying costs a slice of every technique's mastery, the deeper the closer it was
-                    // to finished, and takes all of the caster's meditations with it.
-                    Mastery.applyDeathPenalty(event.getEntity(), future);
+                    // Mastery is never taken away by dying: the whole cap is copied above and nothing
+                    // here touches it. What death does clear is everything that was borrowed for the
+                    // body that just died - the caster's meditations and their links.
                     dispelMeditationClones(event.getEntity(), original);
                     future.getMeditationData().clear();
                     future.setChakraCapacityBonus(0f);

@@ -254,6 +254,7 @@ public class JutsuScreen extends Screen {
             Map.entry(SkillBranch.CORE, Category.BASICS),
             Map.entry(SkillBranch.ATHLETICS, Category.BASICS),
             Map.entry(SkillBranch.TAIJUTSU, Category.TAIJUTSU),
+            Map.entry(SkillBranch.KENJUTSU, Category.TAIJUTSU),
             Map.entry(SkillBranch.GATES, Category.GATES),
             Map.entry(SkillBranch.MEDICINE, Category.DEFENCE),
 

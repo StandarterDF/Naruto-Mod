@@ -1,5 +1,7 @@
 package com.sekwah.narutomod.capabilities.skills;
 
+import com.sekwah.narutomod.skills.Skill;
+import com.sekwah.narutomod.skills.SkillBranch;
 import com.sekwah.narutomod.skills.SkillEffect;
 import com.sekwah.narutomod.skills.SkillTree;
 import net.minecraft.resources.ResourceLocation;
@@ -91,7 +93,16 @@ public class SkillData {
 
     /** Fraction taken off technique cooldowns by learned nodes. */
     public float cooldownReduction() {
-        return SkillTree.bonus(this.unlocked, SkillEffect.COOLDOWN_REDUCTION);
+        float total = SkillTree.bonus(this.unlocked, SkillEffect.COOLDOWN_REDUCTION);
+        // Each learned kenjutsu technique shaves a little off the cooldown of every blade technique.
+        for (Skill skill : Skill.all()) {
+            if (skill.branch() == SkillBranch.KENJUTSU
+                    && skill.unlock() != null
+                    && this.unlocked.contains(skill.id())) {
+                total += 0.02f;
+            }
+        }
+        return total;
     }
 
     @Override

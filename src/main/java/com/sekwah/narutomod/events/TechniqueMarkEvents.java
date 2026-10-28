@@ -5,6 +5,7 @@ import com.sekwah.narutomod.abilities.jutsus.WindStepAbility;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.entity.ShadowCloneEntity;
+import com.sekwah.narutomod.events.GenjutsuEvents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -141,6 +142,38 @@ public final class TechniqueMarkEvents {
     @SubscribeEvent
     public static void onLivingHurt(LivingHurtEvent event) {
         LivingEntity victim = event.getEntity();
+        // A mind held by an illusion cannot wound the one who cast it, not even through a technique.
+        if (victim instanceof Player casterPlayer) {
+            boolean activeVictim = false;
+            for (Player p : casterPlayer.level().players()) {
+                if (GenjutsuEvents.isUnderGenjutsu(p)) {
+                    java.util.UUID c = GenjutsuEvents.getCasterUUID(p);
+                    if (c != null && c.equals(casterPlayer.getUUID())) {
+                        activeVictim = true;
+                        break;
+                    }
+                }
+            }
+            if (activeVictim) {
+                net.minecraft.world.entity.Entity src = event.getSource().getEntity();
+                if (src instanceof Player attacker && GenjutsuEvents.isUnderGenjutsu(attacker)) {
+                    java.util.UUID casterId = GenjutsuEvents.getCasterUUID(attacker);
+                    if (casterId != null && casterId.equals(casterPlayer.getUUID())) {
+                        event.setCanceled(true);
+                        return;
+                    }
+                }
+                if (src == null) {
+                    java.util.Set<String> env = java.util.Set.of("fall", "lava", "inFire", "onFire", "drown",
+                            "starve", "cactus", "sweetBerryBush", "wither", "freeze", "hotFloor", "inWall",
+                            "cramming", "flyIntoWall", "outOfWorld", "generic", "genericKill", "sting");
+                    if (!env.contains(event.getSource().getMsgId())) {
+                        event.setCanceled(true);
+                        return;
+                    }
+                }
+            }
+        }
         if (!victim.level().isClientSide && victim.getPersistentData().contains(SLEEP)) {
             wake(victim);
         }
@@ -332,6 +365,15 @@ public final class TechniqueMarkEvents {
     public static void onAttack(AttackEntityEvent event) {
         if (com.sekwah.narutomod.abilities.jutsus.BeastCarryAbility.carried(event.getEntity()) != null) {
             event.setCanceled(true);
+            return;
+        }
+        // A mind held by an illusion cannot strike the one who cast it.
+        Player attacker = (Player) event.getEntity();
+        if (GenjutsuEvents.isUnderGenjutsu(attacker)) {
+            java.util.UUID casterId = GenjutsuEvents.getCasterUUID(attacker);
+            if (casterId != null && event.getTarget() instanceof Player target && target.getUUID().equals(casterId)) {
+                event.setCanceled(true);
+            }
         }
     }
 

@@ -37,7 +37,7 @@ public class IzanagiAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C V V B B C - the Sharingan combo (C V V B), then the two keys that survive a death. */
-    public static final long COMBO = 111123L;
+    public static final long COMBO = 111223L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "izanagi");
 

@@ -46,7 +46,7 @@ public class DividedCloakAbility extends Ability implements Ability.Toggled, Abi
     }
 
     /** C C B B A B - the seal, then one more key for the sharing. */
-    public static final long COMBO = 11131L;
+    public static final long COMBO = 21131L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "divided_cloak");
 

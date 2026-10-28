@@ -46,7 +46,7 @@ public class KamuiPhaseAbility extends Ability implements Ability.Toggled, Abili
 
 
     /** V C B - deliberately not a prefix of the Kamui eye, so the two never trip over each other. */
-    public static final long COMBO = 2222L;
+    public static final long COMBO = 1221L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "kamui_phasing");
 

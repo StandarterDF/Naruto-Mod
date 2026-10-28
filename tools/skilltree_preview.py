@@ -255,11 +255,18 @@ def lint(nodes, branches):
             if other is None:
                 problems.append("unknown prerequisite %s -> %s" % (node["path"], req))
                 continue
-            if other["branch"] != node["branch"]:
+            # Rinnegan is deliberately gated on Sharingan mastery, so its cross-tab
+            # prerequisites are an intentional exception to the per-board rule.
+            is_rinnegan_sharingan = (
+                node["path"] == "eye_rinnegan" and other["branch"] == "SHARINGAN"
+            )
+            if other["branch"] != node["branch"] and not is_rinnegan_sharingan:
                 problems.append(
                     "cross-tab prerequisite %s (%s) -> %s (%s)"
                     % (node["path"], node["branch"], req, other["branch"])
                 )
+                continue
+            if is_rinnegan_sharingan:
                 continue
             step = max(abs(node["x"] - other["x"]), abs(node["y"] - other["y"]))
             # The star spokes leaving a tab centre are longer on purpose; every other link is short.
@@ -627,7 +634,7 @@ HTML = r"""<!doctype html>
   .chip:hover { border-color: #ff6b6b; color: #fff; }
 
   #problems { left: 8px; top: 8px; width: 480px; display: none;
-              max-height: 76%; overflow: auto; z-index: 20; }
+              max-height: 76%; overflow: auto; z-index: 20; position: relative; }
   #problems div { cursor: pointer; }
   #problems div:hover { color: #fff; }
   #problems .note { color: #9a9a9a; }
@@ -846,10 +853,13 @@ function lint() {
     n.requires.forEach(r => {
       const o = byPath.get(r);
       if (!o) { out.push({text: 'неизвестный предок: ' + n.path + ' -> ' + r, path: n.path}); return; }
-      if (o.branch !== n.branch) {
+      // Rinnegan is deliberately gated on Sharingan mastery (cross-tab by design).
+      const isRinneganSharingan = (n.path === 'eye_rinnegan' && o.branch === 'SHARINGAN');
+      if (o.branch !== n.branch && !isRinneganSharingan) {
         out.push({text: 'межветковая связь: ' + n.path + ' (' + n.branch + ') -> ' + r + ' (' + o.branch + ')', path: n.path});
         return;
       }
+      if (isRinneganSharingan) return;
       const step = Math.max(Math.abs(n.x - o.x), Math.abs(n.y - o.y));
       const limit = o.path === centres.get(n.branch) ? 4 : 2;
       if (step > limit) out.push({text: 'длинная связь (' + step + ' шага): ' + n.path + ' -> ' + r, path: n.path});
@@ -1291,6 +1301,11 @@ function toggleProblems() {
     return;
   }
   problemsBox.innerHTML = '';
+  const close = document.createElement('div');
+  close.textContent = '×';
+  close.style.cssText = 'position:absolute;top:6px;right:10px;cursor:pointer;font-size:18px;color:#aaa;';
+  close.onclick = () => { problemsBox.style.display = 'none'; };
+  problemsBox.appendChild(close);
   const add = (item, cls) => {
     const row = document.createElement('div');
     row.textContent = item.text;
@@ -1805,6 +1820,7 @@ window.addEventListener('keydown', event => {
   }
   if (event.target !== document.body) return;
   if (event.key === 'Escape') {
+    if (problemsBox.style.display === 'block') { problemsBox.style.display = 'none'; return; }
     if (linkFrom >= 0) { linkFrom = -1; syncTools(); draw(); } else select(-1);
     return;
   }

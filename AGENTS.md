@@ -37,7 +37,7 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-17'
 | `abilities/` | `Ability` (база: цена, КД, каст, освоение), `NarutoAbilities` (реестр + `COMBO_MAP`), `AbilityUnlocks` (гейт дерева — единая точка правды), `JutsuEffects` |
 | `abilities/jutsus/` | По классу на технику: клоны, стихии, дыхания, додзюцу, Камуи, Расенган, земляные техники… Плюс общие предки `AbstractBreathAbility`, `AbstractDojutsuAbility`, `BreathCone` |
 | `abilities/utility/` | Простые стойки/утилиты: заряд чакры, рывок, кулак, двойной прыжок, прыжок, ходьба по воде |
-| `abilities/mastery/` | `Mastery` — кривая освоения, скидки, КД, штраф за смерть |
+| `abilities/mastery/` | `Mastery` — кривая освоения, скидки, КД (прогресс смертью не отнимается) |
 | `capabilities/` | `INinjaData`/`NinjaData` (чакра, стамина, сенин, NBT, `@Sync`), `NinjaCapabilityHandler`; вложенные данные — `skills/`, `mastery/`, `absorption/`, `disabledabilitydata/`, `toggleabilitydata/`, `lingerabilitydata/` |
 | `entity/` | `ShadowCloneEntity`, `ChakraMarkerEntity`, `SmokeCloudEntity`, `SubstitutionLogEntity`, `WorkerJob`, `NarutoEntities` (регистрация и атрибуты) |
 | `entity/ai/` | Голы клонов (`Clone*Goal`) и рабочих (`Worker*Goal`) |

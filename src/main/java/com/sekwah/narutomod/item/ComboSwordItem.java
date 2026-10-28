@@ -10,6 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
@@ -106,11 +107,22 @@ public class ComboSwordItem extends SwordItem {
      * blow; the move is the same one the tree teaches, so a sword is a shield as well as a weapon.
      */
     @Override
+    public UseAnim getUseAnimation(ItemStack stack) {
+        return UseAnim.BLOCK;
+    }
+
+    @Override
+    public int getUseDuration(ItemStack stack) {
+        return 72000;
+    }
+
+    @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         if (hand == InteractionHand.MAIN_HAND && !level.isClientSide) {
             com.sekwah.narutomod.abilities.jutsus.ParryAbility.raiseGuard(player);
         }
-        return InteractionResultHolder.success(player.getItemInHand(hand));
+        player.startUsingItem(hand);
+        return InteractionResultHolder.consume(player.getItemInHand(hand));
     }
 
     @Override

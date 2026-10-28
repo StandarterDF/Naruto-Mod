@@ -43,7 +43,7 @@ public class AirPalmAbility extends Ability implements Ability.Cooldown {
     }
 
     /** V B V V B B C C - the eye's seal, then two keys for the empty palm. */
-    public static final long COMBO = 1111L;
+    public static final long COMBO = 1213L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "air_palm");
 

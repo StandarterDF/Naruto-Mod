@@ -68,7 +68,7 @@ public class BoneToolsAbility extends Ability implements Ability.Cooldown {
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
-        // A practised hand grows a better tool: wood-like at first, past netherite at 90%+.
+        // A practised hand grows a better tool: wood-like at first, a netherite sword's equal at 90%+.
         float mastery = Mastery.level(ninjaData, ID);
         int tier = mastery >= 0.9f ? 4 : Math.min(3, (int) (mastery * 5.0f));
         ItemStack tool = BoneMultitoolItem.create(tier);

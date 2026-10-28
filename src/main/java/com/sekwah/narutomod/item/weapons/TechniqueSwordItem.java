@@ -46,6 +46,6 @@ public class TechniqueSwordItem extends ComboSwordItem {
                 ShibukiAbility.swing(player);
             }
         }
-        return InteractionResultHolder.success(player.getItemInHand(hand));
+        return InteractionResultHolder.pass(player.getItemInHand(hand));
     }
 }

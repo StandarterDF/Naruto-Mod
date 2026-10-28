@@ -118,10 +118,8 @@ import com.sekwah.narutomod.abilities.jutsus.CloneSwapAbility;
 import com.sekwah.narutomod.abilities.jutsus.WaterCloneAbility;
 import com.sekwah.narutomod.abilities.jutsus.MudCloneAbility;
 import com.sekwah.narutomod.abilities.jutsus.ClayCloneAbility;
-import com.sekwah.narutomod.abilities.jutsus.CombatStanceAbility;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import net.minecraft.world.entity.player.Player;
-import com.sekwah.narutomod.abilities.jutsus.CombatStanceAbility;
 import com.sekwah.narutomod.abilities.jutsus.ProjectileCutAbility;
 import com.sekwah.narutomod.abilities.jutsus.DrunkenFistAbility;
 import com.sekwah.narutomod.abilities.jutsus.LimboAbility;
@@ -844,13 +842,6 @@ public class NarutoAbilities {
     public static final RegistryObject<ClayCloneAbility> CLAY_CLONE =
             ABILITY.register("clay_clone", ClayCloneAbility::new);
 
-    /**
-     * The combat focus stance: with it up, two keys reach the long physical techniques.
-     * See {@link CombatStanceAbility}.
-     */
-    public static final RegistryObject<CombatStanceAbility> COMBAT_STANCE =
-            ABILITY.register("combat_stance", CombatStanceAbility::new);
-
     // ----------------------------------------------------------------------------------------
     // Taijutsu and kenjutsu: the physical techniques traded for stamina.
     // ----------------------------------------------------------------------------------------
@@ -1086,20 +1077,8 @@ public class NarutoAbilities {
         }
     }
 
-    /**
-     * Resolves a short seal through the combat stance before the global combo map. The stance only
-     * changes what the keys mean for the caster who has it up; the server still checks the unlock on
-     * the ability that comes out of it.
-     */
+    /** Triggers the technique bound to the given combo, if any. */
     public static boolean triggerAbility(long combo, Player player) {
-        if (player != null) {
-            var data = player.getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
-            var alias = CombatStanceAbility.resolve(player, data, combo);
-            if (alias != null) {
-                triggerAbility(alias);
-                return true;
-            }
-        }
         return triggerAbility(combo);
     }
 

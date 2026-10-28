@@ -31,7 +31,7 @@ public class ScrollWorkbenchItem extends Item {
         if (!level.isClientSide) {
             player.openMenu(new SimpleMenuProvider(
                     (id, inventory, owner) -> new CraftingMenu(id, inventory,
-                            ContainerLevelAccess.NULL),
+                            ContainerLevelAccess.create(level, player.blockPosition())),
                     Component.translatable("item.narutomod.scroll_workbench")));
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);

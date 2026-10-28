@@ -1,5 +1,6 @@
 package com.sekwah.narutomod.abilities.jutsus;
 
+import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.config.NarutoConfig;
@@ -10,6 +11,7 @@ import com.sekwah.narutomod.world.WorldEnvironment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 
@@ -36,6 +38,9 @@ public class SenjutsuChargingAbility extends Ability implements Ability.Channele
 
     /** V B C */
     public static final long COMBO = 3122L;
+
+    public static final ResourceLocation ID =
+            new ResourceLocation(NarutoMod.MOD_ID, "senjutsu_charging");
 
     /** Nature energy gathered per tick of perfect stillness. */
     private static final float CHARGE_PER_TICK = 0.5f;

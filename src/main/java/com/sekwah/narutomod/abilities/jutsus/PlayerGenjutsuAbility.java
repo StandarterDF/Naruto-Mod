@@ -29,7 +29,7 @@ import net.minecraft.world.entity.player.Player;
 public class PlayerGenjutsuAbility extends Ability implements Ability.Cooldown {
 
     /** C B C C B - one key off the other illusions. */
-    public static final long COMBO = 12112L;
+    public static final long COMBO = 12312L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "player_genjutsu");
 

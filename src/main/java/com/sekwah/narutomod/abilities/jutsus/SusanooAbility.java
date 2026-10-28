@@ -42,7 +42,7 @@ public class SusanooAbility extends Ability implements Ability.Toggled, Ability.
     }
 
     /** C V V B V C C - the Sharingan (C V V B), then the heavy end of the Mangekyo branch. */
-    public static final long COMBO = 111122L;
+    public static final long COMBO = 111322L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "susanoo");
 

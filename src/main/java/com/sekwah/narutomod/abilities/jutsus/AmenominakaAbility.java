@@ -52,7 +52,7 @@ public class AmenominakaAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C C C C C C - the full Six Paths seal. */
-    public static final long COMBO = 111112L;
+    public static final long COMBO = 111232L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "amenominaka");
 

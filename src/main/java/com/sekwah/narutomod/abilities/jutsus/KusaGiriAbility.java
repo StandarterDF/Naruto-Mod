@@ -14,6 +14,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.LeavesBlock;
@@ -32,7 +34,7 @@ import net.minecraft.world.phys.Vec3;
  * <p>What it refuses to touch matters as much as what it takes: only crops, bushes and leaves are
  * cut, so a swing in a store room does not open a chest, and a swing at a wall does not mine it.</p>
  */
-public class KusaGiriAbility extends Ability implements Ability.Cooldown {
+public class KusaGiriAbility extends Ability implements Ability.Cooldown, Ability.Channeled {
 
     /** A sweep through a field is heard across a yard, but not across a village. */
     @Override
@@ -47,14 +49,18 @@ public class KusaGiriAbility extends Ability implements Ability.Cooldown {
 
     /** What the stroke costs, and how long the arm needs before the next one. */
     private static final float COST = 10.0f;
+    private static final float HOLD_COST = 1.0f;
     private static final int STAMINA_REGEN_DELAY = 10;
     private static final int COOLDOWN = 80;
 
-    /** How far in front of the caster the box starts, in blocks. */
-    private static final int FORWARD = 2;
+    /** Base reach of a tap, and the furthest a fully trained caster can reach. */
+    private static final int BASE_RANGE = 3;
+    private static final int MAX_RANGE = 30;
 
-    /** Half-width and half-depth of the box, and how tall it stands. */
-    private static final int REACH = 1;
+    /** Ticks of holding needed to extend the slash by one block. */
+    private static final int TICKS_PER_BLOCK = 2;
+
+    /** How tall the slash stands. */
     private static final int HEIGHT = 2;
 
     /** How many motes are drawn along the stroke, whatever it found. */
@@ -62,7 +68,7 @@ public class KusaGiriAbility extends Ability implements Ability.Cooldown {
 
     @Override
     public ActivationType activationType() {
-        return ActivationType.INSTANT;
+        return ActivationType.CHANNELED;
     }
 
     @Override
@@ -77,10 +83,19 @@ public class KusaGiriAbility extends Ability implements Ability.Cooldown {
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        float cost = this.masteryCost(ninjaData, COST);
+        if (chargeAmount < 0) {
+            float cost = this.masteryCost(ninjaData, COST);
+            if (ninjaData.getStamina() < cost) {
+                player.displayClientMessage(Component.translatable("jutsu.fail.notenoughstamina",
+                        Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
+                return false;
+            }
+            ninjaData.useStamina(cost, STAMINA_REGEN_DELAY);
+            return true;
+        }
+        // Holding the slash open costs a little every tick.
+        float cost = this.masteryCost(ninjaData, HOLD_COST);
         if (ninjaData.getStamina() < cost) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.notenoughstamina",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
             return false;
         }
         ninjaData.useStamina(cost, STAMINA_REGEN_DELAY);
@@ -96,29 +111,28 @@ public class KusaGiriAbility extends Ability implements Ability.Cooldown {
         int stepX = Math.abs(look.x) >= Math.abs(look.z) ? (int) Math.signum(look.x) : 0;
         int stepZ = stepX == 0 ? (int) Math.signum(look.z) : 0;
         if (stepX == 0 && stepZ == 0) {
-            // Looking straight down a hole still cuts something: the stroke follows the body.
             Direction facing = player.getDirection();
             stepX = facing.getStepX();
             stepZ = facing.getStepZ();
         }
-        // The box is laid out along the stroke and across it, so a diagonal swing covers the ground
-        // in front of the caster rather than a square of the compass.
-        int sideX = stepZ;
-        int sideZ = stepX;
 
-        BlockPos centre = player.blockPosition().offset(stepX * FORWARD, 0, stepZ * FORWARD);
+        int maxRange = BASE_RANGE + Math.round(this.masteryLevel(ninjaData) * (MAX_RANGE - BASE_RANGE));
+        int range;
+        if (ticksActive < 0) {
+            range = BASE_RANGE;
+        } else {
+            range = Math.min(maxRange, BASE_RANGE + ticksActive / TICKS_PER_BLOCK);
+        }
+        range = Math.max(BASE_RANGE, range);
+
         int cut = 0;
-        for (int depth = -REACH; depth <= REACH; depth++) {
-            for (int side = -REACH; side <= REACH; side++) {
-                BlockPos column = centre.offset(stepX * depth + sideX * side, 0, stepZ * depth + sideZ * side);
-                for (int up = 0; up < HEIGHT; up++) {
-                    BlockPos pos = column.above(up);
-                    if (harvestable(level.getBlockState(pos)) && level.mayInteract(player, pos)) {
-                        // Broken with the caster as the breaker, so the drops are the caster's and a
-                        // hoe's or a hand's fortune applies exactly as it would have by hand.
-                        level.destroyBlock(pos, true, player);
-                        cut++;
-                    }
+        for (int d = 1; d <= range; d++) {
+            BlockPos pos = player.blockPosition().offset(stepX * d, 0, stepZ * d);
+            for (int up = 0; up < HEIGHT; up++) {
+                BlockPos p = pos.above(up);
+                if (harvestable(level.getBlockState(p)) && level.mayInteract(player, p)) {
+                    level.destroyBlock(p, true, player);
+                    cut++;
                 }
             }
         }
@@ -140,6 +154,13 @@ public class KusaGiriAbility extends Ability implements Ability.Cooldown {
         // Crops come first: they are bushes too, and only a ripe one is worth cutting.
         if (state.getBlock() instanceof CropBlock crop) {
             return crop.isMaxAge(state);
+        }
+        // Grasses and ferns are not always BushBlocks depending on the version, so name them
+        // explicitly - this is the whole point of a grass-cutting sweep.
+        if (state.is(Blocks.GRASS) || state.is(Blocks.FERN)
+                || state.is(Blocks.TALL_GRASS) || state.is(Blocks.LARGE_FERN)
+                || state.is(Blocks.DEAD_BUSH)) {
+            return true;
         }
         return state.getBlock() instanceof BushBlock || state.getBlock() instanceof LeavesBlock;
     }

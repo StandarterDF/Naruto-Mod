@@ -41,7 +41,7 @@ public class IzanamiAbility extends Ability implements Ability.Cooldown {
     }
 
     /** C V V B B V - the Sharingan combo (C V V B), then the loop closing back on itself. */
-    public static final long COMBO = 111131L;
+    public static final long COMBO = 111231L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "izanami");
 
