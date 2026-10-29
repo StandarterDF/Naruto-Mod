@@ -137,6 +137,12 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     @Sync
     private float maxStamina;
 
+    @Sync(minTicks = 1)
+    private float trainingWeightsStaminaBonus = 0.0f;
+
+    @Sync(minTicks = 1)
+    private float trainingWeightsRegenBonus = 0.0f;
+
     // Unless the player needs to know the max for rendering, no point in rendering.
     private float maxSubstitutions;
 
@@ -538,7 +544,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     public float getMaxStamina() {
         return this.maxStamina
                 + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.MAX_STAMINA)
-                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.ALL_ROUNDED);
+                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.ALL_ROUNDED)
+                + this.trainingWeightsStaminaBonus;
     }
 
     @Override
@@ -993,6 +1000,10 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
 
         this.staminaCostMultiplier = com.sekwah.narutomod.item.TrainingWeightsItem
                 .staminaMultiplier(player);
+        this.trainingWeightsStaminaBonus = com.sekwah.narutomod.item.TrainingWeightsItem
+                .staminaCapacityBonus(player);
+        this.trainingWeightsRegenBonus = com.sekwah.narutomod.item.TrainingWeightsItem
+                .staminaRegenBonus(player);
         // A sage's body is held up by nature: everything costs half the stamina it should.
         if (this.isSageMode() && NarutoConfig.sageBuffsEnabled) {
             this.staminaCostMultiplier *= 0.5f;
@@ -1002,7 +1013,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
             // bar only goes down, which is the price of the stance.
             if (this.getGateCount() <= 0) {
                 float staminaRegen = NarutoConfig.staminaRegen
-                        + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.STAMINA_REGEN) / 20.0f;
+                        + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.STAMINA_REGEN) / 20.0f
+                        + this.trainingWeightsRegenBonus / 20.0f;
                 // Running dry leaves the body winded for a few seconds: the bar comes back at half rate,
                 // which is what makes spending the last point a decision rather than a formality.
                 if (this.stamina <= 0.0f) {

@@ -64,7 +64,7 @@ public class ComboSwordItem extends SwordItem {
      * {@code MULTIPLY_TOTAL} modifier so it scales with the blade's own weight instead of
      * flattening every sword to the same speed.
      */
-    public static final float HEAVY_SPEED_MULTIPLIER = -0.82f;
+    public static final float HEAVY_SPEED_MULTIPLIER = -0.9f;
 
     /** Modifier id of the heavy-blade penalty, owned by {@code ComboSwordAttributeEvents}. */
     public static final UUID HEAVY_PENALTY_UUID =

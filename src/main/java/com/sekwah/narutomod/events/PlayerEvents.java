@@ -64,8 +64,9 @@ public class PlayerEvents {
         if (!(event.getEntity() instanceof Player player) || player.level().isClientSide) {
             return;
         }
-        // Training weights slow down whoever wears them, see TrainingWeightsItem.
-        com.sekwah.narutomod.item.TrainingWeightsItem.applySlowdown(player);
+        // Training weights slow down whoever wears them, then teach the body to carry them, see
+        // TrainingWeightsItem.
+        com.sekwah.narutomod.item.TrainingWeightsItem.tick(player);
         // Two clones sat down to meditate keep their caster topped up and their jutsu coming back
         // twice as fast, see ChakraMeditationJutsuAbility.
         ChakraMeditationJutsuAbility.tickAura(player);
