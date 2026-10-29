@@ -65,7 +65,7 @@ public class ComboSwordItem extends SwordItem {
     private final boolean gainsKills;
 
     /** Bonus damage per kill for a blade that gains kills. */
-    public static final float DAMAGE_PER_KILL = 0.5f;
+    public static final float DAMAGE_PER_KILL = 0.05f;
 
     /** NBT key holding the kill count of a gaining blade. */
     public static final String KILLS_TAG = "narutomod:kills";
