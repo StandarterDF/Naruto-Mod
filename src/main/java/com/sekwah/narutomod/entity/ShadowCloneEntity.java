@@ -609,41 +609,51 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
      * <p>A worker cut down hands its bag over the same way a timed out one does: at once, so it is
      * plain that every worker carries its own harvest.</p>
      *
-     * <p>A clone that was holding a totem of undying in its offhand activates it the same way a
-     * player would: the totem is checked and activated before {@code pop()}, restoring health,
-     * applying regeneration and absorption, and consuming the totem. The clone then vanishes in
-     * smoke as usual. The totem does not protect the clone from its caster: the summoner can
-     * always pop a clone by hand, regardless of equipped totems.</p>
+     * <p>A clone that was holding a totem of undying in either hand activates it the same way a
+     * player would: the lethal blow is turned aside before it lands, the totem is consumed, and the
+     * clone is left standing on one heart with regeneration, absorption and fire resistance. The
+     * totem does not protect the clone from its caster: the summoner can always pop a clone by hand,
+     * regardless of equipped totems. See {@code ShadowCloneEvents#onLethalDamage}.</p>
      */
     @Override
     public void die(DamageSource damageSource) {
         if (this.explosive && !this.level().isClientSide) {
             this.explode();
         }
-        // Totem of undying saves the clone from death, but not from its caster: the summoner
-        // can always pop a clone by hand, regardless of whether it has a totem equipped.
-        boolean isFromCaster = this.getOwnerUUID().map(uuid -> {
-            net.minecraft.world.entity.Entity source = damageSource.getEntity();
-            return source instanceof Player caster && uuid.equals(caster.getUUID());
-        }).orElse(false);
-        // Activate the totem of undying (if any) before popping. Vanilla checks the offhand slot,
-        // restores the entity to full health, applies regeneration and absorption, plays the
-        // activation sound, spawns particles, and consumes one totem.
-        if (!isFromCaster && !this.getOffhandItem().isEmpty()
-                && this.getOffhandItem().getItem() == Items.TOTEM_OF_UNDYING) {
-            this.getOffhandItem().shrink(1);
-            this.setHealth(this.getMaxHealth());
-            this.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 0));
-            this.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 100, 0));
-            if (this.level() instanceof ServerLevel serverLevel) {
-                serverLevel.playSound(null, this.getX(), this.getY(), this.getZ(),
-                        SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 1.0f, 1.0f);
-                serverLevel.sendParticles(ParticleTypes.TOTEM_OF_UNDYING,
-                        this.getX(), this.getY() + 0.5d, this.getZ(),
-                        1, 0.5d, 0.5d, 0.5d, 0.0d);
-            }
-        }
         this.pop();
+    }
+
+    /**
+     * Spends a totem from the clone's hands and pays out its protection, vanilla style. The caller
+     * has already established that the blow would have been lethal and that it did not come from
+     * the caster.
+     *
+     * @return true if a totem was spent, false if the clone was carrying none
+     */
+    public boolean useTotemOfUndying() {
+        for (InteractionHand hand : InteractionHand.values()) {
+            ItemStack stack = this.getItemInHand(hand);
+            if (!stack.is(Items.TOTEM_OF_UNDYING)) {
+                continue;
+            }
+            stack.shrink(1);
+            this.setHealth(1.0f);
+            this.setRemainingFireTicks(0);
+            this.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 900, 1));
+            this.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 100, 1));
+            this.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 800, 0));
+            // The vanilla totem animation: particles and the chime are drawn by every client.
+            this.level().broadcastEntityEvent(this, (byte) 35);
+            return true;
+        }
+        return false;
+    }
+
+    /** Whether this blow came from the caster who summoned the clone. */
+    public boolean isFromCaster(DamageSource damageSource) {
+        Entity source = damageSource.getEntity();
+        return source instanceof Player caster
+                && this.getOwnerUUID().map(uuid -> uuid.equals(caster.getUUID())).orElse(false);
     }
 
     /**

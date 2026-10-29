@@ -5,6 +5,7 @@ import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
@@ -46,6 +47,37 @@ public class ShadowCloneEvents {
      * <p>The event also fires on the client; only the server may pop anything, or the smoke and the
      * poof sound would play twice.</p>
      */
+    /**
+     * A clone carrying a totem of undying survives the blow that would have popped it, once.
+     *
+     * <p>The totem cannot be handled in {@code die()}: by the time that runs the clone has already
+     * taken the lethal damage and is on its way out, so restoring health there would spend the
+     * totem and still pop the clone in the same breath. Instead the blow is caught here, before the
+     * damage is applied, exactly where vanilla checks a player's totem. A blow from the caster is
+     * the exception: their own hand always pops a clone, totem or not.</p>
+     */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onLethalDamage(LivingDamageEvent event) {
+        if (!(event.getEntity() instanceof ShadowCloneEntity clone)) {
+            return;
+        }
+        if (clone.level().isClientSide || event.isCanceled()) {
+            return;
+        }
+        // Final damage this blow carries: only a blow that would actually pop the clone spends a
+        // totem, so armour and absorption still get their say.
+        if (event.getAmount() < clone.getHealth()) {
+            return;
+        }
+        if (clone.isFromCaster(event.getSource())) {
+            return;
+        }
+        if (!clone.useTotemOfUndying()) {
+            return;
+        }
+        event.setCanceled(true);
+    }
+
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onAttackOwnClone(AttackEntityEvent event) {
         Player caster = event.getEntity();
