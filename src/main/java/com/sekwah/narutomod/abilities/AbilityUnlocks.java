@@ -64,7 +64,15 @@ public final class AbilityUnlocks {
             return true;
         }
         if (SCROLL_ONLY.contains(abilityId.getPath())) {
-            return ninjaData.getSkillData().hasScroll(abilityId);
+            if (!ninjaData.getSkillData().hasScroll(abilityId)) {
+                return false;
+            }
+            // Kirin is scroll-only, but a scroll alone is not enough: the caster has to have grown
+            // into the lightning nature first, or the technique is just words on paper.
+            if ("kirin".equals(abilityId.getPath())) {
+                return SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), "ability:lightning_mode");
+            }
+            return true;
         }
         // Shadow shuriken leaves a shadow clone where it lands, so it is only usable once the caster
         // has actually learned to shape one. The tree alone only asks for the chakra node next to it.
