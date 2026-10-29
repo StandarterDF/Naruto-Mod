@@ -2,6 +2,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.entity.jutsuprojectile.TravellingArcEntity;
 import net.minecraft.ChatFormatting;
@@ -112,11 +113,13 @@ public class VacuumBladeAbility extends Ability implements Ability.Cooldown {
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
+        float mastery = Mastery.level(ninjaData, this);
         TravellingArcEntity wave = new TravellingArcEntity(level, player, RANGE, CONE_DOT,
-                DAMAGE * swordPower(player) / WOOD_REFERENCE,
+                DAMAGE * swordPower(player) / WOOD_REFERENCE * (1.0f + 0.5f * mastery),
                 TravellingArcEntity.KIND_VACUUM, false, BLEED_TICKS, MAGIC_SHARE);
         level.addFreshEntity(wave);
         level.playSound(null, player, SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.2f);
+        this.registerCooldown(player, ninjaData, this.getTranslationKey(ninjaData));
     }
 
     /**
