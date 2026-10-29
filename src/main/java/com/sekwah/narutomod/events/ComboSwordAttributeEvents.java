@@ -2,6 +2,7 @@ package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.item.ComboSwordItem;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
@@ -11,14 +12,21 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * Fixes the attack speed attribute of a player holding a ComboSwordItem.
- * If the player has enough Kenjutsu skill nodes, removes the penalty modifier
- * and adds the normal speed modifier.
+ * Makes the great blades too heavy to swing properly for a caster who has not trained Kenjutsu.
+ *
+ * <p>An item cannot see who is holding it, so the blade always hands out its normal attack speed
+ * and the penalty is applied to the holder instead. A single {@code MULTIPLY_TOTAL} modifier is
+ * added while the main hand holds a great sword whose requirement is not met, and removed again as
+ * soon as the caster either trains enough or puts the blade away.</p>
+ *
+ * <p>The check runs on both sides: the server owns the actual swing cooldown, while the client
+ * draws the attack indicator, and the two must agree or the blade feels broken rather than heavy.</p>
  */
 @Mod.EventBusSubscriber(modid = NarutoMod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ComboSwordAttributeEvents {
 
-    private static long lastFixTick = 0;
+    /** How often, in ticks, the held blade is re-checked. */
+    private static final int CHECK_INTERVAL = 10;
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
@@ -26,35 +34,31 @@ public class ComboSwordAttributeEvents {
             return;
         }
         Player player = event.player;
-        if (player.level().isClientSide) {
-            return;
-        }
-        if (player.tickCount - lastFixTick < 20) {
-            // Fix every 20 ticks to avoid spam
-            return;
-        }
-        lastFixTick = player.tickCount;
-
-        ItemStack mainHand = player.getItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND);
-        if (!(mainHand.getItem() instanceof ComboSwordItem sword)) {
+        if (player.tickCount % CHECK_INTERVAL != 0) {
             return;
         }
 
-        var attackSpeed = player.getAttributes().getInstance(Attributes.ATTACK_SPEED);
+        AttributeInstance attackSpeed = player.getAttributes().getInstance(Attributes.ATTACK_SPEED);
         if (attackSpeed == null) {
             return;
         }
 
-        // Remove the penalty modifier
-        attackSpeed.getModifiers().removeIf(mod ->
-                mod.getName().contains("penalty") || mod.getName().contains("Penalty"));
+        ItemStack held = player.getMainHandItem();
+        boolean tooHeavy = held.getItem() instanceof ComboSwordItem sword
+                && !sword.playerMeetsRequirement(player);
+        boolean penalised = attackSpeed.getModifier(ComboSwordItem.HEAVY_PENALTY_UUID) != null;
+        if (tooHeavy == penalised) {
+            return;
+        }
 
-        if (sword.playerMeetsRequirement(player)) {
-            // Player qualifies: add normal speed
-            attackSpeed.addTransientModifier(
-                    new AttributeModifier(ComboSwordItem.ATTACK_SPEED_UUID,
-                            "Combo sword speed", sword.getAttackSpeed(),
-                            AttributeModifier.Operation.ADDITION));
+        if (tooHeavy) {
+            attackSpeed.addTransientModifier(new AttributeModifier(
+                    ComboSwordItem.HEAVY_PENALTY_UUID,
+                    "Combo sword heavy blade",
+                    ComboSwordItem.HEAVY_SPEED_MULTIPLIER,
+                    AttributeModifier.Operation.MULTIPLY_TOTAL));
+        } else {
+            attackSpeed.removeModifier(ComboSwordItem.HEAVY_PENALTY_UUID);
         }
     }
 }

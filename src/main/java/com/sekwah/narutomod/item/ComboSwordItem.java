@@ -1,20 +1,14 @@
 package com.sekwah.narutomod.item;
 
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Multimap;
-import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.skills.Skill;
 import com.sekwah.narutomod.skills.SkillBranch;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
@@ -24,7 +18,9 @@ import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -62,8 +58,20 @@ public class ComboSwordItem extends SwordItem {
     /** Base attack speed passed to the constructor (stored because SwordItem hides it). */
     private final float baseAttackSpeed;
 
-    /** Slow speed when the player has not enough Kenjutsu points (~2 sec per swing). */
-    private static final float PENALTY_SPEED = -0.5f;
+    /**
+     * Speed multiplier applied while the caster has not trained enough Kenjutsu: the blade is
+     * simply too heavy for them, so every swing takes many times longer. It is a
+     * {@code MULTIPLY_TOTAL} modifier so it scales with the blade's own weight instead of
+     * flattening every sword to the same speed.
+     */
+    public static final float HEAVY_SPEED_MULTIPLIER = -0.82f;
+
+    /** Modifier id of the heavy-blade penalty, owned by {@code ComboSwordAttributeEvents}. */
+    public static final UUID HEAVY_PENALTY_UUID =
+            new UUID(0x6E6172754D4F44L, 0x4B454E4A555453L);
+
+    /** Every id of the Kenjutsu branch, built once because the check runs while a player ticks. */
+    private static Set<ResourceLocation> kenjutsuNodes;
 
     public ComboSwordItem(Tier tier, int attackDamage, float attackSpeed, Properties properties,
                           float damagePerStep, int maxCombo, int comboWindow, float chakraPerHit) {
@@ -108,10 +116,6 @@ public class ComboSwordItem extends SwordItem {
         return this.baseAttackSpeed;
     }
 
-    /** Public UUID for the attack speed modifier (BASE_ATTACK_SPEED_UUID is protected). */
-    public static final UUID ATTACK_SPEED_UUID =
-            new UUID(0, -7326683594266061548L);
-
     /**
      * Check if the player has enough Kenjutsu skill nodes unlocked.
      * Each unlocked KENJUTSU branch node counts as one point.
@@ -122,17 +126,28 @@ public class ComboSwordItem extends SwordItem {
         }
         final int[] unlockedCount = {0};
         player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
-            for (var nodeId : ninjaData.getSkillData().getUnlocked()) {
-                for (var skill : Skill.all()) {
-                    if (skill.branch() == SkillBranch.KENJUTSU
-                            && skill.id().equals(nodeId)) {
-                        unlockedCount[0]++;
-                        break;
-                    }
+            for (ResourceLocation nodeId : ninjaData.getSkillData().getUnlocked()) {
+                if (kenjutsuNodeIds().contains(nodeId)) {
+                    unlockedCount[0]++;
                 }
             }
         });
         return unlockedCount[0] >= this.kenjutsuPointsRequired;
+    }
+
+    /** Cached set of node ids that belong to the Kenjutsu branch. */
+    private static Set<ResourceLocation> kenjutsuNodeIds() {
+        Set<ResourceLocation> nodes = kenjutsuNodes;
+        if (nodes == null) {
+            nodes = new HashSet<>();
+            for (Skill skill : Skill.all()) {
+                if (skill.branch() == SkillBranch.KENJUTSU) {
+                    nodes.add(skill.id());
+                }
+            }
+            kenjutsuNodes = nodes;
+        }
+        return nodes;
     }
 
     /**
@@ -179,27 +194,6 @@ public class ComboSwordItem extends SwordItem {
     @Override
     public int getUseDuration(ItemStack stack) {
         return 72000;
-    }
-
-    /**
-     * Return a very slow attack speed if the player has not enough Kenjutsu skill nodes.
-     * This is overridden by {@code ComboSwordAttributeEvents} for qualified players.
-     */
-    @Override
-    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(
-            EquipmentSlot slot, ItemStack stack) {
-        if (slot != EquipmentSlot.MAINHAND) {
-            return super.getAttributeModifiers(slot, stack);
-        }
-        ImmutableMultimap.Builder<Attribute, AttributeModifier> builder =
-                ImmutableMultimap.builder();
-        builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
-                BASE_ATTACK_DAMAGE_UUID, "Combo sword damage",
-                getDamage(), AttributeModifier.Operation.ADDITION));
-        builder.put(Attributes.ATTACK_SPEED, new AttributeModifier(
-                ComboSwordItem.ATTACK_SPEED_UUID, "Combo sword speed (penalty)",
-                PENALTY_SPEED, AttributeModifier.Operation.ADDITION));
-        return builder.build();
     }
 
     @Override
