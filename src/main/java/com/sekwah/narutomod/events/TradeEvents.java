@@ -82,6 +82,10 @@ public final class TradeEvents {
         event.getGenericTrades().add(sell(NarutoItems.SMOKE_BOMB.get(), 5, 4, 8, 3));
         event.getGenericTrades().add(sell(NarutoItems.TRAINING_WEIGHTS.get(), 10, 1, 2, 6));
         event.getGenericTrades().add(sell(NarutoItems.CHAKRA_COMPASS.get(), 12, 1, 2, 6));
+        event.getRareTrades().add(sell(NarutoItems.SCROLL_CHAKRA.get(), 24, 1, 2, 10));
+        event.getRareTrades().add(sell(NarutoItems.SCROLL_STAMINA.get(), 24, 1, 2, 10));
+        event.getRareTrades().add(sell(NarutoItems.SCROLL_VITALITY.get(), 32, 1, 1, 15));
+        event.getRareTrades().add(sell(NarutoItems.SCROLL_STRENGTH.get(), 32, 1, 1, 15));
         // Rare stock: scrolls the wandering trader only sometimes carries.
         event.getRareTrades().add(sell(NarutoItems.SCROLL_EIGHT_GATES.get(), 48, 1, 1, 20));
         event.getRareTrades().add(sell(NarutoItems.SCROLL_SAGE_MODE.get(), 48, 1, 1, 20));

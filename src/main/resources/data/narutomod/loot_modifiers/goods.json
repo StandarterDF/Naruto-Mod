@@ -30,6 +30,12 @@
     { "item": "narutomod:military_pills", "weight": 4 },
     { "item": "narutomod:curry", "weight": 3 },
     { "item": "narutomod:training_weights", "weight": 3 },
+    { "item": "narutomod:scroll_chakra", "weight": 2 },
+    { "item": "narutomod:scroll_stamina", "weight": 2 },
+    { "item": "narutomod:scroll_vitality", "weight": 2 },
+    { "item": "narutomod:scroll_strength", "weight": 1 },
+    { "item": "narutomod:scroll_chakra_regen", "weight": 1 },
+    { "item": "narutomod:scroll_stamina_regen", "weight": 1 },
     { "item": "narutomod:fabric", "weight": 8 },
     { "item": "narutomod:armor_plate", "weight": 4 },
     { "item": "narutomod:treasure_map", "weight": 6 }

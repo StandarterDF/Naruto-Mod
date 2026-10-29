@@ -143,6 +143,25 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     @Sync(minTicks = 1)
     private float trainingWeightsRegenBonus = 0.0f;
 
+    // Stat scrolls: permanent bonuses from scrolls found in the world.
+    @Sync
+    private float chakraBonus = 0.0f;
+
+    @Sync
+    private float staminaBonus = 0.0f;
+
+    @Sync
+    private float chakraRegenBonus = 0.0f;
+
+    @Sync
+    private float staminaRegenBonus = 0.0f;
+
+    @Sync
+    private int vitalityBonus = 0;
+
+    @Sync
+    private int strengthBonus = 0;
+
     // Unless the player needs to know the max for rendering, no point in rendering.
     private float maxSubstitutions;
 
@@ -400,6 +419,12 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private static final String SCROLLS_TAG = "scrolls";
     private static final String BOSS_MILESTONES_TAG = "bossMilestones";
     private static final String NINJA_RANK_TAG = "ninjaRank";
+    private static final String CHAKRA_BONUS_TAG = "chakraBonus";
+    private static final String STAMINA_BONUS_TAG = "staminaBonus";
+    private static final String CHAKRA_REGEN_BONUS_TAG = "chakraRegenBonus";
+    private static final String STAMINA_REGEN_BONUS_TAG = "staminaRegenBonus";
+    private static final String VITALITY_BONUS_TAG = "vitalityBonus";
+    private static final String STRENGTH_BONUS_TAG = "strengthBonus";
     private static final String NATURE_AFFINITY_TAG = "natureAffinity";
     private static final String HANDBOOK_GIVEN_TAG = "handbookGiven";
     private static final String DISABLED_ABILITIES_TAG = "disabledAbilities";
@@ -431,7 +456,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         return this.maxChakra + this.chakraCapacityBonus + this.armorChakraBonus + this.eyeChakraBonus
                 + ChakraChargeAbility.masteryChakraBonus(this)
                 + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.MAX_CHAKRA)
-                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.ALL_ROUNDED);
+                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.ALL_ROUNDED)
+                + this.chakraBonus;
     }
 
     @Override
@@ -545,7 +571,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         return this.maxStamina
                 + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.MAX_STAMINA)
                 + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.ALL_ROUNDED)
-                + this.trainingWeightsStaminaBonus;
+                + this.trainingWeightsStaminaBonus
+                + this.staminaBonus;
     }
 
     @Override
@@ -586,6 +613,66 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     @Override
     public void addStamina(float amount) {
         this.stamina = Math.min(Math.max(this.stamina + amount, 0), this.getMaxStamina());
+    }
+
+    @Override
+    public float getChakraBonus() {
+        return this.chakraBonus;
+    }
+
+    @Override
+    public void addChakraBonus(float amount) {
+        this.chakraBonus += amount;
+    }
+
+    @Override
+    public float getStaminaBonus() {
+        return this.staminaBonus;
+    }
+
+    @Override
+    public void addStaminaBonus(float amount) {
+        this.staminaBonus += amount;
+    }
+
+    @Override
+    public float getChakraRegenBonus() {
+        return this.chakraRegenBonus;
+    }
+
+    @Override
+    public void addChakraRegenBonus(float amount) {
+        this.chakraRegenBonus += amount;
+    }
+
+    @Override
+    public float getStaminaRegenBonus() {
+        return this.staminaRegenBonus;
+    }
+
+    @Override
+    public void addStaminaRegenBonus(float amount) {
+        this.staminaRegenBonus += amount;
+    }
+
+    @Override
+    public int getVitalityBonus() {
+        return this.vitalityBonus;
+    }
+
+    @Override
+    public void addVitalityBonus(int amount) {
+        this.vitalityBonus += amount;
+    }
+
+    @Override
+    public int getStrengthBonus() {
+        return this.strengthBonus;
+    }
+
+    @Override
+    public void addStrengthBonus(int amount) {
+        this.strengthBonus += amount;
     }
 
     @Override
@@ -1014,7 +1101,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
             if (this.getGateCount() <= 0) {
                 float staminaRegen = NarutoConfig.staminaRegen
                         + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.STAMINA_REGEN) / 20.0f
-                        + this.trainingWeightsRegenBonus / 20.0f;
+                        + this.trainingWeightsRegenBonus / 20.0f
+                        + this.staminaRegenBonus / 20.0f;
                 // Running dry leaves the body winded for a few seconds: the bar comes back at half rate,
                 // which is what makes spending the last point a decision rather than a formality.
                 if (this.stamina <= 0.0f) {
@@ -1044,7 +1132,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
             // pool only goes down, which is the price of the stance.
             if (this.getGateCount() <= 0) {
                 float regen = NarutoConfig.chakraRegen
-                        + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.CHAKRA_REGEN) / 20.0f;
+                        + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.CHAKRA_REGEN) / 20.0f
+                        + this.chakraRegenBonus / 20.0f;
                 // A freshly filled pool keeps trickling in faster for a while, which is what makes
                 // topping the bar up before a fight worth the time, see ChakraChargeAbility.
                 if (player.hasEffect(NarutoEffects.CHAKRA_FLOW.get()) && NarutoConfig.chakraFlowEnabled) {
@@ -1191,6 +1280,12 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
         }
         nbt.put(DISABLED_ABILITIES_TAG, disabledTag);
         nbt.putBoolean(MENU_CLICK_ALL_TAG, this.menuClickAll);
+        nbt.putFloat(CHAKRA_BONUS_TAG, this.chakraBonus);
+        nbt.putFloat(STAMINA_BONUS_TAG, this.staminaBonus);
+        nbt.putFloat(CHAKRA_REGEN_BONUS_TAG, this.chakraRegenBonus);
+        nbt.putFloat(STAMINA_REGEN_BONUS_TAG, this.staminaRegenBonus);
+        nbt.putInt(VITALITY_BONUS_TAG, this.vitalityBonus);
+        nbt.putInt(STRENGTH_BONUS_TAG, this.strengthBonus);
         return nbt;
     }
 
@@ -1272,6 +1367,12 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
             this.natureAffinity = compoundTag.getString(NATURE_AFFINITY_TAG);
             this.handbookGiven = compoundTag.getBoolean(HANDBOOK_GIVEN_TAG);
             this.menuClickAll = compoundTag.getBoolean(MENU_CLICK_ALL_TAG);
+            this.chakraBonus = compoundTag.getFloat(CHAKRA_BONUS_TAG);
+            this.staminaBonus = compoundTag.getFloat(STAMINA_BONUS_TAG);
+            this.chakraRegenBonus = compoundTag.getFloat(CHAKRA_REGEN_BONUS_TAG);
+            this.staminaRegenBonus = compoundTag.getFloat(STAMINA_REGEN_BONUS_TAG);
+            this.vitalityBonus = compoundTag.getInt(VITALITY_BONUS_TAG);
+            this.strengthBonus = compoundTag.getInt(STRENGTH_BONUS_TAG);
             this.disabledAbilityData.getAbilities().clear();
             CompoundTag disabledTag = compoundTag.getCompound(DISABLED_ABILITIES_TAG);
             for (String key : disabledTag.getAllKeys()) {

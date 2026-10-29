@@ -67,6 +67,9 @@ public class PlayerEvents {
         // Training weights slow down whoever wears them, then teach the body to carry them, see
         // TrainingWeightsItem.
         com.sekwah.narutomod.item.TrainingWeightsItem.tick(player);
+        // Stat scrolls: re-apply permanent attribute bonuses so they survive a respawn.
+        player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(nd ->
+                com.sekwah.narutomod.item.StatScrollItem.applyBonuses(player, nd));
         // Two clones sat down to meditate keep their caster topped up and their jutsu coming back
         // twice as fast, see ChakraMeditationJutsuAbility.
         ChakraMeditationJutsuAbility.tickAura(player);

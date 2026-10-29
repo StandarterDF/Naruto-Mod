@@ -10,6 +10,7 @@ import com.sekwah.narutomod.item.weapons.BoneBladeItem;
 import com.sekwah.narutomod.item.weapons.BoneMultitoolItem;
 import com.sekwah.narutomod.item.weapons.SamehadaItem;
 import com.sekwah.narutomod.item.weapons.TechniqueSwordItem;
+import com.sekwah.narutomod.item.StatScrollItem;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -263,6 +264,20 @@ public class NarutoItems {
     public static final RegistryObject<Item> SCROLL_BYAKUGAN = createScroll("byakugan");
     public static final RegistryObject<Item> SCROLL_JOUGAN = createScroll("jougan");
     public static final RegistryObject<Item> SCROLL_SIX_PATHS_MODE = createScroll("six_paths_mode");
+
+    // Stat scrolls: permanent passive bonuses from exploring the world.
+    public static final RegistryObject<Item> SCROLL_CHAKRA = ITEMS.register("scroll_chakra",
+            () -> new StatScrollItem(new Item.Properties().stacksTo(1), StatScrollItem.Stat.CHAKRA));
+    public static final RegistryObject<Item> SCROLL_STAMINA = ITEMS.register("scroll_stamina",
+            () -> new StatScrollItem(new Item.Properties().stacksTo(1), StatScrollItem.Stat.STAMINA));
+    public static final RegistryObject<Item> SCROLL_CHAKRA_REGEN = ITEMS.register("scroll_chakra_regen",
+            () -> new StatScrollItem(new Item.Properties().stacksTo(1), StatScrollItem.Stat.CHAKRA_REGEN));
+    public static final RegistryObject<Item> SCROLL_STAMINA_REGEN = ITEMS.register("scroll_stamina_regen",
+            () -> new StatScrollItem(new Item.Properties().stacksTo(1), StatScrollItem.Stat.STAMINA_REGEN));
+    public static final RegistryObject<Item> SCROLL_VITALITY = ITEMS.register("scroll_vitality",
+            () -> new StatScrollItem(new Item.Properties().stacksTo(1), StatScrollItem.Stat.VITALITY));
+    public static final RegistryObject<Item> SCROLL_STRENGTH = ITEMS.register("scroll_strength",
+            () -> new StatScrollItem(new Item.Properties().stacksTo(1), StatScrollItem.Stat.STRENGTH));
 
     /**
      * A scrap of somebody else's map: right-click to turn it into a real filled map pointing at the

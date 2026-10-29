@@ -99,6 +99,20 @@ public interface INinjaData extends INBTSerializable<Tag> {
     void useSubstitution(float amount);
     void addChakra(float amount);
     void addStamina(float amount);
+
+    // Stat scrolls: permanent bonuses from scrolls found in the world.
+    float getChakraBonus();
+    void addChakraBonus(float amount);
+    float getStaminaBonus();
+    void addStaminaBonus(float amount);
+    float getChakraRegenBonus();
+    void addChakraRegenBonus(float amount);
+    float getStaminaRegenBonus();
+    void addStaminaRegenBonus(float amount);
+    int getVitalityBonus();
+    void addVitalityBonus(int amount);
+    int getStrengthBonus();
+    void addStrengthBonus(int amount);
     void setInvisibleTicks(int ticks);
     boolean getInvisible();
 
