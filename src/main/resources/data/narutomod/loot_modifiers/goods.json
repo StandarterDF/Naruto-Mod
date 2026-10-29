@@ -24,6 +24,12 @@
     { "item": "narutomod:shuriken", "weight": 14 },
     { "item": "narutomod:senbon", "weight": 10 },
     { "item": "narutomod:ramen", "weight": 6 },
+    { "item": "narutomod:onigiri", "weight": 8 },
+    { "item": "narutomod:dango", "weight": 6 },
+    { "item": "narutomod:ninja_ration", "weight": 6 },
+    { "item": "narutomod:military_pills", "weight": 4 },
+    { "item": "narutomod:curry", "weight": 3 },
+    { "item": "narutomod:training_weights", "weight": 3 },
     { "item": "narutomod:fabric", "weight": 8 },
     { "item": "narutomod:armor_plate", "weight": 4 },
     { "item": "narutomod:treasure_map", "weight": 6 }
