@@ -1,5 +1,6 @@
 package com.sekwah.narutomod.item;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -10,6 +11,10 @@ import net.minecraft.world.inventory.CraftingMenu;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 /**
  * A field workbench, folded into a scroll.
@@ -29,9 +34,23 @@ public class ScrollWorkbenchItem extends Item {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (!level.isClientSide) {
+            BlockPos pos = player.blockPosition();
+            // A real crafting table is not there, so the menu's own validity check and its result
+            // computation (which both go through this access) have to be faked: the access hands
+            // out the level and runs the callbacks instead of testing for a block that is not there.
+            ContainerLevelAccess access = new ContainerLevelAccess() {
+                @Override
+                public <T> Optional<T> evaluate(BiFunction<Level, BlockPos, T> function) {
+                    return Optional.of(function.apply(level, pos));
+                }
+
+                @Override
+                public void execute(BiConsumer<Level, BlockPos> consumer) {
+                    consumer.accept(level, pos);
+                }
+            };
             player.openMenu(new SimpleMenuProvider(
-                    (id, inventory, owner) -> new CraftingMenu(id, inventory,
-                            ContainerLevelAccess.NULL) {
+                    (id, inventory, owner) -> new CraftingMenu(id, inventory, access) {
                         @Override
                         public boolean stillValid(Player p) {
                             return true;
