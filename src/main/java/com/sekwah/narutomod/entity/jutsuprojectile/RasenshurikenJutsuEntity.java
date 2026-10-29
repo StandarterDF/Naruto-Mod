@@ -118,6 +118,9 @@ public class RasenshurikenJutsuEntity extends AbstractNonGlowingHurtingProjectil
      */
     private float power = 1.0f;
 
+    /** Mastery scaling for the disc's damage: a fully mastered caster hits harder with the same throw. */
+    private float masteryDamageMultiplier = 1.0f;
+
     public RasenshurikenJutsuEntity(EntityType<RasenshurikenJutsuEntity> entityType, Level level) {
         super(entityType, level);
     }
@@ -156,6 +159,10 @@ public class RasenshurikenJutsuEntity extends AbstractNonGlowingHurtingProjectil
 
     public void setPower(float power) {
         this.power = power;
+    }
+
+    public void setMasteryDamageMultiplier(float multiplier) {
+        this.masteryDamageMultiplier = multiplier;
     }
 
     /** Where the renderer is in the spin, and where it was last frame, so it can be interpolated. */
@@ -333,7 +340,7 @@ public class RasenshurikenJutsuEntity extends AbstractNonGlowingHurtingProjectil
         }
         Entity entity = hitResult.getEntity();
         entity.hurt(NarutoDamageTypes.getDamageSource(level, NarutoDamageTypes.WIND_RELEASE, this, this.getOwner()),
-                DIRECT_DAMAGE * this.power);
+                DIRECT_DAMAGE * this.power * this.masteryDamageMultiplier);
         if (this.getOwner() instanceof LivingEntity owner) {
             this.doEnchantDamageEffects(owner, entity);
         }
@@ -372,7 +379,7 @@ public class RasenshurikenJutsuEntity extends AbstractNonGlowingHurtingProjectil
         Entity owner = this.getOwner();
         for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
                 this.getBoundingBox().inflate(BURST_RADIUS), this::canBurstHit)) {
-            float damage = (float) (BURST_DAMAGE * this.power
+            float damage = (float) (BURST_DAMAGE * this.power * this.masteryDamageMultiplier
                     * Math.max(0.0d, 1.0d - Math.sqrt(target.distanceToSqr(this)) / BURST_RADIUS));
             if (damage <= 0.0f) {
                 continue;

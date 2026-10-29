@@ -2,6 +2,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.JutsuEffects;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.entity.jutsuprojectile.RasenshurikenJutsuEntity;
 import net.minecraft.ChatFormatting;
@@ -138,10 +139,12 @@ public class RasenshurikenJutsuAbility extends Ability implements Ability.Channe
         ninjaData.useChakra(releaseCost, 20 * 2);
 
         float power = Mth.clamp((ticksActive - MIN_CHARGE) / (float) (FULL_CHARGE - MIN_CHARGE), 0.0f, 1.0f);
+        float mastery = Mastery.level(ninjaData, this);
         double speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * power;
 
         RasenshurikenJutsuEntity disc = new RasenshurikenJutsuEntity(player, speed);
         disc.setPower(MIN_POWER + (1.0f - MIN_POWER) * power);
+        disc.setMasteryDamageMultiplier(1.0f + 0.5f * mastery);
         level.addFreshEntity(disc);
 
         level.playSound(null, player, SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.0f, 0.8f);

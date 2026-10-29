@@ -3,6 +3,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.friends.Friends;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.JutsuEffects;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -106,7 +107,8 @@ public class RasenganJutsuAbility extends Ability implements Ability.Channeled {
         }
 
         float power = Math.min(ticksActive, FULL_CHARGE) / (float) FULL_CHARGE;
-        float damage = MIN_DAMAGE + (MAX_DAMAGE - MIN_DAMAGE) * power;
+        float mastery = Mastery.level(ninjaData, this);
+        float damage = (MIN_DAMAGE + (MAX_DAMAGE - MIN_DAMAGE) * power) * (1.0f + 0.5f * mastery);
         double reach = MIN_REACH + (MAX_REACH - MIN_REACH) * power;
 
         Vec3 look = player.getLookAngle();
