@@ -2,6 +2,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.config.NarutoConfig;
@@ -146,7 +147,10 @@ public class AirPalmAbility extends Ability implements Ability.Cooldown {
         target.hurtMarked = true;
         target.fallDistance = 0.0f;
 
-        target.hurt(caster.damageSources().magic(), DAMAGE);
+        float mastery = caster.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA)
+                .map(nd -> Mastery.level(nd, AirPalmAbility.ID)).orElse(0.0f);
+        float masteryDamage = DAMAGE * (1.0f + 0.5f * mastery);
+        target.hurt(caster.damageSources().magic(), masteryDamage);
         target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, WEAKNESS_TICKS, 0, false, false));
         drain(target);
     }

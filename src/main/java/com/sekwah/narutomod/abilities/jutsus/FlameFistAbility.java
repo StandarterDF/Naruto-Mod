@@ -2,6 +2,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.abilities.JutsuEffects;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.friends.Friends;
@@ -133,7 +134,10 @@ public class FlameFistAbility extends Ability implements Ability.Cooldown {
         }
         // The blows are four ticks apart, well inside the ordinary invulnerability window.
         target.invulnerableTime = 0;
-        target.hurt(caster.damageSources().playerAttack(caster), DAMAGE);
+        float mastery = caster.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA)
+                .map(nd -> Mastery.level(nd, FlameFistAbility.ID)).orElse(0.0f);
+        target.hurt(caster.damageSources().playerAttack(caster),
+                DAMAGE * (1.0f + 0.5f * mastery));
 
         Vec3 at = target.position().add(0.0d, target.getBbHeight() * 0.6d, 0.0d);
         level.sendParticles(ParticleTypes.FLAME, at.x, at.y, at.z, FLAME_PARTICLES, 0.25d, 0.3d, 0.25d, 0.01d);

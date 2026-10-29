@@ -2,6 +2,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.friends.Friends;
 import net.minecraft.ChatFormatting;
@@ -130,8 +131,10 @@ public class KesaGiriAbility extends Ability implements Ability.Cooldown {
 
     /** One body in the arc: the steel first, then the chakra edge that no plate stops. */
     private static void cut(ServerLevel level, Player caster, LivingEntity target) {
-        float physical = DAMAGE * (1.0f - MAGIC_SHARE);
-        float magic = DAMAGE * MAGIC_SHARE;
+        float mastery = caster.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA)
+                .map(nd -> Mastery.level(nd, KesaGiriAbility.ID)).orElse(0.0f);
+        float physical = DAMAGE * (1.0f - MAGIC_SHARE) * (1.0f + 0.5f * mastery);
+        float magic = DAMAGE * MAGIC_SHARE * (1.0f + 0.5f * mastery);
 
         target.hurt(caster.damageSources().playerAttack(caster), physical);
         if (!target.isAlive()) {

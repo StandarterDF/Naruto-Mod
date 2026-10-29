@@ -2,6 +2,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.abilities.JutsuEffects;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
@@ -264,7 +265,9 @@ public class SixtyFourPalmsAbility extends Ability implements Ability.Channeled,
         // Every palm has to land. Vanilla keeps a body invulnerable for ten ticks after a hit, which
         // would swallow every strike of the kata but the first: the window is cleared per palm.
         target.invulnerableTime = 0;
-        target.hurt(player.damageSources().magic(), PALM_DAMAGE);
+        float mastery = player.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA)
+                .map(nd -> Mastery.level(nd, SixtyFourPalmsAbility.ID)).orElse(0.0f);
+        target.hurt(player.damageSources().magic(), PALM_DAMAGE * (1.0f + 0.5f * mastery));
         drain(target);
         seal(target, level.getGameTime());
 

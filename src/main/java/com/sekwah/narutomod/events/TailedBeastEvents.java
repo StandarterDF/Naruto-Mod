@@ -159,12 +159,16 @@ public final class TailedBeastEvents {
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
+        float mastery = player.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA)
+                .map(nd -> com.sekwah.narutomod.abilities.mastery.Mastery.level(nd, SealBreakAbility.ID))
+                .orElse(0.0f);
+        float damage = SealBreakAbility.SWEEP_DAMAGE * (1.0f + 0.5f * mastery);
         List<LivingEntity> caught = level.getEntitiesOfClass(LivingEntity.class,
                 player.getBoundingBox().inflate(SealBreakAbility.SWEEP_RADIUS),
                 target -> target != player && target.isAlive() && !target.isSpectator()
                         && !(target instanceof Player other && other.isCreative()));
         for (LivingEntity target : caught) {
-            target.hurt(player.damageSources().magic(), SealBreakAbility.SWEEP_DAMAGE);
+            target.hurt(player.damageSources().magic(), damage);
         }
         if (!caught.isEmpty()) {
             level.sendParticles(ParticleTypes.SWEEP_ATTACK, player.getX(),
