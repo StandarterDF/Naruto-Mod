@@ -1,6 +1,8 @@
 package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.NarutoAbilities;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import com.sekwah.narutomod.damagetypes.NarutoDamageTypes;
@@ -113,7 +115,7 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
         // front. A held key may still turn into a seal, which costs nothing, so the channel itself
         // is allowed through and performServer decides what the hold meant.
         if (chargeAmount == -1) {
-            if (ninjaData.getGateCount() >= MAX_GATES) {
+            if (ninjaData.getGateCount() >= maxGates(ninjaData)) {
                 fail(player, "jutsu.fail.gates_open");
                 return false;
             }
@@ -146,7 +148,7 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
             return;
         }
 
-        if (ninjaData.getGateCount() >= MAX_GATES) {
+        if (ninjaData.getGateCount() >= maxGates(ninjaData)) {
             fail(player, "jutsu.fail.gates_open");
             return;
         }
@@ -236,6 +238,17 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
     private static void fail(Player player, String key) {
         player.displayClientMessage(Component.translatable(key,
                 Component.translatable("narutomod:eight_gates").withStyle(ChatFormatting.YELLOW)), true);
+    }
+
+    /**
+     * How many gates the caster may have open at once. Grows with mastery of the technique: an
+     * untrained caster can only force the first gate, and the eighth opens only once the technique
+     * has been lived in. The absolute ceiling stays {@link #MAX_GATES}.
+     */
+    public static int maxGates(INinjaData ninjaData) {
+        float level = Mastery.level(ninjaData, NarutoAbilities.EIGHT_GATES.getId());
+        int gates = 1 + (int) (level * (MAX_GATES - 1));
+        return Math.min(MAX_GATES, Math.max(1, gates));
     }
 
     /** How hard the shockwave throws the struck body, per open gate (push grows with the gate). */

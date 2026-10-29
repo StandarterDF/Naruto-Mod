@@ -29,7 +29,7 @@ import net.minecraft.world.phys.Vec3;
  * velocity is theirs to send, and a nudge that only lives on the server is thrown away by the client
  * on the next movement packet.</p>
  */
-public class ChakraAdhesionAbility extends Ability implements Ability.Channeled {
+public class ChakraAdhesionAbility extends Ability implements Ability.Toggled, Ability.HandleEnded {
     /**
      * How far a cast of this technique carries as a game event. Silent: nothing here disturbs the world.
      */
@@ -58,7 +58,7 @@ public class ChakraAdhesionAbility extends Ability implements Ability.Channeled 
 
     @Override
     public ActivationType activationType() {
-        return ActivationType.CHANNELED;
+        return ActivationType.TOGGLE;
     }
 
     @Override
@@ -66,17 +66,8 @@ public class ChakraAdhesionAbility extends Ability implements Ability.Channeled 
         return COMBO;
     }
 
-    /** There is nothing to hold for an instant; the stance has to be kept. */
-    @Override
-    public boolean canActivateBelowMinCharge() {
-        return false;
-    }
-
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        if (chargeAmount < 0) {
-            return false;
-        }
         if (!NarutoConfig.adhesionEnabled) {
             player.displayClientMessage(Component.translatable("jutsu.fail.adhesion.disabled",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
@@ -105,8 +96,13 @@ public class ChakraAdhesionAbility extends Ability implements Ability.Channeled 
      * Climbs the caster up whatever they are pressed against. Only the vertical part of the motion is
      * touched, so the sideways speed they carried into the wall keeps working along it.
      */
+    /**
+     * The stance is a toggle now: the climb is applied every tick it stays up, on both sides. Mastery
+     * is credited per active tick rather than per activation.
+     */
     @Override
-    public void handleChannelling(Player player, INinjaData ninjaData, int ticksChanneled) {
+    public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
+        this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
         if (!player.horizontalCollision) {
             return;
         }
@@ -117,12 +113,14 @@ public class ChakraAdhesionAbility extends Ability implements Ability.Channeled 
         player.fallDistance = 0.0f;
     }
 
-    /**
-     * The hold ends when the keys come up or the chakra runs dry. There is nothing to clean up - the
-     * fall is allowed to count again from the moment the grip is gone, which is the point.
-     */
     @Override
-    public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
+    public void performToggleClient(Player player, INinjaData ninjaData) {
+        // The client half lives in ClientAdhesionHandler, driven by the toggle set.
+    }
+
+    @Override
+    public void handleAbilityEnded(Player player, INinjaData ninjaData, int ticksActive) {
+        // Nothing to clean up: the fall is allowed to count again from the moment the grip is gone.
     }
 
     /** How fast the climb is at the caster's mastery. Shared with the client end of the movement. */

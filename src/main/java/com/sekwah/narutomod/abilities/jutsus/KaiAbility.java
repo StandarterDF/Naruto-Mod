@@ -12,6 +12,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -103,6 +104,9 @@ public class KaiAbility extends Ability implements Ability.Cooldown {
 
         // The caster is their own first patient: whether or not anything tracked them as under an
         // illusion, their own sight is cleared and their own mind is closed to the next one.
+        if (GenjutsuEvents.isUnderGenjutsu(player)) {
+            GenjutsuEvents.clear(player);
+        }
         clearSenses(player, immunityUntil);
 
         for (LivingEntity living : level.getEntitiesOfClass(LivingEntity.class,
@@ -112,8 +116,11 @@ public class KaiAbility extends Ability implements Ability.Cooldown {
             }
             if (living instanceof Mob mob && GenjutsuEvents.isUnderGenjutsu(mob)) {
                 GenjutsuEvents.clear(mob);
-                clearSenses(living, immunityUntil);
             }
+            if (living instanceof Player p && GenjutsuEvents.isUnderGenjutsu(p)) {
+                GenjutsuEvents.clear(p);
+            }
+            clearSenses(living, immunityUntil);
         }
 
         drawRing(level, player);
@@ -131,6 +138,13 @@ public class KaiAbility extends Ability implements Ability.Cooldown {
         body.removeEffect(MobEffects.BLINDNESS);
         body.removeEffect(MobEffects.DARKNESS);
         body.removeEffect(MobEffects.CONFUSION);
+        // Kai is a full release: every harmful effect is swept away with the illusion, not only
+        // the ones genjutsu itself lays down.
+        for (MobEffectInstance instance : new java.util.ArrayList<>(body.getActiveEffects())) {
+            if (instance != null && !instance.getEffect().isBeneficial()) {
+                body.removeEffect(instance.getEffect());
+            }
+        }
     }
 
     /**

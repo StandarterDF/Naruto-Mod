@@ -2,6 +2,8 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.jutsus.SharinganAbility;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import net.minecraft.ChatFormatting;
@@ -45,13 +47,13 @@ public class KamuiPhaseAbility extends Ability implements Ability.Toggled, Abili
     }
 
 
-    /** V C B - deliberately not a prefix of the Kamui eye, so the two never trip over each other. */
-    public static final long COMBO = 1221L;
+    /** V V V V - a distinct bind, kept off the shadow clone combo (which used to share 1221). */
+    public static final long COMBO = 2222L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "kamui_phasing");
 
-    /** Chakra burnt for every tick the body is not solid. Kept low: the stance is a long walk, not a blink. */
-    private static final float CHAKRA_PER_TICK = 0.2f;
+    /** Chakra burnt for every tick the body is not solid. 15 chakra/s at first, ~3 chakra/s when mastered. */
+    private static final float CHAKRA_PER_TICK = 0.75f;
 
     private static final int CHAKRA_REGEN_DELAY = 20;
 
@@ -59,10 +61,22 @@ public class KamuiPhaseAbility extends Ability implements Ability.Toggled, Abili
     private static final String FLIGHT_TAG = "narutomod:kamuiPhaseFlight";
     private static final String MAYFLY_TAG = "mayfly";
     private static final String FLYING_TAG = "flying";
+    private static final String FLYING_SPEED_TAG = "flyingSpeed";
 
     @Override
     public ActivationType activationType() {
         return ActivationType.TOGGLE;
+    }
+
+    @Override
+    public boolean canStartToggle(Player player, INinjaData ninjaData) {
+        if (!SharinganAbility.isActive(ninjaData)) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.kamui.sharingan",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        return super.canStartToggle(player, ninjaData);
     }
 
     @Override
@@ -72,7 +86,21 @@ public class KamuiPhaseAbility extends Ability implements Ability.Toggled, Abili
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        float cost = this.masteryCost(ninjaData, CHAKRA_PER_TICK);
+        if (!SharinganAbility.isActive(ninjaData)) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.kamui.sharingan",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        // The stance is punishing while new and settles to a usable upkeep once mastered: 15 chakra/s
+        // at the start down to about 3 chakra/s at full mastery.
+        float mastery = Mastery.level(ninjaData, this);
+        float reduction = Math.min(0.8f, mastery * 0.8f);
+        float cost = CHAKRA_PER_TICK * (1.0f - reduction);
+        if (ninjaData.isSageMode()) {
+            cost *= 0.8f;
+        }
+        cost = Math.max(0.15f, cost);
         if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
@@ -135,15 +163,25 @@ public class KamuiPhaseAbility extends Ability implements Ability.Toggled, Abili
                     // hook: writing noPhysics = false under them put the spectator back into
                     // collision with the world, which is exactly what a spectator must never have.
                     boolean passThrough = phasing || player.isSpectator();
+                    if (phasing && !player.isSprinting()) {
+                        player.setSprinting(true);
+                    }
                     if (player.noPhysics != passThrough) {
                         player.noPhysics = passThrough;
                     }
                     if (phasing) {
-                        player.setNoGravity(true);
+                        player.setOnGround(false);
+                    }
+                    if (phasing) {
+                        if (!player.isNoGravity()) {
+                            player.setNoGravity(true);
+                        }
                     } else if (!player.isSpectator()) {
                         // Spectators keep the vanilla floating state; only a caster who just turned
                         // solid gets gravity back.
-                        player.setNoGravity(false);
+                        if (player.isNoGravity()) {
+                            player.setNoGravity(false);
+                        }
                     }
                     if (!player.level().isClientSide) {
                         applyFlight(player, phasing);
@@ -162,11 +200,14 @@ public class KamuiPhaseAbility extends Ability implements Ability.Toggled, Abili
                 CompoundTag saved = new CompoundTag();
                 saved.putBoolean(MAYFLY_TAG, player.getAbilities().mayfly);
                 saved.putBoolean(FLYING_TAG, player.getAbilities().flying);
+                saved.putFloat(FLYING_SPEED_TAG, player.getAbilities().getFlyingSpeed());
                 tag.put(FLIGHT_TAG, saved);
             }
-            if (!player.getAbilities().mayfly || !player.getAbilities().flying) {
+            if (!player.getAbilities().mayfly || !player.getAbilities().flying
+                    || player.getAbilities().getFlyingSpeed() != 0.1f) {
                 player.getAbilities().mayfly = true;
                 player.getAbilities().flying = true;
+                player.getAbilities().setFlyingSpeed(0.04f);
                 player.onUpdateAbilities();
             }
             return;
@@ -178,6 +219,7 @@ public class KamuiPhaseAbility extends Ability implements Ability.Toggled, Abili
         tag.remove(FLIGHT_TAG);
         player.getAbilities().mayfly = saved.getBoolean(MAYFLY_TAG);
         player.getAbilities().flying = saved.getBoolean(FLYING_TAG);
+        player.getAbilities().setFlyingSpeed(saved.getFloat(FLYING_SPEED_TAG));
         player.onUpdateAbilities();
     }
 

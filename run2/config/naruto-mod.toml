@@ -1,0 +1,192 @@
+
+#Server based settings
+[server]
+
+	#Player settings
+	[server.player]
+
+		#Stuff such as regen rates and maximum (will likely change with updates, e.g. stats system)
+		[server.player.energy_bars]
+			#Max Chakra
+			#Range: 0.0 ~ 1.7976931348623157E308
+			maxChakra = 25.0
+			#Chakra Regen
+			#Range: 0.0 ~ 1.7976931348623157E308
+			chakraRegen = 0.05
+			#Max Stamina
+			#Range: 0.0 ~ 1.7976931348623157E308
+			maxStamina = 100.0
+			#Stamina Regen
+			#Range: 0.0 ~ 1.7976931348623157E308
+			staminaRegen = 0.4
+			#Max Substitutions (base; skill tree nodes add more)
+			#Range: > 0
+			maxSubstitutions = 1
+			#Substitution Regen Time (Seconds)
+			#Range: > 0
+			substitutionRegenTime = 60
+			#Max nature energy (senin mana) a ninja can gather, and the pool sage mode drains
+			#Range: 0.0 ~ 1.7976931348623157E308
+			maxSeninMana = 100.0
+			#Can players gather nature energy and enter sage mode?
+			sageModeEnabled = true
+			#Do the sage mode body perks apply: hunger stillness, free landings, halved stamina costs, periodic cleansing and senjutsu perception?
+			sageBuffsEnabled = true
+			#Does the frog kata strike around a sage's blows, and does sage mode lengthen melee reach?
+			sageKataEnabled = true
+			#Can players copy another player's skin and name with henge?
+			hengeEnabled = true
+			#Do mobs react to a disguise? A face that belongs to a monster scares villagers into running and turns iron golems against the wearer. Off by default: it changes how the world's AI behaves.
+			hengeReactionsEnabled = false
+
+			#Technique mastery: every cast makes a technique a little cheaper, and mastery is never lost - dying keeps every point of it
+			[server.player.energy_bars.mastery]
+				#Should techniques get cheaper and faster the more they are used?
+				masteryEnabled = true
+				#How many casts of a technique it takes to reach half of its mastery
+				#Range: > 1
+				halfwayCasts = 40
+				#How slow a technique's mastery is to get going: at 1 the first casts already pay off, higher values make the early casts worth almost nothing while keeping the halfway point at halfwayCasts (2 is the intended default)
+				#Range: 0.1 ~ 10.0
+				exponent = 2.0
+				#How much cheaper a fully mastered technique gets (0.4 = 40% cheaper)
+				#Range: 0.0 ~ 0.95
+				costReduction = 0.4
+				#How much shorter a fully mastered technique's cooldown gets (0.4 = 40% shorter)
+				#Range: 0.0 ~ 0.95
+				cooldownReduction = 0.4
+				#Mastery at which the chakra seal is no longer needed at all, even for the multi shadow clone
+				#Range: 0.0 ~ 1.0
+				sealFreeAt = 0.9
+				#How far, in blocks, a fully mastered chakra meditation reaches at most
+				#Range: 8.0 ~ 100000.0
+				meditationRadiusMax = 512.0
+				#Meditation mastery past which every meditating clone feeds its caster even out of range
+				#Range: 0.0 ~ 1.0
+				meditationPassiveAt = 0.95
+				#Chakra capacity each meditating clone adds while out of range past the threshold
+				#Range: 0.0 ~ 1.7976931348623157E308
+				meditationPassiveCapacity = 25.0
+
+			#Chakra sensing: the held sense that shows what is around the caster, and the tapped night vision trick
+			[server.player.energy_bars.sensing]
+				#How far, in blocks, a fully mastered chakra sense reaches (an untrained sense always reaches 16). 96 is six chunks.
+				#Range: 16.0 ~ 100000.0
+				radiusMax = 96.0
+				#Chakra burnt per second while the night vision trick is up
+				#Range: 0.0 ~ 100.0
+				nightVisionChakraPerSecond = 1.0
+
+			#Techniques that work the ground: the wide pick swing, and the ore sense that reads the rock for a moment
+			[server.player.energy_bars.mining]
+				#Can players hold the wide dig stance and break a 3x3 plane of blocks with every swing?
+				wideDigEnabled = true
+				#Can players cast the ore sense pulse? On a public server this is effectively a short-lived x-ray, so it can be turned off here.
+				oreSenseEnabled = true
+
+			#Stances and tricks that are not about the ground: sticking to a wall, living in places the body should not, hiding in smoke, and running on chakra instead of food
+			[server.player.energy_bars.techniques]
+				#Can players hold the chakra adhesion stance and climb along a wall they are pressed against?
+				adhesionEnabled = true
+				#Can players hold the body adaptation stance, breathing water and shrugging off lava and powder snow?
+				adaptationEnabled = true
+				#Can players cast the smoke screen?
+				smokeEnabled = true
+				#Does the smoke screen also blind players caught in it? Turn this off to keep it a mob-only escape on a PvP server.
+				smokeBlindPlayers = true
+				#Can players hold the silence stance, hiding their footsteps and blows from sculk sensors, shriekers, the warden and mob ears?
+				silenceEnabled = true
+
+		#How the world around the caster changes techniques: weather, biome and dimension make a breath reach further or hit softer
+		[server.player.world]
+			#Do weather, biome and dimension affect the elemental breaths (and how fast nature energy gathers)?
+			environmentEnabled = true
+			#Do the mod's scrolls and kit turn up in vanilla chests? Turn this off to keep chests exactly vanilla and hand scrolls out another way.
+			scrollLootEnabled = true
+			#Does sleeping through the night refill chakra and nature energy? Only a natural morning wake-up counts, never being woken by damage.
+			sleepRestoresChakra = true
+			#Does filling the chakra bar by hand grant the short chakra flow effect (a faster passive trickle for a while)?
+			chakraFlowEnabled = true
+			#Does an almost empty chakra pool slow the caster down? It is a soft penalty that removes itself as soon as the pool recovers.
+			chakraExhaustionEnabled = true
+			#Do technique casts make noise the world can hear (sculk sensors, shriekers, the warden, mob ears)? Silent techniques stay silent.
+			jutsuLoudnessEnabled = true
+			#Do meditating clones hum and give off a soft glow while they are feeding their caster? Purely cosmetic.
+			meditationAmbienceEnabled = true
+			#Does lightning striking a lightning rod refill the chakra batteries lying or carried nearby? The only free way to charge one.
+			lightningChargesBatteries = true
+			#Does a standing chakra marker log act as a respawn point when the ninja has no bed or respawn anchor? Beds and anchors always win.
+			markerRespawnEnabled = true
+			#How far a sentry seal watches for hostile mobs, in blocks. Also the radius kept clear of spawns when suppression is on.
+			#Range: 4 ~ 64
+			sentrySealRadius = 16
+			#Does a sentry seal stop hostile mobs from spawning inside its radius? Off by default; spawner blocks are never affected.
+			sentrySealSuppressesSpawns = false
+			#Do the breaths leave elemental states behind? A soaked creature cannot catch fire and takes less fire damage; cold water chills a creature, slowing it until it warms up.
+			elementalStatesEnabled = true
+			#Do ninja ranks (Genin, Chunin, Jonin, S-rank) exist? Ranks are milestones worked out from learned skill nodes and boss milestones, and are shown as advancements. Turn off to keep the ladder out of the game entirely.
+			ninjaRanksEnabled = true
+			#May genjutsu be turned on players as well as mobs? Off by default: illusions on another player are a PvP tool and many servers do not want them, so the technique refuses a player target unless this is on.
+			genjutsuOnPlayers = true
+
+		#Variables for weapons
+		[server.player.weapons]
+			#Explosive Kunai block damage
+			kunaiExplosionBreakBlocks = true
+			#Explosive Kunai explosion radius
+			#Range: 1.0 ~ 100.0
+			kunaiExplosionRadius = 3.0
+			#Paper Bomb explosion radius
+			#Range: 1.0 ~ 100.0
+			paperBombExplosionRadius = 4.0
+			#Paper Bomb block damage
+			paperBombExplosionBreakBlocks = true
+			#Tailed Beast Bomb block damage. Off by default: the bomb wounds but breaks nothing. An operator can flip it mid-game with '/naruto debug bomb'.
+			tailedBallExplosionBreakBlocks = false
+			#Key hold threshold in ticks (20 per second)
+			#Range: > 0
+			jutsuKeyHoldThreshold = 15
+			#Jutsu activation delay (20 per second)
+			#Range: > 0
+			jutsuActivateDelay = 15
+
+		#Kamui and the pocket dimension it opens
+		[server.player.kamui]
+			#Can players use Kamui to step into the pocket dimension, and to drag targets in with them?
+			kamuiEnabled = true
+			#Seconds anything dragged into Kamui (anyone but the caster) spends in the void before it is spat back out where it was taken from
+			#Range: 1 ~ 600
+			kamuiTransferSeconds = 30
+
+		#The eye bloodlines: a stance that is paid for by the tick and opens one eye's powers
+		[server.player.dojutsu]
+			#Can players open the Rinnegan? It costs chakra every tick and grants extra chakra and nature energy while it is open.
+			rinneganEnabled = true
+			#Can players cast Chibaku Tensei? It pulls the ground and everything standing on it into a ball in the sky, then brings it down. Requires an open Rinnegan. The ball breaks no blocks - see chibakuTenseiRadius for how big it gets.
+			chibakuTenseiEnabled = true
+			#How big the Chibaku Tensei ball gets at a full charge, in blocks of radius. A tapped ball is a fifth of this. Only the picture, the reach of the pull and the weight of the landing scale with it: the technique never breaks blocks.
+			#Range: 6 ~ 32
+			chibakuTenseiRadius = 16
+			#Can players open the Sharingan? It costs chakra every tick and reads whoever the caster looks at; Amaterasu is built on it.
+			sharinganEnabled = true
+			#Can players open the Byakugan? It costs chakra every tick and shows every living body in a short bubble through the walls; Rotation is built on it.
+			byakuganEnabled = true
+			#Can players open the Jougan? It costs chakra every tick, grants extra capacity and lights up hostile chakra; Dimensional Step and Chakra Sever are built on it.
+			jouganEnabled = true
+			#Can players open the Senrigan? It is the cheapest eye: it gives no power of its own, but it lets the caster watch through any of their own shadow clones.
+			senriganEnabled = true
+
+		#Friendships between players: a two-way pact that keeps the mod's techniques and shadow clones off a friend
+		[server.player.friends]
+			#Can players add each other as friends? A friendship is two-way: the mod's techniques and shadow clones spare a friend, and a request can be answered from the friends button in the skill menu.
+			friendsEnabled = true
+
+	#Client based settings
+	[server.client]
+
+		#Variables for UI
+		[server.client.ui]
+			#Design for the chara bar
+			#Range: 0 ~ 7
+			chakraBarDesign = 0
+

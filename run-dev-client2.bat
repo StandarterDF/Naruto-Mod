@@ -54,7 +54,7 @@ echo Using JDK: %JDK17%
 echo Starting the second dev client (run2, user Dev2) ...
 echo.
 
-call gradlew.bat runClient2 %OFFLINE% %*
+call gradlew.bat runClientAlt %OFFLINE% %*
 set "CODE=%ERRORLEVEL%"
 
 if not "%CODE%"=="0" (

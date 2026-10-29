@@ -75,13 +75,25 @@ public final class Skill {
             "ability:rasenshuriken",
             "ability:eight_gates",
             "ability:kamui",
+            "ability:kamui_phasing",
             "ability:sage_mode",
             "ability:earth_wall",
             "ability:rinnegan",
             "ability:chibaku_tensei",
             "ability:sharingan",
             "ability:byakugan",
-            "ability:jougan");
+            "ability:jougan",
+            "ability:multi_shadow_clone",
+            "ability:curse_seal_two",
+            "ability:seal_vessel",
+            "ability:perfect_cloak",
+            "ability:tailed_ball",
+            "ability:tailed_cloak",
+            "ability:divided_cloak",
+            "ability:seal_break",
+            "ability:gate_peacock",
+            "ability:gate_tiger",
+            "ability:gate_elephant");
 
     static {
 
@@ -159,7 +171,7 @@ public final class Skill {
                 SkillEffect.MOVEMENT_SPEED, 0.012f, "agility_gale");
         node("endurance", SkillBranch.ATHLETICS, 0, 0, 12,
                 SkillEffect.STAMINA_REGEN, 0.2f);
-        unlock("agility_shuriken_shadow", SkillBranch.CLONES, 0, 1, 20,
+        unlock("agility_shuriken_shadow", SkillBranch.CLONES, 1, 1, 20,
                 "ability:shuriken_shadow", "clone_focus");
         unlock("agility_beast_carry", SkillBranch.ATHLETICS, 0, 1, 24,
                 "ability:beast_carry", "endurance");
@@ -229,7 +241,7 @@ public final class Skill {
                 SkillEffect.STAMINA_REGEN, 0.3f, "taijutsu");
         unlock("taijutsu_projectile_cut", SkillBranch.TAIJUTSU, 3, -1, 26,
                 "ability:projectile_cut", "agility_fury");
-        unlock("taijutsu_drunken_fist", SkillBranch.TAIJUTSU, 1, -1, 32,
+        unlock("taijutsu_drunken_fist", SkillBranch.TAIJUTSU, 2, 1, 32,
                 "ability:drunken_fist", "agility_power");
         unlock("taijutsu_blade_parry", SkillBranch.KENJUTSU, 2, 3, 30,
                 "ability:blade_parry", "ken_stance");
@@ -277,7 +289,7 @@ public final class Skill {
                 "ability:size_expansion", "body_balance");
         
         
-        unlock("taijutsu_bone_bullets", SkillBranch.TAIJUTSU, 1, 2, 34,
+        unlock("taijutsu_bone_bullets", SkillBranch.TAIJUTSU, 1, 1, 34,
                 "ability:bone_bullets", "body_balance");
         node("taijutsu", SkillBranch.TAIJUTSU, 0, 0, 10,
                 SkillEffect.ATTACK_DAMAGE, 1f);
@@ -310,14 +322,14 @@ public final class Skill {
                 SkillEffect.MAX_STAMINA, 40f, "gates_stamina");
         unlock("body_eight_gates", SkillBranch.GATES, -1, 0, 104,
                 "ability:eight_gates", "gates_core");
-        unlock("taijutsu_gate_peacock", SkillBranch.GATES, 0, -1, 44,
-                "ability:gate_peacock", "gates_core");
-        unlock("taijutsu_gate_tiger", SkillBranch.GATES, 1, 0, 52,
-                "ability:gate_tiger", "gates_core");
-        node("gates_flow", SkillBranch.GATES, 1, 1, 28,
+        unlock("taijutsu_gate_peacock", SkillBranch.GATES, -1, -1, 44,
+                "ability:gate_peacock", "body_eight_gates");
+        unlock("taijutsu_gate_tiger", SkillBranch.GATES, -1, 1, 52,
+                "ability:gate_tiger", "body_eight_gates");
+        node("gates_flow", SkillBranch.GATES, -1, 2, 28,
                 SkillEffect.STAMINA_REGEN, 0.2f, "taijutsu_gate_tiger");
-        unlock("taijutsu_gate_elephant", SkillBranch.GATES, 1, 2, 60,
-                "ability:gate_elephant", "gates_flow");
+        unlock("taijutsu_gate_elephant", SkillBranch.GATES, -2, 0, 60,
+                "ability:gate_elephant", "body_eight_gates");
 
         // =====================================================================================
         // 2. NINJUTSU - one board per nature, each with its own centre.
@@ -407,7 +419,7 @@ public final class Skill {
                 "ability:clone_decoy", "clone_drill");
         unlock("clone_medic", SkillBranch.CLONES, 3, 3, 30,
                 "ability:clone_medic", "clone_drill");
-        unlock("clone_swap", SkillBranch.CLONES, 1, 1, 24,
+        unlock("clone_swap", SkillBranch.CLONES, 2, 0, 24,
                 "ability:clone_swap", "clone_focus");
         unlock("clone_water", SkillBranch.CLONES, 4, 3, 34,
                 "ability:water_clone", "clone_drill");
@@ -415,7 +427,7 @@ public final class Skill {
                 "ability:mud_clone", "clone_vitality");
         unlock("clone_clay", SkillBranch.CLONES, 1, 4, 46,
                 "ability:clay_clone", "clone_vitality");
-        unlock("clone_sparring", SkillBranch.CLONES, 1, 0, 30,
+        unlock("clone_sparring", SkillBranch.CLONES, 3, 0, 30,
                 "ability:clone_sparring", "clone_focus");
         unlock("clone_sacrifice", SkillBranch.CLONES, 0, 2, 34,
                 "ability:clone_sacrifice", "clone_vitality");
@@ -529,9 +541,9 @@ public final class Skill {
                 SkillEffect.CHAKRA_REGEN, 0.2f, "mind_sensing");
         //
         // SAGE - Senjutsu: nature energy, its gathering and Sage Mode.
-        node("sage_core", SkillBranch.SAGE, 1, 0, 6,
+        node("sage_core", SkillBranch.SAGE, 1, 0, 10,
                 SkillEffect.SENIN_MANA, 25f);
-        unlock("body_senjutsu", SkillBranch.SAGE, 2, 0, 16,
+        unlock("body_senjutsu", SkillBranch.SAGE, 2, 0, 24,
                 "ability:senjutsu_charging", "sage_core");
         node("sage_mana", SkillBranch.SAGE, 3, 0, 9,
                 SkillEffect.SENIN_MANA, 50f, "body_senjutsu");
@@ -541,28 +553,28 @@ public final class Skill {
                 SkillEffect.SAGE_ENTRY, 0.3f, "sage_gather");
         node("body_enlighten", SkillBranch.SAGE, 3, 2, 11,
                 SkillEffect.MAX_CHAKRA, 20f, "sage_entry");
-        unlock("body_sage_mode", SkillBranch.SAGE, 3, 1, 22,
+        unlock("body_sage_mode", SkillBranch.SAGE, 3, 1, 30,
                 "ability:sage_mode", "body_enlighten");
         unlock("sage_curse_seal_one", SkillBranch.SAGE, 0, 1, 12,
                 "ability:curse_seal_one", "sage_core");
         unlock("sage_curse_seal_two", SkillBranch.SAGE, 0, 2, 17,
-                "ability:curse_seal_two", "sage_entry");
-        unlock("sage_chakra_cloak", SkillBranch.SAGE, 0, 0, 12,
+                "ability:curse_seal_two", "sage_curse_seal_one");
+        unlock("sage_chakra_cloak", SkillBranch.SAGE, 0, 0, 20,
                 "ability:chakra_cloak", "sage_core");
-        unlock("sage_tailed_cloak", SkillBranch.SAGE, 0, -1, 16,
-                "ability:tailed_cloak", "sage_core");
+        unlock("sage_tailed_cloak", SkillBranch.SAGE, 0, -1, 26,
+                "ability:tailed_cloak", "sage_chakra_cloak");
         unlock("sage_orochimaru_body", SkillBranch.SAGE, 1, 1, 14,
                 "ability:orochimaru_body", "sage_core");
-        unlock("sage_seal_vessel", SkillBranch.SAGE, 1, -1, 16,
-                "ability:seal_vessel", "sage_core");
-        unlock("sage_divided_cloak", SkillBranch.SAGE, 0, -2, 13,
-                "ability:divided_cloak", "sage_core");
-        unlock("sage_seal_break", SkillBranch.SAGE, 1, -2, 14,
-                "ability:seal_break", "sage_core");
-        unlock("sage_perfect_cloak", SkillBranch.SAGE, 2, -1, 19,
-                "ability:perfect_cloak", "sage_core");
-        unlock("sage_tailed_ball", SkillBranch.SAGE, 2, -2, 18,
-                "ability:tailed_ball", "sage_core");
+        unlock("sage_seal_vessel", SkillBranch.SAGE, 1, -1, 26,
+                "ability:seal_vessel", "sage_perfect_cloak");
+        unlock("sage_divided_cloak", SkillBranch.SAGE, 0, -2, 22,
+                "ability:divided_cloak", "sage_tailed_cloak");
+        unlock("sage_seal_break", SkillBranch.SAGE, 1, -2, 24,
+                "ability:seal_break", "sage_seal_vessel");
+        unlock("sage_perfect_cloak", SkillBranch.SAGE, 2, -1, 30,
+                "ability:perfect_cloak", "sage_tailed_cloak");
+        unlock("sage_tailed_ball", SkillBranch.SAGE, 2, -2, 32,
+                "ability:tailed_ball", "sage_perfect_cloak");
 
         // =====================================================================================
         // 4. DOJUTSU - the eye bloodlines.
@@ -740,7 +752,7 @@ public final class Skill {
         node("eye_focus", SkillBranch.RINNEGAN, 1, 0, 18,
                 SkillEffect.CHAKRA_REGEN, 0.2f, "eye_rinn");
         unlock("eye_rinnegan", SkillBranch.RINNEGAN, 2, 0, 64,
-                "ability:rinnegan", "eye_focus", "sharingan_base", "sharingan_tomoe", "sharingan_insight", "sharingan_read", "sharingan_eye", "sharingan_chakra_trail", "sharingan_suggestion", "sharingan_tsukuyomi", "sharingan_kurai", "sharingan_izanagi", "sharingan_izanami", "sharingan_kotoamatsukami", "sharingan_susanoo", "sharingan_illusory_double", "sharingan_flame", "sharingan_amaterasu", "sharingan_genjutsu", "sharingan_mangekyo", "sharingan_shape", "sharingan_kagutsuchi");
+                "ability:rinnegan", "eye_focus");
         node("eye_force", SkillBranch.RINNEGAN, 2, -1, 26,
                 SkillEffect.MAX_CHAKRA, 15f, "eye_rinnegan");
         unlock("eye_push", SkillBranch.RINNEGAN, 2, -2, 40,
@@ -938,7 +950,12 @@ public final class Skill {
         if (!this.requiresScroll()) {
             return null;
         }
-        return new ResourceLocation(NarutoMod.MOD_ID, this.unlock.substring("ability:".length()));
+        // Kamui's phasing body is taught by the same scroll as the eye itself.
+        String knowledge = this.unlock.substring("ability:".length());
+        if ("kamui_phasing".equals(knowledge)) {
+            knowledge = "kamui";
+        }
+        return new ResourceLocation(NarutoMod.MOD_ID, knowledge);
     }
 
     public String nameKey() {

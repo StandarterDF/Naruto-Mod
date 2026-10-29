@@ -453,6 +453,26 @@ public class SkillTreeScreen extends Screen {
             return;
         }
         if (!SkillTree.prerequisitesMet(skill, this.unlocked)) {
+            if (this.minecraft != null && this.minecraft.player != null) {
+                this.minecraft.player.displayClientMessage(
+                        Component.translatable("naruto.skill.fail.prereq",
+                                Component.translatable(skill.nameKey())).withStyle(ChatFormatting.RED), true);
+            }
+            return;
+        }
+        if (!this.hasScroll(skill)) {
+            if (this.minecraft != null && this.minecraft.player != null) {
+                this.minecraft.player.displayClientMessage(
+                        Component.translatable("naruto.skill.fail.scroll",
+                                Component.translatable(skill.nameKey())).withStyle(ChatFormatting.RED), true);
+            }
+            return;
+        }
+        if (!this.hasSharingan(skill)) {
+            if (this.minecraft != null && this.minecraft.player != null) {
+                this.minecraft.player.displayClientMessage(
+                        Component.translatable("naruto.skill.fail.sharingan").withStyle(ChatFormatting.RED), true);
+            }
             return;
         }
         if (this.skillPoints < skill.cost()) {
@@ -655,7 +675,8 @@ public class SkillTreeScreen extends Screen {
 
         boolean learned = this.unlocked.contains(skill.id());
         boolean ready = SkillTree.prerequisitesMet(skill, this.unlocked)
-                && this.hasScroll(skill);
+                && this.hasScroll(skill)
+                && this.hasSharingan(skill);
         boolean affordable = this.skillPoints >= skill.cost();
 
         int border;
@@ -688,6 +709,17 @@ public class SkillTreeScreen extends Screen {
         return !skill.requiresScroll() || this.scrolls.contains(skill.scrollKnowledge());
     }
 
+    /** Kamui is a Sharingan technique: buying its node also needs the Sharingan itself. */
+    private boolean requiresSharingan(Skill skill) {
+        return skill.isUnlock() && ("ability:kamui".equals(skill.unlock())
+                || "ability:kamui_phasing".equals(skill.unlock()));
+    }
+
+    private boolean hasSharingan(Skill skill) {
+        return !this.requiresSharingan(skill)
+                || SkillTree.hasUnlock(this.unlocked, "ability:sharingan");
+    }
+
     private List<Component> tooltipFor(Skill skill) {
         List<Component> lines = new ArrayList<>();
         lines.add(Component.translatable(skill.nameKey()).withStyle(ChatFormatting.GOLD));
@@ -699,9 +731,15 @@ public class SkillTreeScreen extends Screen {
             if (!SkillTree.prerequisitesMet(skill, this.unlocked)) {
                 lines.add(Component.translatable("naruto.gui.skill.locked", prerequisiteNames(skill))
                         .withStyle(ChatFormatting.RED));
-            } else if (!this.hasScroll(skill)) {
+            }
+            if (this.requiresSharingan(skill)
+                    && !SkillTree.hasUnlock(this.unlocked, "ability:sharingan")) {
+                lines.add(Component.translatable("naruto.gui.skill.sharingan").withStyle(ChatFormatting.RED));
+            }
+            if (!this.hasScroll(skill)) {
                 lines.add(Component.translatable("naruto.gui.skill.scroll").withStyle(ChatFormatting.RED));
-            } else if (this.skillPoints < skill.cost()) {
+            }
+            if (this.skillPoints < skill.cost()) {
                 lines.add(Component.translatable("naruto.gui.skill.poor", grouped(skill.cost() - this.skillPoints))
                         .withStyle(ChatFormatting.RED));
             }

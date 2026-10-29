@@ -1,10 +1,20 @@
 package com.sekwah.narutomod.item;
 
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
+import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
+import com.sekwah.narutomod.skills.Skill;
+import com.sekwah.narutomod.skills.SkillBranch;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
@@ -15,6 +25,7 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * One of the great swords: a heavy blade that grows heavier the longer a fight goes on.
@@ -45,13 +56,31 @@ public class ComboSwordItem extends SwordItem {
     /** Chakra drawn out of the target by every hit, for the blades that are supposed to do that. */
     private final float chakraPerHit;
 
+    /** How many Kenjutsu skill nodes must be unlocked to swing at normal speed. */
+    private final int kenjutsuPointsRequired;
+
+    /** Base attack speed passed to the constructor (stored because SwordItem hides it). */
+    private final float baseAttackSpeed;
+
+    /** Slow speed when the player has not enough Kenjutsu points (~2 sec per swing). */
+    private static final float PENALTY_SPEED = -0.5f;
+
     public ComboSwordItem(Tier tier, int attackDamage, float attackSpeed, Properties properties,
                           float damagePerStep, int maxCombo, int comboWindow, float chakraPerHit) {
+        this(tier, attackDamage, attackSpeed, properties, damagePerStep, maxCombo, comboWindow,
+                chakraPerHit, 0);
+    }
+
+    public ComboSwordItem(Tier tier, int attackDamage, float attackSpeed, Properties properties,
+                          float damagePerStep, int maxCombo, int comboWindow, float chakraPerHit,
+                          int kenjutsuPointsRequired) {
         super(tier, attackDamage, attackSpeed, properties);
         this.damagePerStep = damagePerStep;
         this.maxCombo = maxCombo;
         this.comboWindow = comboWindow;
         this.chakraPerHit = chakraPerHit;
+        this.kenjutsuPointsRequired = kenjutsuPointsRequired;
+        this.baseAttackSpeed = attackSpeed;
     }
 
     public float getDamagePerStep() {
@@ -68,6 +97,42 @@ public class ComboSwordItem extends SwordItem {
 
     public float getChakraPerHit() {
         return this.chakraPerHit;
+    }
+
+    public int getKenjutsuPointsRequired() {
+        return this.kenjutsuPointsRequired;
+    }
+
+    /** Returns the base attack speed passed to the constructor. */
+    public float getAttackSpeed() {
+        return this.baseAttackSpeed;
+    }
+
+    /** Public UUID for the attack speed modifier (BASE_ATTACK_SPEED_UUID is protected). */
+    public static final UUID ATTACK_SPEED_UUID =
+            new UUID(0, -7326683594266061548L);
+
+    /**
+     * Check if the player has enough Kenjutsu skill nodes unlocked.
+     * Each unlocked KENJUTSU branch node counts as one point.
+     */
+    public boolean playerMeetsRequirement(Player player) {
+        if (this.kenjutsuPointsRequired <= 0) {
+            return true;
+        }
+        final int[] unlockedCount = {0};
+        player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
+            for (var nodeId : ninjaData.getSkillData().getUnlocked()) {
+                for (var skill : Skill.all()) {
+                    if (skill.branch() == SkillBranch.KENJUTSU
+                            && skill.id().equals(nodeId)) {
+                        unlockedCount[0]++;
+                        break;
+                    }
+                }
+            }
+        });
+        return unlockedCount[0] >= this.kenjutsuPointsRequired;
     }
 
     /**
@@ -116,8 +181,37 @@ public class ComboSwordItem extends SwordItem {
         return 72000;
     }
 
+    /**
+     * Return a very slow attack speed if the player has not enough Kenjutsu skill nodes.
+     * This is overridden by {@code ComboSwordAttributeEvents} for qualified players.
+     */
+    @Override
+    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(
+            EquipmentSlot slot, ItemStack stack) {
+        if (slot != EquipmentSlot.MAINHAND) {
+            return super.getAttributeModifiers(slot, stack);
+        }
+        ImmutableMultimap.Builder<Attribute, AttributeModifier> builder =
+                ImmutableMultimap.builder();
+        builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
+                BASE_ATTACK_DAMAGE_UUID, "Combo sword damage",
+                getDamage(), AttributeModifier.Operation.ADDITION));
+        builder.put(Attributes.ATTACK_SPEED, new AttributeModifier(
+                ComboSwordItem.ATTACK_SPEED_UUID, "Combo sword speed (penalty)",
+                PENALTY_SPEED, AttributeModifier.Operation.ADDITION));
+        return builder.build();
+    }
+
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        // A shield takes priority over the blade's guard: if the caster is carrying one, right-click
+        // must block with the shield instead of starting the sword's parry stance.
+        ItemStack offHand = player.getItemInHand(InteractionHand.OFF_HAND);
+        ItemStack mainHand = player.getItemInHand(InteractionHand.MAIN_HAND);
+        if (offHand.getItem() instanceof net.minecraft.world.item.ShieldItem
+                || mainHand.getItem() instanceof net.minecraft.world.item.ShieldItem) {
+            return InteractionResultHolder.pass(player.getItemInHand(hand));
+        }
         if (hand == InteractionHand.MAIN_HAND && !level.isClientSide) {
             com.sekwah.narutomod.abilities.jutsus.ParryAbility.raiseGuard(player);
         }
@@ -145,6 +239,12 @@ public class ComboSwordItem extends SwordItem {
         if (combo > 0) {
             tooltip.add(Component.translatable("item.narutomod.combo_sword.current",
                     Component.literal(String.valueOf(combo)).withStyle(ChatFormatting.GOLD))
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+        if (this.kenjutsuPointsRequired > 0) {
+            tooltip.add(Component.translatable("item.narutomod.combo_sword.kenjutsu_requirement",
+                    Component.literal(String.valueOf(this.kenjutsuPointsRequired))
+                            .withStyle(ChatFormatting.RED))
                     .withStyle(ChatFormatting.DARK_GRAY));
         }
     }

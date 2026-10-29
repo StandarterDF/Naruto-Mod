@@ -3,6 +3,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.friends.Friends;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.jutsus.SharinganAbility;
 import com.sekwah.narutomod.abilities.JutsuEffects;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.config.NarutoConfig;
@@ -72,14 +73,14 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
     /** Ticks of channelling before the swirl has hold of a target. */
     private static final int MIN_CHANNEL = 20;
 
-    /** Chakra for a step through, in either direction. */
-    private static final float STEP_COST = 40.0f;
+    /** Chakra for a step through, in either direction. Expensive at first, easing with mastery. */
+    private static final float STEP_COST = 80.0f;
 
     /** Chakra burned for every tick the dragging hand is held open. */
-    private static final float CHAKRA_PER_TICK = 1.5f;
+    private static final float CHAKRA_PER_TICK = 4.0f;
 
     /** Chakra for actually pulling a target through. */
-    private static final float PULL_COST = 30.0f;
+    private static final float PULL_COST = 60.0f;
 
     private static final int CHAKRA_REGEN_DELAY = 20;
 
@@ -121,6 +122,12 @@ public class KamuiJutsuAbility extends Ability implements Ability.Channeled {
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
         if (!NarutoConfig.kamuiEnabled) {
             player.displayClientMessage(Component.translatable("jutsu.fail.kamui.disabled",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        if (!SharinganAbility.isActive(ninjaData)) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.kamui.sharingan",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
                     .withStyle(ChatFormatting.RED), true);
             return false;

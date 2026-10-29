@@ -271,21 +271,21 @@ public class NarutoItems {
 
     public static final RegistryObject<Item> KATANA = ITEMS.register("katana", ()
             -> new ComboSwordItem(NinjaTier.KATANA, 3, -1.95F, new Item.Properties(),
-                    0.35f, 3, 20, 0.0f));
+                    0.35f, 3, 20, 0.0f, 1));
 
     /**
      * Samehada: quick enough for a chain to be kept alive, and it takes chakra off whatever it cuts.
      */
     public static final RegistryObject<Item> SAMEHADA = ITEMS.register("samehada",
             () -> new ComboSwordItem(NinjaTier.KATANA, 4, -2.4F, new Item.Properties().stacksTo(1),
-                    0.5f, 20, 20 * 4, 1.5f));
+                    0.5f, 20, 20 * 4, 1.5f, 2));
 
     /**
      * Kubikiribocho: slow, heavy, and the chain is worth far more per step.
      */
     public static final RegistryObject<Item> KUBIKIRIBOCHO = ITEMS.register("kubikiribocho",
             () -> new ComboSwordItem(NinjaTier.KATANA, 6, -3.2F, new Item.Properties().stacksTo(1),
-                    0.75f, 20, 20 * 5, 0.0f));
+                    0.75f, 20, 20 * 5, 0.0f, 3));
 
     /** The bone blade grown by the Camellia Dance: a handful of cuts, no durability, no enchanting. */
     public static final RegistryObject<Item> BONE_BLADE = ITEMS.register("bone_blade",

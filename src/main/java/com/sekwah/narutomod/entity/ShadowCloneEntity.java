@@ -34,9 +34,11 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
@@ -606,11 +608,40 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
      *
      * <p>A worker cut down hands its bag over the same way a timed out one does: at once, so it is
      * plain that every worker carries its own harvest.</p>
+     *
+     * <p>A clone that was holding a totem of undying in its offhand activates it the same way a
+     * player would: the totem is checked and activated before {@code pop()}, restoring health,
+     * applying regeneration and absorption, and consuming the totem. The clone then vanishes in
+     * smoke as usual. The totem does not protect the clone from its caster: the summoner can
+     * always pop a clone by hand, regardless of equipped totems.</p>
      */
     @Override
     public void die(DamageSource damageSource) {
         if (this.explosive && !this.level().isClientSide) {
             this.explode();
+        }
+        // Totem of undying saves the clone from death, but not from its caster: the summoner
+        // can always pop a clone by hand, regardless of whether it has a totem equipped.
+        boolean isFromCaster = this.getOwnerUUID().map(uuid -> {
+            net.minecraft.world.entity.Entity source = damageSource.getEntity();
+            return source instanceof Player caster && uuid.equals(caster.getUUID());
+        }).orElse(false);
+        // Activate the totem of undying (if any) before popping. Vanilla checks the offhand slot,
+        // restores the entity to full health, applies regeneration and absorption, plays the
+        // activation sound, spawns particles, and consumes one totem.
+        if (!isFromCaster && !this.getOffhandItem().isEmpty()
+                && this.getOffhandItem().getItem() == Items.TOTEM_OF_UNDYING) {
+            this.getOffhandItem().shrink(1);
+            this.setHealth(this.getMaxHealth());
+            this.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 0));
+            this.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 100, 0));
+            if (this.level() instanceof ServerLevel serverLevel) {
+                serverLevel.playSound(null, this.getX(), this.getY(), this.getZ(),
+                        SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 1.0f, 1.0f);
+                serverLevel.sendParticles(ParticleTypes.TOTEM_OF_UNDYING,
+                        this.getX(), this.getY() + 0.5d, this.getZ(),
+                        1, 0.5d, 0.5d, 0.5d, 0.0d);
+            }
         }
         this.pop();
     }

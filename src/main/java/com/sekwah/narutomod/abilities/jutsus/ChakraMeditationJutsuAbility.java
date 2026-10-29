@@ -62,6 +62,14 @@ public class ChakraMeditationJutsuAbility extends ShadowCloneJutsuAbility {
     }
 
     /**
+     * Mastery is earned by the chakra the clones restore, not by the act of casting, so a bare
+     * activation does not move it forward.
+     */
+    @Override
+    public void recordMastery(Player player, INinjaData ninjaData) {
+    }
+
+    /**
      * Runs every tick for every server side player, from {@code PlayerEvents#onEntityUpdate}.
      *
      * <p>Doing it here rather than in the clones keeps it in one place: the clones do not need to
@@ -107,10 +115,20 @@ public class ChakraMeditationJutsuAbility extends ShadowCloneJutsuAbility {
             // Sage mode runs on nature energy, not chakra, so while it is up the clones feed that
             // instead - otherwise meditating in sage mode would refill the wrong bar entirely.
             float refill = CHAKRA_PER_CLONE * linked;
+            // Mastery is earned by the chakra (or nature energy) the clones actually put back into
+            // the bar, so a meditation that keeps feeding counts for more than a single cast.
             if (ninjaData.isSageMode()) {
+                float before = ninjaData.getSeninMana();
                 ninjaData.addSeninMana(refill);
+                float restored = ninjaData.getSeninMana() - before;
+                ((ChakraMeditationJutsuAbility) meditation).recordMasteryCredit(player, ninjaData,
+                        restored / Math.max(1f, ninjaData.getMaxSeninMana()));
             } else {
+                float before = ninjaData.getChakra();
                 ninjaData.addChakra(refill);
+                float restored = ninjaData.getChakra() - before;
+                ((ChakraMeditationJutsuAbility) meditation).recordMasteryCredit(player, ninjaData,
+                        restored / Math.max(1f, ninjaData.getMaxChakra()));
             }
             fastForwardCooldowns(ninjaData);
         });

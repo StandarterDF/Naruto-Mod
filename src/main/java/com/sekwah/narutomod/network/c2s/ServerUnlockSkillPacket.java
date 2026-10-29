@@ -65,6 +65,14 @@ public class ServerUnlockSkillPacket {
                                 Component.translatable(skill.nameKey())).withStyle(ChatFormatting.RED), true);
                         return;
                     }
+                    if (skill.isUnlock() && ("ability:kamui".equals(skill.unlock())
+                            || "ability:kamui_phasing".equals(skill.unlock()))) {
+                        if (!SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), "ability:sharingan")) {
+                            player.displayClientMessage(Component.translatable("naruto.skill.fail.sharingan")
+                                    .withStyle(ChatFormatting.RED), true);
+                            return;
+                        }
+                    }
                     int held = ninjaData.getSkillData().getPoints();
                     if (held < skill.cost()) {
                         player.displayClientMessage(Component.translatable("naruto.skill.fail.points",

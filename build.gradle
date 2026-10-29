@@ -116,7 +116,14 @@ minecraft {
             }
         }
 
-        client2 {
+        // Second client for multiplayer testing. It must inherit from the stock client run:
+        // NeoGradle only fills main class, JVM module flags and the launch-target args for the
+        // built-in run names (client/server/data), so a bare custom run has an empty main class
+        // and fails with "No main class specified". The parent merge (RunConfig#mergeParents)
+        // copies all of that in, and the settings below override just the game directory and user.
+        clientAlt {
+            parent(null, 'client')
+
             workingDirectory project.file('run2')
 
             property 'forge.logging.console.level', 'debug'

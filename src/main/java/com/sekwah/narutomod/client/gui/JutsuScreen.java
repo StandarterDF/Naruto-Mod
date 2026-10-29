@@ -147,7 +147,8 @@ public class JutsuScreen extends Screen {
         SAGE("naruto.gui.jutsu.category.sage"),
         CURSE_SEAL("naruto.gui.jutsu.category.curse_seal"),
         TAILED("naruto.gui.jutsu.category.tailed"),
-        OTHER("naruto.gui.jutsu.category.other");
+        OTHER("naruto.gui.jutsu.category.other"),
+        PASSIVE("naruto.gui.jutsu.category.passive");
 
         private final String translationKey;
 
@@ -161,7 +162,8 @@ public class JutsuScreen extends Screen {
             Map.entry("chakra_charge", Category.BASICS),
             Map.entry("water_walk", Category.BASICS),
             Map.entry("chakra_fist", Category.BASICS),
-            Map.entry("leap", Category.BASICS),
+            Map.entry("leap", Category.PASSIVE),
+            Map.entry("double_jump", Category.PASSIVE),
             Map.entry("blade_rain", Category.TAIJUTSU),
 
             Map.entry("shadow_clone", Category.CLONES),
@@ -234,6 +236,7 @@ public class JutsuScreen extends Screen {
             Map.entry("rotation", Category.BYAKUGAN),
 
             Map.entry("jougan", Category.JOUGAN),
+            Map.entry("jougan_phase", Category.JOUGAN),
             Map.entry("dimension_step", Category.JOUGAN),
             Map.entry("chakra_sever", Category.JOUGAN),
 
@@ -355,7 +358,7 @@ public class JutsuScreen extends Screen {
      * Whether the list is showing only the techniques already learned. Static like the page, so the
      * menu opens in the same mode it was left in.
      */
-    private static boolean onlyUnlocked = false;
+    private static boolean onlyUnlocked = true;
 
     /** Whether the player has taken up the title, which is what the list is for. */
     private boolean ninjaModeEnabled;
@@ -1048,7 +1051,18 @@ public class JutsuScreen extends Screen {
             return false;
         }
         Row row = this.pages.get(this.page).get(index);
-        if (row.isHeader() || !this.isClickable(row.entry())) {
+        if (row.isHeader()) {
+            return false;
+        }
+        if (!this.isClickable(row.entry())) {
+            ResourceLocation lockedId = ResourceLocation.tryParse(row.entry().nameKey());
+            Ability lockedAbility = lockedId == null ? null : NarutoRegistries.ABILITIES.getValue(lockedId);
+            if (lockedAbility != null && this.minecraft != null && this.minecraft.player != null) {
+                this.minecraft.player.displayClientMessage(
+                        Component.translatable("jutsu.fail.notunlocked",
+                                Component.translatable(lockedAbility.getTranslationKey(this.ninjaData))
+                                        .withStyle(ChatFormatting.YELLOW)).withStyle(ChatFormatting.RED), true);
+            }
             return false;
         }
         boolean controllable = this.isControllable(row.entry());

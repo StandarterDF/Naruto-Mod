@@ -34,7 +34,7 @@ public class KamuiEvents {
      * at things that were actually taken. Anything that is not in the pocket any more (it was spat
      * out, or it died and something else took its tags) is dropped from the books.</p>
      */
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onLivingTick(LivingEvent.LivingTickEvent event) {
         LivingEntity entity = event.getEntity();
         if (entity instanceof Player player) {
@@ -60,6 +60,8 @@ public class KamuiEvents {
         }
         KamuiJutsuAbility.spitBack(entity);
     }
+
+
 
     /**
      * The pocket has no wildlife, no monsters and no ore: it is a flat bedrock plane in the void,

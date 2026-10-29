@@ -35,7 +35,7 @@ public final class ClientAdhesionHandler {
             return;
         }
         player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
-            if (!ChakraAdhesionAbility.ID.equals(ninjaData.getCurrentlyChanneledAbility())) {
+            if (!ninjaData.getToggleAbilityData().getAbilitiesHashSet().contains(ChakraAdhesionAbility.ID)) {
                 return;
             }
             if (!player.horizontalCollision) {

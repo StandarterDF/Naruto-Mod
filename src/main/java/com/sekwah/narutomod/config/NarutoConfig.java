@@ -421,7 +421,7 @@ public class NarutoConfig {
         CONFIG_GENJUTSU_ON_PLAYERS = configBuilder.comment("May genjutsu be turned on players as well as mobs?"
                         + " Off by default: illusions on another player are a PvP tool and many servers do"
                         + " not want them, so the technique refuses a player target unless this is on.")
-                .define("genjutsuOnPlayers", false);
+                .define("genjutsuOnPlayers", true);
 
         configBuilder.pop();
 
