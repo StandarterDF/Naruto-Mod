@@ -8,6 +8,11 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.Brain;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.world.entity.monster.Evoker;
+import net.minecraft.world.entity.monster.Vex;
+import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
@@ -58,6 +63,22 @@ public class GenjutsuEvents {
         data.putString(CASTER_TAG, caster.getUUID().toString());
         // Whatever it was about to hit, it is no longer its enemy.
         victim.setTarget(null);
+        // Piglins think with their brain, not with setTarget: clear the attack target and the
+        // grudge from the brain too, or the illusion never reaches them.
+        if (victim instanceof AbstractPiglin piglin) {
+            Brain<?> brain = piglin.getBrain();
+            brain.eraseMemory(MemoryModuleType.ATTACK_TARGET);
+            brain.eraseMemory(MemoryModuleType.ANGRY_AT);
+        }
+        // An evoker's vexes are an extension of its will: a genjutsu on the master reaches them too,
+        // otherwise the caster has tamed the hand but not the swarm.
+        if (victim instanceof Evoker) {
+            for (Vex vex : victim.level().getEntitiesOfClass(Vex.class,
+                    victim.getBoundingBox().inflate(32.0d),
+                    v -> v.isAlive() && v.getOwner() == victim)) {
+                apply(caster, vex, duration);
+            }
+        }
     }
 
     /** Puts a player under the illusion. Only meaningful when the server allows it. */
@@ -86,6 +107,10 @@ public class GenjutsuEvents {
         data.remove(END_TAG);
         data.remove(CASTER_TAG);
         victim.setTarget(null);
+        if (victim instanceof AbstractPiglin piglin) {
+            piglin.getBrain().eraseMemory(MemoryModuleType.ATTACK_TARGET);
+            piglin.getBrain().eraseMemory(MemoryModuleType.ANGRY_AT);
+        }
     }
 
     /** Drops the illusion early from a player. */
@@ -150,6 +175,27 @@ public class GenjutsuEvents {
                 return;
             }
 
+            // Piglins decide their target from the brain, not from setTarget, so the illusion has to
+            // keep clearing the brain's target every tick or they re-acquire the caster immediately.
+            if (mob instanceof AbstractPiglin piglin) {
+                Brain<?> brain = piglin.getBrain();
+                brain.eraseMemory(MemoryModuleType.ATTACK_TARGET);
+                brain.eraseMemory(MemoryModuleType.ANGRY_AT);
+            }
+
+            // An evoker under the illusion passes it to any vex it summons while it lasts.
+            if (mob instanceof Evoker) {
+                for (Vex vex : mob.level().getEntitiesOfClass(Vex.class,
+                        mob.getBoundingBox().inflate(32.0d),
+                        v -> v.isAlive() && v.getOwner() == mob && !isUnderGenjutsu(v))) {
+                    Player caster = mob.level().getPlayerByUUID(
+                            java.util.UUID.fromString(mob.getPersistentData().getString(CASTER_TAG)));
+                    if (caster != null) {
+                        apply(caster, vex, (int) (getEnd(mob) - mob.level().getGameTime()));
+                    }
+                }
+            }
+
             LivingEntity target = mob.getTarget();
             if (target != null && !isValidVictim(mob, target)) {
                 mob.setTarget(null);
@@ -160,6 +206,9 @@ public class GenjutsuEvents {
                 LivingEntity next = findVictim(mob);
                 if (next != null) {
                     mob.setTarget(next);
+                    if (mob instanceof AbstractPiglin piglin) {
+                        piglin.getBrain().setMemory(MemoryModuleType.ATTACK_TARGET, next);
+                    }
                 }
             }
 
