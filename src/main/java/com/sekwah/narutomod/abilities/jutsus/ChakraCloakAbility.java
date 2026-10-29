@@ -46,6 +46,11 @@ public class ChakraCloakAbility extends Ability implements Ability.Toggled, Abil
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_cloak");
 
+    @Override
+    protected float sageModeCostMultiplier() {
+        return 0.5f;
+    }
+
     /**
      * The mark that says the cloak is up. It is also the contract with the parent: while it is in the
      * future no other technique may be started by this caster.

@@ -43,6 +43,11 @@ public class TailedBallAbility extends Ability implements Ability.Channeled {
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "tailed_ball");
 
+    @Override
+    protected float sageModeCostMultiplier() {
+        return 0.5f;
+    }
+
     /** Chakra paid to open the sphere, before mastery, and every tick it is gathered. */
     private static final float OPEN_COST = 80.0f;
     private static final float UPKEEP = 0.5f;

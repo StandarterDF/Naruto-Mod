@@ -52,6 +52,11 @@ public class TailedCloakAbility extends Ability implements Ability.Toggled, Abil
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "tailed_cloak");
 
+    @Override
+    protected float sageModeCostMultiplier() {
+        return 0.5f;
+    }
+
     /** The mark that says the tailed cloak is up, refreshed every active tick. */
     public static final String UNTIL_TAG = "narutomod:tailed_cloak_until";
 
@@ -59,7 +64,7 @@ public class TailedCloakAbility extends Ability implements Ability.Toggled, Abil
     private static final UUID ARMOUR_MODIFIER_ID = UUID.fromString("d2a8f4c6-1b73-49e5-8c0d-7f5a3b9e2c81");
 
     /** Twelve points of armour - six pieces' worth of chakra over the whole body. */
-    private static final double ARMOUR_BONUS = 12.0d;
+    private static final double ARMOUR_BONUS = 16.0d;
 
     /** Chakra paid to draw the tail out, before mastery, and every tick it is held. */
     private static final float OPEN_COST = 40.0f;
@@ -70,7 +75,7 @@ public class TailedCloakAbility extends Ability implements Ability.Toggled, Abil
     /** How often the tail sweeps, how far it reaches and how hard it lands. */
     private static final int SWEEP_INTERVAL = 20;
     private static final double SWEEP_RADIUS = 5.0d;
-    private static final float SWEEP_DAMAGE = 6.0f;
+    private static final float SWEEP_DAMAGE = 8.0f;
 
     /** How often the cloak roars, and how far the roar is heard by the mobs it marks. */
     private static final int ROAR_INTERVAL = 100;
@@ -198,8 +203,8 @@ public class TailedCloakAbility extends Ability implements Ability.Toggled, Abil
 
     /** Re-applied every tick so lost gifts come back with the stance. */
     private static void applyBoons(Player player) {
-        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, EFFECT_DURATION, 0, true, false));
-        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, EFFECT_DURATION, 0, true, false));
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, EFFECT_DURATION, 1, true, false));
+        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, EFFECT_DURATION, 1, true, false));
         player.addEffect(new MobEffectInstance(MobEffects.JUMP, EFFECT_DURATION, 0, true, false));
         player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, EFFECT_DURATION, 0, true, false));
     }

@@ -50,6 +50,11 @@ public class DividedCloakAbility extends Ability implements Ability.Toggled, Abi
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "divided_cloak");
 
+    @Override
+    protected float sageModeCostMultiplier() {
+        return 0.5f;
+    }
+
     /** The mark that says the cloak is up, refreshed every active tick. */
     public static final String UNTIL_TAG = "narutomod:divided_cloak_until";
 
@@ -58,8 +63,8 @@ public class DividedCloakAbility extends Ability implements Ability.Toggled, Abi
     private static final UUID DAMAGE_MODIFIER_ID = UUID.fromString("a09c7f14-2e58-4b31-9d06-3f7b81c25e10");
 
     /** Two points of armour - a piece's worth - and one point of bare-handed force. */
-    private static final double ARMOUR_BONUS = 2.0d;
-    private static final double DAMAGE_BONUS = 1.0d;
+    private static final double ARMOUR_BONUS = 4.0d;
+    private static final double DAMAGE_BONUS = 2.0d;
 
     /** How far the cloak reaches: close enough to be a fighting line, not a field. */
     private static final double SHARE_RANGE = 6.0d;
@@ -133,6 +138,7 @@ public class DividedCloakAbility extends Ability implements Ability.Toggled, Abi
         boolean opening = player.getPersistentData().getLong(UNTIL_TAG) <= now;
         applyModifiers(player);
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, EFFECT_DURATION, 0, true, false));
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, EFFECT_DURATION, 0, true, false));
         player.getPersistentData().putLong(UNTIL_TAG, now + MARK_GRACE);
 
         if (!(player.level() instanceof ServerLevel level)) {
@@ -202,6 +208,7 @@ public class DividedCloakAbility extends Ability implements Ability.Toggled, Abi
     public static void clear(Player player) {
         player.getPersistentData().remove(UNTIL_TAG);
         player.removeEffect(MobEffects.MOVEMENT_SPEED);
+        player.removeEffect(MobEffects.DAMAGE_RESISTANCE);
         AttributeInstance armour = player.getAttribute(Attributes.ARMOR);
         if (armour != null) {
             armour.removeModifier(ARMOUR_MODIFIER_ID);

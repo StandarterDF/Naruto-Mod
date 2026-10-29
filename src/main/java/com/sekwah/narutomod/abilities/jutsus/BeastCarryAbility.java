@@ -36,6 +36,11 @@ public class BeastCarryAbility extends Ability implements Ability.Toggled, Abili
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "beast_carry");
 
+    @Override
+    protected float sageModeCostMultiplier() {
+        return 0.5f;
+    }
+
     /** UUID of the creature on the caster's shoulders, held in the caster's persistent data. */
     public static final String CARRIED_KEY = "narutomod:carried_entity";
 

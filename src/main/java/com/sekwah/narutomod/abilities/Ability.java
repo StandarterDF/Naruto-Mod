@@ -168,7 +168,7 @@ public abstract class Ability {
         float cost = Mastery.cost(ninjaData, this, baseCost);
         Nature element = this.nature();
         if (ninjaData.isSageMode()) {
-            cost *= 0.8f;
+            cost *= sageModeCostMultiplier();
         }
         if (element != null) {
             String affinity = ninjaData.getNatureAffinity();
@@ -186,6 +186,15 @@ public abstract class Ability {
      */
     public Nature nature() {
         return null;
+    }
+
+    /**
+     * How much Sage Mode takes off this technique's chakra price. The default tenth off is the
+     * ordinary nature-energy discount; the tailed beast techniques are built on the beast's chakra
+     * already sitting in the vessel, so a sage in that state pays half.
+     */
+    protected float sageModeCostMultiplier() {
+        return 0.8f;
     }
 
     /** How far this technique has been mastered, from zero to just under one. */

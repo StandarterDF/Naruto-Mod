@@ -46,6 +46,11 @@ public class SealVesselAbility extends Ability implements Ability.Cooldown {
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "seal_vessel");
 
+    @Override
+    protected float sageModeCostMultiplier() {
+        return 0.5f;
+    }
+
     /** Points of vessel left. Anything that borrows the beast's chakra reads this first. */
     public static final String INTEGRITY_TAG = "narutomod:seal_vessel_integrity";
 

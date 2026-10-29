@@ -48,6 +48,11 @@ public class PerfectCloakAbility extends Ability implements Ability.Toggled, Abi
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "perfect_cloak");
 
+    @Override
+    protected float sageModeCostMultiplier() {
+        return 0.5f;
+    }
+
     /** The mark that says the cloak is settled, refreshed every active tick. */
     public static final String UNTIL_TAG = "narutomod:perfect_cloak_until";
 
