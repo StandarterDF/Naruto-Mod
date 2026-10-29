@@ -8,7 +8,10 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
@@ -119,6 +122,35 @@ public class BoneBladeItem extends SwordItem {
     @Override
     public boolean isValidRepairItem(ItemStack stack, ItemStack repair) {
         return false;
+    }
+
+    /**
+     * Right-click raises the blade guard, the same as every other sword in the mod: the bone blade is
+     * a blade first and a technique second, so it blocks the way the rest of them do.
+     */
+    @Override
+    public UseAnim getUseAnimation(ItemStack stack) {
+        return UseAnim.BLOCK;
+    }
+
+    @Override
+    public int getUseDuration(ItemStack stack) {
+        return 72000;
+    }
+
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack offHand = player.getItemInHand(InteractionHand.OFF_HAND);
+        ItemStack mainHand = player.getItemInHand(InteractionHand.MAIN_HAND);
+        if (offHand.getItem() instanceof net.minecraft.world.item.ShieldItem
+                || mainHand.getItem() instanceof net.minecraft.world.item.ShieldItem) {
+            return InteractionResultHolder.pass(player.getItemInHand(hand));
+        }
+        if (hand == InteractionHand.MAIN_HAND && !level.isClientSide) {
+            com.sekwah.narutomod.abilities.jutsus.ParryAbility.raiseGuard(player);
+        }
+        player.startUsingItem(hand);
+        return InteractionResultHolder.consume(player.getItemInHand(hand));
     }
 
     @Override
