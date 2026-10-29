@@ -14,7 +14,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.Level.ExplosionInteraction;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 
@@ -183,8 +183,24 @@ public class TrainingWeightsItem extends Item {
         if (current < prev) {
             // A weight left the pack: let the packed chakra go.
             if (player.level() instanceof ServerLevel level) {
-                level.explode(player, player.getX(), player.getY() + 0.5d, player.getZ(),
-                        2.0f, ExplosionInteraction.NONE);
+                level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, player.getX(),
+                        player.getY() + 0.5d, player.getZ(), 1, 0.0d, 0.0d, 0.0d, 0.0d);
+                level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                        net.minecraft.sounds.SoundEvents.GENERIC_EXPLODE, net.minecraft.sounds.SoundSource.PLAYERS,
+                        1.0f, 1.2f);
+                for (net.minecraft.world.entity.LivingEntity target : level.getEntitiesOfClass(
+                        net.minecraft.world.entity.LivingEntity.class,
+                        player.getBoundingBox().inflate(2.5d),
+                        t -> t != player && t.isAlive())) {
+                    target.hurt(player.damageSources().magic(), 2.0f);
+                    Vec3 push = target.position().subtract(player.position());
+                    if (push.lengthSqr() < 0.0001d) {
+                        push = new Vec3(0.0d, 0.0d, 1.0d);
+                    }
+                    push = push.normalize().scale(1.2d);
+                    target.push(push.x, 0.4d, push.z);
+                    target.hurtMarked = true;
+                }
             }
         }
         player.getPersistentData().putInt(PREV_CARRIED_TAG, current);
