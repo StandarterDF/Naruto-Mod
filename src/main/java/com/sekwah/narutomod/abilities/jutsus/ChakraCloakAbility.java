@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -56,17 +57,20 @@ public class ChakraCloakAbility extends Ability implements Ability.Toggled, Abil
     private static final UUID DAMAGE_MODIFIER_ID = UUID.fromString("b7e4d190-8c26-4f53-a1b9-6e3d7c0a9254");
 
     /** Four points of armour - two pieces' worth - and two points of bare-handed force. */
-    private static final double ARMOUR_BONUS = 4.0d;
-    private static final double DAMAGE_BONUS = 2.0d;
+    private static final double ARMOUR_BONUS = 8.0d;
+    private static final double DAMAGE_BONUS = 4.0d;
 
     /** Chakra paid to pull the cloak on, before mastery, and every tick it is worn. */
-    private static final float OPEN_COST = 20.0f;
-    private static final float UPKEEP = 0.3f;
+    private static final float OPEN_COST = 15.0f;
+    private static final float UPKEEP = 0.2f;
 
     private static final int CHAKRA_REGEN_DELAY = 10;
 
     /** How far ahead the mark is kept while the cloak is worn. */
     private static final int MARK_GRACE = 10;
+
+    /** How long the boons are handed out for; refreshed every tick, so this is just a hold time. */
+    private static final int EFFECT_DURATION = 40;
 
     @Override
     public ActivationType activationType() {
@@ -101,6 +105,10 @@ public class ChakraCloakAbility extends Ability implements Ability.Toggled, Abil
         applyModifiers(player);
         // The chakra burning over the body hides it from anything that would mark it out.
         player.removeEffect(MobEffects.GLOWING);
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, EFFECT_DURATION, 1, true, false));
+        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, EFFECT_DURATION, 1, true, false));
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, EFFECT_DURATION, 0, true, false));
+        player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, EFFECT_DURATION, 0, true, false));
         player.getPersistentData().putLong(UNTIL_TAG, now + MARK_GRACE);
 
         if (player.level() instanceof ServerLevel level) {
@@ -188,5 +196,9 @@ public class ChakraCloakAbility extends Ability implements Ability.Toggled, Abil
     public void handleAbilityEnded(Player player, INinjaData ninjaData, int ticksActive) {
         player.getPersistentData().remove(UNTIL_TAG);
         removeModifiers(player);
+        player.removeEffect(MobEffects.DAMAGE_BOOST);
+        player.removeEffect(MobEffects.MOVEMENT_SPEED);
+        player.removeEffect(MobEffects.DAMAGE_RESISTANCE);
+        player.removeEffect(MobEffects.REGENERATION);
     }
 }

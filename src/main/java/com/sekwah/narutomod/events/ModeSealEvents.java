@@ -215,6 +215,10 @@ public final class ModeSealEvents {
         }
         if (retire(data, ninjaData, ChakraCloakAbility.UNTIL_TAG, ChakraCloakAbility.ID, now)) {
             ChakraCloakAbility.removeModifiers(player);
+            player.removeEffect(net.minecraft.world.effect.MobEffects.DAMAGE_BOOST);
+            player.removeEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED);
+            player.removeEffect(net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE);
+            player.removeEffect(net.minecraft.world.effect.MobEffects.REGENERATION);
         }
         if (retire(data, ninjaData, TailedCloakAbility.UNTIL_TAG, TailedCloakAbility.ID, now)) {
             TailedCloakAbility.removeModifiers(player);

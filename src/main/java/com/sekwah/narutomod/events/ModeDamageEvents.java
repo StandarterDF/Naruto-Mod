@@ -47,7 +47,7 @@ public final class ModeDamageEvents {
         } else if (toggles.contains(TailedCloakAbility.ID)) {
             multiplier = Math.max(multiplier, 2.0f);
         } else if (toggles.contains(ChakraCloakAbility.ID)) {
-            multiplier = Math.max(multiplier, 1.5f);
+            multiplier = Math.max(multiplier, 2.0f);
         }
         // Eight Gates: no technique damage boost (taijutsu only).
 
