@@ -1,5 +1,7 @@
 package com.sekwah.narutomod.item;
 
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.skills.Skill;
 import com.sekwah.narutomod.skills.SkillBranch;
@@ -9,6 +11,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
@@ -55,6 +61,19 @@ public class ComboSwordItem extends SwordItem {
     /** How many Kenjutsu skill nodes must be unlocked to swing at normal speed. */
     private final int kenjutsuPointsRequired;
 
+    /** Whether this blade grows sharper with every kill it takes. */
+    private final boolean gainsKills;
+
+    /** Bonus damage per kill for a blade that gains kills. */
+    public static final float DAMAGE_PER_KILL = 0.5f;
+
+    /** NBT key holding the kill count of a gaining blade. */
+    public static final String KILLS_TAG = "narutomod:kills";
+
+    /** Stable id for the kill-bonus damage modifier. */
+    private static final UUID KILL_BONUS_UUID =
+            UUID.fromString("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+
     /** Base attack speed passed to the constructor (stored because SwordItem hides it). */
     private final float baseAttackSpeed;
 
@@ -76,12 +95,19 @@ public class ComboSwordItem extends SwordItem {
     public ComboSwordItem(Tier tier, int attackDamage, float attackSpeed, Properties properties,
                           float damagePerStep, int maxCombo, int comboWindow, float chakraPerHit) {
         this(tier, attackDamage, attackSpeed, properties, damagePerStep, maxCombo, comboWindow,
-                chakraPerHit, 0);
+                chakraPerHit, 0, false);
     }
 
     public ComboSwordItem(Tier tier, int attackDamage, float attackSpeed, Properties properties,
                           float damagePerStep, int maxCombo, int comboWindow, float chakraPerHit,
                           int kenjutsuPointsRequired) {
+        this(tier, attackDamage, attackSpeed, properties, damagePerStep, maxCombo, comboWindow,
+                chakraPerHit, kenjutsuPointsRequired, false);
+    }
+
+    public ComboSwordItem(Tier tier, int attackDamage, float attackSpeed, Properties properties,
+                          float damagePerStep, int maxCombo, int comboWindow, float chakraPerHit,
+                          int kenjutsuPointsRequired, boolean gainsKills) {
         super(tier, attackDamage, attackSpeed, properties);
         this.damagePerStep = damagePerStep;
         this.maxCombo = maxCombo;
@@ -89,6 +115,7 @@ public class ComboSwordItem extends SwordItem {
         this.chakraPerHit = chakraPerHit;
         this.kenjutsuPointsRequired = kenjutsuPointsRequired;
         this.baseAttackSpeed = attackSpeed;
+        this.gainsKills = gainsKills;
     }
 
     public float getDamagePerStep() {
@@ -109,6 +136,49 @@ public class ComboSwordItem extends SwordItem {
 
     public int getKenjutsuPointsRequired() {
         return this.kenjutsuPointsRequired;
+    }
+
+    public boolean gainsKills() {
+        return this.gainsKills;
+    }
+
+    /** @return how many kills this blade has taken. */
+    public static int getKills(ItemStack stack) {
+        CompoundTag tag = stack.getTag();
+        return tag == null ? 0 : tag.getInt(KILLS_TAG);
+    }
+
+    /** Records one more kill on the blade. */
+    public static void addKill(ItemStack stack) {
+        CompoundTag tag = stack.getOrCreateTag();
+        tag.putInt(KILLS_TAG, getKills(stack) + 1);
+    }
+
+    /** Bonus damage this blade currently deals from its kill count. */
+    public float killBonus(ItemStack stack) {
+        return gainsKills ? getKills(stack) * DAMAGE_PER_KILL : 0.0f;
+    }
+
+    /**
+     * A blade that gains kills grows sharper with every one: the kill count rides along on the
+     * stack, so the bonus survives a relog and a handover, and the attribute is recomputed from
+     * it every time the game asks for the blade's modifiers.
+     */
+    @Override
+    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlot slot, ItemStack stack) {
+        Multimap<Attribute, AttributeModifier> base = super.getAttributeModifiers(slot, stack);
+        if (slot != EquipmentSlot.MAINHAND || !gainsKills) {
+            return base;
+        }
+        float bonus = killBonus(stack);
+        if (bonus <= 0.0f) {
+            return base;
+        }
+        ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
+        builder.putAll(base);
+        builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(KILL_BONUS_UUID,
+                "Kubikiribocho kills", bonus, AttributeModifier.Operation.ADDITION));
+        return builder.build();
     }
 
     /** Returns the base attack speed passed to the constructor. */
@@ -240,6 +310,13 @@ public class ComboSwordItem extends SwordItem {
                     Component.literal(String.valueOf(this.kenjutsuPointsRequired))
                             .withStyle(ChatFormatting.RED))
                     .withStyle(ChatFormatting.DARK_GRAY));
+        }
+        if (this.gainsKills) {
+            int kills = getKills(stack);
+            tooltip.add(Component.translatable("item.narutomod.combo_sword.kills",
+                    Component.literal(String.valueOf(kills)).withStyle(ChatFormatting.GOLD),
+                    Component.literal(String.valueOf(kills * DAMAGE_PER_KILL)).withStyle(ChatFormatting.RED))
+                    .withStyle(ChatFormatting.GRAY));
         }
     }
 }

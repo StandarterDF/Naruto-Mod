@@ -2,12 +2,12 @@ package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
+import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import com.sekwah.narutomod.item.ComboSwordItem;
-import com.sekwah.narutomod.item.weapons.SamehadaItem;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -20,6 +20,9 @@ import net.minecraftforge.fml.common.Mod;
  * out before the sword is told it has landed, so the chain has to be read and extended from the
  * attacker's hand as the hit goes in. It runs before everything else so that a caster's chakra fist
  * and other bonuses stack on top of the great sword's weight rather than the other way round.</p>
+ *
+ * <p>The Kubikiribocho also keeps a tally of every kill it takes: each one makes it a little
+ * sharper, with no ceiling, so a blade that has been through a war hits harder than a fresh one.</p>
  */
 @Mod.EventBusSubscriber(modid = NarutoMod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ComboSwordEvents {
@@ -46,22 +49,40 @@ public class ComboSwordEvents {
             event.setAmount(event.getAmount() + bonus);
         }
 
-        LivingEntity victim = event.getEntity();
-        if (sword instanceof SamehadaItem samehada) {
-            biteChakra(samehada, victim, player);
-            maybeFeed(samehada, victim, player);
+        if (sword instanceof com.sekwah.narutomod.item.weapons.SamehadaItem samehada) {
+            biteChakra(samehada, event.getEntity(), player);
+            maybeFeed(samehada, event.getEntity(), player);
         } else if (sword.getChakraPerHit() > 0.0f) {
             player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData ->
                     ninjaData.addChakra(sword.getChakraPerHit()));
         }
     }
 
-    /**
-     * Samehada takes chakra out of whatever it cuts. A victim with a pool of its own (another ninja)
-     * is drained for real; a plain beast has no pool, so the blade pulls the chakra out of its flesh
-     * and the amount follows its maximum health instead.
-     */
-    private static void biteChakra(SamehadaItem sword, LivingEntity victim, Player owner) {
+    @SubscribeEvent
+    public static void onLivingDeath(LivingDeathEvent event) {
+        if (event.getEntity().level().isClientSide) {
+            return;
+        }
+        LivingEntity victim = event.getEntity();
+        if (!(event.getSource().getEntity() instanceof Player killer)) {
+            return;
+        }
+        if (victim == killer) {
+            return;
+        }
+        // A caster's own clones are not kills worth a sharper blade.
+        if (victim instanceof ShadowCloneEntity clone && clone.isOwnedBy(killer)) {
+            return;
+        }
+        ItemStack held = killer.getMainHandItem();
+        if (!(held.getItem() instanceof ComboSwordItem sword) || !sword.gainsKills()) {
+            return;
+        }
+        ComboSwordItem.addKill(held);
+    }
+
+    private static void biteChakra(com.sekwah.narutomod.item.weapons.SamehadaItem sword,
+                                   LivingEntity victim, Player owner) {
         float bite = sword.chakraBite(victim);
         if (bite <= 0.0f) {
             return;
@@ -81,15 +102,13 @@ public class ComboSwordEvents {
         });
     }
 
-    /**
-     * A peaceful creature feeds the blade's caster. The caster's own pets are spared the indignity:
-     * cutting your own dog should not hand out a snack.
-     */
-    private static void maybeFeed(SamehadaItem sword, LivingEntity victim, Player owner) {
-        if (!SamehadaItem.isPeaceful(victim)) {
+    private static void maybeFeed(com.sekwah.narutomod.item.weapons.SamehadaItem sword,
+                                 LivingEntity victim, Player owner) {
+        if (!com.sekwah.narutomod.item.weapons.SamehadaItem.isPeaceful(victim)) {
             return;
         }
-        if (victim instanceof OwnableEntity ownable && owner.getUUID().equals(ownable.getOwnerUUID())) {
+        if (victim instanceof net.minecraft.world.entity.OwnableEntity ownable
+                && owner.getUUID().equals(ownable.getOwnerUUID())) {
             return;
         }
         owner.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ownerData ->

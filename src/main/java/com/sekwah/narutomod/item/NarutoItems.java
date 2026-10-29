@@ -287,7 +287,7 @@ public class NarutoItems {
      */
     public static final RegistryObject<Item> KUBIKIRIBOCHO = ITEMS.register("kubikiribocho",
             () -> new ComboSwordItem(NinjaTier.KATANA, 6, -3.2F, new Item.Properties().stacksTo(1),
-                    0.75f, 20, 20 * 5, 0.0f, 3));
+                    0.75f, 20, 20 * 5, 0.0f, 3, true));
 
     /** The bone blade grown by the Camellia Dance: a handful of cuts, no durability, no enchanting. */
     public static final RegistryObject<Item> BONE_BLADE = ITEMS.register("bone_blade",
