@@ -276,6 +276,8 @@
   "item.narutomod.combo_sword.drain": "Забирает %s чакры у того, кого режет",
   "item.narutomod.combo_sword.current": "Цепочка: %s",
   "item.narutomod.combo_sword.kenjutsu_requirement": "Требуется %s навык(ов) Кендзюцу",
+  "item.narutomod.samehada.drain": "Забирает чакру у всего, что режет, больше — у крепких",
+  "item.narutomod.samehada.feed": "Кормит владельца при ударе по мирным существам",
   "narutomod.keys.category": "Naruto Mod",
   "naruto.keys.jutsu_menu": "Меню Техник",
   "naruto.keys.key1": "Клавиша Техник 1",

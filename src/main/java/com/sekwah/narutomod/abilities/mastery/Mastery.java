@@ -100,7 +100,15 @@ public final class Mastery {
      * a run of short channels is worth the same as one long one.
      */
     public static void recordCredit(Player player, INinjaData ninjaData, Ability ability, float credit) {
-        award(player, ninjaData, ability, credit);
+        award(player, ninjaData, idOf(ability), credit);
+    }
+
+    /**
+     * The same, for a mechanic that has its own mastery but is not an ability at all - the
+     * Samehada feeding its caster, say. The id is what the progress is filed under.
+     */
+    public static void recordCredit(Player player, INinjaData ninjaData, ResourceLocation id, float credit) {
+        award(player, ninjaData, id, credit);
     }
 
     /**
@@ -108,15 +116,15 @@ public final class Mastery {
      * same way whether a technique is counted by casts or by the work it did.
      */
     private static void award(Player player, INinjaData ninjaData, Ability ability, float credit) {
-        if (!NarutoConfig.masteryEnabled || player.isCreative()) {
+        award(player, ninjaData, idOf(ability), credit);
+    }
+
+    private static void award(Player player, INinjaData ninjaData, ResourceLocation id, float credit) {
+        if (!NarutoConfig.masteryEnabled || player.isCreative() || id == null) {
             return;
         }
         float scaled = credit * gainMultiplier;
         if (scaled <= 0f) {
-            return;
-        }
-        ResourceLocation id = idOf(ability);
-        if (id == null) {
             return;
         }
         MasteryData data = ninjaData.getMasteryData();

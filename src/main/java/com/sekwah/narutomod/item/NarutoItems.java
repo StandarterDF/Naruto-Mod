@@ -8,6 +8,7 @@ import com.sekwah.narutomod.item.weapons.SenbonItem;
 import com.sekwah.narutomod.item.weapons.ShurikenItem;
 import com.sekwah.narutomod.item.weapons.BoneBladeItem;
 import com.sekwah.narutomod.item.weapons.BoneMultitoolItem;
+import com.sekwah.narutomod.item.weapons.SamehadaItem;
 import com.sekwah.narutomod.item.weapons.TechniqueSwordItem;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.resources.ResourceLocation;
@@ -275,10 +276,11 @@ public class NarutoItems {
 
     /**
      * Samehada: quick enough for a chain to be kept alive, and it takes chakra off whatever it cuts.
+     * It is a legendary blade, so it lasts far longer than the rank-and-file katanas.
      */
     public static final RegistryObject<Item> SAMEHADA = ITEMS.register("samehada",
-            () -> new ComboSwordItem(NinjaTier.KATANA, 4, -2.4F, new Item.Properties().stacksTo(1),
-                    0.5f, 20, 20 * 4, 1.5f, 2));
+            () -> new SamehadaItem(NinjaTier.LEGENDARY, 4, -2.4F, new Item.Properties().stacksTo(1),
+                    0.5f, 20, 20 * 4));
 
     /**
      * Kubikiribocho: slow, heavy, and the chain is worth far more per step.

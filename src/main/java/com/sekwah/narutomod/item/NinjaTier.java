@@ -15,6 +15,14 @@ public enum NinjaTier implements Tier {
             () -> {
         return Ingredient.of(Items.IRON_INGOT);
     }, BlockTags.NEEDS_IRON_TOOL),
+    /**
+     * The named blades: the same steel as a katana, but considerately more of it. A legendary sword
+     * is a once-in-a-lifetime find, not something a caster should have to reforge every skirmish.
+     */
+    LEGENDARY(2, 1800, 6.0F, 1.5F, 18,
+            () -> {
+        return Ingredient.of(Items.PRISMARINE_SHARD);
+    }, BlockTags.NEEDS_IRON_TOOL),
     ;
 
     private final int level;
