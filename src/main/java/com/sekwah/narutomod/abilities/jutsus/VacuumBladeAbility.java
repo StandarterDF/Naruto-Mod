@@ -47,8 +47,9 @@ public class VacuumBladeAbility extends Ability implements Ability.Cooldown {
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "vacuum_blade");
 
-    /** How far the crescent carries, and the full width of the cone it opens. */
-    private static final double RANGE = 12.0d;
+    /** How far the crescent carries at base, and the full width of the cone it opens. */
+    private static final double BASE_RANGE = 6.0d;
+    private static final double RANGE_PER_MASTERY = 6.0d;
     private static final double CONE_DEGREES = 30.0d;
 
     /** Cosine of half the cone: a body is inside when the angle to it is within fifteen degrees. */
@@ -114,7 +115,8 @@ public class VacuumBladeAbility extends Ability implements Ability.Cooldown {
             return;
         }
         float mastery = Mastery.level(ninjaData, this);
-        TravellingArcEntity wave = new TravellingArcEntity(level, player, RANGE, CONE_DOT,
+        double range = BASE_RANGE + RANGE_PER_MASTERY * mastery;
+        TravellingArcEntity wave = new TravellingArcEntity(level, player, range, CONE_DOT,
                 DAMAGE * swordPower(player) / WOOD_REFERENCE * (1.0f + 0.5f * mastery),
                 TravellingArcEntity.KIND_VACUUM, false, BLEED_TICKS, MAGIC_SHARE);
         level.addFreshEntity(wave);
