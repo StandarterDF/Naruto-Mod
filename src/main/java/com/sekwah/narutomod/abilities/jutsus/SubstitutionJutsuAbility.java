@@ -1,6 +1,7 @@
 package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.entity.SubstitutionLogEntity;
 import com.sekwah.narutomod.skills.SkillEffect;
@@ -70,7 +71,8 @@ public class SubstitutionJutsuAbility extends Ability implements Ability.Channel
 
             Vec3 loc = ninjaData.getSubstitutionLoc();
             double distance = loc != null ? player.position().distanceTo(loc) : 0;
-            if(loc != null && Math.round(distance) <= MAX_MARKER_DISTANCE && player.level().dimension().location().equals(ninjaData.getSubstitutionDimension())) {
+            int maxDistance = (int) (MAX_MARKER_DISTANCE * (1.0f + 0.5f * Mastery.level(ninjaData, this)));
+            if(loc != null && Math.round(distance) <= maxDistance && player.level().dimension().location().equals(ninjaData.getSubstitutionDimension())) {
                 spawnLogAt(player, player.position(), ninjaData);
                 player.teleportTo(loc.x, loc.y - 2, loc.z);
                 ninjaData.setSubstitutionLoc(null, null);

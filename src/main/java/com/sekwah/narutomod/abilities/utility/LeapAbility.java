@@ -1,6 +1,7 @@
 package com.sekwah.narutomod.abilities.utility;
 
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.sounds.NarutoSounds;
@@ -50,7 +51,8 @@ public class LeapAbility extends Ability {
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
         Vec3 lookVector = player.getLookAngle();
-        float horScale = 2.41f;
+        float mastery = Mastery.level(ninjaData, this);
+        float horScale = 2.41f * (1.0f + 0.25f * mastery);
         PlayerUtil.setVelocity(player, lookVector.x * horScale, (lookVector.y * 0.6 + 0.8F)
                 , lookVector.z * horScale, true);
         player.level().playSound(null,
