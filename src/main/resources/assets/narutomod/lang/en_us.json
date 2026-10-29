@@ -338,6 +338,7 @@
   "naruto.gui.jutsu.category.other": "Other",
   "naruto.gui.jutsu.category.passive": "Passive",
   "naruto.gui.jutsu.locked": "Become a ninja to see the list of techniques.",
+  "naruto.gui.jutsu.passive": "passive",
   "naruto.gui.jutsu.page": "Page %s / %s",
   "naruto.gui.jutsu.enable": "Become a ninja",
   "naruto.gui.jutsu.disable": "I change my mind",

@@ -340,6 +340,7 @@
   "naruto.gui.skill.branch.clones": "Клоны",
   "naruto.gui.skill.branch.space": "Пространство",
   "naruto.gui.skill.branch.mind": "Разум",
+  "naruto.gui.jutsu.passive": "пассивно",
   "naruto.gui.jutsu.locked_suffix": " (закрыто)",
   "jutsu.fail.notunlocked": "%s ещё не изучена - откройте её в дереве скилов",
   "jutsu.fail.techdisabled": "%s отключена в меню техник",

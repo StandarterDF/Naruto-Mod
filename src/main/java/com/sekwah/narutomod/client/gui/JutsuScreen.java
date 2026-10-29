@@ -1,6 +1,7 @@
 package com.sekwah.narutomod.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.NarutoAbilities;
 import com.sekwah.narutomod.abilities.AbilityUnlocks;
@@ -598,6 +599,23 @@ public class JutsuScreen extends Screen {
         List<Entry> result = new ArrayList<>();
         NarutoAbilities.COMBO_MAP.forEach((combo, id) ->
                 result.add(new Entry(id.toString(), combo, categoryOf(id))));
+        // Hidden passives: techniques that are never cast through a combo (double jump, leap and
+        // the like) but are still learned in the skill tree. They are filed on the last page so the
+        // reader can see what their passives actually do instead of hunting for them in the tree.
+        Set<String> comboPaths = new HashSet<>();
+        for (ResourceLocation id : NarutoAbilities.COMBO_MAP.values()) {
+            comboPaths.add(id.getPath());
+        }
+        for (String path : CATEGORIES.keySet()) {
+            if (comboPaths.contains(path)) {
+                continue;
+            }
+            ResourceLocation id = new ResourceLocation(NarutoMod.MOD_ID, path);
+            if (NarutoRegistries.ABILITIES.getValue(id) == null) {
+                continue;
+            }
+            result.add(new Entry(id.toString(), 0L, categoryOf(id)));
+        }
         result.sort(Comparator.comparingInt((Entry entry) -> entry.category().ordinal())
                 .thenComparingInt(JutsuScreen::orderOf)
                 .thenComparingLong(Entry::combo));
@@ -618,6 +636,12 @@ public class JutsuScreen extends Screen {
         Category openCategory = null;
         for (Entry entry : entries) {
             boolean headerNeeded = entry.category() != openCategory;
+            // Passives always start on their own page, so the last page is always theirs.
+            if (entry.category() == Category.PASSIVE && !current.isEmpty()) {
+                pages.add(current);
+                current = new ArrayList<>();
+                headerNeeded = true;
+            }
             // A page must not end on a header, so the entry is made to fit alongside it.
             int needed = headerNeeded ? 2 : 1;
             if (current.size() + needed > ROWS_PER_PAGE) {
@@ -1131,6 +1155,9 @@ public class JutsuScreen extends Screen {
      * the caster's own key presses do.
      */
     private static Component comboKeys(long combo) {
+        if (combo <= 0) {
+            return Component.translatable("naruto.gui.jutsu.passive");
+        }
         MutableComponent keys = Component.empty();
         String digits = Long.toString(combo);
         for (int i = 0; i < digits.length(); i++) {
