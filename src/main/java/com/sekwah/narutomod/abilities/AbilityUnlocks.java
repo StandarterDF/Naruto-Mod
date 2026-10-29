@@ -35,7 +35,8 @@ public final class AbilityUnlocks {
      * is the single check both sides share.
      */
     private static final Set<String> SCROLL_ONLY = Set.of(
-            "kirin");
+            "kirin",
+            "six_paths_mode");
 
     private AbilityUnlocks() {
     }
@@ -71,6 +72,9 @@ public final class AbilityUnlocks {
             // into the lightning nature first, or the technique is just words on paper.
             if ("kirin".equals(abilityId.getPath())) {
                 return SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), "ability:lightning_mode");
+            }
+            if ("six_paths_mode".equals(abilityId.getPath())) {
+                return SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), "ability:rinnegan");
             }
             return true;
         }

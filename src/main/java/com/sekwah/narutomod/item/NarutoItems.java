@@ -262,6 +262,7 @@ public class NarutoItems {
     public static final RegistryObject<Item> SCROLL_SHARINGAN = createScroll("sharingan");
     public static final RegistryObject<Item> SCROLL_BYAKUGAN = createScroll("byakugan");
     public static final RegistryObject<Item> SCROLL_JOUGAN = createScroll("jougan");
+    public static final RegistryObject<Item> SCROLL_SIX_PATHS_MODE = createScroll("six_paths_mode");
 
     /**
      * A scrap of somebody else's map: right-click to turn it into a real filled map pointing at the
