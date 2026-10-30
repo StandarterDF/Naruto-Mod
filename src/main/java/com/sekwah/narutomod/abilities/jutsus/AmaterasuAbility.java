@@ -8,11 +8,14 @@ import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.events.AmaterasuEvents;
 import com.sekwah.narutomod.util.Targeting;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import com.sekwah.narutomod.abilities.jutsus.BreathCone;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Amaterasu: the black flame that is willed onto a target rather than thrown at it.
@@ -29,7 +32,7 @@ import net.minecraft.world.entity.player.Player;
  * heat the fire breath pours into a furnace. Like every power built on an eye it refuses to cast
  * without the eye open.</p>
  */
-public class AmaterasuAbility extends Ability implements Ability.Cooldown {
+public class AmaterasuAbility extends Ability implements Ability.Cooldown, Ability.Channeled {
 
     /** Black fire is loud in the chakra sense; it carries as far as a shout. */
     @Override
@@ -51,7 +54,7 @@ public class AmaterasuAbility extends Ability implements Ability.Cooldown {
 
     @Override
     public ActivationType activationType() {
-        return ActivationType.INSTANT;
+        return ActivationType.CHANNELED;
     }
 
     @Override
@@ -77,16 +80,21 @@ public class AmaterasuAbility extends Ability implements Ability.Cooldown {
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }
-        if (!(Targeting.lookedAtEntity(player, RANGE) instanceof LivingEntity)) {
+        // A tap (chargeAmount < 0) needs a target; a held breath does not.
+        if (chargeAmount < 0 && !(Targeting.lookedAtEntity(player, RANGE) instanceof LivingEntity)) {
             player.displayClientMessage(Component.translatable("jutsu.fail.amaterasu.notarget",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }
 
-        // The third eye reads the black flame more cheaply while it is open.
-        float base = RinneSharinganAbility.isActive(ninjaData) ? COST * 0.7f : COST;
-        float cost = this.masteryCost(ninjaData, base);
+        float baseCost;
+        if (chargeAmount < 0) {
+            baseCost = RinneSharinganAbility.isActive(ninjaData) ? COST * 0.7f : COST;
+        } else {
+            baseCost = 2.0f;
+        }
+        float cost = this.masteryCost(ninjaData, baseCost);
         if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
@@ -97,7 +105,46 @@ public class AmaterasuAbility extends Ability implements Ability.Cooldown {
     }
 
     @Override
+    public void handleChannelling(Player player, INinjaData ninjaData, int ticksChanneled) {
+        if (!(player.level() instanceof ServerLevel level)) {
+            return;
+        }
+        if (ticksChanneled == 0) {
+            level.playSound(null, player, net.minecraft.sounds.SoundEvents.BLAZE_SHOOT,
+                    net.minecraft.sounds.SoundSource.PLAYERS, 1.0f, 0.8f);
+        }
+        // Visual black-flame spray.
+        Vec3 eye = player.getEyePosition();
+        Vec3 look = player.getViewVector(1.0f);
+        for (int step = 1; step <= 6; step++) {
+            double dist = 24.0d * step / 6.0d;
+            Vec3 point = eye.add(look.scale(dist));
+            level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, point.x, point.y, point.z,
+                    2, 0.2d, 0.2d, 0.2d, 0.01d);
+        }
+        if (ticksChanneled % 10 == 0) {
+            for (LivingEntity target : BreathCone.entities(level, player, 24.0d, 0.7d)) {
+                if (target == player || target.isSpectator() || !target.isAlive()) {
+                    continue;
+                }
+                if (target instanceof Player other && other.isCreative()) {
+                    continue;
+                }
+                if (Friends.areFriends(player, target)) {
+                    continue;
+                }
+                AmaterasuEvents.ignite(level, target, player);
+            }
+            AmaterasuEvents.heatFurnaces(level, player.position(), 8.0d);
+        }
+        this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
+    }
+
+    @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
+        if (ticksActive >= 0) {
+            return;
+        }
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }

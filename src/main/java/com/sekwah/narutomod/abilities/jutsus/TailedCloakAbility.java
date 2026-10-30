@@ -2,7 +2,9 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.friends.Friends;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -170,8 +172,12 @@ public class TailedCloakAbility extends Ability implements Ability.Toggled, Abil
 
     /** The tail answers blows, not presence: only whoever is hunting the caster is swept. */
     private static void sweep(Player player, ServerLevel level) {
+        INinjaData ninjaData = player.getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
+        float mastery = ninjaData == null ? 0.0f : Mastery.level(ninjaData, ID);
+        // Reduced base reach that grows with mastery: 3 blocks at the start, up to 5 when mastered.
+        double radius = 3.0d + (5.0d - 3.0d) * mastery;
         List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class,
-                player.getBoundingBox().inflate(SWEEP_RADIUS),
+                player.getBoundingBox().inflate(radius),
                 target -> Friends.isAggressor(player, target));
         for (LivingEntity target : targets) {
             target.hurt(player.damageSources().magic(), SWEEP_DAMAGE);

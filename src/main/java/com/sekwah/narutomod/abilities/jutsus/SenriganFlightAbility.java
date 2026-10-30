@@ -18,9 +18,9 @@ import net.minecraft.world.entity.player.Player;
  *
  * <p>Every Doujutsu technique until now was a way of seeing or a way of striking, with no way to
  * move through the air; this is the missing half. While the stance is up the caster can fly, and it
- * is paid for by the tick like any other eye power. It needs <b>any</b> open eye rather than a
- * specific one - the flight is a trick of the eye, not a property of a bloodline - so it is taught
- * on the Senrigan board only because that is where the eye's utility lives.</p>
+ * is paid for by the tick like any other eye power. It needs the <b>Senrigan</b> open: the flight is
+ * a trick of that eye, not a property of any bloodline, so it is taught on the Senrigan board where
+ * the eye's utility lives.</p>
  *
  * <p>The flight state the caster started with is written onto them and put back when the stance
  * ends, so a creative caster keeps their wings and a survival one does not keep them either. The
@@ -65,13 +65,16 @@ public class SenriganFlightAbility extends Ability implements Ability.Toggled, A
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }
-        if (!AbstractDojutsuAbility.anyEyeActive(ninjaData)) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.dojutsu.required",
+        if (!SenriganAbility.isActive(ninjaData)) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.senrigan.required",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }
-        float cost = this.masteryCost(ninjaData, CHAKRA_PER_TICK);
+        // Standing on the ground is cheaper: the eye does not have to hold the body up, so less
+        // chakra is burnt and the client keeps its normal field of view instead of flickering.
+        float baseCost = player.onGround() ? (CHAKRA_PER_TICK * 0.33f) : CHAKRA_PER_TICK;
+        float cost = this.masteryCost(ninjaData, baseCost);
         if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW)), true);
@@ -83,6 +86,10 @@ public class SenriganFlightAbility extends Ability implements Ability.Toggled, A
 
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
+        if (!SenriganAbility.isActive(ninjaData)) {
+            ninjaData.getToggleAbilityData().removeAbilityEndedSilently(player, ninjaData, this);
+            return;
+        }
         // Mastery is earned by holding the body up, not by flicking the stance on.
         this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
         grantFlight(player);
@@ -127,11 +134,11 @@ public class SenriganFlightAbility extends Ability implements Ability.Toggled, A
             saved.putBoolean(FLYING_TAG, player.getAbilities().flying);
             tag.put(FLIGHT_TAG, saved);
         }
-        if (!player.getAbilities().mayfly || !player.getAbilities().flying) {
-            player.getAbilities().mayfly = true;
-            player.getAbilities().flying = true;
-            player.onUpdateAbilities();
-        }
+        player.getAbilities().mayfly = true;
+        // Only actually fly while airborne: keeping the flying flag on while standing on the
+        // ground makes the client wobble the field of view back and forth.
+        player.getAbilities().flying = !player.onGround();
+        player.onUpdateAbilities();
     }
 
     /**

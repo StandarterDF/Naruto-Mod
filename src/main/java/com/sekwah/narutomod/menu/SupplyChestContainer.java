@@ -8,6 +8,9 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -146,6 +149,7 @@ public class SupplyChestContainer implements Container {
             this.mergeWithExisting(remaining);
             this.fillEmptySlots(remaining);
         }
+        this.sort();
         return remaining;
     }
 
@@ -250,6 +254,36 @@ public class SupplyChestContainer implements Container {
         for (int slot = 0; slot < this.size; slot++) {
             this.items.set(slot, ItemStack.EMPTY);
             this.amounts[slot] = 0;
+        }
+    }
+
+    /**
+     * Auto-sorts the chest: most numerous stacks first, then by item name when the counts match.
+     * Empty slots are pushed to the end.
+     */
+    public void sort() {
+        List<Map.Entry<ItemStack, Integer>> entries = new ArrayList<>();
+        for (int slot = 0; slot < this.size; slot++) {
+            if (this.amounts[slot] > 0 && !this.items.get(slot).isEmpty()) {
+                entries.add(Map.entry(this.items.get(slot).copy(), this.amounts[slot]));
+            }
+        }
+        entries.sort((a, b) -> {
+            int byAmount = Integer.compare(b.getValue(), a.getValue());
+            if (byAmount != 0) {
+                return byAmount;
+            }
+            return a.getKey().getHoverName().getString()
+                    .compareToIgnoreCase(b.getKey().getHoverName().getString());
+        });
+        this.clearContent();
+        int slot = 0;
+        for (Map.Entry<ItemStack, Integer> entry : entries) {
+            if (slot >= this.size) {
+                break;
+            }
+            this.setEntry(slot, entry.getKey(), entry.getValue());
+            slot++;
         }
     }
 

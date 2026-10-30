@@ -40,10 +40,11 @@ import com.sekwah.narutomod.abilities.jutsus.SenjutsuChargingAbility;
 import com.sekwah.narutomod.abilities.jutsus.GenjutsuJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.HengeJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.RinneganAbility;
+import com.sekwah.narutomod.abilities.jutsus.RinneganPrisonAbility;
 import com.sekwah.narutomod.abilities.jutsus.UniversalForceAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChibakuTenseiAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraTransferAbility;
-import com.sekwah.narutomod.abilities.jutsus.HeavenWeightAbility;
+
 import com.sekwah.narutomod.abilities.jutsus.SharinganAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraTrailAbility;
 import com.sekwah.narutomod.abilities.jutsus.SuggestionAbility;
@@ -102,6 +103,8 @@ import com.sekwah.narutomod.abilities.jutsus.MountainCollapseAbility;
 import com.sekwah.narutomod.abilities.jutsus.DimensionStepAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraSeverAbility;
 import com.sekwah.narutomod.abilities.jutsus.SenriganAbility;
+import com.sekwah.narutomod.abilities.jutsus.SenriganEvasionAbility;
+import com.sekwah.narutomod.abilities.jutsus.SenriganGuidanceAbility;
 import com.sekwah.narutomod.abilities.jutsus.SenriganFlightAbility;
 import com.sekwah.narutomod.abilities.jutsus.SenriganSightAbility;
 import com.sekwah.narutomod.abilities.jutsus.MomoshikiAbsorptionAbility;
@@ -149,7 +152,7 @@ import com.sekwah.narutomod.abilities.jutsus.StructureCutAbility;
 import com.sekwah.narutomod.abilities.jutsus.JouganPhaseAbility;
 import com.sekwah.narutomod.abilities.jutsus.BlackRodAbility;
 import com.sekwah.narutomod.abilities.jutsus.ItemAttractionAbility;
-import com.sekwah.narutomod.abilities.jutsus.RinneganLevitationAbility;
+
 import com.sekwah.narutomod.abilities.jutsus.VoidCastAbility;
 import com.sekwah.narutomod.abilities.jutsus.MechanismSightAbility;
 import com.sekwah.narutomod.abilities.jutsus.HiddenSealAbility;
@@ -484,6 +487,8 @@ public class NarutoAbilities {
     public static final RegistryObject<RinneganAbility> RINNEGAN =
             ABILITY.register("rinnegan", RinneganAbility::new);
 
+    public static final RegistryObject<RinneganPrisonAbility> RINNEGAN_PRISON =
+            ABILITY.register("rinnegan_prison", RinneganPrisonAbility::new);
     /**
      * One hand pulls, the other pushes: the Rinnegan's plainest power, tapped to drag a looked-at
      * creature in and sneaked to throw everything around the caster out. See
@@ -505,12 +510,6 @@ public class NarutoAbilities {
     public static final RegistryObject<ChakraTransferAbility> CHAKRA_TRANSFER =
             ABILITY.register("chakra_transfer", ChakraTransferAbility::new);
 
-    /**
-     * The eye pressing the sky down on everything around the caster. See
-     * {@link HeavenWeightAbility}.
-     */
-    public static final RegistryObject<HeavenWeightAbility> HEAVEN_WEIGHT =
-            ABILITY.register("heaven_weight", HeavenWeightAbility::new);
 
     /**
      * The palm Rinnegan: a stance that swallows an incoming technique whole and hands its nature back
@@ -718,6 +717,16 @@ public class NarutoAbilities {
      */
     public static final RegistryObject<SenriganSightAbility> SENRIGAN_SIGHT =
             ABILITY.register("senrigan_sight", SenriganSightAbility::new);
+
+    public static final RegistryObject<SenriganEvasionAbility> SENRIGAN_EVASION =
+            ABILITY.register("senrigan_evasion", SenriganEvasionAbility::new);
+
+    /**
+     * Senrigan guidance: redirects every attack onto the creature closest to the crosshair, even
+     * through walls, while the Senrigan is open. See {@link SenriganGuidanceAbility}.
+     */
+    public static final RegistryObject<SenriganGuidanceAbility> SENRIGAN_GUIDANCE =
+            ABILITY.register("senrigan_guidance", SenriganGuidanceAbility::new);
 
     /**
      * Holds the caster in the air on chakra while any eye is open: the one piece of movement the
@@ -960,9 +969,6 @@ public class NarutoAbilities {
     public static final RegistryObject<ItemAttractionAbility> ITEM_ATTRACTION =
             ABILITY.register("item_attraction", ItemAttractionAbility::new);
 
-    /** Lifting a body off the ground. See {@link RinneganLevitationAbility}. */
-    public static final RegistryObject<RinneganLevitationAbility> RINNEGAN_LEVITATION =
-            ABILITY.register("rinnegan_levitation", RinneganLevitationAbility::new);
 
     /** Seeing the hollows behind the stone. See {@link VoidCastAbility}. */
     public static final RegistryObject<VoidCastAbility> VOID_CAST =

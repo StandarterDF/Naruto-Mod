@@ -6,6 +6,7 @@ import com.sekwah.narutomod.abilities.jutsus.NarakaPathAbility;
 import com.sekwah.narutomod.abilities.jutsus.OuterPathArmorAbility;
 import com.sekwah.narutomod.abilities.jutsus.OuterPathChainsAbility;
 import com.sekwah.narutomod.abilities.jutsus.RinboHengokuAbility;
+import com.sekwah.narutomod.abilities.jutsus.RinneganPrisonAbility;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import com.sekwah.narutomod.friends.Friends;
@@ -17,11 +18,13 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -30,6 +33,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.Iterator;
+import java.util.UUID;
 import java.util.List;
 
 /**
@@ -130,6 +134,7 @@ public final class RinneganExtraEvents {
         upkeepEcho(entity, data, now);
         upkeepChains(entity, data, now);
         upkeepShell(entity, data, now);
+        upkeepPrison(entity, data, now);
     }
 
     /** A summoned wolf is pulled back to its owner when it strays, and taken home when time is up. */
@@ -190,6 +195,33 @@ public final class RinneganExtraEvents {
      * does this on the same tick the stance ends; this is the belt to that pair of braces, for a
      * body that lost its capability or left before the stance could be closed properly.
      */
+    /** A prison summon is taken back when its time is up. */
+    private static void upkeepPrison(LivingEntity entity, CompoundTag data, long now) {
+        if (!data.getBoolean(RinneganPrisonAbility.PRISON_TAG)) {
+            return;
+        }
+        if (now >= data.getLong(RinneganPrisonAbility.UNTIL_TAG)) {
+            entity.discard();
+            return;
+        }
+        if (!(entity instanceof Mob mob)) return;
+        if (mob.getTarget() != null && mob.getTarget().isAlive()) return;
+        UUID ownerId = data.hasUUID(RinneganPrisonAbility.OWNER_TAG) ? data.getUUID(RinneganPrisonAbility.OWNER_TAG) : null;
+        Player owner = ownerId == null ? null : entity.level().getPlayerByUUID(ownerId);
+        if (owner == null) return;
+        List<LivingEntity> enemies = entity.level().getEntitiesOfClass(LivingEntity.class,
+                entity.getBoundingBox().inflate(16.0d),
+                e -> e.isAlive() && e != owner && e != entity && !(e instanceof Player p && p.isCreative())
+                        && !Friends.areFriends(owner, e));
+        LivingEntity nearest = null;
+        double best = Double.MAX_VALUE;
+        for (LivingEntity e : enemies) {
+            double d = e.distanceToSqr(entity);
+            if (d < best) { best = d; nearest = e; }
+        }
+        if (nearest != null) mob.setTarget(nearest);
+    }
+
     private static void upkeepShell(LivingEntity entity, CompoundTag data, long now) {
         if (!(entity instanceof Player player) || !data.contains(OuterPathArmorAbility.UNTIL_TAG)) {
             return;
@@ -282,6 +314,63 @@ public final class RinneganExtraEvents {
         }
     }
 
+    /** A prison summon that dies feeds its owner absorption, and punishes its killer. */
+    @SubscribeEvent
+    public static void onPrisonDeath(LivingDeathEvent event) {
+        LivingEntity entity = event.getEntity();
+        if (entity.level().isClientSide) return;
+        CompoundTag data = entity.getPersistentData();
+        if (!data.getBoolean(RinneganPrisonAbility.PRISON_TAG)) return;
+        UUID ownerId = data.hasUUID(RinneganPrisonAbility.OWNER_TAG) ? data.getUUID(RinneganPrisonAbility.OWNER_TAG) : null;
+        if (ownerId == null) return;
+        Player owner = entity.level().getPlayerByUUID(ownerId);
+        if (owner == null) return;
+        float maxHp = data.getFloat(RinneganPrisonAbility.MAXHP_TAG);
+        float hearts = maxHp / 10.0f;
+        owner.setAbsorptionAmount(owner.getAbsorptionAmount() + hearts);
+        CompoundTag pdata = owner.getPersistentData();
+        long until = entity.level().getGameTime() + 3600; // 3 minutes
+        pdata.putLong(RinneganPrisonAbility.ABSORPTION_UNTIL_TAG, until);
+        pdata.putFloat(RinneganPrisonAbility.ABSORPTION_AMOUNT_TAG,
+                pdata.getFloat(RinneganPrisonAbility.ABSORPTION_AMOUNT_TAG) + hearts);
+        Entity killer = event.getSource().getEntity();
+        if (killer != null && killer != owner && killer instanceof LivingEntity livingKiller) {
+            livingKiller.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 300, 1, false, true));
+            livingKiller.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 300, 1, false, true));
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || event.player.level().isClientSide) return;
+        Player player = event.player;
+        CompoundTag pdata = player.getPersistentData();
+        // Passive chakra while prisoners are held.
+        net.minecraft.nbt.ListTag prisoners = pdata.getList(RinneganPrisonAbility.PRISON_LIST_TAG, 8);
+        if (!prisoners.isEmpty()) {
+            if (player.tickCount % 20 == 0) {
+                float totalHp = 0.0f;
+                for (int i = 0; i < prisoners.size(); i++) {
+                    String[] parts = prisoners.getString(i).split("\\|");
+                    if (parts.length >= 2) {
+                        try { totalHp += Float.parseFloat(parts[1]); } catch (NumberFormatException ignored) {}
+                    }
+                }
+                final float gain = Math.max(1.0f, totalHp * 0.05f);
+                player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(nd ->
+                        nd.addChakra(gain));
+            }
+        }
+        // Absorption timer.
+        long until = pdata.getLong(RinneganPrisonAbility.ABSORPTION_UNTIL_TAG);
+        if (until > 0 && player.level().getGameTime() >= until) {
+            float amount = pdata.getFloat(RinneganPrisonAbility.ABSORPTION_AMOUNT_TAG);
+            player.setAbsorptionAmount(Math.max(0.0f, player.getAbsorptionAmount() - amount));
+            pdata.remove(RinneganPrisonAbility.ABSORPTION_UNTIL_TAG);
+            pdata.remove(RinneganPrisonAbility.ABSORPTION_AMOUNT_TAG);
+        }
+    }
+
     /** A summoned wolf was never a real wolf, so nothing may fall out of it. */
     @SubscribeEvent
     public static void onDrops(LivingDropsEvent event) {
@@ -289,7 +378,8 @@ public final class RinneganExtraEvents {
         if (entity.level().isClientSide) {
             return;
         }
-        if (entity.getPersistentData().getBoolean(AnimalPathAbility.SUMMON_TAG)) {
+        if (entity.getPersistentData().getBoolean(AnimalPathAbility.SUMMON_TAG)
+                || entity.getPersistentData().getBoolean(RinneganPrisonAbility.PRISON_TAG)) {
             event.getDrops().clear();
         }
     }

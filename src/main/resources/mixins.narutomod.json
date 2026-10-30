@@ -6,6 +6,7 @@
   "refmap": "mixins.narutomod.refmap.json",
   "mixins": [
     "common.AbstractFurnaceAccessor",
+    "common.AbstractArrowAccessor",
     "common.CampfireAccessor",
     "common.GameEventDispatcherMixin",
     "common.TripWireBlockMixin"

@@ -18,6 +18,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.event.level.ExplosionEvent;
 import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -93,6 +96,38 @@ public class AbsorptionEvents {
             event.setAmount(event.getAmount() * (1.0f + DAMAGE_PER_CHARGE * charges));
             release(caster, charges);
         });
+    }
+
+    /** Absorbs any explosion that detonates near a caster holding the palm stance. */
+    @SubscribeEvent
+    public static void onExplosionDetonate(ExplosionEvent.Detonate event) {
+        if (!(event.getLevel() instanceof ServerLevel level)) {
+            return;
+        }
+        Vec3 center = event.getExplosion().getPosition();
+        for (Player player : level.players()) {
+            player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
+                if (!MomoshikiAbsorptionAbility.isActive(ninjaData)) {
+                    return;
+                }
+                if (player.distanceToSqr(center) > 10.0d * 10.0d) {
+                    return;
+                }
+                // Swallow the blast: nothing around the caster is touched.
+                event.getAffectedEntities().clear();
+                event.getAffectedBlocks().clear();
+                // Show the absorbed radius.
+                for (int i = 0; i < 32; i++) {
+                    double angle = (Math.PI * 2.0d / 32.0d) * i;
+                    double x = center.x + Math.cos(angle) * 10.0d;
+                    double z = center.z + Math.sin(angle) * 10.0d;
+                    level.sendParticles(ParticleTypes.ENCHANT, x, center.y + 0.5d, z,
+                            1, 0.1d, 0.1d, 0.1d, 0.0d);
+                }
+                level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                        SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.2f, 0.7f);
+            });
+        }
     }
 
     /** Stores the technique and shows the palm eating it. */

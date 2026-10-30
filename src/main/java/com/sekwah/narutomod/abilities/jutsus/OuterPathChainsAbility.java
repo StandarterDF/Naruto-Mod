@@ -167,6 +167,7 @@ public class OuterPathChainsAbility extends Ability implements Ability.Channeled
             }
             target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, CHAIN_REFRESH,
                     SLOW_AMPLIFIER, false, true));
+            target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, CHAIN_REFRESH, 0, false, true));
             target.getPersistentData().putLong(UNTIL_TAG, now + HOLD_TICKS);
             drawChain(level, player, target, i);
         }
@@ -174,9 +175,17 @@ public class OuterPathChainsAbility extends Ability implements Ability.Channeled
 
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
-        // The hold ends when the keys come up or the chakra runs out: the marks are what actually
-        // pin the bodies, so letting go of the map is the whole release.
-        this.holds.remove(player.getUUID());
+        // On release: the pins let go and the after-effects (weakness + slowness) settle in for half
+        // a minute, which is the price of having been held.
+        List<UUID> caught = this.holds.remove(player.getUUID());
+        if (caught != null && player.level() instanceof ServerLevel level) {
+            for (UUID id : caught) {
+                if (level.getEntity(id) instanceof LivingEntity target && target.isAlive()) {
+                    target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 20 * 30, 1, false, true));
+                    target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20 * 30, 2, false, true));
+                }
+            }
+        }
     }
 
     /**
@@ -189,17 +198,14 @@ public class OuterPathChainsAbility extends Ability implements Ability.Channeled
 
     /** Everything living, hostile to the caster, and inside the cone the gaze cuts out. */
     private static List<LivingEntity> targets(Player caster) {
-        Vec3 eye = caster.getEyePosition();
-        Vec3 look = caster.getViewVector(1.0f).normalize();
         return caster.level().getEntitiesOfClass(LivingEntity.class,
-                        caster.getBoundingBox().inflate(RANGE), entity -> canCatch(caster, entity, eye, look))
+                        caster.getBoundingBox().inflate(RANGE), entity -> canCatch(caster, entity))
                 .stream()
                 .sorted(Comparator.comparingDouble(entity -> entity.distanceToSqr(caster)))
-                .limit(MAX_TARGETS)
                 .toList();
     }
 
-    private static boolean canCatch(Player caster, LivingEntity target, Vec3 eye, Vec3 look) {
+    private static boolean canCatch(Player caster, LivingEntity target) {
         if (target == caster || !target.isAlive() || target.isSpectator()) {
             return false;
         }
@@ -209,12 +215,7 @@ public class OuterPathChainsAbility extends Ability implements Ability.Channeled
         if (Friends.isOwnSide(caster, target)) {
             return false;
         }
-        Vec3 to = target.getEyePosition().subtract(eye);
-        double distance = to.length();
-        if (distance < 0.01d || distance > RANGE) {
-            return false;
-        }
-        return to.normalize().dot(look) >= CONE_DOT;
+        return target.distanceTo(caster) <= RANGE;
     }
 
     /** One chain from one of the caster's hands to a caught body. */

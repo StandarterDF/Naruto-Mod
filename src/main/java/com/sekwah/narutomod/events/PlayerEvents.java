@@ -5,6 +5,8 @@ import com.sekwah.narutomod.abilities.AbilityUnlocks;
 import com.sekwah.narutomod.abilities.jutsus.BodyAdaptationAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraMeditationJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraSensingAbility;
+import com.sekwah.narutomod.abilities.jutsus.SenriganAbility;
+import com.sekwah.narutomod.abilities.jutsus.SenriganSightAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraShieldAbility;
 import com.sekwah.narutomod.abilities.jutsus.EightGatesAbility;
 import com.sekwah.narutomod.abilities.jutsus.HengeJutsuAbility;
@@ -89,6 +91,13 @@ public class PlayerEvents {
             // Night vision is fed from the chakra bar and closes itself when it runs dry, see
             // ChakraSensingAbility.
             ChakraSensingAbility.maintain(player, ninjaData);
+            // The Senrigan's possession cannot outlive the eye: if the eye closes while the caster
+            // is wearing a clone, send them home safely instead of stranding them.
+            if (player instanceof ServerPlayer serverPlayer
+                    && SenriganSightAbility.isPossessing(serverPlayer)
+                    && !SenriganAbility.isActive(ninjaData)) {
+                SenriganSightAbility.endPossession(serverPlayer);
+            }
             // Ranks are milestones worked out from skill nodes and boss kills, see NinjaRanks.
             if (player instanceof ServerPlayer serverPlayer) {
                 NinjaRanks.tick(serverPlayer, ninjaData);

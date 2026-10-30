@@ -229,6 +229,9 @@ public class TravellingArcEntity extends Entity {
             return;
         }
         flat = flat.normalize();
+        // The front travels along the full look vector (including pitch), while the sweep arc itself
+        // stays horizontal, so the wind animation reads as a flat blade even when aimed up or down.
+        double height = direction.normalize().y * traveled;
         int points = this.entityData.get(DATA_KIND) == KIND_VACUUM ? 7 : 9;
         for (int i = 0; i < points; i++) {
             double share = points == 1 ? 0.5d : i / (double) (points - 1);
@@ -236,11 +239,11 @@ public class TravellingArcEntity extends Entity {
             double cos = Math.cos(angle);
             double sin = Math.sin(angle);
             Vec3 across = new Vec3(flat.x * cos - flat.z * sin, 0.0d, flat.x * sin + flat.z * cos);
-            Vec3 at = this.position().add(across.scale(traveled)).add(0.0d, -0.4d, 0.0d);
+            Vec3 at = this.position().add(across.scale(traveled)).add(0.0d, height - 0.4d, 0.0d);
             level.sendParticles(ParticleTypes.SWEEP_ATTACK, at.x, at.y, at.z, 1, 0.0d, 0.0d, 0.0d, 0.0d);
         }
         if (this.entityData.get(DATA_KIND) == KIND_VACUUM && this.age % 2 == 0) {
-            Vec3 at = this.position().add(flat.scale(traveled)).add(0.0d, -0.4d, 0.0d);
+            Vec3 at = this.position().add(flat.scale(traveled)).add(0.0d, height - 0.4d, 0.0d);
             level.sendParticles(ParticleTypes.CRIT, at.x, at.y, at.z, 2, 0.2d, 0.2d, 0.2d, 0.02d);
         }
     }

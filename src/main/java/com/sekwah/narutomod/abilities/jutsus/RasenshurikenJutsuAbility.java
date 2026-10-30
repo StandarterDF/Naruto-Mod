@@ -76,6 +76,12 @@ public class RasenshurikenJutsuAbility extends Ability implements Ability.Channe
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
+        if (!player.getMainHandItem().isEmpty()) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.palm_block.weapon",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
         if (ninjaData.getSeninMana() <= 0.0f) {
             player.displayClientMessage(Component.translatable("jutsu.fail.senin.notenough",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW),

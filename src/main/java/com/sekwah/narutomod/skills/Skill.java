@@ -87,6 +87,7 @@ public final class Skill {
             "ability:curse_seal_two",
             "ability:seal_vessel",
             "ability:perfect_cloak",
+            "ability:six_paths_mode",
             "ability:tailed_ball",
             "ability:tailed_cloak",
             "ability:divided_cloak",
@@ -466,7 +467,7 @@ public final class Skill {
         node("clone_lifetime", SkillBranch.CLONES, 3, 5, 36,
                 SkillEffect.CLONE_LIFETIME, 0.3f, "clone_mastery");
         node("labour_hands", SkillBranch.CLONES, 6, 2, 36,
-                SkillEffect.MAX_STAMINA, 20f, "clone_storage");
+                SkillEffect.MAX_STAMINA, 20f, "clone_shadow");
         unlock("labour_worker", SkillBranch.CLONES, 6, 1, 54,
                 "worker:farm", "labour_hands");
         node("labour_grit", SkillBranch.CLONES, 7, 1, 40,
@@ -725,8 +726,7 @@ public final class Skill {
                 "ability:item_attraction", "eye_force");
         unlock("eye_rod", SkillBranch.RINNEGAN, 4, 0, 32,
                 "ability:black_rod", "eye_palm");
-        unlock("eye_levitate", SkillBranch.RINNEGAN, 1, -2, 36,
-                "ability:rinnegan_levitation", "eye_gravity");
+
         node("jougan_cut", SkillBranch.JOUGAN, 0, 1, 30,
                 SkillEffect.COST_REDUCTION, 0.04f, "jougan_base");
         unlock("jougan_sever", SkillBranch.JOUGAN, 1, 0, 56,
@@ -765,8 +765,7 @@ public final class Skill {
         // also press down.
         unlock("eye_transfer", SkillBranch.RINNEGAN, 3, -1, 32,
                 "ability:chakra_transfer", "eye_palm");
-        unlock("eye_weight", SkillBranch.RINNEGAN, 1, 1, 34,
-                "ability:heaven_weight", "eye_gravity");
+
         unlock("eye_residual", SkillBranch.RINNEGAN, 2, 1, 30,
                 "mechanic:residual_force", "eye_force");
         unlock("eye_naraka", SkillBranch.RINNEGAN, 0, 1, 44,
@@ -785,6 +784,8 @@ public final class Skill {
                 SkillEffect.COST_REDUCTION, 0.03f, "eye_rinnegan");
         unlock("eye_absorb", SkillBranch.RINNEGAN, 4, -1, 64,
                 "ability:momoshiki_absorption", "eye_palm");
+        unlock("eye_limbo", SkillBranch.RINNEGAN, 3, 2, 70,
+                "ability:limbo", "eye_palm");
 
         // SIX PATHS - the sage's own branch: the mode and everything that hangs off it.
         node("six_paths_base", SkillBranch.SIX_PATHS, 0, 0, 40,
@@ -804,8 +805,6 @@ public final class Skill {
                 "ability:six_paths_mode", "six_paths_gate");
         node("six_paths_void", SkillBranch.SIX_PATHS, -1, 2, 52,
                 SkillEffect.COST_REDUCTION, 0.04f, "six_paths_gate");
-        unlock("six_paths_limbo", SkillBranch.SIX_PATHS, -1, 3, 84,
-                "ability:limbo", "six_paths_void");
 
         node("six_paths_orbs", SkillBranch.SIX_PATHS, 1, 1, 48,
                 SkillEffect.MAX_CHAKRA, 20f, "six_paths_gate");
@@ -835,7 +834,10 @@ public final class Skill {
                 SkillEffect.COST_REDUCTION, 0.03f, "senrigan_far");
         unlock("senrigan_flight", SkillBranch.SENRIGAN, 3, 0, 56,
                 "ability:senrigan_flight", "senrigan_levity");
-
+        unlock("senrigan_evasion", SkillBranch.SENRIGAN, 3, -1, 56,
+                "ability:senrigan_evasion", "senrigan_thread");
+        unlock("senrigan_guidance", SkillBranch.SENRIGAN, 4, 0, 56,
+                "ability:senrigan_guidance", "senrigan_flight");
     }
 
     private final String path;

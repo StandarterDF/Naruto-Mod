@@ -50,8 +50,16 @@ public class GudodamaFormAbility extends Ability implements Ability.Toggled, Abi
     /** Extra melee damage the shape adds while it is held. */
     private static final double DAMAGE_BONUS = 6.0d;
 
+    /** Extra attack speed the shape adds while it is held. */
+    private static final double SPEED_BONUS = 4.0d;
+
+    /** Extra knockback the shape adds while it is held. */
+    private static final double KNOCKBACK_BONUS = 2.0d;
+
     /** A stable id, so the same modifier is added and taken off rather than stacking. */
     private static final UUID DAMAGE_MODIFIER_ID = UUID.fromString("4a7c2e91-6b3d-4f58-8e21-9c5d0a7f3b64");
+    private static final UUID SPEED_MODIFIER_ID = UUID.fromString("4a7c2e91-6b3d-4f58-8e21-9c5d0a7f3b65");
+    private static final UUID KNOCKBACK_MODIFIER_ID = UUID.fromString("4a7c2e91-6b3d-4f58-8e21-9c5d0a7f3b66");
 
     /** One orb is consumed for every five seconds the shape is worn. */
     private static final int ORB_INTERVAL = 100;
@@ -103,6 +111,7 @@ public class GudodamaFormAbility extends Ability implements Ability.Toggled, Abi
         this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
         applyShape(player);
         payOrb(player);
+        ninjaData.setGudodamaForm(true);
         if (player.tickCount % 4 == 0 && player.level() instanceof ServerLevel level) {
             level.sendParticles(ParticleTypes.SQUID_INK, player.getX(),
                     player.getY() + player.getBbHeight() * 0.6d, player.getZ(),
@@ -116,6 +125,16 @@ public class GudodamaFormAbility extends Ability implements Ability.Toggled, Abi
         if (attack != null && attack.getModifier(DAMAGE_MODIFIER_ID) == null) {
             attack.addTransientModifier(new AttributeModifier(DAMAGE_MODIFIER_ID,
                     "narutomod:gudodama_form", DAMAGE_BONUS, AttributeModifier.Operation.ADDITION));
+        }
+        AttributeInstance speed = player.getAttribute(Attributes.ATTACK_SPEED);
+        if (speed != null && speed.getModifier(SPEED_MODIFIER_ID) == null) {
+            speed.addTransientModifier(new AttributeModifier(SPEED_MODIFIER_ID,
+                    "narutomod:gudodama_form", SPEED_BONUS, AttributeModifier.Operation.ADDITION));
+        }
+        AttributeInstance knockback = player.getAttribute(Attributes.ATTACK_KNOCKBACK);
+        if (knockback != null && knockback.getModifier(KNOCKBACK_MODIFIER_ID) == null) {
+            knockback.addTransientModifier(new AttributeModifier(KNOCKBACK_MODIFIER_ID,
+                    "narutomod:gudodama_form", KNOCKBACK_BONUS, AttributeModifier.Operation.ADDITION));
         }
     }
 
@@ -153,7 +172,16 @@ public class GudodamaFormAbility extends Ability implements Ability.Toggled, Abi
         if (attack != null) {
             attack.removeModifier(DAMAGE_MODIFIER_ID);
         }
+        AttributeInstance speed = player.getAttribute(Attributes.ATTACK_SPEED);
+        if (speed != null) {
+            speed.removeModifier(SPEED_MODIFIER_ID);
+        }
+        AttributeInstance knockback = player.getAttribute(Attributes.ATTACK_KNOCKBACK);
+        if (knockback != null) {
+            knockback.removeModifier(KNOCKBACK_MODIFIER_ID);
+        }
         player.getPersistentData().remove(NEXT_ORB_TAG);
+        ninjaData.setGudodamaForm(false);
     }
 
     /** @return whether the shape is currently worn, asked by the damage hook in {@code SixPathsEvents}. */

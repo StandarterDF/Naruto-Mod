@@ -2,11 +2,13 @@ package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.abilities.jutsus.DividedCloakAbility;
 import com.sekwah.narutomod.abilities.jutsus.EightGatesAbility;
 import com.sekwah.narutomod.abilities.jutsus.PerfectCloakAbility;
 import com.sekwah.narutomod.abilities.jutsus.SealBreakAbility;
 import com.sekwah.narutomod.abilities.jutsus.SealVesselAbility;
+import com.sekwah.narutomod.abilities.jutsus.ChakraCloakAbility;
 import com.sekwah.narutomod.abilities.jutsus.TailedCloakAbility;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
@@ -60,7 +62,7 @@ public final class TailedBeastEvents {
     private static final int FRENZY_PARTICLE_INTERVAL = 4;
 
     /** A beast has two arms, and they strike two bodies at most. */
-    private static final int ARMS = 2;
+    private static final int ARMS = 4;
 
     private TailedBeastEvents() {
     }
@@ -82,6 +84,7 @@ public final class TailedBeastEvents {
         wearVessel(player, data, now);
         keepSealBreak(player, data, now);
         keepPerfectCloak(player, data, now);
+        keepChakraCloakTail(player);
         clearLostStances(player, ninjaData, data, now);
         // The vessel's own mark is server-side ink; the HUD reads this copy instead.
         ninjaData.setSealVesselIntegrity(SealVesselAbility.isSealed(player)
@@ -202,12 +205,42 @@ public final class TailedBeastEvents {
         }
     }
 
+    /** Chakra cloak: one tail strikes a nearby enemy. */
+    private static void keepChakraCloakTail(Player player) {
+        if (!ChakraCloakAbility.isActive(player) || !player.isAlive() || player.tickCount % 20 != 0) {
+            return;
+        }
+        if (!(player.level() instanceof ServerLevel level)) {
+            return;
+        }
+        INinjaData cloakData = player.getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
+        float cloakMastery = cloakData == null ? 0.0f : Mastery.level(cloakData, ChakraCloakAbility.ID);
+        // Reduced base reach that grows with mastery: 2.5 blocks at the start, up to 4 when mastered.
+        double cloakRadius = 2.5d + (4.0d - 2.5d) * cloakMastery;
+        List<LivingEntity> near = level.getEntitiesOfClass(LivingEntity.class,
+                player.getBoundingBox().inflate(cloakRadius),
+                target -> Friends.isAggressor(player, target));
+        if (near.isEmpty()) {
+            return;
+        }
+        near.sort(Comparator.comparingDouble(player::distanceToSqr));
+        LivingEntity target = near.get(0);
+        target.hurt(player.damageSources().magic(), 3.0f);
+        level.sendParticles(ParticleTypes.SWEEP_ATTACK, target.getX(),
+                target.getY() + target.getBbHeight() * 0.5d, target.getZ(),
+                1, 0.0d, 0.0d, 0.0d, 0.0d);
+    }
+
     private static void strikeWithArms(Player player) {
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
+        INinjaData ninjaData = player.getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
+        float mastery = ninjaData == null ? 0.0f : Mastery.level(ninjaData, PerfectCloakAbility.ID);
+        // Reduced base reach that grows with mastery: 3 blocks at the start, up to 5 when mastered.
+        double radius = 3.0d + (5.0d - 3.0d) * mastery;
         List<LivingEntity> near = level.getEntitiesOfClass(LivingEntity.class,
-                player.getBoundingBox().inflate(PerfectCloakAbility.ARM_RADIUS),
+                player.getBoundingBox().inflate(radius),
                 target -> canStrike(player, target));
         near.sort(Comparator.comparingDouble(player::distanceToSqr));
         int strikes = Math.min(ARMS, near.size());
@@ -271,6 +304,13 @@ public final class TailedBeastEvents {
     public static void onLivingHurt(LivingHurtEvent event) {
         if (event.getEntity().level().isClientSide) {
             return;
+        }
+        if (event.getEntity() instanceof LivingEntity) {
+            LivingEntity victim = (LivingEntity) event.getEntity();
+            Entity src = event.getSource().getEntity();
+            if (src instanceof Player caster && src != victim) {
+                Friends.rememberAttacker(victim, caster);
+            }
         }
         Entity attacker = event.getSource().getEntity();
         if (!(attacker instanceof Player caster) || attacker == event.getEntity()) {

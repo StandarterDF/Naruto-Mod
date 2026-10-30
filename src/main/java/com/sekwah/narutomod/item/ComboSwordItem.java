@@ -156,7 +156,8 @@ public class ComboSwordItem extends SwordItem {
 
     /** Bonus damage this blade currently deals from its kill count. */
     public float killBonus(ItemStack stack) {
-        return gainsKills ? getKills(stack) * DAMAGE_PER_KILL : 0.0f;
+        if (!gainsKills) return 0.0f;
+        return Math.round(getKills(stack) * DAMAGE_PER_KILL * 100.0f) / 100.0f;
     }
 
     /**
@@ -315,7 +316,7 @@ public class ComboSwordItem extends SwordItem {
             int kills = getKills(stack);
             tooltip.add(Component.translatable("item.narutomod.combo_sword.kills",
                     Component.literal(String.valueOf(kills)).withStyle(ChatFormatting.GOLD),
-                    Component.literal(String.valueOf(kills * DAMAGE_PER_KILL)).withStyle(ChatFormatting.RED))
+                    Component.literal(String.valueOf(Math.round(kills * DAMAGE_PER_KILL * 100.0f) / 100.0f)).withStyle(ChatFormatting.RED))
                     .withStyle(ChatFormatting.GRAY));
         }
     }

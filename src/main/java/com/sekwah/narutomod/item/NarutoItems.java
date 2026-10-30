@@ -3,6 +3,8 @@ package com.sekwah.narutomod.item;
 import com.sekwah.narutomod.item.armor.NarutoArmorItem;
 import com.sekwah.narutomod.item.armor.NarutoArmorMaterial;
 import com.sekwah.narutomod.item.weapons.ExplosiveKunaiItem;
+import com.sekwah.narutomod.item.AsuraMissileItem;
+import com.sekwah.narutomod.item.HidanScytheItem;
 import com.sekwah.narutomod.item.weapons.KunaiItem;
 import com.sekwah.narutomod.item.weapons.SenbonItem;
 import com.sekwah.narutomod.item.weapons.ShurikenItem;
@@ -35,6 +37,9 @@ public class NarutoItems {
     // Weapons
     public static final RegistryObject<Item> KUNAI = ITEMS.register("kunai", ()
             -> new KunaiItem(new Item.Properties()));
+
+    public static final RegistryObject<Item> ASURA_MISSILE = ITEMS.register("asura_missile", ()
+            -> new AsuraMissileItem(new Item.Properties().stacksTo(16)));
 
     public static final RegistryObject<Item> SENBON = ITEMS.register("senbon", ()
             -> new SenbonItem(new Item.Properties()));
@@ -301,6 +306,10 @@ public class NarutoItems {
     /**
      * Kubikiribocho: slow, heavy, and the chain is worth far more per step.
      */
+    public static final RegistryObject<Item> HIDAN_SCYTHE = ITEMS.register("hidan_scythe", ()
+            -> new HidanScytheItem(net.minecraft.world.item.Tiers.NETHERITE, 6, -2.8f,
+                    new Item.Properties()));
+
     public static final RegistryObject<Item> KUBIKIRIBOCHO = ITEMS.register("kubikiribocho",
             () -> new ComboSwordItem(NinjaTier.KATANA, 6, -3.2F, new Item.Properties().stacksTo(1),
                     0.75f, 20, 20 * 5, 0.0f, 3, true));

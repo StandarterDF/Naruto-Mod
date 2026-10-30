@@ -29,7 +29,14 @@ public class TechniqueSwordItem extends ComboSwordItem {
 
     public TechniqueSwordItem(Tier tier, int attackDamage, float attackSpeed, Properties properties,
                               float damagePerStep, int maxCombo, int comboWindow, Art art) {
-        super(tier, attackDamage, attackSpeed, properties, damagePerStep, maxCombo, comboWindow, 0.0f);
+        this(tier, attackDamage, attackSpeed, properties, damagePerStep, maxCombo, comboWindow, art, 3);
+    }
+
+    public TechniqueSwordItem(Tier tier, int attackDamage, float attackSpeed, Properties properties,
+                              float damagePerStep, int maxCombo, int comboWindow, Art art,
+                              int kenjutsuPointsRequired) {
+        super(tier, attackDamage, attackSpeed, properties, damagePerStep, maxCombo, comboWindow, 0.0f,
+                kenjutsuPointsRequired);
         this.art = art;
     }
 

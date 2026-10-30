@@ -73,6 +73,29 @@ public class ServerUnlockSkillPacket {
                             return;
                         }
                     }
+                    if (skill.isUnlock() && "ability:six_paths_mode".equals(skill.unlock())) {
+                        if (!SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), "ability:rinnegan")) {
+                            player.displayClientMessage(Component.translatable("naruto.skill.fail.rinnegan")
+                                    .withStyle(ChatFormatting.RED), true);
+                            return;
+                        }
+                    }
+                    if (skill.isUnlock() && "ability:rinnegan".equals(skill.unlock())) {
+                        if (!SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), "ability:sharingan")) {
+                            player.displayClientMessage(Component.translatable("naruto.skill.fail.sharingan")
+                                    .withStyle(ChatFormatting.RED), true);
+                            return;
+                        }
+                        boolean hasMangekyo = SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), "ability:tsukuyomi")
+                                || SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), "ability:susanoo")
+                                || SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), "ability:izanagi")
+                                || SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), "ability:izanami");
+                        if (!hasMangekyo) {
+                            player.displayClientMessage(Component.translatable("naruto.skill.fail.sharingan")
+                                    .withStyle(ChatFormatting.RED), true);
+                            return;
+                        }
+                    }
                     int held = ninjaData.getSkillData().getPoints();
                     if (held < skill.cost()) {
                         player.displayClientMessage(Component.translatable("naruto.skill.fail.points",

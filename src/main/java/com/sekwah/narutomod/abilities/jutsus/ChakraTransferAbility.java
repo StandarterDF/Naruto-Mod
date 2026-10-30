@@ -25,7 +25,7 @@ import java.util.List;
  * same rate it is drawn - nothing is created and nothing is lost, so a caster cannot use it to
  * multiply a battery. The beam holds only while both bodies stay close enough to be connected.</p>
  */
-public class ChakraTransferAbility extends Ability implements Ability.Channeled {
+public class ChakraTransferAbility extends Ability implements Ability.Cooldown {
 
     /** A shared thread of chakra is quiet work, not a shout. */
     @Override
@@ -37,6 +37,11 @@ public class ChakraTransferAbility extends Ability implements Ability.Channeled 
     public static final long COMBO = 11231L;
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "chakra_transfer");
+
+    @Override
+    public int getCooldown() {
+        return 40;
+    }
 
     /** How far the beam can reach. */
     private static final double RANGE = 12.0d;
@@ -52,7 +57,7 @@ public class ChakraTransferAbility extends Ability implements Ability.Channeled 
 
     @Override
     public ActivationType activationType() {
-        return ActivationType.CHANNELED;
+        return ActivationType.INSTANT;
     }
 
     @Override
@@ -98,35 +103,16 @@ public class ChakraTransferAbility extends Ability implements Ability.Channeled 
 
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
-        // The work happens per tick in handleChannelling; a completed channel is worth one cast.
-        this.recordMastery(player, ninjaData);
-    }
-
-    @Override
-    public void handleChannelling(Player player, INinjaData ninjaData, int ticksChanneled) {
         Player ally = recipient(player);
         if (ally == null || !(player.level() instanceof ServerLevel level)) {
             return;
         }
-        ally.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(allyData -> {
-            float room = allyData.getMaxChakra() - allyData.getChakra();
-            float moved = Math.min(PER_TICK, room);
-            if (moved > 0.0f) {
-                allyData.setChakra(allyData.getChakra() + moved);
-            }
-        });
-        this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
-
-        if (ticksChanneled % 3 == 0) {
-            for (Step step : Step.between(player, ally)) {
-                level.sendParticles(ParticleTypes.END_ROD, step.x, step.y, step.z,
-                        1, 0.02d, 0.02d, 0.02d, 0.0d);
-            }
-        }
-        if (ticksChanneled % 20 == 0) {
-            level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.BEACON_AMBIENT, SoundSource.PLAYERS, 0.35f, 1.6f);
-        }
+        // Apply the seal to both: shared chakra while they stay within range.
+        player.getPersistentData().putString("narutomod:chakra_seal_partner", ally.getUUID().toString());
+        ally.getPersistentData().putString("narutomod:chakra_seal_partner", player.getUUID().toString());
+        level.sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY() + 1.0d, player.getZ(),
+                12, 0.3d, 0.5d, 0.3d, 0.02d);
+        this.recordMastery(player, ninjaData);
     }
 
     /**

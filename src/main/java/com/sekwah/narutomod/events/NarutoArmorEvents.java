@@ -7,7 +7,11 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -45,6 +49,12 @@ public class NarutoArmorEvents {
             float chakraCapacity = 0.0f;
             float maxHealth = 0.0f;
             float chakraRegen = 0.0f;
+            float enchantChakra = 0.0f;
+            float enchantStamina = 0.0f;
+            float enchantChakraRegen = 0.0f;
+            float enchantStaminaRegen = 0.0f;
+            float enchantSenin = 0.0f;
+            float enchantSeninRegen = 0.0f;
             for (ItemStack piece : player.getInventory().armor) {
                 if (piece.getItem() instanceof NarutoArmorItem armor) {
                     NarutoArmorItem.Bonus bonus = armor.getBonus();
@@ -55,9 +65,37 @@ public class NarutoArmorEvents {
                     maxHealth += bonus.maxHealth();
                     chakraRegen += bonus.chakraRegenPerSecond();
                 }
+                // Enchantment bonuses.
+                var reg = player.level().registryAccess().registry(Registries.ENCHANTMENT).orElse(null);
+                if (reg != null) {
+                    Enchantment chakraBoost = reg.get(new ResourceLocation("narutomod", "chakra_boost"));
+                    Enchantment staminaBoost = reg.get(new ResourceLocation("narutomod", "stamina_boost"));
+                    Enchantment chakraRegenEnch = reg.get(new ResourceLocation("narutomod", "chakra_regen"));
+                    Enchantment staminaRegenEnch = reg.get(new ResourceLocation("narutomod", "stamina_regen"));
+                    Enchantment seninBoost = reg.get(new ResourceLocation("narutomod", "senin_chakra"));
+                    Enchantment seninRegenEnch = reg.get(new ResourceLocation("narutomod", "senin_regen"));
+                    if (chakraBoost != null) enchantChakra += 10.0f * EnchantmentHelper.getItemEnchantmentLevel(chakraBoost, piece);
+                    if (staminaBoost != null) enchantStamina += 10.0f * EnchantmentHelper.getItemEnchantmentLevel(staminaBoost, piece);
+                    if (chakraRegenEnch != null) enchantChakraRegen += EnchantmentHelper.getItemEnchantmentLevel(chakraRegenEnch, piece);
+                    if (staminaRegenEnch != null) enchantStaminaRegen += EnchantmentHelper.getItemEnchantmentLevel(staminaRegenEnch, piece);
+                    if (seninBoost != null) enchantSenin += 10.0f * EnchantmentHelper.getItemEnchantmentLevel(seninBoost, piece);
+                    if (seninRegenEnch != null) enchantSeninRegen += EnchantmentHelper.getItemEnchantmentLevel(seninRegenEnch, piece);
+                }
             }
 
             ninjaData.setArmorChakraBonus(chakraCapacity);
+            ninjaData.setEnchantChakraBonus(enchantChakra);
+            ninjaData.setEnchantStaminaBonus(enchantStamina);
+            ninjaData.setEnchantSeninBonus(enchantSenin);
+            if (enchantChakraRegen > 0 && player.tickCount % 20 == 0) {
+                ninjaData.addChakra(enchantChakraRegen);
+            }
+            if (enchantStaminaRegen > 0 && player.tickCount % 20 == 0) {
+                ninjaData.addStamina(enchantStaminaRegen);
+            }
+            if (enchantSeninRegen > 0 && player.tickCount % 20 == 0) {
+                ninjaData.addSeninMana(enchantSeninRegen);
+            }
 
             // The custom pool is topped up rather than the natural regeneration being poked at: an
             // armour bonus should not be able to be switched off by spending chakra.

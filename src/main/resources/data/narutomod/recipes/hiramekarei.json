@@ -2,12 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "pattern": [
     "III",
-    "IDI",
+    "INI",
     " S "
   ],
   "key": {
     "I": { "item": "minecraft:iron_block" },
-    "D": { "item": "minecraft:diamond" },
+    "N": { "item": "minecraft:nether_star" },
     "S": { "item": "minecraft:stick" }
   },
   "result": {

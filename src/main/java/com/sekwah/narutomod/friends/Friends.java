@@ -116,6 +116,15 @@ public final class Friends {
      * only; the mark lives in the victim's own data and is read by {@link #isAggressor}.
      */
     public static void rememberAttacker(Player victim, @Nullable Entity attacker) {
+        rememberAttacker((LivingEntity) victim, attacker);
+    }
+
+    /**
+     * Remembers who landed a blow on any living creature, so the beast's arms and tail know whom
+     * the caster has gone after. The mark lives in the victim's own data and is read by
+     * {@link #isAggressor(Player, LivingEntity)} as "whom the caster attacked".
+     */
+    public static void rememberAttacker(LivingEntity victim, @Nullable Entity attacker) {
         if (victim.level().isClientSide || attacker == null || attacker == victim) {
             return;
         }
@@ -142,9 +151,16 @@ public final class Friends {
         if (target instanceof Mob mob && mob.getTarget() == player) {
             return true;
         }
+        // Whoever struck the caster moments ago.
         CompoundTag data = player.getPersistentData();
-        return data.getInt(LAST_ATTACKER_ID) == target.getId()
-                && player.level().getGameTime() - data.getLong(LAST_ATTACKED_AT) <= ATTACKER_MEMORY_TICKS;
+        if (data.getInt(LAST_ATTACKER_ID) == target.getId()
+                && player.level().getGameTime() - data.getLong(LAST_ATTACKED_AT) <= ATTACKER_MEMORY_TICKS) {
+            return true;
+        }
+        // Whoever the caster struck moments ago.
+        CompoundTag targetData = target.getPersistentData();
+        return targetData.getInt(LAST_ATTACKER_ID) == player.getId()
+                && player.level().getGameTime() - targetData.getLong(LAST_ATTACKED_AT) <= ATTACKER_MEMORY_TICKS;
     }
 
     /** @return true when this damage came from a mod technique rather than an ordinary blow. */

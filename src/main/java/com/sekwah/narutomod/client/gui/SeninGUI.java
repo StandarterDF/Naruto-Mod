@@ -107,13 +107,8 @@ public class SeninGUI implements PlayerGUI {
         GuiUtils.centeredTextOutlined(guiGraphics, this.minecraft.font, text,
                 screenMid - OFFSET - (barWidth / 2), y - 4, color, darker);
 
-        // The entry price, drawn as a tick while the mode is closed: filling past it means the
-        // cast will go through.
-        if (!this.sageMode && this.entryThreshold > 0.0f && this.entryThreshold < this.maxSeninMana) {
-            int barLeft = screenMid - OFFSET - (WIDTH - xOffset);
-            int tickX = barLeft + (int) (barWidth * (this.entryThreshold / this.maxSeninMana));
-            guiGraphics.fill(tickX, y, tickX + 1, y + 22, 0xBFFFFFFF);
-        }
+        // The entry price tick is no longer drawn over the bar, so the nature energy pool reads
+        // cleanly even while the mode is closed.
     }
 
     private void setColor(Color color) {

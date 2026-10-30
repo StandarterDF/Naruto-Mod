@@ -76,6 +76,11 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
      */
     @Sync(minTicks = 1)
     private float armorChakraBonus;
+    private float enchantChakraBonus;
+    private float enchantStaminaBonus;
+    private float enchantSeninBonus;
+    @Sync(minTicks = 1)
+    private boolean gudodamaForm;
 
     /**
      * Chakra capacity handed out by an open eye, see {@code RinneganAbility}. A third separate field
@@ -454,6 +459,7 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     @Override
     public float getMaxChakra() {
         return this.maxChakra + this.chakraCapacityBonus + this.armorChakraBonus + this.eyeChakraBonus
+                + this.enchantChakraBonus
                 + ChakraChargeAbility.masteryChakraBonus(this)
                 + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.MAX_CHAKRA)
                 + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.ALL_ROUNDED)
@@ -478,6 +484,26 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     @Override
     public void setArmorChakraBonus(float bonus) {
         this.armorChakraBonus = bonus;
+    }
+
+    public void setEnchantChakraBonus(float bonus) {
+        this.enchantChakraBonus = bonus;
+    }
+
+    public void setEnchantStaminaBonus(float bonus) {
+        this.enchantStaminaBonus = bonus;
+    }
+
+    public void setEnchantSeninBonus(float bonus) {
+        this.enchantSeninBonus = bonus;
+    }
+
+    public boolean isGudodamaForm() {
+        return this.gudodamaForm;
+    }
+
+    public void setGudodamaForm(boolean active) {
+        this.gudodamaForm = active;
     }
 
     @Override
@@ -572,7 +598,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
                 + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.MAX_STAMINA)
                 + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.ALL_ROUNDED)
                 + this.trainingWeightsStaminaBonus
-                + this.staminaBonus;
+                + this.staminaBonus
+                + this.enchantStaminaBonus;
     }
 
     @Override
@@ -761,7 +788,8 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
             return 0.0f;
         }
         return NarutoConfig.maxSeninMana + this.eyeSeninBonus
-                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.SENIN_MANA);
+                + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.SENIN_MANA)
+                + this.enchantSeninBonus;
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.sekwah.narutomod.events;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.jutsus.GudodamaFormAbility;
+import com.sekwah.narutomod.abilities.jutsus.GudodamaFormAbility;
 import com.sekwah.narutomod.abilities.jutsus.SixPathsModeAbility;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
@@ -13,14 +14,22 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageTypes;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.MobEffectEvent;
 import net.minecraftforge.eventbus.api.Event;
@@ -65,9 +74,18 @@ public final class SixPathsEvents {
     /** How much of any damage a shaped Truth-Seeking Orb swallows. */
     private static final float FORM_DAMAGE_FACTOR = 0.8f;
 
-    /** The mode closes its wounds on a slow, steady beat rather than every tick. */
-    private static final int REGEN_INTERVAL = 20;
-    private static final float REGEN_HEAL = 2.0f;
+    /**
+     * Health the mode gives back on every regeneration beat. The beat is short, so the bar climbs
+     * steadily rather than jumping a fistful of hearts once a second; at this rate the mode mends
+     * fifteen points a second, fast enough to out-pace most of what a fight can take off.
+     */
+    private static final float REGEN_PER_BEAT = 3.0f;
+
+    /** How often the mode gives back {@link #REGEN_PER_BEAT} health, in ticks. */
+    private static final int REGEN_INTERVAL = 4;
+
+    /** How often the body is also washed clean of everything that is eating it, in ticks. */
+    private static final int CLEANSE_INTERVAL = 20;
 
     private SixPathsEvents() {
     }
@@ -95,23 +113,51 @@ public final class SixPathsEvents {
 
         long now = player.level().getGameTime();
         // The orb count is kept honest here rather than trusted from the techniques that spend it.
-        int orbs = Mth.clamp(data.getInt(SixPathsModeAbility.ORBS_TAG), 0, SixPathsModeAbility.MAX_ORBS);
+        int maxOrbs = SixPathsModeAbility.maxOrbs(ninjaData);
+        if (GudodamaFormAbility.isActive(ninjaData)) {
+            maxOrbs = Math.max(0, maxOrbs - 2);
+        }
+        int orbs = Mth.clamp(data.getInt(SixPathsModeAbility.ORBS_TAG), 0, maxOrbs);
         data.putInt(SixPathsModeAbility.ORBS_TAG, orbs);
         ninjaData.setSixPathsOrbs(orbs);
 
         boolean stillRunning = ninjaData.getToggleAbilityData().getAbilitiesHashSet()
                 .contains(SixPathsModeAbility.ID);
-        if (!stillRunning || now >= data.getLong(SixPathsModeAbility.UNTIL_TAG) || orbs <= 0) {
-            // The minute is over, the last orb is spent, or the stance was lost without the ability
-            // hearing about it. Closing through the registry pays the stance's own cleanup; a mark
-            // with no stance behind it is simply cleared.
+        if (stillRunning) {
+            player.getActiveEffects().stream()
+                    .filter(e -> !e.getEffect().isBeneficial())
+                    .map(net.minecraft.world.effect.MobEffectInstance::getEffect)
+                    .toList()
+                    .forEach(player::removeEffect);
+            // While the Six Paths mode is up the body is fed on its own: refresh Saturation III
+            // every 5 seconds so it stays on for 6 seconds at a time.
+            if (player.tickCount % 100 == 0) {
+                player.addEffect(new MobEffectInstance(MobEffects.SATURATION, 120, 2, true, true));
+            }
+            if (player.tickCount % 20 == 0) {
+                ninjaData.addStamina(4.0f);
+            }
+        }
+        // The mode no longer expires on its own; it only ends when the chakra runs out or the stance
+        // is dropped. Orbs regenerate back to the maximum over time.
+        if (!stillRunning || ninjaData.getChakra() <= 0.0f) {
             end(player, ninjaData);
             release(player, data);
             return;
         }
+        long totemUntil = data.getLong("narutomod:orb_totem_until");
+        if (totemUntil > 0 && now >= totemUntil) {
+            data.remove("narutomod:orb_totem_until");
+            totemUntil = 0;
+        }
+        if (totemUntil == 0 && orbs < maxOrbs && player.tickCount % 200 == 0) {
+            orbs = Math.min(maxOrbs, orbs + 1);
+            data.putInt(SixPathsModeAbility.ORBS_TAG, orbs);
+            ninjaData.setSixPathsOrbs(orbs);
+        }
 
-        // Sneaking is how a sage chooses to come down. Letting go of the mark takes the flight with
-        // it; the mod only ever gives wings if it was the one lending them.
+        // The mode lends wings like creative: mayfly is kept on, and the client toggles flying on a
+        // double jump on its own. Sneaking lands again.
         if (player.isShiftKeyDown()) {
             releaseFlight(player, data);
         } else {
@@ -121,6 +167,87 @@ public final class SixPathsEvents {
 
         if (player.tickCount % REGEN_INTERVAL == 0) {
             regenerate(player);
+        }
+        if (player.tickCount % CLEANSE_INTERVAL == 0) {
+            cleanse(player);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onExperienceDrop(LivingExperienceDropEvent event) {
+        LivingEntity dead = event.getEntity();
+        if (dead.getPersistentData().getBoolean("narutomod:orb_launch_kill")) {
+            float mastery = dead.getPersistentData().getFloat("narutomod:orb_launch_mastery");
+            int mult = 2 + (int)(mastery * 3.0f); // 2..5
+            event.setDroppedExperience(event.getDroppedExperience() * mult);
+            dead.getPersistentData().remove("narutomod:orb_launch_kill");
+            dead.getPersistentData().remove("narutomod:orb_launch_mastery");
+        }
+    }
+
+    @SubscribeEvent
+    public static void onBreakSpeed(PlayerEvent.BreakSpeed event) {
+        Player player = event.getEntity();
+        INinjaData ninjaData = player.getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
+        if (ninjaData == null || !ninjaData.isGudodamaForm()) {
+            return;
+        }
+        float speed = event.getNewSpeed();
+        if (speed < 1.0f) {
+            speed = 8.0f;
+        }
+        event.setNewSpeed(speed * 10.0f);
+    }
+
+    @SubscribeEvent
+    public static void onHarvestCheck(PlayerEvent.HarvestCheck event) {
+        INinjaData ninjaData = event.getEntity().getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
+        if (ninjaData != null && ninjaData.isGudodamaForm()) {
+            // The shaped hand counts as the right tool, so blocks drop normally.
+            event.setCanHarvest(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onBlockBreak(BlockEvent.BreakEvent event) {
+        if (event.getPlayer() == null || event.getPlayer().level().isClientSide) {
+            return;
+        }
+        Player player = event.getPlayer();
+        INinjaData ninjaData = player.getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
+        if (ninjaData == null || !GudodamaFormAbility.isActive(ninjaData)) {
+            return;
+        }
+        float cost = 1.0f;
+        if (ninjaData.getChakra() >= cost) {
+            ninjaData.useChakra(cost, 0);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLivingDeath(LivingDeathEvent event) {
+        if (!(event.getEntity() instanceof Player player) || player.level().isClientSide) {
+            return;
+        }
+        if (!SixPathsModeAbility.isActive(player)) {
+            return;
+        }
+        int orbs = SixPathsModeAbility.orbs(player);
+        if (orbs <= 0) {
+            return;
+        }
+        // Totem-like protection: cancel death, restore HP, clear negatives, small chakra, reduce orbs by 1.
+        event.setCanceled(true);
+        player.setHealth(player.getMaxHealth());
+        player.removeAllEffects();
+        player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(nd -> {
+            nd.addChakra(20.0f);
+            SixPathsModeAbility.setOrbs(player, orbs - 1);
+            player.getPersistentData().putLong("narutomod:orb_totem_until", player.level().getGameTime() + 20 * 60);
+        });
+        if (player.level() instanceof ServerLevel level) {
+            level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1.0d, player.getZ(),
+                    30, 0.5d, 0.8d, 0.5d, 0.1d);
         }
     }
 
@@ -152,11 +279,8 @@ public final class SixPathsEvents {
             saved.putBoolean(FLYING_TAG, player.getAbilities().flying);
             data.put(FLIGHT_TAG, saved);
         }
-        if (!player.getAbilities().mayfly || !player.getAbilities().flying) {
-            player.getAbilities().mayfly = true;
-            player.getAbilities().flying = true;
-            player.onUpdateAbilities();
-        }
+        player.getAbilities().mayfly = true;
+        player.onUpdateAbilities();
     }
 
     /** Puts the flight state back exactly as it was before the stance. Safe when nothing was lent. */
@@ -181,14 +305,24 @@ public final class SixPathsEvents {
     }
 
     /**
-     * A sage's body closes on its own. The slow, the poison, the withering and the fire are all just
-     * damage that has not finished arriving, so the mode refuses to let them finish; a chill is the
-     * same idea in the mod's own elemental state, and is warmed away rather than left to slow the
-     * caster. Darkness and blindness are cleared here as well, which covers anything that was already
-     * on the body when the mode opened.
+     * A sage's body closes on its own, a few points on a short beat. Healing in one lump each second
+     * is what makes a health bar jump; spread over quarter-second beats it creeps up instead, which
+     * is how the mode is meant to read.
      */
     private static void regenerate(Player player) {
-        player.heal(REGEN_HEAL);
+        if (player.getHealth() < player.getMaxHealth()) {
+            player.heal(REGEN_PER_BEAT);
+        }
+    }
+
+    /**
+     * The slow, the poison, the withering and the fire are all just damage that has not finished
+     * arriving, so the mode refuses to let them finish; a chill is the same idea in the mod's own
+     * elemental state, and is warmed away rather than left to slow the caster. Darkness and
+     * blindness are cleared here as well, which covers anything that was already on the body when
+     * the mode opened. Once a second is enough for any of it.
+     */
+    private static void cleanse(Player player) {
         player.removeEffect(MobEffects.POISON);
         player.removeEffect(MobEffects.WITHER);
         player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
@@ -214,12 +348,30 @@ public final class SixPathsEvents {
         if (ninjaData == null) {
             return;
         }
+        if (SixPathsModeAbility.isActive(player)) {
+            if (event.getSource().is(net.minecraft.world.damagesource.DamageTypes.LAVA)
+                    || event.getSource().is(net.minecraft.world.damagesource.DamageTypes.IN_WALL)
+                    || event.getSource().is(net.minecraft.world.damagesource.DamageTypes.DROWN)) {
+                event.setCanceled(true);
+                return;
+            }
+        }
         float amount = event.getAmount();
         if (SixPathsModeAbility.isActive(player) && isTechniqueDamage(event.getSource())) {
             amount *= TECHNIQUE_DAMAGE_FACTOR;
         }
         if (GudodamaFormAbility.isActive(ninjaData)) {
             amount *= FORM_DAMAGE_FACTOR;
+            // Consume chakra on hit.
+            float cost = 2.0f;
+            if (ninjaData.getChakra() >= cost) {
+                ninjaData.useChakra(cost, 0);
+            }
+            if (player.level() instanceof ServerLevel level) {
+                LivingEntity target = (LivingEntity) event.getEntity();
+                level.sendParticles(ParticleTypes.EXPLOSION, target.getX(), target.getY() + target.getBbHeight() * 0.5d, target.getZ(),
+                        1, 0.0d, 0.0d, 0.0d, 0.0d);
+            }
         }
         if (amount != event.getAmount()) {
             event.setAmount(amount);

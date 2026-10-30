@@ -3,7 +3,10 @@ package com.sekwah.narutomod.abilities.utility;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.AbilityUnlocks;
 import com.sekwah.narutomod.abilities.NarutoAbilities;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.skills.SkillTree;
+import com.sekwah.narutomod.triggers.NarutoAdvancements;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
 import com.sekwah.narutomod.sounds.NarutoSounds;
 import net.minecraft.core.particles.ParticleTypes;
@@ -49,6 +52,17 @@ public class DoubleJumpAbility extends Ability {
             return false;
         }
         return ninjaData.getDoubleJumpData().canDoubleJumpServer;
+    }
+
+    @Override
+    public void recordMastery(Player player, INinjaData ninjaData) {
+        // Double jump is triggered on every second jump; slow its mastery down.
+        Mastery.recordCredit(player, ninjaData, this, 0.2f);
+        NarutoAdvancements.onTechniqueCast(player, ninjaData, this);
+        if (SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), "mechanic:residual_force")) {
+            player.getPersistentData().putLong("narutomod:residual_force_until",
+                    player.level().getGameTime() + 100L);
+        }
     }
 
     @Override

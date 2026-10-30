@@ -5,7 +5,7 @@ import com.sekwah.narutomod.abilities.jutsus.BlackRodAbility;
 import com.sekwah.narutomod.abilities.jutsus.ChakraShearAbility;
 import com.sekwah.narutomod.abilities.jutsus.JouganPhaseAbility;
 import com.sekwah.narutomod.abilities.jutsus.KamuiPhaseAbility;
-import com.sekwah.narutomod.abilities.jutsus.RinneganLevitationAbility;
+
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import net.minecraft.core.particles.ParticleTypes;
@@ -69,9 +69,7 @@ public final class DojutsuLeftoverEvents {
         if (entity instanceof Player player) {
             applyPhaseFlags(player);
         }
-        if (!entity.level().isClientSide) {
-            releaseExpiredLift(entity);
-        }
+
     }
 
     /**
@@ -104,23 +102,6 @@ public final class DojutsuLeftoverEvents {
             // A caster who let go inside a wall is put back into open air rather than buried alive.
             KamuiPhaseAbility.unstick(player);
         }
-    }
-
-    /**
-     * The Rinnegan's hold renews a short mark on the lifted body. If the caster is gone and the mark
-     * runs out, gravity comes back here rather than by the caster's hand.
-     */
-    private static void releaseExpiredLift(LivingEntity entity) {
-        CompoundTag data = entity.getPersistentData();
-        if (!data.contains(RinneganLevitationAbility.LEVITATION_UNTIL)) {
-            return;
-        }
-        if (data.getLong(RinneganLevitationAbility.LEVITATION_UNTIL) > entity.level().getGameTime()) {
-            return;
-        }
-        data.remove(RinneganLevitationAbility.LEVITATION_UNTIL);
-        entity.setNoGravity(false);
-        entity.fallDistance = 0.0f;
     }
 
     /**

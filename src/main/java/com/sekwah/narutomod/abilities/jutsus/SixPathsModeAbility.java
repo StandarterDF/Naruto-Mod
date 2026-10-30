@@ -2,6 +2,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.config.NarutoConfig;
 import net.minecraft.ChatFormatting;
@@ -66,8 +67,17 @@ public class SixPathsModeAbility extends Ability
     /** The mode's own gift on top of the eye's: a far larger pool to spend while it lasts. */
     private static final float BONUS_CHAKRA = 100.0f;
 
-    /** How many Truth-Seeking Orbs the mode hands out. */
-    public static final int MAX_ORBS = 9;
+    /** Base orbs before mastery; the rest grow with mastery. */
+    public static final int BASE_ORBS = 2;
+
+    /** How many Truth-Seeking Orbs the mode hands out at full mastery. */
+    public static final int MAX_ORBS = 8;
+
+    /** Orbs available for this caster, growing from 1 to 9 with mastery. */
+    public static int maxOrbs(INinjaData ninjaData) {
+        float mastery = Mastery.level(ninjaData, ID);
+        return Math.max(BASE_ORBS, BASE_ORBS + Math.round(mastery * (MAX_ORBS - BASE_ORBS)));
+    }
 
     /** Tick the mode closes on its own. */
     public static final String UNTIL_TAG = "narutomod:six_paths_until";
@@ -163,8 +173,8 @@ public class SixPathsModeAbility extends Ability
         long now = player.level().getGameTime();
         data.putLong(UNTIL_TAG, now + DURATION);
         data.putLong(STARTED_TAG, now);
-        data.putInt(ORBS_TAG, MAX_ORBS);
-        ninjaData.setSixPathsOrbs(MAX_ORBS);        ninjaData.setSeninMana(ninjaData.getSeninMana() - RITUAL_SENIN);
+        data.putInt(ORBS_TAG, 0);
+        ninjaData.setSixPathsOrbs(0);        ninjaData.setSeninMana(ninjaData.getSeninMana() - RITUAL_SENIN);
         ninjaData.setEyeChakraBonus(BONUS_CHAKRA);
         if (player.level() instanceof ServerLevel level) {
             level.sendParticles(ParticleTypes.END_ROD, player.getX(),
@@ -233,22 +243,31 @@ public class SixPathsModeAbility extends Ability
         return player.getPersistentData().contains(UNTIL_TAG);
     }
 
-    /** @return whether the mode is up this instant, read from its own clock. */
+    /** @return whether the mode is up this instant, read from the synced toggle set. */
     public static boolean isActive(Player player) {
-        return player.getPersistentData().getLong(UNTIL_TAG) > player.level().getGameTime();
+        if (!player.getPersistentData().contains(UNTIL_TAG)) {
+            return false;
+        }
+        INinjaData ninjaData = player.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
+        return ninjaData != null && ninjaData.getToggleAbilityData().getAbilitiesHashSet().contains(ID);
     }
 
     /** @return the orbs the caster has left, clamped to the mode's own allowance. */
     public static int orbs(Player player) {
-        return Mth.clamp(player.getPersistentData().getInt(ORBS_TAG), 0, MAX_ORBS);
+        INinjaData ninjaData = player.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
+        int max = ninjaData != null ? maxOrbs(ninjaData) : MAX_ORBS;
+        return Mth.clamp(player.getPersistentData().getInt(ORBS_TAG), 0, max);
     }
 
     /** Writes the orb count, keeping any other code from putting more out than the mode gave. */
     public static void setOrbs(Player player, int orbs) {
-        int clamped = Mth.clamp(orbs, 0, MAX_ORBS);
+        INinjaData ninjaData = player.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
+        int max = ninjaData != null ? maxOrbs(ninjaData) : MAX_ORBS;
+        int clamped = Mth.clamp(orbs, 0, max);
         player.getPersistentData().putInt(ORBS_TAG, clamped);
-        player.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA)
-                .ifPresent(ninjaData -> ninjaData.setSixPathsOrbs(clamped));
+        if (ninjaData != null) {
+            ninjaData.setSixPathsOrbs(clamped);
+        }
     }
 
     /** Spends one orb and @return how many are left. */

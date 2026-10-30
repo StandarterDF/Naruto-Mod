@@ -4,6 +4,7 @@ import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.config.NarutoConfig;
+import com.sekwah.narutomod.friends.Friends;
 import com.sekwah.narutomod.util.Targeting;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -14,6 +15,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -107,6 +109,20 @@ public class BlackRodAbility extends Ability implements Ability.Cooldown {
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
         if (!(player.level() instanceof ServerLevel level)) {
+            return;
+        }
+        // A rod driven into a body marks it for 30s-60s: weakness and a slow drain of its chakra.
+        Entity looked = Targeting.lookedAtEntity(player, RANGE);
+        if (looked instanceof LivingEntity target && target != player && target.isAlive()
+                && !Friends.areFriends(player, target)) {
+            target.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    net.minecraft.world.effect.MobEffects.WEAKNESS, 20 * 60, 1, false, true));
+            CompoundTag data = target.getPersistentData();
+            data.putLong("narutomod:black_rod_drain_until", level.getGameTime() + 20 * 60);
+            data.putUUID("narutomod:black_rod_drain_caster", player.getUUID());
+            level.sendParticles(ParticleTypes.SQUID_INK, target.getX(),
+                    target.getY() + target.getBbHeight() * 0.5d, target.getZ(),
+                    14, 0.18d, 0.18d, 0.18d, 0.02d);
             return;
         }
         BlockHitResult hit = Targeting.lookedAtBlock(player, RANGE);

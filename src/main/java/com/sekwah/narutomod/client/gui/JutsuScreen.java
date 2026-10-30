@@ -131,23 +131,23 @@ public class JutsuScreen extends Screen {
      */
     private enum Category {
         BASICS("naruto.gui.jutsu.category.basics"),
-        BODY("naruto.gui.jutsu.category.body"),
-        DEFENCE("naruto.gui.jutsu.category.defence"),
-        ELEMENTAL("naruto.gui.jutsu.category.elemental"),
-        TAIJUTSU("naruto.gui.jutsu.category.taijutsu"),
-        CLONES("naruto.gui.jutsu.category.clones"),
         SPACE("naruto.gui.jutsu.category.space"),
+        DEFENCE("naruto.gui.jutsu.category.defence"),
+        BODY("naruto.gui.jutsu.category.body"),
+        CLONES("naruto.gui.jutsu.category.clones"),
+        ELEMENTAL("naruto.gui.jutsu.category.elemental"),
+        SAGE("naruto.gui.jutsu.category.sage"),
+        CURSE_SEAL("naruto.gui.jutsu.category.curse_seal"),
+        TAIJUTSU("naruto.gui.jutsu.category.taijutsu"),
         GATES("naruto.gui.jutsu.category.gates"),
         ILLUSION("naruto.gui.jutsu.category.illusion"),
         SHARINGAN("naruto.gui.jutsu.category.sharingan"),
+        RINNEGAN("naruto.gui.jutsu.category.rinnegan"),
         BYAKUGAN("naruto.gui.jutsu.category.byakugan"),
         JOUGAN("naruto.gui.jutsu.category.jougan"),
         SENRIGAN("naruto.gui.jutsu.category.senrigan"),
-        RINNEGAN("naruto.gui.jutsu.category.rinnegan"),
-        SIX_PATHS("naruto.gui.jutsu.category.six_paths"),
-        SAGE("naruto.gui.jutsu.category.sage"),
-        CURSE_SEAL("naruto.gui.jutsu.category.curse_seal"),
         TAILED("naruto.gui.jutsu.category.tailed"),
+        SIX_PATHS("naruto.gui.jutsu.category.six_paths"),
         OTHER("naruto.gui.jutsu.category.other"),
         PASSIVE("naruto.gui.jutsu.category.passive");
 
@@ -228,6 +228,7 @@ public class JutsuScreen extends Screen {
             Map.entry("universal_force", Category.RINNEGAN),
             Map.entry("chibaku_tensei", Category.RINNEGAN),
             Map.entry("momoshiki_absorption", Category.RINNEGAN),
+            Map.entry("limbo", Category.RINNEGAN),
 
             Map.entry("sharingan", Category.SHARINGAN),
             Map.entry("amaterasu", Category.SHARINGAN),
@@ -313,12 +314,17 @@ public class JutsuScreen extends Screen {
             Map.entry("gate_tiger", 2),
             Map.entry("gate_elephant", 3),
 
+            Map.entry("rinnegan", 0),
+            Map.entry("universal_force", 1),
+            Map.entry("chibaku_tensei", 2),
+            Map.entry("momoshiki_absorption", 3),
+            Map.entry("limbo", 4),
+
             Map.entry("six_paths_mode", 0),
             Map.entry("gudodama_launch", 1),
             Map.entry("gudodama_guard", 2),
             Map.entry("gudodama_form", 3),
             Map.entry("yin_yang_heal", 4),
-            Map.entry("limbo", 5),
 
             Map.entry("senjutsu_charging", 0),
             Map.entry("sage_mode", 1),
@@ -636,8 +642,9 @@ public class JutsuScreen extends Screen {
         Category openCategory = null;
         for (Entry entry : entries) {
             boolean headerNeeded = entry.category() != openCategory;
-            // Passives always start on their own page, so the last page is always theirs.
-            if (entry.category() == Category.PASSIVE && !current.isEmpty()) {
+            // Passives start on their own page once, so the last page(s) are theirs; do not
+            // split every passive onto a separate page.
+            if (entry.category() == Category.PASSIVE && openCategory != Category.PASSIVE && !current.isEmpty()) {
                 pages.add(current);
                 current = new ArrayList<>();
                 headerNeeded = true;

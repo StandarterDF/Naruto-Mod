@@ -66,6 +66,12 @@ public class RasenganJutsuAbility extends Ability implements Ability.Channeled {
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
+        if (!player.getMainHandItem().isEmpty()) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.palm_block.weapon",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
         float cost = this.masteryCost(ninjaData, CHAKRA_PER_TICK);
         if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",

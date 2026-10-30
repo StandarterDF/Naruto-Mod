@@ -2,6 +2,7 @@ package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.item.ComboSwordItem;
+import com.sekwah.narutomod.item.HidanScytheItem;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -44,8 +45,12 @@ public class ComboSwordAttributeEvents {
         }
 
         ItemStack held = player.getMainHandItem();
-        boolean tooHeavy = held.getItem() instanceof ComboSwordItem sword
-                && !sword.playerMeetsRequirement(player);
+        boolean tooHeavy = false;
+        if (held.getItem() instanceof ComboSwordItem sword) {
+            tooHeavy = !sword.playerMeetsRequirement(player);
+        } else if (held.getItem() instanceof HidanScytheItem scythe) {
+            tooHeavy = !scythe.playerMeetsRequirement(player);
+        }
         boolean penalised = attackSpeed.getModifier(ComboSwordItem.HEAVY_PENALTY_UUID) != null;
         if (tooHeavy == penalised) {
             return;

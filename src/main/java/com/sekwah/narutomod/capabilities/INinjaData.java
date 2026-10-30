@@ -36,6 +36,11 @@ public interface INinjaData extends INBTSerializable<Tag> {
      */
     float getArmorChakraBonus();
     void setArmorChakraBonus(float bonus);
+    void setEnchantChakraBonus(float bonus);
+    void setEnchantStaminaBonus(float bonus);
+    void setEnchantSeninBonus(float bonus);
+    boolean isGudodamaForm();
+    void setGudodamaForm(boolean active);
 
     /**
      * The max health bonus the worn armour last put on the player's attribute, remembered so the

@@ -15,7 +15,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+import com.sekwah.narutomod.item.NarutoItems;
 
 import java.util.Comparator;
 import java.util.List;
@@ -96,12 +98,6 @@ public class AsuraMissilesAbility extends Ability implements Ability.Cooldown {
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }
-        if (targets(player).isEmpty()) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.asura_missiles.notarget",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
-                    .withStyle(ChatFormatting.RED), true);
-            return false;
-        }
         float cost = this.masteryCost(ninjaData, COST);
         if (ninjaData.getChakra() < cost) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
@@ -117,15 +113,12 @@ public class AsuraMissilesAbility extends Ability implements Ability.Cooldown {
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
-        List<LivingEntity> chosen = targets(player);
-        for (int i = 0; i < chosen.size(); i++) {
-            LivingEntity target = chosen.get(i);
-            int delay = ARRIVAL_STAGGER * (i + 1);
-            // The seeker is only a scheduled arrival; the target reference is held for the few
-            // ticks it takes and checked again on arrival in case the body died or left.
-            ninjaData.scheduleDelayedTickEvent(delayed -> arrive(level, delayed, target), delay);
+        // Rework: the ability now hands the caster three missiles to keep in the inventory. Each one
+        // is thrown at a target by hand, so the caster chooses when and whom to strike.
+        ItemStack missiles = new ItemStack(NarutoItems.ASURA_MISSILE.get(), 3);
+        if (!player.getInventory().add(missiles)) {
+            player.drop(missiles, false);
         }
-
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.0f, 1.4f);
         level.sendParticles(ParticleTypes.END_ROD, player.getX(),
@@ -156,6 +149,11 @@ public class AsuraMissilesAbility extends Ability implements Ability.Cooldown {
             return false;
         }
         return !Friends.isOwnSide(caster, target);
+    }
+
+    /** Fires a single missile at the given target (used by the inventory missile item). */
+    public static void fireOne(ServerLevel level, Player caster, LivingEntity target) {
+        arrive(level, caster, target);
     }
 
     /** One seeker arriving: the trail is drawn, then the body is struck. */

@@ -3,6 +3,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.friends.Friends;
 import net.minecraft.ChatFormatting;
@@ -132,10 +133,14 @@ public class GudodamaLaunchAbility extends Ability implements Ability.Cooldown {
         level.playSound(null, impact.x, impact.y, impact.z,
                 SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.2f, 0.8f);
 
+        float mastery = Mastery.level(ninjaData, this);
+        float damage = (float) (50.0d + 200.0d * mastery * mastery);
         List<LivingEntity> caught = level.getEntitiesOfClass(LivingEntity.class,
                 new AABB(impact, impact).inflate(RADIUS), target -> isValidTarget(player, target));
         for (LivingEntity target : caught) {
-            target.hurt(level.damageSources().indirectMagic(player, player), DAMAGE);
+            target.getPersistentData().putBoolean("narutomod:orb_launch_kill", true);
+            target.getPersistentData().putFloat("narutomod:orb_launch_mastery", mastery);
+            target.hurt(level.damageSources().indirectMagic(player, player), damage);
         }
 
         SixPathsModeAbility.spendOrb(player);

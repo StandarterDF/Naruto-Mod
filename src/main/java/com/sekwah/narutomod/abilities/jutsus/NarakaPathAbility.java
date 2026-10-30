@@ -166,8 +166,10 @@ public class NarakaPathAbility extends Ability implements Ability.Cooldown {
             double angle = (Math.PI * 2.0d / 32.0d) * i;
             double x = centre.x + Math.cos(angle) * radius;
             double z = centre.z + Math.sin(angle) * radius;
-            level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, x, centre.y + 0.1d, z,
-                    1, 0.02d, 0.02d, 0.02d, 0.0d);
+            for (int h = 0; h < 3; h++) {
+                level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, x, centre.y + 0.1d + h * 0.6d, z,
+                        1, 0.02d, 0.02d, 0.02d, 0.0d);
+            }
         }
         level.sendParticles(ParticleTypes.SOUL, centre.x, centre.y + 0.5d, centre.z,
                 4, radius * 0.4d, 0.3d, radius * 0.4d, 0.01d);

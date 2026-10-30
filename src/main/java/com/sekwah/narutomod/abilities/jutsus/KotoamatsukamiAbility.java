@@ -17,6 +17,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
+import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.player.Player;
 
 /**
@@ -166,6 +167,10 @@ public class KotoamatsukamiAbility extends Ability implements Ability.Cooldown {
      * a datapack gives them a smaller pool.
      */
     private static boolean isTooStrong(LivingEntity target) {
+        // Kotoamatsukami is imba: even a Warden can be talked into trusting the caster.
+        if (target instanceof Warden) {
+            return false;
+        }
         return target.getHealth() >= 100.0f
                 || target instanceof EnderDragon
                 || target instanceof WitherBoss;

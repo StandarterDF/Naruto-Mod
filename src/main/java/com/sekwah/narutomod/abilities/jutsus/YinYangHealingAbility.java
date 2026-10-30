@@ -15,6 +15,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -87,10 +88,10 @@ public class YinYangHealingAbility extends Ability implements Ability.Channeled 
         return COMBO;
     }
 
-    /** The seal has to be held: a tap would only graze the ally and waste the entry price. */
+    /** A tap is allowed: it grants a burst of regeneration and saturation. */
     @Override
     public boolean canActivateBelowMinCharge() {
-        return false;
+        return true;
     }
 
     @Override
@@ -116,7 +117,7 @@ public class YinYangHealingAbility extends Ability implements Ability.Channeled 
             }
             return false;
         }
-        float cost = this.masteryCost(ninjaData, chargeAmount == 0 ? ENTRY_COST : CHAKRA_PER_TICK);
+        float cost = this.masteryCost(ninjaData, chargeAmount < 0 ? ENTRY_COST : (chargeAmount == 0 ? ENTRY_COST : CHAKRA_PER_TICK));
         if (ninjaData.getChakra() < cost) {
             if (chargeAmount == 0) {
                 player.displayClientMessage(Component.translatable("jutsu.fail.notenoughchakra",
@@ -134,6 +135,12 @@ public class YinYangHealingAbility extends Ability implements Ability.Channeled 
      */
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
+        if (ticksActive >= 0) {
+            return;
+        }
+        // Tap: a burst of regeneration and saturation.
+        player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 20 * 30, 4, false, true));
+        player.addEffect(new MobEffectInstance(MobEffects.SATURATION, 20 * 30, 255, false, true));
     }
 
     @Override
@@ -162,6 +169,54 @@ public class YinYangHealingAbility extends Ability implements Ability.Channeled 
 
         this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
         drawSeal(level, player, ally, ticksChanneled);
+
+        // Visual field wall: a ring of particles around the caster, shown for the whole hold.
+        if (ticksChanneled % 4 == 0) {
+            double radius = 8.0d;
+            for (int i = 0; i < 36; i++) {
+                double angle = (Math.PI * 2.0d / 36.0d) * i;
+                double x = player.getX() + Math.cos(angle) * radius;
+                double z = player.getZ() + Math.sin(angle) * radius;
+                level.sendParticles(ParticleTypes.END_ROD, x, player.getY() + 0.1d, z,
+                        1, 0.05d, 0.05d, 0.05d, 0.0d);
+                level.sendParticles(ParticleTypes.END_ROD, x, player.getY() + 1.0d, z,
+                        1, 0.05d, 0.05d, 0.05d, 0.0d);
+            }
+        }
+
+        // Held field: drain enemies, heal allies/creator, swap ailments. Scales with enemy count
+        // and mastery: more enemies (and higher mastery) drain and heal harder.
+        if (ticksChanneled % 20 == 0) {
+            double radius = 8.0d;
+            List<LivingEntity> nearby = level.getEntitiesOfClass(LivingEntity.class,
+                    player.getBoundingBox().inflate(radius));
+            float mastery = this.masteryLevel(ninjaData);
+            float perEnemy = 2.0f + 4.0f * mastery;
+            float drained = 0.0f;
+            int enemies = 0;
+            for (LivingEntity e : nearby) {
+                if (e == player || e.isSpectator() || !e.isAlive()) continue;
+                if (Friends.isOwnSide(player, e)) {
+                    for (MobEffect effect : CURED) {
+                        e.removeEffect(effect);
+                    }
+                    e.heal(1.0f + 2.0f * mastery);
+                } else {
+                    e.hurt(player.damageSources().magic(), perEnemy);
+                    drained += perEnemy;
+                    enemies++;
+                    for (MobEffect effect : CURED) {
+                        e.addEffect(new MobEffectInstance(effect, 60, 0, false, true));
+                    }
+                }
+            }
+            // If no enemies, still heal moderately.
+            if (enemies == 0) {
+                player.heal(2.0f + 2.0f * mastery);
+            } else {
+                player.heal(drained * (0.25f + 0.25f * mastery));
+            }
+        }
     }
 
     /**

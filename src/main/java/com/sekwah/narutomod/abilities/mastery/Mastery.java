@@ -187,7 +187,7 @@ public final class Mastery {
      */
     public static float meditationRadius(INinjaData ninjaData, Ability ability) {
         float level = level(ninjaData, ability);
-        double max = Math.max(8.0d, NarutoConfig.meditationRadiusMax);
-        return (float) (8.0d + (max - 8.0d) * level * level * level);
+        double max = Math.max(32.0d, NarutoConfig.meditationRadiusMax);
+        return (float) (32.0d + (max - 32.0d) * level * level * level);
     }
 }

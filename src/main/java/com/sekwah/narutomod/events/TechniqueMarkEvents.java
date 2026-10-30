@@ -120,16 +120,6 @@ public final class TechniqueMarkEvents {
             }
         }
 
-        // A body under the weight of the sky does not get to leave the ground.
-        if (data.contains("narutomod:heaven_weight_until")) {
-            if (now >= data.getLong("narutomod:heaven_weight_until")) {
-                data.remove("narutomod:heaven_weight_until");
-            } else if (!entity.onGround()) {
-                entity.setDeltaMovement(entity.getDeltaMovement().x, Math.min(-0.08d, entity.getDeltaMovement().y),
-                        entity.getDeltaMovement().z);
-            }
-        }
-
         // Frozen bodies keep still until the seam closes; the non-living ones (arrows, charges,
         // falling blocks) are handled on the level tick, because this event only sees living bodies.
         if (data.contains(STASIS) && now >= data.getLong(STASIS)) {
@@ -374,15 +364,6 @@ public final class TechniqueMarkEvents {
             if (casterId != null && event.getTarget() instanceof Player target && target.getUUID().equals(casterId)) {
                 event.setCanceled(true);
             }
-        }
-    }
-
-    /** A body that has been made heavy cannot jump while the mark lasts. */
-    @SubscribeEvent
-    public static void onJump(LivingEvent.LivingJumpEvent event) {
-        if (event.getEntity().getPersistentData().getLong("narutomod:heaven_weight_until")
-                > event.getEntity().level().getGameTime()) {
-            event.setCanceled(true);
         }
     }
 

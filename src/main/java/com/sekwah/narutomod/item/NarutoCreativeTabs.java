@@ -35,6 +35,7 @@ public class NarutoCreativeTabs {
                 output.accept(NarutoItems.KATANA.get());
                 output.accept(NarutoItems.SAMEHADA.get());
                 output.accept(NarutoItems.KUBIKIRIBOCHO.get());
+                output.accept(NarutoItems.HIDAN_SCYTHE.get());
                 output.accept(NarutoItems.BONE_BLADE.get());
                 output.accept(NarutoItems.HIRAMEKAREI.get());
                 output.accept(NarutoItems.SHIBUKI.get());

@@ -2,12 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "pattern": [
     "PPP",
-    "PIP",
+    "PNP",
     " S "
   ],
   "key": {
     "P": { "item": "narutomod:paper_bomb" },
-    "I": { "item": "minecraft:iron_block" },
+    "N": { "item": "minecraft:nether_star" },
     "S": { "item": "minecraft:stick" }
   },
   "result": {

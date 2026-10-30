@@ -85,14 +85,19 @@ public final class AbilityUnlocks {
                 return false;
             }
         }
-        // The Rinnegan is the eye the Sharingan grows into: it is only granted once every Sharingan
-        // technique has actually been learned, without dragging a web of lines across the tree.
+        // The Rinnegan is the eye the Sharingan grows into: it no longer needs the whole Sharingan
+        // branch, only the Sharingan itself and at least one Mangekyo technique such as Susanoo.
         if (abilityId != null && "rinnegan".equals(abilityId.getPath())) {
-            for (Skill skill : Skill.all()) {
-                if (skill.branch() == SkillBranch.SHARINGAN
-                        && !ninjaData.getSkillData().getUnlocked().contains(skill.id())) {
-                    return false;
-                }
+            Set<ResourceLocation> unlocked = ninjaData.getSkillData().getUnlocked();
+            if (!SkillTree.hasUnlock(unlocked, "ability:sharingan")) {
+                return false;
+            }
+            boolean hasMangekyo = SkillTree.hasUnlock(unlocked, "ability:tsukuyomi")
+                    || SkillTree.hasUnlock(unlocked, "ability:susanoo")
+                    || SkillTree.hasUnlock(unlocked, "ability:izanagi")
+                    || SkillTree.hasUnlock(unlocked, "ability:izanami");
+            if (!hasMangekyo) {
+                return false;
             }
         }
         // Kamui is a Sharingan technique: it cannot be learned without the Sharingan itself.

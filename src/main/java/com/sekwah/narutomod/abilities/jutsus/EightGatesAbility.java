@@ -116,7 +116,11 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
         // is allowed through and performServer decides what the hold meant.
         if (chargeAmount == -1) {
             if (ninjaData.getGateCount() >= maxGates(ninjaData)) {
-                fail(player, "jutsu.fail.gates_open");
+                if (ninjaData.getGateCount() >= MAX_GATES) {
+                    fail(player, "jutsu.fail.gates_open");
+                } else {
+                    fail(player, "jutsu.fail.gates_locked");
+                }
                 return false;
             }
             return canPay(player, ninjaData);
@@ -149,7 +153,11 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
         }
 
         if (ninjaData.getGateCount() >= maxGates(ninjaData)) {
-            fail(player, "jutsu.fail.gates_open");
+            if (ninjaData.getGateCount() >= MAX_GATES) {
+                fail(player, "jutsu.fail.gates_open");
+            } else {
+                fail(player, "jutsu.fail.gates_locked");
+            }
             return;
         }
         if (!canPay(player, ninjaData)) {
@@ -417,7 +425,12 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
             sp.playNotifySound(SoundEvents.UI_BUTTON_CLICK.get(), SoundSource.PLAYERS, 0.2f, 0.6f);
         }
 
-        if (player.tickCount % DRAIN_INTERVAL == 0) {
+        // Fast stamina regeneration while the gates are open.
+        if (player.tickCount % 20 == 0) {
+            ninjaData.addStamina(2.0f);
+        }
+        if (player.tickCount % DRAIN_INTERVAL == 0 && gates >= 4) {
+            // Gates 1-3 cost nothing in health: the early gates are training, not a death sentence.
             // Charged in whole points of health, because the health bar is drawn in half hearts and a
             // drain that always arrived as a fraction of one would never visibly move it. The unpaid
             // remainder is carried into the next tick, so the long run cost is unchanged.

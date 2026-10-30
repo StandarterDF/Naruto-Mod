@@ -230,6 +230,11 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
 
         int cloneCount = this.cloneCount(player, ninjaData);
 
+        // Untrained casters (mastery below 10%) sometimes get unstable copies: chibi clones, or
+        // clones that turn on their owner. The better the technique is mastered, the rarer this gets.
+        float mastery = Mastery.level(ninjaData, this);
+        boolean unstable = mastery < 0.1f;
+
         for (int i = 0; i < cloneCount; i++) {
             int lifetime = summoningWorkers ? ShadowCloneEntity.WORKER_LIFETIME : this.settings.lifetime();
             // The clone branch stretches the life of a copy - worker and fighter tracked separately,
@@ -237,8 +242,20 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
             float lifetimeBonus = SkillTree.bonus(ninjaData.getSkillData().getUnlocked(),
                     summoningWorkers ? SkillEffect.WORKER_LIFETIME : SkillEffect.CLONE_LIFETIME);
             lifetime = Math.round(lifetime * (1.0f + lifetimeBonus));
+
+            boolean chibi = this.settings.chibi();
+            boolean rogue = false;
+            if (unstable && !summoningWorkers) {
+                float roll = player.getRandom().nextFloat();
+                if (roll < 0.15f) {
+                    chibi = true;
+                } else if (roll < 0.30f) {
+                    rogue = true;
+                }
+            }
+
             ShadowCloneEntity clone = new ShadowCloneEntity(level, player,
-                    lifetime, this.settings.chibi(), this.settings.meditating());
+                    lifetime, chibi, this.settings.meditating());
             clone.applyVariantAttributes(this.settings.attackDamage(), this.settings.movementSpeed());
             if (summoningWorkers) {
                 clone.setWorker(true);
@@ -249,6 +266,10 @@ public class ShadowCloneJutsuAbility extends Ability implements Ability.Cooldown
             }
             this.positionClone(clone, level, player, i, cloneCount);
             level.addFreshEntity(clone);
+            if (rogue) {
+                // The unstable copy turns on the one who summoned it.
+                clone.setTarget(player);
+            }
         }
 
         level.sendParticles(ParticleTypes.CLOUD, player.getX(),

@@ -3,6 +3,7 @@ package com.sekwah.narutomod.abilities;
 import com.sekwah.narutomod.capabilities.CooldownTickEvent;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.triggers.NarutoAdvancements;
+import com.sekwah.narutomod.abilities.jutsus.SixPathsModeAbility;
 import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
@@ -390,6 +391,9 @@ public abstract class Ability {
          */
         default void registerCooldown(Player player, INinjaData ninjaData, String translationKey) {
             int cooldown = Mastery.reduceCooldown(ninjaData, translationKey, getCooldown());
+            if (SixPathsModeAbility.isActive(player)) {
+                cooldown = Math.max(1, cooldown / 5);
+            }
             if (cooldown > 0)  {
                 ninjaData.getCooldownEvents().put(translationKey, new CooldownTickEvent(cooldown));
             }

@@ -339,6 +339,9 @@ public class RasenshurikenJutsuEntity extends AbstractNonGlowingHurtingProjectil
             return;
         }
         Entity entity = hitResult.getEntity();
+        if (this.getOwner() instanceof LivingEntity owner && entity instanceof LivingEntity living) {
+            living.setLastHurtByMob(owner);
+        }
         entity.hurt(NarutoDamageTypes.getDamageSource(level, NarutoDamageTypes.WIND_RELEASE, this, this.getOwner()),
                 DIRECT_DAMAGE * this.power * this.masteryDamageMultiplier);
         if (this.getOwner() instanceof LivingEntity owner) {
@@ -383,6 +386,9 @@ public class RasenshurikenJutsuEntity extends AbstractNonGlowingHurtingProjectil
                     * Math.max(0.0d, 1.0d - Math.sqrt(target.distanceToSqr(this)) / BURST_RADIUS));
             if (damage <= 0.0f) {
                 continue;
+            }
+            if (owner instanceof LivingEntity livingOwner) {
+                target.setLastHurtByMob(livingOwner);
             }
             target.hurt(NarutoDamageTypes.getDamageSource(level, NarutoDamageTypes.WIND_RELEASE, this, owner), damage);
             Vec3 push = target.position().subtract(this.position());

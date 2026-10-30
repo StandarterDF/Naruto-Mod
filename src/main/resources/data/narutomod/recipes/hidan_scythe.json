@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "NII",
+    "II ",
+    "S  "
+  ],
+  "key": {
+    "N": { "item": "minecraft:nether_star" },
+    "I": { "item": "minecraft:iron_ingot" },
+    "S": { "item": "minecraft:stick" }
+  },
+  "result": {
+    "item": "narutomod:hidan_scythe",
+    "count": 1
+  }
+}

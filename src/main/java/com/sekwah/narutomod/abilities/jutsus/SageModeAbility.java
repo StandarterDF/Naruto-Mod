@@ -98,7 +98,19 @@ public class SageModeAbility extends Ability {
     private static final float STRENGTH_UP_AT = 0.6f;
     private static final float RESISTANCE_AT = 0.35f;
     private static final float JUMP_AT = 0.5f;
-    private static final float REGENERATION_AT = 0.7f;
+
+    /** Mastery from which the mode starts closing its own wounds. */
+    private static final float REGENERATION_AT = 0.5f;
+
+    /**
+     * Healing is paid on a beat of {@link #REGENERATION_INTERVAL} ticks rather than every tick: the
+     * amount is large enough to read on the bar at once, but the beat is short enough that it still
+     * climbs smoothly. The rate is deliberately low - a sage mends, but slower than a fight hits.
+     */
+    private static final float REGENERATION_PER_BEAT = 0.4f;
+
+    /** How often the mode gives back {@link #REGENERATION_PER_BEAT} health, in ticks. */
+    private static final int REGENERATION_INTERVAL = 4;
 
     /** How much further a sage's arm reaches while the mode is up. */
     private static final double REACH_BONUS = 1.0d;
@@ -257,6 +269,16 @@ public class SageModeAbility extends Ability {
         ninjaData.addSeninMana(-drain);
         if (ninjaData.getSeninMana() <= 0.0f) {
             ninjaData.setSeninMana(0.0f);
+            // The first three times a sage's nature energy runs dry, the body reverts to a frog
+            // for a minute - the price of drawing on the toads' power without mastering it.
+            int frogCount = player.getPersistentData().getInt("narutomod:sage_frog_count");
+            if (frogCount < 3) {
+                player.getPersistentData().putInt("narutomod:sage_frog_count", frogCount + 1);
+                ninjaData.setHengeTarget("");
+                ninjaData.setHengeEntityType("minecraft:frog");
+                ninjaData.setHengeName("Frog");
+                ninjaData.setHengeTicks(20 * 60);
+            }
             end(player, ninjaData);
             return;
         }
@@ -286,12 +308,12 @@ public class SageModeAbility extends Ability {
      * than filled, so nothing is gained to keep.
      */
     private static void applyBody(Player player, INinjaData ninjaData, float mastery) {
-        // Nature feeds its own: exhaustion never accumulates and the bar never drops below the line
-        // vanilla healing needs, so a sage can fight on rations they already ate.
+        // Nature feeds its own: exhaustion is wiped every tick, so the hunger bar never drains while
+        // the mode is up and a sage can fight on rations they already ate. Saturation is held at
+        // zero on purpose: with a fed saturation bar vanilla mends a point every few ticks from food
+        // alone, which would drown out the mode's own slow trickle.
+        player.getFoodData().setSaturation(0.0f);
         player.getFoodData().setExhaustion(0.0f);
-        if (player.getFoodData().getFoodLevel() < 18) {
-            player.getFoodData().setFoodLevel(18);
-        }
 
         trackStillness(player);
 
@@ -340,7 +362,11 @@ public class SageModeAbility extends Ability {
             player.addEffect(new MobEffectInstance(MobEffects.JUMP, EFFECT_DURATION, 0, true, false));
         }
         if (mastery >= REGENERATION_AT) {
-            player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, EFFECT_DURATION, 0, true, false));
+            // Mending is its own trickle rather than the regeneration effect: a fraction of a point
+            // on a short beat reads as a body slowly closing over, where the effect arrives whole.
+            if (player.tickCount % REGENERATION_INTERVAL == 0 && player.getHealth() < player.getMaxHealth()) {
+                player.heal(REGENERATION_PER_BEAT);
+            }
         }
     }
 
@@ -350,7 +376,6 @@ public class SageModeAbility extends Ability {
         player.removeEffect(MobEffects.DAMAGE_BOOST);
         player.removeEffect(MobEffects.DAMAGE_RESISTANCE);
         player.removeEffect(MobEffects.JUMP);
-        player.removeEffect(MobEffects.REGENERATION);
         removeReach(player);
     }
 

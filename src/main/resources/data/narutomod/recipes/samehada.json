@@ -1,11 +1,12 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "DII",
+    "NII",
     "DI ",
     "S  "
   ],
   "key": {
+    "N": { "item": "minecraft:nether_star" },
     "D": { "item": "minecraft:diamond" },
     "I": { "item": "minecraft:iron_ingot" },
     "S": { "item": "minecraft:stick" }
