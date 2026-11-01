@@ -1,6 +1,7 @@
 package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
+import com.sekwah.narutomod.abilities.jutsus.SixPathsModeAbility;
 import com.sekwah.narutomod.damagetypes.NarutoDamageTypes;
 import com.sekwah.narutomod.mixin.common.AbstractFurnaceAccessor;
 import net.minecraft.core.BlockPos;
@@ -15,7 +16,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -49,11 +49,11 @@ public class AmaterasuEvents {
     private static final String CASTER_TAG = "narutomod:amaterasu_caster";
 
     /** How long the black flame burns, in ticks. */
-    private static final int DURATION = 200;
+    private static final int DURATION = 20 * 60 * 10;
 
     /** How often it bites, and how hard. */
     private static final int DAMAGE_INTERVAL = 20;
-    private static final float BURN_DAMAGE = 3.0f;
+    private static final float BURN_DAMAGE = 4.0f;
 
     /** The bite that lands with the cast itself, so the technique is felt immediately. */
     private static final float IGNITION_DAMAGE = 6.0f;
@@ -82,6 +82,18 @@ public class AmaterasuEvents {
      * living, sensible one.
      */
     public static void ignite(ServerLevel level, LivingEntity target, Player caster) {
+        // Six Paths: a bearer with an orb to spare shrugs the black flame off instead of burning.
+        if (target instanceof Player player
+                && SixPathsModeAbility.isActive(player)
+                && SixPathsModeAbility.orbs(player) > 0) {
+            SixPathsModeAbility.spendOrb(player);
+            level.sendParticles(ParticleTypes.LARGE_SMOKE, target.getX(),
+                    target.getY() + target.getBbHeight() * 0.5d, target.getZ(),
+                    24, 0.45d, 0.45d, 0.45d, 0.02d);
+            level.playSound(null, target.getX(), target.getY(), target.getZ(),
+                    SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 1.2f, 1.0f);
+            return;
+        }
         CompoundTag data = target.getPersistentData();
         data.putLong(UNTIL_TAG, level.getGameTime() + DURATION);
         data.putString(CASTER_TAG, caster.getUUID().toString());
@@ -160,24 +172,20 @@ public class AmaterasuEvents {
     }
 
     /**
-     * Stakes the black flame's heat onto every furnace within {@code radius} of the victim. The
-     * furnaces then cook at ten times their speed for {@link #FURNACE_BOOST_TICKS}, and are kept
-     * lit so the boost has fuel to work with. Positions are remembered rather than block entities:
+     * Stakes the black flame's heat onto the single furnace under the caster's crosshair. That
+     * furnace then cooks at ten times its speed for {@link #FURNACE_BOOST_TICKS}, and is kept lit
+     * so the boost has fuel to work with. The position is remembered rather than the block entity:
      * a chunk may unload and come back inside the half minute.
      */
-    public static void heatFurnaces(ServerLevel level, Vec3 centre, double radius) {
-        Map<BlockPos, Long> boosts = FURNACE_BOOSTS.computeIfAbsent(level.dimension(), key -> new HashMap<>());
-        long until = level.getGameTime() + FURNACE_BOOST_TICKS;
-        BlockPos min = BlockPos.containing(centre.x - radius, centre.y - radius, centre.z - radius);
-        BlockPos max = BlockPos.containing(centre.x + radius, centre.y + radius, centre.z + radius);
-        for (BlockPos pos : BlockPos.betweenClosed(min, max)) {
-            if (!level.hasChunkAt(pos)) {
-                continue;
-            }
-            if (level.getBlockEntity(pos) instanceof AbstractFurnaceBlockEntity) {
-                boosts.put(pos.immutable(), until);
-            }
+    public static void heatFurnace(ServerLevel level, BlockPos pos) {
+        if (!level.hasChunkAt(pos)) {
+            return;
         }
+        if (!(level.getBlockEntity(pos) instanceof AbstractFurnaceBlockEntity)) {
+            return;
+        }
+        Map<BlockPos, Long> boosts = FURNACE_BOOSTS.computeIfAbsent(level.dimension(), key -> new HashMap<>());
+        boosts.put(pos.immutable(), level.getGameTime() + FURNACE_BOOST_TICKS);
     }
 
     /** Drives the boosted furnaces while their half minute lasts, and forgets them afterwards. */

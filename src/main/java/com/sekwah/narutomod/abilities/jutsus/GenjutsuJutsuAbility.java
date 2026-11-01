@@ -6,6 +6,7 @@ import com.sekwah.narutomod.abilities.jutsus.RinneganAbility;
 import com.sekwah.narutomod.abilities.jutsus.SharinganAbility;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.config.NarutoConfig;
+import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import com.sekwah.narutomod.events.GenjutsuEvents;
 import com.sekwah.narutomod.friends.Friends;
 import com.sekwah.narutomod.world.WorldEnvironment;
@@ -99,16 +100,21 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Channeled {
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
         boolean mass = this.masteryLevel(ninjaData) >= MASS_MASTERY;
         Mob target = findTarget(player);
-        Player playerTarget = NarutoConfig.genjutsuOnPlayers ? findPlayerTarget(player) : null;
+        // Null while the server refuses illusions on players, see findPlayerTarget.
+        Player playerTarget = findPlayerTarget(player);
         boolean opening = chargeAmount <= 0;
         boolean tap = chargeAmount < 0;
         // A tap needs something to take hold of; a held channel stays open even with nothing in
         // sight yet, so the caster can sweep the illusion across whatever enters their view later.
         if (tap && target == null && playerTarget == null
                 && !(mass && !findTargets(player, player.isShiftKeyDown() ? 1 : MAX_MASS_TARGETS).isEmpty())) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.genjutsu.notarget",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
-                    .withStyle(ChatFormatting.RED), true);
+            // A player under the gaze is refused by the config, not by the absence of a target, so
+            // say so instead of claiming there is nothing alive in front of the caster.
+            net.minecraft.network.chat.MutableComponent refusal = !NarutoConfig.genjutsuOnPlayers && aimedPlayer(player) != null
+                    ? Component.translatable("jutsu.fail.genjutsu.players_disabled")
+                    : Component.translatable("jutsu.fail.genjutsu.notarget",
+                            Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW));
+            player.displayClientMessage(refusal.withStyle(ChatFormatting.RED), true);
             return false;
         }
         LivingEntity activeTarget = playerTarget != null ? playerTarget : target;
@@ -177,16 +183,16 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Channeled {
                     SoundEvents.ILLUSIONER_CAST_SPELL, SoundSource.PLAYERS, 0.8f, 0.7f);
         }
         if (NarutoConfig.genjutsuOnPlayers) {
-            Player aimedPlayer = findPlayerTarget(player);
-            if (aimedPlayer != null && !Friends.areFriends(player, aimedPlayer)) {
-                GenjutsuEvents.apply(player, aimedPlayer, duration);
+            Player playerVictim = findPlayerTarget(player);
+            if (playerVictim != null) {
+                GenjutsuEvents.apply(player, playerVictim, duration);
                 player.displayClientMessage(Component.translatable("jutsu.genjutsu.cast",
-                        aimedPlayer.getDisplayName().copy().withStyle(ChatFormatting.LIGHT_PURPLE))
+                        playerVictim.getDisplayName().copy().withStyle(ChatFormatting.LIGHT_PURPLE))
                         .withStyle(ChatFormatting.DARK_PURPLE), true);
-                level.sendParticles(ParticleTypes.ENCHANT, aimedPlayer.getX(),
-                        aimedPlayer.getY() + aimedPlayer.getBbHeight(), aimedPlayer.getZ(),
+                level.sendParticles(ParticleTypes.ENCHANT, playerVictim.getX(),
+                        playerVictim.getY() + playerVictim.getBbHeight(), playerVictim.getZ(),
                         30, 0.5d, 0.4d, 0.5d, 0.4d);
-                level.playSound(null, aimedPlayer.getX(), aimedPlayer.getY(), aimedPlayer.getZ(),
+                level.playSound(null, playerVictim.getX(), playerVictim.getY(), playerVictim.getZ(),
                         SoundEvents.ILLUSIONER_CAST_SPELL, SoundSource.PLAYERS, 0.8f, 0.7f);
             }
         }
@@ -233,17 +239,23 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Channeled {
         // The full moon makes an illusion reach further; by day or on a new moon it is the plain range.
         double range = RANGE * (1.0d + MOON_RANGE_BONUS * WorldEnvironment.moonClarity(player));
         Entity lookedAt = lookedAtEntity(player, range);
-        if (lookedAt instanceof Mob mob && mob.isAlive()) {
+        // A ninja does not fool their own shadow clone: it is their own mind in duplicate.
+        if (lookedAt instanceof Mob mob && mob.isAlive() && !isOwnClone(player, mob)) {
             return mob;
         }
         return null;
     }
 
-    /** @return the player the ninja is looking at, or null when illusions on players are off or the look lands elsewhere. */
-    private Player findPlayerTarget(Player caster) {
-        if (!NarutoConfig.genjutsuOnPlayers) {
-            return null;
-        }
+    /** @return whether the mob is a shadow clone made by the caster. */
+    private static boolean isOwnClone(Player caster, Mob mob) {
+        return mob instanceof ShadowCloneEntity clone && clone.isOwnedBy(caster);
+    }
+
+    /**
+     * @return the player under the caster's gaze who could be a victim, whether or not the config
+     *         allows illusions on players.
+     */
+    private static Player aimedPlayer(Player caster) {
         double range = RANGE * (1.0d + MOON_RANGE_BONUS * WorldEnvironment.moonClarity(caster));
         Entity lookedAt = lookedAtEntity(caster, range);
         if (lookedAt instanceof Player other && other != caster
@@ -253,6 +265,11 @@ public class GenjutsuJutsuAbility extends Ability implements Ability.Channeled {
             return other;
         }
         return null;
+    }
+
+    /** @return the player to lay the illusion on, or null when illusions on players are off. */
+    private static Player findPlayerTarget(Player caster) {
+        return NarutoConfig.genjutsuOnPlayers ? aimedPlayer(caster) : null;
     }
 
     /**

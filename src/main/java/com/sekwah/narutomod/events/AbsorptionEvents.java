@@ -9,7 +9,6 @@ import com.sekwah.narutomod.damagetypes.NarutoDamageTypes;
 import com.sekwah.narutomod.entity.jutsuprojectile.FireballJutsuEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.RasenshurikenJutsuEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.WaterBulletJutsuEntity;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -30,10 +29,11 @@ import net.minecraftforge.fml.common.Mod;
 /**
  * The two halves of Momoshiki's absorption: catching a technique and handing it back.
  *
- * <p>Catching is done on the projectile impact: a thrown technique of the mod's that lands on a caster
- * holding the palm stance never reaches its own impact handler - it is cancelled, the projectile is
- * discarded and its nature is stored. That also means whatever the technique would have done (the
- * fireball's spread, the water bullet's splash, the disc's carry) simply does not happen.</p>
+ * <p>Catching happens in two places. A thrown technique of the mod's that lands on a caster holding
+ * the palm stance is swallowed on the projectile impact: it is cancelled, the projectile is discarded
+ * and its nature is stored. A technique that lands as damage (fire breath, Amaterasu, ...) is swallowed
+ * on the damage event instead, cancelling the hit. An explosion detonating near the caster is swallowed
+ * whole. In every case the palm is fed chakra for what it ate.</p>
  *
  * <p>Handing back is done on the damage event instead of in any single technique, so every technique
  * of the same nature benefits without a line of change in its own class: the first one to land spends
@@ -44,6 +44,13 @@ public class AbsorptionEvents {
 
     /** Extra damage per charge held, as a fraction of the hit's own damage. */
     private static final float DAMAGE_PER_CHARGE = 0.5f;
+
+    /** Chakra granted for swallowing a thrown projectile. */
+    private static final float CHAKRA_PER_PROJECTILE = 10.0f;
+    /** Chakra granted for swallowing an explosion. */
+    private static final float CHAKRA_PER_EXPLOSION = 25.0f;
+    /** Chakra granted for swallowing a technique hit. */
+    private static final float CHAKRA_PER_TECHNIQUE = 15.0f;
 
     /**
      * A thrown technique reaches the caster and is swallowed instead of landing. Runs before the
@@ -57,31 +64,65 @@ public class AbsorptionEvents {
         if (!(hit.getEntity() instanceof Player player) || player.level().isClientSide) {
             return;
         }
-        AbsorptionData.Nature nature = natureOf(event.getProjectile());
-        if (nature == null) {
+        Projectile projectile = event.getProjectile();
+        // Non-combat projectiles are never swallowed, even if something mapped them.
+        if (projectile instanceof net.minecraft.world.entity.projectile.ThrownEnderpearl
+                || projectile instanceof net.minecraft.world.entity.projectile.FishingHook
+                || projectile.getClass().getName().equals("net.minecraft.world.entity.projectile.EyeOfEnder")) {
             return;
         }
+        // Every thrown thing is chakra in flight, so a plain arrow is eaten too - it simply leaves no
+        // nature charge behind, only chakra.
+        AbsorptionData.Nature nature = natureOf(projectile);
         player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
             if (!MomoshikiAbsorptionAbility.isActive(ninjaData)) {
                 return;
             }
             event.setCanceled(true);
-            event.getProjectile().discard();
-            absorb(player, ninjaData, nature, event.getProjectile());
+            projectile.discard();
+            absorb(player, ninjaData, nature, projectile);
         });
     }
 
     /**
-     * The caster's own technique of a stored nature hands the borrowed chakra back: the charges are
-     * spent and the hit grows with them. The hand that absorbed it is the hand that pays for it, so
-     * only the caster's own damage is scaled - a reflected or shared hit is not.
+     * Two jobs, in order:
+     * <ol>
+     *     <li>If the hurt player is holding the palm open and the incoming damage is one of the mod's
+     *         techniques, swallow it: cancel the damage, store a charge of its nature and grant chakra.</li>
+     *     <li>Otherwise, if the caster of the hit is a player who has charges of that nature stored,
+     *         spend them all and scale the hit (the "handing back" half).</li>
+     * </ol>
      */
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onLivingHurt(LivingHurtEvent event) {
+        // 1. Swallow an incoming technique when the victim holds the palm open.
+        if (event.getEntity() instanceof Player victim && !victim.level().isClientSide) {
+            if (!event.isCanceled() && event.getAmount() > 0.0f) {
+                DamageSource source = event.getSource();
+                if (isModTechnique(source)) {
+                    AbsorptionData.Nature incomingNature = natureOf(source);
+                    victim.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
+                        if (!MomoshikiAbsorptionAbility.isActive(ninjaData)) {
+                            return;
+                        }
+                        event.setCanceled(true);
+                        if (incomingNature != null) {
+                            ninjaData.getAbsorptionData().add(incomingNature);
+                        }
+                        ninjaData.addChakra(CHAKRA_PER_TECHNIQUE);
+                        absorbTechnique(victim);
+                    });
+                }
+            }
+        }
+        if (event.isCanceled()) {
+            return;
+        }
+        // 2. Hand borrowed chakra back when the caster's own technique of that nature lands.
         if (!(event.getSource().getEntity() instanceof Player caster) || caster.level().isClientSide) {
             return;
         }
-        if (event.isCanceled() || event.getAmount() <= 0.0f) {
+        if (event.getAmount() <= 0.0f) {
             return;
         }
         AbsorptionData.Nature nature = natureOf(event.getSource());
@@ -116,6 +157,8 @@ public class AbsorptionEvents {
                 // Swallow the blast: nothing around the caster is touched.
                 event.getAffectedEntities().clear();
                 event.getAffectedBlocks().clear();
+                // The swallowed blast feeds the palm.
+                ninjaData.addChakra(CHAKRA_PER_EXPLOSION);
                 // Show the absorbed radius.
                 for (int i = 0; i < 32; i++) {
                     double angle = (Math.PI * 2.0d / 32.0d) * i;
@@ -133,8 +176,12 @@ public class AbsorptionEvents {
     /** Stores the technique and shows the palm eating it. */
     private static void absorb(Player player, INinjaData ninjaData, AbsorptionData.Nature nature,
                                Projectile projectile) {
-        // A full palm still eats the technique - it has simply run out of room to keep it.
-        ninjaData.getAbsorptionData().add(nature);
+        // A full palm still eats the technique - it has simply run out of room to keep it. A plain
+        // projectile has no nature to store and is eaten for its chakra alone.
+        if (nature != null) {
+            ninjaData.getAbsorptionData().add(nature);
+        }
+        ninjaData.addChakra(CHAKRA_PER_PROJECTILE);
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
@@ -142,6 +189,18 @@ public class AbsorptionEvents {
                 projectile.getX(), projectile.getY(), projectile.getZ(),
                 24, 0.3d, 0.3d, 0.3d, 0.35d);
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.2f, 0.7f);
+    }
+
+    /** Visual feedback for swallowing a technique hit directly. */
+    private static void absorbTechnique(Player victim) {
+        if (!(victim.level() instanceof ServerLevel level)) {
+            return;
+        }
+        level.sendParticles(ParticleTypes.ENCHANT,
+                victim.getX(), victim.getY() + victim.getBbHeight() * 0.5d, victim.getZ(),
+                24, 0.3d, 0.3d, 0.3d, 0.35d);
+        level.playSound(null, victim.getX(), victim.getY(), victim.getZ(),
                 SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.2f, 0.7f);
     }
 
@@ -169,6 +228,18 @@ public class AbsorptionEvents {
             return AbsorptionData.Nature.WIND;
         }
         return null;
+    }
+
+    /** Whether this damage source is one of the mod's techniques, i.e. swallowable by the palm. */
+    private static boolean isModTechnique(DamageSource source) {
+        return source.is(NarutoDamageTypes.FIREBALL)
+                || source.is(NarutoDamageTypes.FIRE_BREATH)
+                || source.is(NarutoDamageTypes.AMATERASU)
+                || source.is(NarutoDamageTypes.WATER_BULLET)
+                || source.is(NarutoDamageTypes.WIND_RELEASE)
+                || source.is(NarutoDamageTypes.CHIBAKU_TENSEI)
+                || source.is(NarutoDamageTypes.TAILED_BALL)
+                || source.is(NarutoDamageTypes.SENJUTSU);
     }
 
     /** Which nature a landed technique carries, by the damage type it was dealt with. */

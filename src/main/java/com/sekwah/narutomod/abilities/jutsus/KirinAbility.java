@@ -6,9 +6,7 @@ import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.util.ElementalStates;
-import com.sekwah.narutomod.util.Targeting;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -16,28 +14,24 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.Vec3;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Kirin: the sky itself answers the caster, but only in a thunderstorm.
  *
  * <p>This is deliberately not a bolt shape drawn by the mod - a real {@link LightningBolt} is put
- * down where the caster looks, so vanilla does everything a lightning strike does: it burns, it turns
- * a nearby creeper charged, it pulses a lightning rod (see {@code events/LightningEvents}) and it
- * hurts whatever is standing there. The technique only decides where the bolt lands and how it
- * treats soaked targets.</p>
+ * down on each enemy within range, so vanilla does everything a lightning strike does: it burns, it
+ * turns a nearby creeper charged, it pulses a lightning rod (see {@code events/LightningEvents}) and
+ * it hurts whatever is standing there. The technique only decides which enemies are struck and how
+ * it treats soaked targets.</p>
  *
- * <p>Water conducts. A wet creature struck by the bolt takes extra damage, and the charge runs on to
- * other wet creatures nearby, hop by hop, weakening as it goes. That makes the water breath and this
- * technique a real combination rather than two unrelated elements: soak a crowd, then call the
- * storm.</p>
+ * <p>Water conducts. A wet creature struck by the bolt takes extra damage. That makes the water
+ * breath and this technique a real combination rather than two unrelated elements: soak a crowd,
+ * then call the storm.</p>
+ *
+ * <p>The strike is an area-of-effect attack: one bolt is called down on every enemy within 30 blocks
+ * of the caster, with soaked targets taking an additional bonus.</p>
  */
 public class KirinAbility extends Ability implements Ability.Cooldown {
 
@@ -52,21 +46,11 @@ public class KirinAbility extends Ability implements Ability.Cooldown {
     /** Cooldown in ticks: half a minute. Mastery shortens it like any other technique. */
     private static final int COOLDOWN = 20 * 30;
 
-    /** How far the caster can aim the strike. */
-    private static final double RANGE = 48.0d;
-
-    /** How far from the landing point the strike counts as a direct hit. */
-    private static final double DIRECT_RADIUS = 3.0d;
-
-    /** How far the charge runs from a soaked creature to the next soaked one. */
-    private static final double CHAIN_RADIUS = 8.0d;
+    /** Radius of the area-of-effect: one bolt per enemy within this distance of the caster. */
+    private static final double AOE_RADIUS = 30.0d;
 
     /** Extra damage a soaked target takes on top of the vanilla bolt. */
     private static final float WET_BONUS_DAMAGE = 8.0f;
-
-    /** Damage of each hop in the chain, and how many hops the charge may take. */
-    private static final float CHAIN_DAMAGE = 4.0f;
-    private static final int CHAIN_HOPS = 2;
 
     private static final int CHAKRA_REGEN_DELAY = 20;
 
@@ -109,75 +93,28 @@ public class KirinAbility extends Ability implements Ability.Cooldown {
         if (!(player.level() instanceof ServerLevel level) || !level.isThundering()) {
             return;
         }
-        Vec3 strike = aimPoint(player);
-        LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
-        if (bolt == null) {
-            return;
-        }
-        bolt.moveTo(strike.x, strike.y, strike.z);
-        bolt.setCause(player instanceof net.minecraft.server.level.ServerPlayer serverPlayer
-                ? serverPlayer : null);
-        level.addFreshEntity(bolt);
+        Player caster = player;
         float mastery = Mastery.level(ninjaData, this);
         float damage = 30.0f + 70.0f * mastery;
-        conduct(level, player, strike, damage);
-    }
-
-    /** Where the bolt lands: the block under the crosshair, or a point along the line of sight. */
-    private static Vec3 aimPoint(Player player) {
-        BlockHitResult hit = Targeting.lookedAtBlock(player, RANGE);
-        if (hit != null) {
-            BlockPos pos = hit.getBlockPos();
-            return new Vec3(pos.getX() + 0.5d, pos.getY() + 1.0d, pos.getZ() + 0.5d);
-        }
-        return player.getEyePosition().add(player.getViewVector(1.0f).scale(RANGE));
-    }
-
-    /**
-     * Applies the wet part of the strike: the direct hit is stronger on a soaked creature, and the
-     * charge then runs to other soaked creatures nearby, weakening with every hop.
-     */
-    private static void conduct(ServerLevel level, Player caster, Vec3 strike, float damage) {
-        List<LivingEntity> direct = level.getEntitiesOfClass(LivingEntity.class,
-                new net.minecraft.world.phys.AABB(strike, strike).inflate(DIRECT_RADIUS),
-                target -> target.isAlive() && target != caster && !caster.isAlliedTo(target)
-                        && !Friends.areFriends(caster, target));
-        Set<Integer> visited = new HashSet<>();
-        Deque<LivingEntity> frontier = new ArrayDeque<>();
-        for (LivingEntity target : direct) {
-            target.hurt(level.damageSources().lightningBolt(), damage);
-            level.sendParticles(net.minecraft.core.particles.ParticleTypes.ELECTRIC_SPARK,
-                    target.getX(), target.getY() + target.getBbHeight() * 0.5d, target.getZ(),
-                    16, 0.4d, 0.4d, 0.4d, 0.05d);
-            visited.add(target.getId());
-            frontier.add(target);
-        }
-        float chainDamage = CHAIN_DAMAGE;
-        for (int hop = 0; hop < CHAIN_HOPS && !frontier.isEmpty(); hop++) {
-            int count = frontier.size();
-            for (int i = 0; i < count; i++) {
-                LivingEntity source = frontier.poll();
-                if (source == null) {
-                    continue;
-                }
-                List<LivingEntity> next = level.getEntitiesOfClass(LivingEntity.class,
-                        new net.minecraft.world.phys.AABB(source.position(), source.position())
-                                .inflate(CHAIN_RADIUS),
-                        target -> target.isAlive() && target != caster && !caster.isAlliedTo(target)
-                                && !Friends.areFriends(caster, target)
-                                && !visited.contains(target.getId()) && ElementalStates.isWet(target));
-                for (LivingEntity target : next) {
-                    if (!visited.add(target.getId())) {
-                        continue;
-                    }
-                    target.hurt(level.damageSources().lightningBolt(), chainDamage);
-                    level.sendParticles(net.minecraft.core.particles.ParticleTypes.ELECTRIC_SPARK,
-                            target.getX(), target.getY() + target.getBbHeight() * 0.5d, target.getZ(),
-                            10, 0.3d, 0.3d, 0.3d, 0.04d);
-                    frontier.add(target);
-                }
+        List<LivingEntity> enemies = level.getEntitiesOfClass(LivingEntity.class,
+                new net.minecraft.world.phys.AABB(caster.position(), caster.position()).inflate(AOE_RADIUS),
+                target -> target.isAlive() && target != player && target != caster
+                        && !caster.isAlliedTo(target) && !Friends.areFriends(caster, target)
+                        && !target.isSpectator()
+                        && !(target instanceof Player p && p.isCreative()));
+        for (LivingEntity target : enemies) {
+            LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
+            if (bolt == null) {
+                continue;
             }
-            chainDamage *= 0.5f;
+            bolt.moveTo(target.getX(), target.getY(), target.getZ());
+            bolt.setCause(player instanceof net.minecraft.server.level.ServerPlayer serverPlayer
+                    ? serverPlayer : null);
+            level.addFreshEntity(bolt);
+            target.hurt(level.damageSources().lightningBolt(), damage);
+            if (ElementalStates.isWet(target)) {
+                target.hurt(level.damageSources().lightningBolt(), WET_BONUS_DAMAGE);
+            }
         }
     }
 }

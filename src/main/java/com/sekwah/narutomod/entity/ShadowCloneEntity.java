@@ -41,6 +41,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -546,6 +547,17 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
             return;
         }
 
+        if (this.getPersistentData().getBoolean("narutomod:item_collector_clone")) {
+            // A collector clone stands still and vacuums dropped items into its caster's inventory.
+            if (this.tickCount % 15 == 0) {
+                this.collectNearbyItemsForOwner();
+            }
+            if (this.tickCount % 10 == 0 && this.level() instanceof ServerLevel serverLevel) {
+                serverLevel.sendParticles(ParticleTypes.END_ROD,
+                        this.getX(), this.getY() + 0.4d, this.getZ(), 4, 0.3d, 0.25d, 0.3d, 0.01d);
+            }
+        }
+
         if (this.isMeditating()) {
             // Keep the caster's link to this clone fresh, and its expiry honest, so a meditation
             // reaches as far as its mastery allows without anyone scanning the world for it.
@@ -804,6 +816,11 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         return this.entityData.get(DATA_MEDITATING);
     }
 
+    /** Sets how many ticks this clone still has before it pops on its own. */
+    public void setLifetime(int lifetime) {
+        this.lifetime = lifetime;
+    }
+
     public void setMeditating(boolean meditating) {
         this.entityData.set(DATA_MEDITATING, meditating);
     }
@@ -970,6 +987,53 @@ public class ShadowCloneEntity extends PathfinderMob implements RangedAttackMob 
         ItemStack leftover = this.depositInSupplyChest(stack);
         if (!leftover.isEmpty()) {
             this.bag.add(leftover);
+        }
+    }
+
+    /**
+     * Pulls dropped items in a short radius into the caster's own inventory. Used by the item
+     * collector clone: it stands still and vacuums the ground around it. Anything that will not fit
+     * is left where it lies.
+     *
+     * <p>Puts what fits into the caster's supply chest first, then their inventory; freshly dropped
+     * items are left alone until their pickup delay expires.</p>
+     */
+    private void collectNearbyItemsForOwner() {
+        Player owner = this.getOwner();
+        if (owner == null) {
+            return;
+        }
+        List<ItemEntity> nearby = this.level().getEntitiesOfClass(ItemEntity.class,
+                this.getBoundingBox().inflate(5.0d));
+        for (ItemEntity itemEntity : nearby) {
+            if (!itemEntity.isAlive() || itemEntity.getItem().isEmpty()) {
+                continue;
+            }
+            if (itemEntity.hasPickUpDelay()) {
+                continue;
+            }
+            ItemStack current = itemEntity.getItem();
+            int originalCount = current.getCount();
+            ItemStack leftover = this.depositInSupplyChest(current.copy());
+            if (!leftover.isEmpty()) {
+                owner.getInventory().add(leftover);
+            }
+            int remaining = leftover.isEmpty() ? 0 : leftover.getCount();
+            if (remaining >= originalCount) {
+                continue;
+            }
+            if (this.level() instanceof ServerLevel serverLevel) {
+                serverLevel.sendParticles(ParticleTypes.PORTAL,
+                        itemEntity.getX(), itemEntity.getY() + 0.2d, itemEntity.getZ(),
+                        3, 0.1d, 0.1d, 0.1d, 0.02d);
+            }
+            if (remaining <= 0) {
+                itemEntity.discard();
+            } else {
+                ItemStack leftoverStack = current.copy();
+                leftoverStack.setCount(remaining);
+                itemEntity.setItem(leftoverStack);
+            }
         }
     }
 

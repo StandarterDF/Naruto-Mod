@@ -1,6 +1,18 @@
 {
-  "parent": "item/handheld",
-  "textures": {
-    "layer0": "narutomod:items/weapons/shibuki"
+  "parent": "forge:item/default",
+  "loader": "forge:separate_transforms",
+  "base": {
+    "parent": "narutomod:item/shibuki_model"
+  },
+  "perspectives": {
+    "gui": {
+      "parent": "narutomod:item/shibuki_flat"
+    },
+    "ground": {
+      "parent": "narutomod:item/shibuki_flat"
+    },
+    "fixed": {
+      "parent": "narutomod:item/shibuki_flat"
+    }
   }
 }

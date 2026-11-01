@@ -7,14 +7,20 @@ import com.sekwah.narutomod.abilities.jutsus.KotoamatsukamiAbility;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.monster.warden.Warden;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+
+import java.util.UUID;
 
 /**
  * The three Sharingan techniques that write their effect on a body instead of finishing it there.
@@ -154,11 +160,11 @@ public final class SharinganIllusionEvents {
     }
 
     /**
-     * Kotoamatsukami: the belief ends the moment the caster proves it wrong with a blow.
+     * Kotoamatsukami: the belief is not broken by the caster's blows.
      *
-     * <p>Only the named caster breaks it. Anyone else may hit the creature all day and the belief
-     * that the caster is an ally stands, which is what makes the technique usable in a group fight
-     * rather than only in a corridor.</p>
+     * <p>Once planted, the creature treats the caster as a full ally for the whole duration, even
+     * if the caster strikes it. Only expired marks are cleaned up here; the illusion holds until
+     * {@link KotoamatsukamiAbility#UNTIL_TAG} runs out.</p>
      */
     private static void breakBelief(LivingHurtEvent event, CompoundTag data, long now) {
         if (!data.contains(KotoamatsukamiAbility.UNTIL_TAG)) {
@@ -169,25 +175,16 @@ public final class SharinganIllusionEvents {
             data.remove(KotoamatsukamiAbility.SOURCE_TAG);
             return;
         }
-        Entity attacker = event.getSource().getEntity();
-        if (attacker == null) {
-            return;
-        }
-        if (data.getString(KotoamatsukamiAbility.SOURCE_TAG).equals(attacker.getStringUUID())) {
-            data.remove(KotoamatsukamiAbility.UNTIL_TAG);
-            data.remove(KotoamatsukamiAbility.SOURCE_TAG);
-        }
     }
 
     /**
      * The creature refuses to take the caster for an enemy while the belief lasts.
      *
-     * <p>The target is cleared to nothing rather than replaced: this is not a decoy and the mob is
-     * not being sent after somebody else, it simply does not see the caster as worth attacking. Its
-     * other targets are left alone, so a creature that was already fighting somebody keeps fighting
-     * them - the illusion is about one person only.</p>
+     * <p>The target change is cancelled outright and the new target cleared, so neither the AI nor
+     * a queued goal can commit to the caster. Other targets are left alone: the illusion is about
+     * one person only.</p>
      */
-    @SubscribeEvent
+    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.HIGHEST)
     public static void onTargetChange(LivingChangeTargetEvent event) {
         if (!(event.getEntity() instanceof Mob mob) || mob.level().isClientSide) {
             return;
@@ -197,12 +194,132 @@ public final class SharinganIllusionEvents {
             return;
         }
         CompoundTag data = mob.getPersistentData();
-        if (data.getLong(KotoamatsukamiAbility.UNTIL_TAG) <= mob.level().getGameTime()) {
+        long now = mob.level().getGameTime();
+        if (data.getLong(KotoamatsukamiAbility.UNTIL_TAG) <= now) {
             return;
         }
         if (data.getString(KotoamatsukamiAbility.SOURCE_TAG).equals(chosen.getStringUUID())) {
+            event.setCanceled(true);
             event.setNewTarget(null);
         }
+    }
+
+    @SubscribeEvent
+    public static void onLivingAttack(LivingAttackEvent event) {
+        if (event.isCanceled() || event.getAmount() <= 0.0f) {
+            return;
+        }
+        LivingEntity victim = event.getEntity();
+        if (victim.level().isClientSide) {
+            return;
+        }
+        Entity attackerEntity = event.getSource().getEntity();
+        if (!(attackerEntity instanceof Mob attacker)) {
+            return;
+        }
+        CompoundTag data = attacker.getPersistentData();
+        long now = attacker.level().getGameTime();
+        if (data.getLong(KotoamatsukamiAbility.UNTIL_TAG) <= now) {
+            return;
+        }
+        if (data.getString(KotoamatsukamiAbility.SOURCE_TAG).equals(victim.getStringUUID())) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onKotoLivingTick(LivingEvent.LivingTickEvent event) {
+        LivingEntity entity = event.getEntity();
+        if (entity.level().isClientSide || !(entity instanceof Mob mob)) {
+            return;
+        }
+        CompoundTag data = mob.getPersistentData();
+        long now = mob.level().getGameTime();
+        if (data.getLong(KotoamatsukamiAbility.UNTIL_TAG) <= now) {
+            return;
+        }
+        String source = data.getString(KotoamatsukamiAbility.SOURCE_TAG);
+        if (source.isEmpty()) {
+            return;
+        }
+        UUID sourceUuid;
+        try {
+            sourceUuid = UUID.fromString(source);
+        } catch (IllegalArgumentException ignored) {
+            return;
+        }
+        if (!(mob.level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        Player caster = serverLevel.getServer().getPlayerList().getPlayer(sourceUuid);
+        if (caster == null) {
+            return;
+        }
+        if (mob.getLastHurtByMob() == caster) {
+            mob.setLastHurtByMob(null);
+        }
+        LivingEntity currentTarget = mob.getTarget();
+        if (currentTarget != null && sourceUuid.equals(currentTarget.getUUID())) {
+            mob.setTarget(null);
+        }
+        if (mob instanceof Warden warden) {
+            warden.clearAnger(caster);
+        }
+        if (mob instanceof net.minecraft.world.entity.NeutralMob neutral
+                && caster.getUUID().equals(neutral.getPersistentAngerTarget())) {
+            neutral.stopBeingAngry();
+        }
+        // The charmed body fights for the caster: every second it is pointed at the nearest enemy
+        // of the caster, and if it wanders too far it follows its new master.
+        if (mob.tickCount % 20 == 0) {
+            LivingEntity enemy = nearestEnemyOf(caster, mob);
+            if (enemy != null) {
+                mob.setTarget(enemy);
+            }
+        }
+        if (mob.distanceToSqr(caster) > 100.0d) {
+            mob.getNavigation().moveTo(caster, 1.0d);
+        }
+        if (mob.tickCount % 10 == 0) {
+            serverLevel.sendParticles(net.minecraft.core.particles.ParticleTypes.WITCH,
+                    mob.getX(), mob.getY() + mob.getBbHeight() + 0.3d, mob.getZ(),
+                    3, 0.3d, 0.2d, 0.3d, 0.0d);
+        }
+    }
+
+    /** Nearest body the caster is fighting, skipping the caster, their friends and other charmed mobs. */
+    private static LivingEntity nearestEnemyOf(Player caster, Mob charmed) {
+        LivingEntity best = null;
+        double bestDistance = 16.0d * 16.0d;
+        for (LivingEntity candidate : caster.level().getEntitiesOfClass(LivingEntity.class,
+                caster.getBoundingBox().inflate(16.0d))) {
+            if (candidate == caster || candidate == charmed || !candidate.isAlive()
+                    || candidate.isSpectator()) {
+                continue;
+            }
+            if (candidate instanceof Player other && (other.isCreative() || other.isSpectator())) {
+                continue;
+            }
+            if (candidate.isAlliedTo(caster) || com.sekwah.narutomod.friends.Friends.areFriends(caster, candidate)) {
+                continue;
+            }
+            if (candidate instanceof com.sekwah.narutomod.entity.ShadowCloneEntity clone
+                    && clone.isOwnedBy(caster)) {
+                continue;
+            }
+            // Do not order one charmed body to attack another.
+            if (candidate instanceof Mob otherMob
+                    && otherMob.getPersistentData().getLong(KotoamatsukamiAbility.UNTIL_TAG)
+                    > caster.level().getGameTime()) {
+                continue;
+            }
+            double distance = candidate.distanceToSqr(caster);
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                best = candidate;
+            }
+        }
+        return best;
     }
 
     /** The loop's four seconds end: the body gets its own behaviour back, but only what was taken. */

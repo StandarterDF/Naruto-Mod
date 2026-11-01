@@ -6,6 +6,7 @@ import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import com.sekwah.narutomod.damagetypes.NarutoDamageTypes;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -20,25 +21,31 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+
+import java.util.UUID;
 
 /**
  * The eight inner gates, opened one at a time and sealed again with the same bind.
  *
- * <p>Every tap opens the next gate, and by the time all eight are open the caster is fast, strong
- * and hard to hurt in a way nothing else in the mod can match. Keeping the last key of the combo
- * held instead seals every gate the caster still can, which is why the two halves share one
- * technique rather than two combos to remember: the bind only ever does the thing the caster means
- * by how long they press it.</p>
+ * <p>Every tap opens the next gate, adding speed, damage reduction and a melee damage bonus that scales with
+ * mastery and the number of open gates (7 gates on full mastery give +24 attack damage, enough to
+ * one-shot a zombie or skeleton). Keeping the last key of the combo held instead seals every gate the
+ * caster still can, which is why the two halves share one technique rather than two combos to remember:
+ * the bind only ever does the thing the caster means by how long they press it.</p>
  *
- * <p>The catch is that the body is not built for it: the gates grind the caster down the whole time
- * they are open, and the drain grows with the square of how many are open, so two gates are
- * something a caster can keep up for ten minutes while the last two are a countdown.</p>
+ * <p>The catch is that the body is not built for it: the gates drain health while open, from nothing
+ * on gates 1-2 up to 0.90 HP/s on the eighth. The drain is reduced by mastery on gates 3-7 and is
+ * fixed and lethal on gate 8 (~22 s from a full health bar). Healing is allowed on gates 1-5, forbidden
+ * on gates 6-8. The eighth gate is slightly weaker overall than Six Paths Mode (no flight, no regen,
+ * no spheres) but carries a very high physical damage bonus and a deadly timer.</p>
  *
  * <p><b>The eighth gate cannot be sealed.</b> Up to the seventh the caster can still close them with
- * a hold, but once the last gate is open no hold shuts it and eight gates drain a full health bar in
- * a little over half a minute. Death is the only way out, which is the point: the eighth gate is
- * meant to be spent, not used. The gates fall away with death and are gone when the caster comes
- * back.</p>
+ * a hold, but once the last gate is open no hold shuts it and death is the only way out, which is the
+ * point: the eighth gate is meant to be spent, not used. The gates fall away with death and are gone
+ * when the caster comes back.</p>
  *
  * <p>The effects are kept alive from {@code PlayerEvents}, not here, since they have to be refreshed
  * every tick while the gates are open.</p>
@@ -62,6 +69,10 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
     private static final float CHAKRA_PER_GATE = 25.0f;
     private static final float STAMINA_PER_GATE = 15.0f;
 
+    /** Stamina every landed blow costs on top of the opening price, growing with the open gates. */
+    private static final float STAMINA_PER_HIT_BASE = 1.0f;
+    private static final float STAMINA_PER_HIT_PER_GATE = 0.5f;
+
     /** How often, in ticks, the open gates take their toll on the caster. */
     private static final int DRAIN_INTERVAL = 20;
 
@@ -72,18 +83,10 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
      */
     private static final int RELEASE_HOLD_TICKS = 10;
 
-    /**
-     * Health lost each tick of drain, multiplied by the square of the open gates.
-     *
-     * <p>Anchored on two numbers rather than picked out of the air: the second gate costs a tenth of
-     * a heart a second, so a full health bar lasts ten minutes, and the eighth costs a bit over half
-     * a heart a second, which is a little over half a minute to live. Everything between follows
-     * from the square, so the early gates are a slow tax and the last two are a countdown.</p>
-     *
-     * <p>Fractions are not thrown away, they are carried: the caster is charged whole points of
-     * health so that the health bar actually moves, and the remainder waits for the next tick.</p>
-     */
-    private static final float DRAIN_COEFFICIENT = 0.00833f;
+    /** Fixed UUID/name of the transient attack-damage modifier the open gates apply. */
+    public static final UUID GATE_ATTACK_DAMAGE_MODIFIER_UUID =
+            UUID.fromString("3a7c1e2f-9b4d-4c5a-8f1e-2b3c4d5e6f7a");
+    public static final String GATE_ATTACK_DAMAGE_MODIFIER_NAME = "narutomod:eight_gates";
 
     @Override
     public ActivationType activationType() {
@@ -175,10 +178,8 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
         if (gates == 2) {
             ninjaData.addStamina(ninjaData.getMaxStamina() * 0.25f);
         }
-        // Gate of Pain: muscle tissue tears on opening.
-        if (gates == 4) {
-            player.hurt(player.damageSources().magic(), 1.0f);
-        }
+        // Gate of Pain: muscle tissue tears on opening - but the one-shot damage on opening is
+        // dropped; the ongoing drain carries the price instead.
         // Dojutsu cannot burn alongside the gates: the eye is closed for the duration.
         if (gates == 1) {
             for (ResourceLocation eyeId : new ResourceLocation[] {
@@ -201,8 +202,8 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
         level.playSound(null, player, SoundEvents.RAVAGER_ROAR, SoundSource.PLAYERS,
                 0.7f, 0.6f + gates * 0.05f);
         player.displayClientMessage(Component.translatable("jutsu.eight_gates.open",
-                Component.literal(String.valueOf(gates)).withStyle(ChatFormatting.GOLD))
-                .withStyle(ChatFormatting.RED), true);
+                gateName(gates), Component.literal(String.valueOf(gates)).withStyle(ChatFormatting.GOLD))
+                .withStyle(ChatFormatting.RED), false);
     }
 
     /**
@@ -257,6 +258,83 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
         float level = Mastery.level(ninjaData, NarutoAbilities.EIGHT_GATES.getId());
         int gates = 1 + (int) (level * (MAX_GATES - 1));
         return Math.min(MAX_GATES, Math.max(1, gates));
+    }
+
+    /**
+     * The lore name of a gate, for the chat line and the HUD: 1 Opening, 2 Healing, 3 Life,
+     * 4 Pain, 5 Limit, 6 View, 7 Wonder, 8 Death.
+     */
+    public static Component gateName(int gate) {
+        int clamped = Math.min(MAX_GATES, Math.max(1, gate));
+        return Component.translatable("narutomod:gate." + clamped);
+    }
+
+    /** Bonus added to the caster's melee attack damage while the gates are open. */
+    public static float meleeBonus(INinjaData ninjaData) {
+        int gates = ninjaData.getGateCount();
+        if (gates <= 0) {
+            return 0.0f;
+        }
+        float base;
+        switch (gates) {
+            case 1: base = 2.0f; break;
+            case 2: base = 3.0f; break;
+            case 3: base = 5.0f; break;
+            case 4: base = 7.0f; break;
+            case 5: base = 10.0f; break;
+            case 6: base = 14.0f; break;
+            case 7: base = 24.0f; break;
+            default: base = 32.0f; break;
+        }
+        float mastery = Mastery.level(ninjaData, NarutoAbilities.EIGHT_GATES.getId());
+        return base * (0.55f + 0.45f * mastery);
+    }
+
+    /** Damage multiplier for the gates' finishing techniques. */
+    public static float techniqueScale(INinjaData ninjaData) {
+        int gates = ninjaData.getGateCount();
+        if (gates < 1) {
+            gates = 1;
+        }
+        float mastery = Mastery.level(ninjaData, NarutoAbilities.EIGHT_GATES.getId());
+        return (0.65f + 0.35f * mastery) * (1.0f + 0.10f * (gates - 1));
+    }
+
+    /** Health drained per second for the given number of open gates and mastery. */
+    private static float drainPerSecond(int gates, float mastery) {
+        switch (gates) {
+            case 1:
+            case 2:
+                return 0.0f;
+            case 3:
+                return 0.05f * (1.0f - mastery);
+            case 4:
+                return 0.15f * (1.0f - 0.9f * mastery);
+            case 5:
+                return 0.30f * (1.0f - 0.9f * mastery);
+            case 6:
+                return 0.55f * (1.0f - 0.7f * mastery);
+            case 7:
+                return 0.80f * (1.0f - 0.5f * mastery);
+            default:
+                return 0.90f;
+        }
+    }
+
+    /**
+     * Extra damage multiplier applied to incoming damage while the gates are open, on top of the
+     * vanilla {@code DAMAGE_RESISTANCE} effect. Gates 1-5 rely on the effect alone (20/40/60/80%
+     * reduction); on gates 6-8 the effect is already capped at 80%, so the remainder is cut further
+     * here, for a combined reduction of 90% / 92% / 95% respectively.
+     *
+     * @param gates number of open gates (0 or less yields no reduction)
+     * @return factor to multiply incoming damage by
+     */
+    public static float extraDamageFactor(int gates) {
+        if (gates <= 5) return 1.0f;
+        if (gates == 6) return 0.5f;
+        if (gates == 7) return 0.4f;
+        return 0.25f;
     }
 
     /** How hard the shockwave throws the struck body, per open gate (push grows with the gate). */
@@ -323,8 +401,24 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
-        int gates = Math.max(1, player.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA)
-                .resolve().map(com.sekwah.narutomod.capabilities.INinjaData::getGateCount).orElse(1));
+        INinjaData ninjaData = player.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA)
+                .resolve().orElse(null);
+        if (ninjaData == null) {
+            return;
+        }
+        int gates = Math.max(1, ninjaData.getGateCount());
+
+        // Every blow is paid for in stamina. Running dry slams the gates shut instead of letting the
+        // caster keep hitting for free, and the blow itself is then dropped.
+        float cost = STAMINA_PER_HIT_BASE + STAMINA_PER_HIT_PER_GATE * gates;
+        if (ninjaData.getStamina() < cost) {
+            close(player, ninjaData);
+            player.displayClientMessage(Component.translatable("jutsu.eight_gates.out_of_stamina")
+                    .withStyle(ChatFormatting.RED), true);
+            return;
+        }
+        ninjaData.useStamina(cost, 20);
+
         double push = knockbackFor(gates);
         double lift = liftFor(gates);
         int particles = burstParticlesFor(gates);
@@ -388,12 +482,33 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
         }
 
         int shortDuration = DRAIN_INTERVAL + 20;
-        // Speed and strength rise with every gate; the defensive ones only every other gate, so the
-        // last few gates are about hitting harder rather than becoming untouchable.
+        // Speed rises with every gate; strength is carried by a transient attribute modifier
+        // (ATTACK_DAMAGE) applied below, so technique damage is not doubled by it. Damage from
+        // outside is soaked through vanilla DAMAGE_RESISTANCE, growing with the open gates:
+        // 1 gate = I (20%), 2 = II (40%), 3 = III (60%), 4-5 = IV (80%). On gates 6-8 the effect
+        // is already capped at 80%, so an extra multiplier (see extraDamageFactor) cuts the
+        // remainder further: 6 = 0.5 (90% total), 7 = 0.4 (92% total), 8 = 0.25 (95% total).
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, shortDuration, gates - 1, true, false));
-        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, shortDuration, (gates - 1) / 2, true, false));
-        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, shortDuration, (gates - 1) / 3, true, false));
         player.addEffect(new MobEffectInstance(MobEffects.JUMP, shortDuration, Math.min(gates - 1, 3), true, false));
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, shortDuration, Math.min(3, gates - 1), true, false));
+
+        // Constant melee bonus for as long as the gates are open: goes only onto melee attacks, never
+        // onto technique damage. Applied only when the value actually changes, so the attribute is not
+        // dirtied (and re-synced) every tick.
+        if (player.getAttribute(Attributes.ATTACK_DAMAGE) != null) {
+            AttributeInstance attr = player.getAttribute(Attributes.ATTACK_DAMAGE);
+            float bonus = meleeBonus(ninjaData);
+            float applied = player.getPersistentData().getFloat("narutomod:eight_gates_attack_bonus");
+            if (Math.abs(applied - bonus) > 0.01f) {
+                attr.removeModifier(GATE_ATTACK_DAMAGE_MODIFIER_UUID);
+                if (bonus > 0.0f) {
+                    attr.addTransientModifier(new AttributeModifier(
+                            GATE_ATTACK_DAMAGE_MODIFIER_UUID, GATE_ATTACK_DAMAGE_MODIFIER_NAME,
+                            bonus, AttributeModifier.Operation.ADDITION));
+                }
+                player.getPersistentData().putFloat("narutomod:eight_gates_attack_bonus", bonus);
+            }
+        }
 
         // Visual progression: a small dust burst every 40 ticks once the skin starts to redden, coloured
         // by the gate tier. Gates 1-2 are invisible by canon - only the user notices.
@@ -429,12 +544,17 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
         if (player.tickCount % 20 == 0) {
             ninjaData.addStamina(2.0f);
         }
-        if (player.tickCount % DRAIN_INTERVAL == 0 && gates >= 4) {
-            // Gates 1-3 cost nothing in health: the early gates are training, not a death sentence.
+        if (player.tickCount % DRAIN_INTERVAL == 0) {
+            float mastery = Mastery.level(ninjaData, NarutoAbilities.EIGHT_GATES.getId());
+            float rate = drainPerSecond(gates, mastery);
+            if (rate <= 0.0f) {
+                ninjaData.setGateBacklashCarry(0.0f);
+                return;
+            }
             // Charged in whole points of health, because the health bar is drawn in half hearts and a
             // drain that always arrived as a fraction of one would never visibly move it. The unpaid
             // remainder is carried into the next tick, so the long run cost is unchanged.
-            float owed = ninjaData.getGateBacklashCarry() + DRAIN_COEFFICIENT * gates * gates;
+            float owed = ninjaData.getGateBacklashCarry() + rate;
             int points = (int) owed;
             ninjaData.setGateBacklashCarry(owed - points);
             if (points > 0) {
@@ -449,7 +569,7 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
      * <p>This is deliberately not damage in the usual sense: it goes straight onto the health bar
      * instead of through the damage pipeline, because the backlash is the caster's own body giving
      * out and nothing may soak it up. Armour, resistance, absorption, a chakra shield, the gates'
-     * own resistance buff and even creative mode all leave it alone, which is the whole point of an
+     * own damage reduction and even creative mode all leave it alone, which is the whole point of an
      * irreversible technique. The feedback vanilla would have given is replayed by hand, and dying
      * is done by hand too so that no last-second save can cancel it.</p>
      */
@@ -480,7 +600,35 @@ public class EightGatesAbility extends Ability implements Ability.Channeled {
         ninjaData.setGateBacklashCarry(0.0f);
         player.removeEffect(MobEffects.MOVEMENT_SPEED);
         player.removeEffect(MobEffects.DAMAGE_BOOST);
-        player.removeEffect(MobEffects.DAMAGE_RESISTANCE);
         player.removeEffect(MobEffects.JUMP);
+        player.removeEffect(MobEffects.DAMAGE_RESISTANCE);
+        if (player.getAttribute(Attributes.ATTACK_DAMAGE) != null) {
+            player.getAttribute(Attributes.ATTACK_DAMAGE).removeModifier(GATE_ATTACK_DAMAGE_MODIFIER_UUID);
+        }
+        player.getPersistentData().remove("narutomod:eight_gates_attack_bonus");
+    }
+
+    /** The ground takes the landing: a ring of force that throws everything nearby and hurts it. */
+    public static void landingShockwave(Player player, int gates) {
+        if (gates < 5 || !(player.level() instanceof ServerLevel level)) {
+            return;
+        }
+        double radius = 1.5d + 0.5d * (gates - 4);       // 5 gates -> 2.0, 8 gates -> 3.5
+        float damage = 3.0f + 2.0f * (gates - 4);        // 5 gates -> 5, 8 gates -> 11
+        for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(radius))) {
+            if (e == player || !e.isAlive() || e.isSpectator() || com.sekwah.narutomod.friends.Friends.isOwnSide(player, e)) {
+                continue;
+            }
+            e.hurt(player.damageSources().playerAttack(player), damage);
+            Vec3 away = e.position().subtract(player.position());
+            if (away.lengthSqr() < 1.0e-4d) {
+                away = new Vec3(0.0d, 0.0d, 1.0d);
+            }
+            away = away.normalize().scale(0.6d * (gates - 3));
+            e.push(away.x, 0.45d, away.z);
+            e.hurtMarked = true;
+        }
+        level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, player.getX(), player.getY() + 0.1d, player.getZ(), 1, 0.0d, 0.0d, 0.0d, 0.0d);
+        level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.6f + 0.05f * gates, 1.0f);
     }
 }

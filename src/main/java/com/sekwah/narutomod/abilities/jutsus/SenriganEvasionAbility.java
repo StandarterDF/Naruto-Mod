@@ -12,8 +12,9 @@ import net.minecraft.world.entity.player.Player;
 
 /**
  * Senrigan Evasion: while the Senrigan is open, projectiles pass through the caster without harming
- * them and melee damage is halved. Every hit that would have landed and every tick of the stance
- * costs chakra; when the chakra runs out the stance ends and the next hit lands in full.
+ * them, explosions are fully absorbed, and melee damage is halved. Falling and fire are not evaded at
+ * all. Every hit that would have landed and every tick of the stance costs chakra; when the chakra
+ * runs out the stance ends and the next hit lands in full.
  */
 public class SenriganEvasionAbility extends Ability implements Ability.Toggled, Ability.HandleEnded {
 

@@ -19,6 +19,12 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * Instant leap in the look direction. Normally refused unless the caster is on the ground; the
+ * restriction is lifted by six open gates and by Six Paths mode, both of which carry the leap
+ * through the air. The impulse is applied server-side in {@link #performServer} via
+ * {@code PlayerUtil.setVelocity}, so it takes effect whether or not the caster is on the ground.
+ */
 public class LeapAbility extends Ability {
     @Override
     public ActivationType activationType() {
@@ -42,9 +48,11 @@ public class LeapAbility extends Ability {
 
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
-        // Six open gates lift the restriction that the leap may only be taken from the ground.
-        boolean sixGates = ninjaData.getGateCount() >= 6;
-        if(!sixGates && !player.onGround()) {
+        // Six open gates and Six Paths Mode lift the restriction that the leap may only be taken
+        // from the ground: in either state the caster may launch themselves even while airborne.
+        boolean exemptFromGround = ninjaData.getGateCount() >= 6
+                || SixPathsModeAbility.isActive(player);
+        if(!exemptFromGround && !player.onGround()) {
             player.displayClientMessage(Component.translatable("jutsu.fail.notonground", Component.translatable("jutsu.leap").withStyle(ChatFormatting.YELLOW)), true);
             return false;
         }

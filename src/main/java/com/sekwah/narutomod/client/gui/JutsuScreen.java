@@ -256,29 +256,42 @@ public class JutsuScreen extends Screen {
      * {@link #CATEGORIES} to override this.
      */
     private static final Map<SkillBranch, Category> BRANCHES = Map.ofEntries(
+            // Basics: the physical pools and the mobility board.
             Map.entry(SkillBranch.CORE, Category.BASICS),
             Map.entry(SkillBranch.ATHLETICS, Category.BASICS),
-            Map.entry(SkillBranch.TAIJUTSU, Category.TAIJUTSU),
-            Map.entry(SkillBranch.KENJUTSU, Category.TAIJUTSU),
-            Map.entry(SkillBranch.GATES, Category.GATES),
+
+            // Space and defence.
+            Map.entry(SkillBranch.SPACE, Category.SPACE),
             Map.entry(SkillBranch.MEDICINE, Category.DEFENCE),
 
+            // Body: the sage board also teaches the tailed-beast techniques.
+            Map.entry(SkillBranch.SAGE, Category.BODY),
+
+            // Clones.
+            Map.entry(SkillBranch.CLONES, Category.CLONES),
+
+            // The five natures share one board.
             Map.entry(SkillBranch.FIRE, Category.ELEMENTAL),
             Map.entry(SkillBranch.WATER, Category.ELEMENTAL),
             Map.entry(SkillBranch.EARTH, Category.ELEMENTAL),
             Map.entry(SkillBranch.WIND, Category.ELEMENTAL),
             Map.entry(SkillBranch.WOOD, Category.ELEMENTAL),
 
-            Map.entry(SkillBranch.CLONES, Category.CLONES),
-            Map.entry(SkillBranch.SPACE, Category.SPACE),
-            Map.entry(SkillBranch.MIND, Category.ILLUSION),
-            Map.entry(SkillBranch.SAGE, Category.BODY),
+            // Hand-to-hand and blades share one group, then the gates.
+            Map.entry(SkillBranch.TAIJUTSU, Category.TAIJUTSU),
+            Map.entry(SkillBranch.KENJUTSU, Category.TAIJUTSU),
+            Map.entry(SkillBranch.GATES, Category.GATES),
 
+            // Illusions and transformations.
+            Map.entry(SkillBranch.MIND, Category.ILLUSION),
+
+            // The dojutsu, in the order the menu lists them: Sharingan, Rinnegan, Byakugan,
+            // Jougan, Senrigan, then the Six Paths built on the Rinnegan.
             Map.entry(SkillBranch.SHARINGAN, Category.SHARINGAN),
+            Map.entry(SkillBranch.RINNEGAN, Category.RINNEGAN),
             Map.entry(SkillBranch.BYAKUGAN, Category.BYAKUGAN),
             Map.entry(SkillBranch.JOUGAN, Category.JOUGAN),
             Map.entry(SkillBranch.SENRIGAN, Category.SENRIGAN),
-            Map.entry(SkillBranch.RINNEGAN, Category.RINNEGAN),
             Map.entry(SkillBranch.SIX_PATHS, Category.SIX_PATHS)
     );
 

@@ -1,6 +1,18 @@
 {
-  "parent": "item/handheld",
-  "textures": {
-    "layer0": "narutomod:items/weapons/hiramekarei"
+  "parent": "forge:item/default",
+  "loader": "forge:separate_transforms",
+  "base": {
+    "parent": "narutomod:item/hiramekarei_model"
+  },
+  "perspectives": {
+    "gui": {
+      "parent": "narutomod:item/hiramekarei_flat"
+    },
+    "ground": {
+      "parent": "narutomod:item/hiramekarei_flat"
+    },
+    "fixed": {
+      "parent": "narutomod:item/hiramekarei_flat"
+    }
   }
 }

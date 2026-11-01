@@ -6,8 +6,13 @@ import com.sekwah.narutomod.config.NarutoConfig;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraftforge.common.loot.LootModifier;
@@ -96,7 +101,18 @@ public class AddLootModifier extends LootModifier {
         }
         int count = this.min >= this.max ? this.min : this.min + random.nextInt(this.max - this.min + 1);
         if (count > 0) {
-            generatedLoot.add(new ItemStack(picked.item(), count));
+            ItemStack stack;
+            if (picked.enchantment().isPresent()) {
+                Enchantment ench = BuiltInRegistries.ENCHANTMENT.get(picked.enchantment().get());
+                if (ench != null) {
+                    stack = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(ench, picked.level()));
+                } else {
+                    stack = new ItemStack(picked.item(), count);
+                }
+            } else {
+                stack = new ItemStack(picked.item(), count);
+            }
+            generatedLoot.add(stack);
         }
         return generatedLoot;
     }
@@ -131,10 +147,12 @@ public class AddLootModifier extends LootModifier {
     }
 
     /** One item and how likely it is to be the one picked when the roll happens. */
-    public record WeightedItem(Item item, int weight) {
+    public record WeightedItem(Item item, int weight, java.util.Optional<ResourceLocation> enchantment, int level) {
         public static final Codec<WeightedItem> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 ForgeRegistries.ITEMS.getCodec().fieldOf("item").forGetter(WeightedItem::item),
-                Codec.intRange(0, 1000).optionalFieldOf("weight", 1).forGetter(WeightedItem::weight)
+                Codec.intRange(0, 1000).optionalFieldOf("weight", 1).forGetter(WeightedItem::weight),
+                ResourceLocation.CODEC.optionalFieldOf("enchantment").forGetter(WeightedItem::enchantment),
+                Codec.INT.optionalFieldOf("level", 1).forGetter(WeightedItem::level)
         ).apply(instance, WeightedItem::new));
     }
 }

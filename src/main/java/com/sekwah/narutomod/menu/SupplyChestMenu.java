@@ -183,13 +183,9 @@ public class SupplyChestMenu extends AbstractContainerMenu {
         if (this.player.level().isClientSide) {
             this.container.ensureSize(total);
         }
-        this.syncedTotalSize = Math.max(this.syncedTotalSize, total);
-        if (this.clientAmounts.length < total) {
-            this.clientAmounts = new int[total];
-        } else {
-            Arrays.fill(this.clientAmounts, 0);
-        }
-        System.arraycopy(amounts, 0, this.clientAmounts, 0, Math.min(amounts.length, this.clientAmounts.length));
+        this.syncedTotalSize = total;
+        this.clientAmounts = new int[total];
+        System.arraycopy(amounts, 0, this.clientAmounts, 0, Math.min(amounts.length, total));
     }
 
     public int getScrollRow() {
@@ -298,6 +294,9 @@ public class SupplyChestMenu extends AbstractContainerMenu {
     @Override
     public void removed(Player player) {
         super.removed(player);
+        if (!player.level().isClientSide) {
+            this.container.compactAndSort();
+        }
         this.container.stopOpen(player);
     }
 
@@ -327,6 +326,10 @@ public class SupplyChestMenu extends AbstractContainerMenu {
                 this.setCarried(carried);
             }
         }
+        if (!this.player.level().isClientSide) {
+            this.container.compactAndSort();
+            this.broadcastChanges();
+        }
     }
 
     /** Shift-click from a chest slot: tips the whole amount out into the caster's own inventory. */
@@ -337,7 +340,8 @@ public class SupplyChestMenu extends AbstractContainerMenu {
             return;
         }
         ItemStack template = this.container.getItem(real);
-        int remaining = amount;
+        int remaining = Math.min(amount, CARRY_LIMIT);
+        int moved = 0;
         for (int i = this.windowSize; i < this.slots.size() && remaining > 0; i++) {
             Slot slot = this.slots.get(i);
             ItemStack inv = slot.getItem();
@@ -352,6 +356,7 @@ public class SupplyChestMenu extends AbstractContainerMenu {
             inv.grow(move);
             slot.setChanged();
             remaining -= move;
+            moved += move;
         }
         for (int i = this.windowSize; i < this.slots.size() && remaining > 0; i++) {
             Slot slot = this.slots.get(i);
@@ -363,9 +368,14 @@ public class SupplyChestMenu extends AbstractContainerMenu {
             placed.setCount(move);
             slot.set(placed);
             remaining -= move;
+            moved += move;
         }
-        if (remaining != amount) {
-            this.container.addAmount(real, remaining - amount);
+        if (moved > 0) {
+            this.container.addAmount(real, -moved);
+        }
+        if (!this.player.level().isClientSide && moved > 0) {
+            this.container.compactAndSort();
+            this.broadcastChanges();
         }
     }
 
@@ -381,6 +391,10 @@ public class SupplyChestMenu extends AbstractContainerMenu {
         stack.setCount(drop);
         player.drop(stack, false);
         this.container.addAmount(real, -drop);
+        if (!this.player.level().isClientSide) {
+            this.container.compactAndSort();
+            this.broadcastChanges();
+        }
     }
 
     /** Shuffles a stack between the caster's main inventory and their hotbar, the usual shift-click. */

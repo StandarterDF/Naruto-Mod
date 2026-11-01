@@ -1,5 +1,6 @@
 package com.sekwah.narutomod.network.c2s;
 
+import com.sekwah.narutomod.abilities.AbilityUnlocks;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
 import com.sekwah.narutomod.skills.Skill;
@@ -59,6 +60,18 @@ public class ServerUnlockSkillPacket {
                         player.displayClientMessage(Component.translatable("naruto.skill.fail.prereq",
                                 Component.translatable(skill.nameKey())).withStyle(ChatFormatting.RED), true);
                         return;
+                    }
+                    if (skill.isUnlock()) {
+                        String base = AbilityUnlocks.baseRequirement(skill.unlock());
+                        if (base != null && !SkillTree.hasUnlock(ninjaData.getSkillData().getUnlocked(), base)) {
+                            Skill baseSkill = SkillTree.byUnlock(base);
+                            Component baseName = baseSkill != null
+                                    ? Component.translatable(baseSkill.nameKey())
+                                    : Component.literal(base);
+                            player.displayClientMessage(Component.translatable("naruto.skill.fail.base_required",
+                                    baseName).withStyle(ChatFormatting.RED), true);
+                            return;
+                        }
                     }
                     if (skill.requiresScroll() && !ninjaData.getSkillData().hasScroll(skill.scrollKnowledge())) {
                         player.displayClientMessage(Component.translatable("naruto.skill.fail.scroll",

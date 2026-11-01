@@ -6,6 +6,7 @@ import com.sekwah.narutomod.abilities.NarutoAbilities;
 import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.config.NarutoConfig;
+import com.sekwah.narutomod.registries.NarutoRegistries;
 import com.sekwah.narutomod.skills.SkillEffect;
 import com.sekwah.narutomod.skills.SkillTree;
 import net.minecraft.ChatFormatting;
@@ -27,7 +28,9 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.ForgeMod;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -64,6 +67,12 @@ public class SageModeAbility extends Ability {
     /** Nature energy needed to open the mode at all. */
     public static final float MIN_SENIN = 50.0f;
 
+    /** Where the frog-transformation counter lives on the player. */
+    private static final String FROG_COUNT_TAG = "narutomod:sage_frog_count";
+
+    /** How many times a dry pool turns the sage into a frog before the mode can be released. */
+    private static final int FROG_TRANSFORMATIONS = 3;
+
     /** Nature energy burned every tick the mode is up at full mastery (a full 100 is a bit over four minutes). */
     private static final float DRAIN_PER_TICK = 0.02f;
 
@@ -82,6 +91,9 @@ public class SageModeAbility extends Ability {
     /** Chakra the mode feeds its caster every tick, from a trickle at the start to a steady flow. */
     private static final float CHAKRA_PER_TICK_MIN = 0.15f;
     private static final float CHAKRA_PER_TICK_MAX = 0.5f;
+
+    /** Stamina the mode gives back every second, five times the base trickle. */
+    private static final float STAMINA_REGEN_PER_SECOND = 2.0f;
 
     /** How long the effects are handed out for; refreshed every tick, so this is just a hold time. */
     private static final int EFFECT_DURATION = 200;
@@ -127,9 +139,9 @@ public class SageModeAbility extends Ability {
     /** How long the perception glow lasts; refreshed every {@link #SENSE_INTERVAL}. */
     private static final int SENSE_DURATION = 40;
 
-    /** Base perception radius, wider once the mode is nearly mastered. */
-    private static final double SENSE_RADIUS = 24.0d;
-    private static final double SENSE_RADIUS_MASTER = 32.0d;
+    /** Perception radius: deliberately short, so the sage's sense is not a second Byakugan. */
+    private static final double SENSE_RADIUS = 15.0d;
+    private static final double SENSE_RADIUS_MASTER = 15.0d;
 
     /** Mastery at which the perception widens to its full reach. */
     private static final float SENSE_UP_AT = 0.85f;
@@ -178,8 +190,15 @@ public class SageModeAbility extends Ability {
             return false;
         }
         if (ninjaData.isSageMode()) {
-            // The mode is let go the same way it is opened. There is nothing to pay for putting it
-            // down, so the recast always goes through and performServer closes it.
+            // The first three times nature energy runs dry the body turns into a frog on its own.
+            // Until that has happened three times the mode cannot be released by hand: the sage has
+            // not learned to let go of it yet.
+            if (player.getPersistentData().getInt(FROG_COUNT_TAG) < FROG_TRANSFORMATIONS) {
+                player.displayClientMessage(Component.translatable("jutsu.fail.sage.cannot_exit")
+                        .withStyle(ChatFormatting.RED), true);
+                return false;
+            }
+            // After the third transformation the mode is let go the same way it is opened.
             return true;
         }
         if (ninjaData.getSeninMana() < entryThreshold(ninjaData)) {
@@ -203,6 +222,13 @@ public class SageModeAbility extends Ability {
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
         if (ninjaData.isSageMode()) {
+            // Same guard as handleCost: a menu toggle must not slip past the first three frog
+            // transformations either.
+            if (player.getPersistentData().getInt(FROG_COUNT_TAG) < FROG_TRANSFORMATIONS) {
+                player.displayClientMessage(Component.translatable("jutsu.fail.sage.cannot_exit")
+                        .withStyle(ChatFormatting.RED), true);
+                return;
+            }
             end(player, ninjaData);
             return;
         }
@@ -230,6 +256,32 @@ public class SageModeAbility extends Ability {
         ninjaData.setSageMode(false);
         clearPerks(player);
         player.displayClientMessage(Component.translatable("jutsu.sage.end").withStyle(ChatFormatting.YELLOW), true);
+    }
+
+    /**
+     * Drops every stance the caster is holding in one sweep. A body that has just turned into a frog
+     * cannot keep a single one of them up - no dojutsu, no flight, no shell, no open gate - so the
+     * whole toggle set is walked on a copy: ending one stance may end another, and walking the live
+     * set while it shrinks would throw. The endings go through {@link Ability.HandleEnded} rather
+     * than a bare set removal, so everything a stance borrowed (flight, spheres, buffs, modifiers)
+     * is handed back properly instead of being left on the player.
+     */
+    private static void stripAllModes(Player player, INinjaData ninjaData) {
+        Set<ResourceLocation> active = new HashSet<>(ninjaData.getToggleAbilityData().getAbilitiesHashSet());
+        for (ResourceLocation id : active) {
+            // A stance already closed by one of the endings above is skipped, so no ending runs
+            // twice on the same ability.
+            if (!ninjaData.getToggleAbilityData().getAbilitiesHashSet().contains(id)) {
+                continue;
+            }
+            Ability ability = NarutoRegistries.ABILITIES.getValue(id);
+            if (ability != null) {
+                ninjaData.getToggleAbilityData().removeAbilityEnded(player, ninjaData, ability);
+            } else {
+                // Gone from the registry: there is nothing to end, so the stale id is just dropped.
+                ninjaData.getToggleAbilityData().removeAbility(id);
+            }
+        }
     }
 
     /**
@@ -271,9 +323,16 @@ public class SageModeAbility extends Ability {
             ninjaData.setSeninMana(0.0f);
             // The first three times a sage's nature energy runs dry, the body reverts to a frog
             // for a minute - the price of drawing on the toads' power without mastering it.
-            int frogCount = player.getPersistentData().getInt("narutomod:sage_frog_count");
-            if (frogCount < 3) {
-                player.getPersistentData().putInt("narutomod:sage_frog_count", frogCount + 1);
+            int frogCount = player.getPersistentData().getInt(FROG_COUNT_TAG);
+            if (frogCount < FROG_TRANSFORMATIONS) {
+                player.getPersistentData().putInt(FROG_COUNT_TAG, frogCount + 1);
+                // The frog takes the body over, and a frog holds nothing: every stance is closed
+                // first, then both pools are emptied. The stances have to go before end() below,
+                // which is what turns the mode itself off, so a mode that cannot be held alongside
+                // the toad does not survive in the toggle set.
+                stripAllModes(player, ninjaData);
+                ninjaData.setChakra(0.0f);
+                ninjaData.setSeninMana(0.0f);
                 ninjaData.setHengeTarget("");
                 ninjaData.setHengeEntityType("minecraft:frog");
                 ninjaData.setHengeName("Frog");
@@ -287,6 +346,9 @@ public class SageModeAbility extends Ability {
         applyPerks(player, mastery);
         if (NarutoConfig.sageBuffsEnabled) {
             applyBody(player, ninjaData, mastery);
+            if (player.tickCount % 20 == 0) {
+                ninjaData.addStamina(STAMINA_REGEN_PER_SECOND);
+            }
         }
         if (NarutoConfig.sageKataEnabled) {
             applyReach(player);
@@ -327,13 +389,11 @@ public class SageModeAbility extends Ability {
             }
         }
 
-        // Senjutsu perception: hostile monsters glow through walls. Standing rooted doubles the
-        // reach of the feeling, which is what makes holding ground a decision rather than a habit.
+        // Senjutsu perception: hostile monsters glow through walls, but only in a short fifteen-block
+        // feeling. It deliberately does not grow with mastery or standing still, so it stays a close
+        // sense rather than a second Byakugan.
         if (player.tickCount % SENSE_INTERVAL == 0 && player.level() instanceof ServerLevel level) {
             double radius = mastery >= SENSE_UP_AT ? SENSE_RADIUS_MASTER : SENSE_RADIUS;
-            if (stillTicks(player) >= STILL_TICKS) {
-                radius *= 2.0d;
-            }
             List<Mob> felt = level.getEntitiesOfClass(Mob.class,
                     player.getBoundingBox().inflate(radius),
                     mob -> mob.isAlive()

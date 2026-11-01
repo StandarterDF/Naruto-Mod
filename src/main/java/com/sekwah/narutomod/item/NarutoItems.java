@@ -4,13 +4,20 @@ import com.sekwah.narutomod.item.armor.NarutoArmorItem;
 import com.sekwah.narutomod.item.armor.NarutoArmorMaterial;
 import com.sekwah.narutomod.item.weapons.ExplosiveKunaiItem;
 import com.sekwah.narutomod.item.AsuraMissileItem;
+import com.sekwah.narutomod.item.AkimichiPillItem;
 import com.sekwah.narutomod.item.HidanScytheItem;
+import com.sekwah.narutomod.item.weapons.HiramekareiItem;
+import com.sekwah.narutomod.item.weapons.KabutowariItem;
 import com.sekwah.narutomod.item.weapons.KunaiItem;
+import com.sekwah.narutomod.item.weapons.MinatoKunaiItem;
 import com.sekwah.narutomod.item.weapons.SenbonItem;
 import com.sekwah.narutomod.item.weapons.ShurikenItem;
 import com.sekwah.narutomod.item.weapons.BoneBladeItem;
+import com.sekwah.narutomod.item.weapons.NuibariItem;
 import com.sekwah.narutomod.item.weapons.BoneMultitoolItem;
+import com.sekwah.narutomod.item.weapons.KibaItem;
 import com.sekwah.narutomod.item.weapons.SamehadaItem;
+import com.sekwah.narutomod.item.weapons.ShibukiItem;
 import com.sekwah.narutomod.item.weapons.TechniqueSwordItem;
 import com.sekwah.narutomod.item.StatScrollItem;
 import com.sekwah.narutomod.sounds.NarutoSounds;
@@ -23,6 +30,9 @@ import net.minecraft.world.item.*;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraftforge.registries.RegistryObject;
 
 import static com.sekwah.narutomod.NarutoMod.MOD_ID;
@@ -46,6 +56,9 @@ public class NarutoItems {
 
     public static final RegistryObject<Item> EXPLOSIVE_KUNAI = ITEMS.register("explosive_kunai", ()
             -> new ExplosiveKunaiItem(new Item.Properties().stacksTo(16)));
+
+    public static final RegistryObject<Item> MINATO_KUNAI = ITEMS.register("minato_kunai", ()
+            -> new MinatoKunaiItem(new Item.Properties().stacksTo(1)));
 
     public static final RegistryObject<Item> SHURIKEN = ITEMS.register("shuriken", ()
             -> new ShurikenItem(new Item.Properties()));
@@ -83,6 +96,10 @@ public class NarutoItems {
     /** Training weights: heavier steps and a heavier stamina bill, for the body that wants the work. */
     public static final RegistryObject<Item> TRAINING_WEIGHTS = ITEMS.register("training_weights",
             () -> new TrainingWeightsItem(new Item.Properties().stacksTo(2)));
+
+    /** Toneri's scarf: a keepsake that hardens the wearer and quickens passive nature-energy gathering. */
+    public static final RegistryObject<Item> TONERI_SCARF = ITEMS.register("toneri_scarf",
+            () -> new ToneriScarfItem(new Item.Properties().stacksTo(1)));
 
     /**
      * The material the better recipes are built from: a crystal that can be charged with chakra.
@@ -186,6 +203,22 @@ public class NarutoItems {
                     .food(new FoodProperties.Builder().nutrition(6).saturationMod(0.6f).build())));
 
     /**
+     * The three Akimichi clan pills: spinach (green), curry (yellow) and chili (red).
+     */
+    public static final RegistryObject<Item> SPINACH_PILL = ITEMS.register("spinach_pill",
+            () -> new AkimichiPillItem(AkimichiPillItem.PillType.SPINACH,
+                    new Item.Properties().stacksTo(16)
+                            .food(new FoodProperties.Builder().nutrition(1).saturationMod(0.1f).fast().alwaysEat().build())));
+    public static final RegistryObject<Item> CURRY_PILL = ITEMS.register("curry_pill",
+            () -> new AkimichiPillItem(AkimichiPillItem.PillType.CURRY,
+                    new Item.Properties().stacksTo(16)
+                            .food(new FoodProperties.Builder().nutrition(1).saturationMod(0.1f).fast().alwaysEat().build())));
+    public static final RegistryObject<Item> CHILI_PILL = ITEMS.register("chili_pill",
+            () -> new AkimichiPillItem(AkimichiPillItem.PillType.CHILI,
+                    new Item.Properties().stacksTo(16)
+                            .food(new FoodProperties.Builder().nutrition(1).saturationMod(0.1f).fast().alwaysEat().build())));
+
+    /**
      * Ichiraku's finest. A proper meal rather than a snack: more than a full hunger bar's worth in
      * one bowl, and enough saturation to keep the caster topped up for a while afterwards.
      */
@@ -257,18 +290,83 @@ public class NarutoItems {
      * points. See {@link JutsuScrollItem} and {@code Skill#requiresScroll()}.
      */
     public static final RegistryObject<Item> SCROLL_RASENGAN = createScroll("rasengan");
-    public static final RegistryObject<Item> SCROLL_RASENSHURIKEN = createScroll("rasenshuriken");
-    public static final RegistryObject<Item> SCROLL_EIGHT_GATES = createScroll("eight_gates");
-    public static final RegistryObject<Item> SCROLL_KAMUI = createScroll("kamui");
-    public static final RegistryObject<Item> SCROLL_SAGE_MODE = createScroll("sage_mode");
-    public static final RegistryObject<Item> SCROLL_KIRIN = createScroll("kirin");
-    public static final RegistryObject<Item> SCROLL_EARTH_WALL = createScroll("earth_wall");
-    public static final RegistryObject<Item> SCROLL_RINNEGAN = createScroll("rinnegan");
-    public static final RegistryObject<Item> SCROLL_CHIBAKU_TENSEI = createScroll("chibaku_tensei");
-    public static final RegistryObject<Item> SCROLL_SHARINGAN = createScroll("sharingan");
+    /** The shuriken is the Rasengan thrown: the tree already asks for it, so the scroll does too. */
+    public static final RegistryObject<Item> SCROLL_RASENSHURIKEN = createScroll("rasenshuriken", "rasengan");
+    /**
+     * The gates scroll is the whole discipline in one copy: a duplicate opens one of the three gate
+     * techniques, and each of them can also be found on a scroll of its own.
+     */
+    public static final RegistryObject<Item> SCROLL_EIGHT_GATES = createScroll("eight_gates", null,
+            "gate_peacock", "gate_tiger", "gate_elephant");
+    public static final RegistryObject<Item> SCROLL_GATE_PEACOCK = createScroll("gate_peacock", "eight_gates");
+    public static final RegistryObject<Item> SCROLL_GATE_TIGER = createScroll("gate_tiger", "eight_gates");
+    public static final RegistryObject<Item> SCROLL_GATE_ELEPHANT = createScroll("gate_elephant", "eight_gates");
+    /** Kamui is a Sharingan art: the scroll will not be read without the eye. */
+    public static final RegistryObject<Item> SCROLL_KAMUI = createScroll("kamui", "sharingan");
+    public static final RegistryObject<Item> SCROLL_KAMUI_PHASING = createScroll("kamui_phasing", "sharingan");
+    public static final RegistryObject<Item> SCROLL_AMATERASU = createScroll("amaterasu", "sharingan");
+    public static final RegistryObject<Item> SCROLL_KAGUTSUCHI = createScroll("kagutsuchi", "sharingan");
+    public static final RegistryObject<Item> SCROLL_SUSANOO = createScroll("susanoo", "sharingan");
+    public static final RegistryObject<Item> SCROLL_TSUKUYOMI = createScroll("tsukuyomi", "sharingan");
+    public static final RegistryObject<Item> SCROLL_IZANAGI = createScroll("izanagi", "sharingan");
+    public static final RegistryObject<Item> SCROLL_IZANAMI = createScroll("izanami", "sharingan");
+    /**
+     * Sage Mode grows out of the gathering technique, and a duplicate reveals one of the sealed
+     * body arts of the same branch - each of them is scroll-gated without a scroll of its own.
+     */
+    public static final RegistryObject<Item> SCROLL_SAGE_MODE = createScroll("sage_mode", "senjutsu_charging",
+            "curse_seal_two", "seal_vessel", "perfect_cloak", "tailed_cloak", "tailed_ball",
+            "divided_cloak", "seal_break");
+    /**
+     * Kirin is a lightning technique: {@code AbilityUnlocks} already refuses to cast it without the
+     * lightning nature, so the scroll asks for that same node instead of burning itself on a caster
+     * who cannot use the art anyway.
+     */
+    public static final RegistryObject<Item> SCROLL_KIRIN = createScroll("kirin", "lightning_mode");
+    /**
+     * The Rinnegan is the Sharingan's next form ({@code AbilityUnlocks} spells out the Sharingan
+     * requirement). Chibaku Tensei has a scroll of its own, so a duplicate only gives mastery.
+     */
+    public static final RegistryObject<Item> SCROLL_RINNEGAN = createScroll("rinnegan", "sharingan");
+    /** Chibaku Tensei only makes sense to a caster who already carries the Rinnegan. */
+    public static final RegistryObject<Item> SCROLL_CHIBAKU_TENSEI = createScroll("chibaku_tensei", "rinnegan");
+    /**
+     * A duplicate Sharingan scroll reveals one of the eye's deeper arts, each of which also has a
+     * scroll of its own.
+     */
+    public static final RegistryObject<Item> SCROLL_SHARINGAN = createScroll("sharingan", null,
+            "kamui", "kamui_phasing", "amaterasu", "kagutsuchi", "susanoo", "tsukuyomi", "izanagi",
+            "izanami", "kirin");
     public static final RegistryObject<Item> SCROLL_BYAKUGAN = createScroll("byakugan");
     public static final RegistryObject<Item> SCROLL_JOUGAN = createScroll("jougan");
-    public static final RegistryObject<Item> SCROLL_SIX_PATHS_MODE = createScroll("six_paths_mode");
+    public static final RegistryObject<Item> SCROLL_SENRIGAN = createScroll("senrigan", null,
+            "senrigan_sight", "senrigan_flight", "senrigan_evasion", "senrigan_guidance");
+    public static final RegistryObject<Item> SCROLL_SENRIGAN_SIGHT = createScroll("senrigan_sight", "senrigan");
+    public static final RegistryObject<Item> SCROLL_SENRIGAN_FLIGHT = createScroll("senrigan_flight", "senrigan");
+    public static final RegistryObject<Item> SCROLL_SENRIGAN_EVASION = createScroll("senrigan_evasion", "senrigan");
+    public static final RegistryObject<Item> SCROLL_SENRIGAN_GUIDANCE = createScroll("senrigan_guidance", "senrigan");
+    public static final RegistryObject<Item> SCROLL_KOTOAMATSUKAMI = createScroll("kotoamatsukami", "sharingan");
+    /**
+     * Six Paths Mode needs an open Rinnegan; Chibaku Tensei is on its own scroll, so a duplicate
+     * only gives mastery.
+     */
+    public static final RegistryObject<Item> SCROLL_SIX_PATHS_MODE = createScroll("six_paths_mode", "rinnegan");
+    /** The clone art is mastered once the plain clone is known. */
+    public static final RegistryObject<Item> SCROLL_MULTI_SHADOW_CLONE = createScroll("multi_shadow_clone", "shadow_clone");
+    /** The second stage of the curse seal grows out of the first. */
+    public static final RegistryObject<Item> SCROLL_CURSE_SEAL_TWO = createScroll("curse_seal_two", "curse_seal_one");
+    /**
+     * The body arts of the sealed branches: each has a scroll of its own, and a duplicate reveals
+     * one of the others.
+     */
+    public static final RegistryObject<Item> SCROLL_SEAL_VESSEL = createScroll("seal_vessel", "perfect_cloak",
+            "seal_break");
+    public static final RegistryObject<Item> SCROLL_SEAL_BREAK = createScroll("seal_break", "seal_vessel");
+    public static final RegistryObject<Item> SCROLL_PERFECT_CLOAK = createScroll("perfect_cloak", "tailed_cloak");
+    public static final RegistryObject<Item> SCROLL_TAILED_CLOAK = createScroll("tailed_cloak", "chakra_cloak",
+            "tailed_ball", "divided_cloak");
+    public static final RegistryObject<Item> SCROLL_TAILED_BALL = createScroll("tailed_ball", "tailed_cloak");
+    public static final RegistryObject<Item> SCROLL_DIVIDED_CLOAK = createScroll("divided_cloak", "tailed_cloak");
 
     // Stat scrolls: permanent passive bonuses from exploring the world.
     public static final RegistryObject<Item> SCROLL_CHAKRA = ITEMS.register("scroll_chakra",
@@ -318,19 +416,30 @@ public class NarutoItems {
     public static final RegistryObject<Item> BONE_BLADE = ITEMS.register("bone_blade",
             () -> new BoneBladeItem(new Item.Properties().stacksTo(1)));
 
+    /** Nuibari: a thin needle blade that threads victims together and fires reinforced needles. */
+    public static final RegistryObject<Item> NUIBARI = ITEMS.register("nuibari",
+            () -> new NuibariItem(new Item.Properties().stacksTo(1)));
+
     /** The bone multitool grown by the Bone Tools technique: one implement that digs, fights,
      * tills, strips and flattens, with a short life of its own. */
     public static final RegistryObject<Item> BONE_MULTITOOL = ITEMS.register("bone_multitool",
             () -> new BoneMultitoolItem(NinjaTier.KATANA));
-    /** Hiramekarei: right-click shoulders the hammer for ten seconds of heavier blows. */
+    /** Hiramekarei: a chakra-storing blade whose right-click releases a light hammer. */
     public static final RegistryObject<Item> HIRAMEKAREI = ITEMS.register("hiramekarei",
-            () -> new TechniqueSwordItem(NinjaTier.KATANA, 5, -2.6F, new Item.Properties().stacksTo(1),
-                    0.75f, 20, 20 * 4, TechniqueSwordItem.Art.HIRAMEKAREI));
+            () -> new HiramekareiItem(NinjaTier.KATANA, 5, -2.6F, new Item.Properties().stacksTo(1)));
 
-    /** Shibuki: right-click sets off the blast scroll; sneak to dig a short tunnel instead. */
+    /** Shibuki: blast sword with an endless scroll of explosive tags. */
     public static final RegistryObject<Item> SHIBUKI = ITEMS.register("shibuki",
-            () -> new TechniqueSwordItem(NinjaTier.KATANA, 4, -2.4F, new Item.Properties().stacksTo(1),
-                    0.5f, 20, 20 * 4, TechniqueSwordItem.Art.SHIBUKI));
+            () -> new ShibukiItem(NinjaTier.KATANA, 4, -2.4F, new Item.Properties().stacksTo(1),
+                    0.5f, 20, 20 * 4, 3));
+
+    /** Kiba: twin lightning blades that strike with thunder in a storm and keep their wearer quick. */
+    public static final RegistryObject<Item> KIBA = ITEMS.register("kiba",
+            () -> new KibaItem(new Item.Properties().stacksTo(1)));
+
+    /** Kabutowari: a hammer-axe that shatters any guard, ignoring shields and most armour. */
+    public static final RegistryObject<Item> KABUTOWARI = ITEMS.register("kabutowari",
+            () -> new KabutowariItem(new Item.Properties().stacksTo(1)));
 
     /** A bottle of rice wine: the price of the Drunken Fist. */
     public static final RegistryObject<Item> SAKE = ITEMS.register("sake",
@@ -339,9 +448,24 @@ public class NarutoItems {
     // Ninja Masks
 
     private static RegistryObject<Item> createScroll(String knowledge) {
+        return createScroll(knowledge, null);
+    }
+
+    /**
+     * A scroll for one technique, optionally tied to the mode it belongs to.
+     *
+     * @param base id of the mode or dojutsu the scroll needs before it can be read, or {@code null}
+     * @param pool techniques a duplicate copy of a base scroll may teach, in order of preference
+     */
+    private static RegistryObject<Item> createScroll(String knowledge, String base, String... pool) {
+        List<ResourceLocation> poolIds = new ArrayList<>();
+        for (String id : pool) {
+            poolIds.add(new ResourceLocation(MOD_ID, id));
+        }
+        ResourceLocation baseId = base == null ? null : new ResourceLocation(MOD_ID, base);
         return ITEMS.register("scroll_" + knowledge, () -> new JutsuScrollItem(
                 new Item.Properties().stacksTo(1).rarity(Rarity.RARE),
-                new ResourceLocation(MOD_ID, knowledge)));
+                new ResourceLocation(MOD_ID, knowledge), baseId, poolIds));
     }
 
     /**

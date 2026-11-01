@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "entries": [
+    "narutomod:scrolls_tier1",
+    "narutomod:scrolls_tier2",
+    "narutomod:scrolls_tier3",
+    "narutomod:scrolls_end",
+    "narutomod:scrolls_boss_warden",
+    "narutomod:scrolls_boss_dragon",
+    "narutomod:scrolls_boss_wither",
+    "narutomod:scrolls_boss_guardian",
+    "narutomod:scrolls_fishing",
+    "narutomod:archaeology_common",
+    "narutomod:archaeology_rare",
+    "narutomod:notes",
+    "narutomod:goods",
+    "narutomod:relics",
+    "narutomod:barter",
+    "narutomod:armor_books"
+  ]
+}

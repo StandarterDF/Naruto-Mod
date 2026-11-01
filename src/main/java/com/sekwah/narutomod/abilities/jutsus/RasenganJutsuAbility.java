@@ -67,9 +67,13 @@ public class RasenganJutsuAbility extends Ability implements Ability.Channeled {
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
         if (!player.getMainHandItem().isEmpty()) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.palm_block.weapon",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
-                    .withStyle(ChatFormatting.RED), true);
+            // handleCost runs on every tick of the channel: report the occupied hand once, on the
+            // first tick, instead of flashing the same action bar line every tick.
+            if (chargeAmount <= 0) {
+                player.displayClientMessage(Component.translatable("jutsu.fail.item_in_main_hand",
+                        Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                        .withStyle(ChatFormatting.RED), true);
+            }
             return false;
         }
         float cost = this.masteryCost(ninjaData, CHAKRA_PER_TICK);
@@ -104,6 +108,14 @@ public class RasenganJutsuAbility extends Ability implements Ability.Channeled {
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
         if (!(player.level() instanceof ServerLevel level)) {
+            return;
+        }
+        // A channel that slipped past handleCost (for example a stale client packet) must still not
+        // fire with an occupied main hand.
+        if (!player.getMainHandItem().isEmpty()) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.item_in_main_hand",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
             return;
         }
         // A tap that never charged: nothing to throw.

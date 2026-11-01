@@ -100,12 +100,12 @@ public final class RaidEvents {
     private static Item pickCaptainScroll(Player player) {
         int roll = player.getRandom().nextInt(10);
         if (roll < 6) {
-            return NarutoItems.SCROLL_EARTH_WALL.get();
-        }
-        if (roll < 9) {
             return NarutoItems.SCROLL_RASENGAN.get();
         }
-        return NarutoItems.SCROLL_KIRIN.get();
+        if (roll < 9) {
+            return NarutoItems.SCROLL_KIRIN.get();
+        }
+        return NarutoItems.SCROLL_RASENSHURIKEN.get();
     }
 
     private static Item pickVictoryScroll(Player player) {

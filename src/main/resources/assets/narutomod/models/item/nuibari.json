@@ -1,0 +1,18 @@
+{
+  "parent": "forge:item/default",
+  "loader": "forge:separate_transforms",
+  "base": {
+    "parent": "narutomod:item/nuibari_model"
+  },
+  "perspectives": {
+    "gui": {
+      "parent": "narutomod:item/nuibari_flat"
+    },
+    "ground": {
+      "parent": "narutomod:item/nuibari_flat"
+    },
+    "fixed": {
+      "parent": "narutomod:item/nuibari_flat"
+    }
+  }
+}

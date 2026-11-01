@@ -1,6 +1,7 @@
 package com.sekwah.narutomod.events;
 
 import com.sekwah.narutomod.NarutoMod;
+import com.sekwah.narutomod.config.NarutoConfig;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -83,6 +84,11 @@ public class GenjutsuEvents {
 
     /** Puts a player under the illusion. Only meaningful when the server allows it. */
     public static void apply(Player caster, Player victim, int duration) {
+        // Server-wide switch: a caller that slipped past the ability's own check must not turn the
+        // illusion on in a world that has refused it.
+        if (!NarutoConfig.genjutsuOnPlayers) {
+            return;
+        }
         if (victim.getTags().contains("narutomod:genjutsu_resistant")) {
             return;
         }

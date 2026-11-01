@@ -1,6 +1,18 @@
 {
-  "parent": "narutomod:item/kunai",
-  "textures": {
-    "layer0": "narutomod:items/weapons/shuriken"
+  "parent": "forge:item/default",
+  "loader": "forge:separate_transforms",
+  "base": {
+    "parent": "narutomod:item/shuriken_model"
+  },
+  "perspectives": {
+    "gui": {
+      "parent": "narutomod:item/shuriken_flat"
+    },
+    "ground": {
+      "parent": "narutomod:item/shuriken_flat"
+    },
+    "fixed": {
+      "parent": "narutomod:item/shuriken_flat"
+    }
   }
 }

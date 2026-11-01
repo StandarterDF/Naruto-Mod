@@ -13,6 +13,7 @@ import com.sekwah.narutomod.client.renderer.NarutoRenderEvents;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.commands.NarutoCommands;
 import com.sekwah.narutomod.effect.NarutoEffects;
+import com.sekwah.narutomod.enchantment.NarutoEnchantments;
 import com.sekwah.narutomod.entity.NarutoDataSerialisers;
 import com.sekwah.narutomod.entity.NarutoEntities;
 import com.sekwah.narutomod.gameevents.NarutoGameEvents;
@@ -69,6 +70,7 @@ public class NarutoMod {
         NarutoSounds.register(eventBus);
         NarutoDataSerialisers.register(eventBus);
         NarutoItems.register(eventBus);
+        NarutoEnchantments.register(eventBus);
         NarutoBlocks.register(eventBus);
         NarutoEntities.register(eventBus);
         NarutoAbilities.register(eventBus);

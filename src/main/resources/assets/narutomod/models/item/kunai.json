@@ -1,18 +1,18 @@
 {
-  "parent": "item/handheld",
-  "textures": {
-    "layer0": "narutomod:items/weapons/kunai"
+  "parent": "forge:item/default",
+  "loader": "forge:separate_transforms",
+  "base": {
+    "parent": "narutomod:item/kunai_model"
   },
-  "display": {
-    "thirdperson_righthand": {
-      "rotation": [ 0, -90, 55 ],
-      "translation": [ 0, 3.0, 1 ],
-      "scale": [ 0.55, 0.55, 0.55 ]
+  "perspectives": {
+    "gui": {
+      "parent": "narutomod:item/kunai_flat"
     },
-    "thirdperson_lefthand": {
-      "rotation": [ 0, 90, -55 ],
-      "translation": [ 0, 3.0, 1 ],
-      "scale": [ 0.55, 0.55, 0.55 ]
+    "ground": {
+      "parent": "narutomod:item/kunai_flat"
+    },
+    "fixed": {
+      "parent": "narutomod:item/kunai_flat"
     }
   }
 }

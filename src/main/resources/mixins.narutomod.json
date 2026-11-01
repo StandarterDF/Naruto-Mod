@@ -9,6 +9,7 @@
     "common.AbstractArrowAccessor",
     "common.CampfireAccessor",
     "common.GameEventDispatcherMixin",
+    "common.ProjectileCanHitMixin",
     "common.TripWireBlockMixin"
   ],
   "client": [

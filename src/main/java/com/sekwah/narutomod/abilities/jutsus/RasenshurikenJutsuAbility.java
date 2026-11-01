@@ -77,9 +77,13 @@ public class RasenshurikenJutsuAbility extends Ability implements Ability.Channe
     @Override
     public boolean handleCost(Player player, INinjaData ninjaData, int chargeAmount) {
         if (!player.getMainHandItem().isEmpty()) {
-            player.displayClientMessage(Component.translatable("jutsu.fail.palm_block.weapon",
-                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
-                    .withStyle(ChatFormatting.RED), true);
+            // handleCost runs on every tick of the channel: report the occupied hand once, on the
+            // first tick, instead of flashing the same action bar line every tick.
+            if (chargeAmount <= 0) {
+                player.displayClientMessage(Component.translatable("jutsu.fail.item_in_main_hand",
+                        Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                        .withStyle(ChatFormatting.RED), true);
+            }
             return false;
         }
         if (ninjaData.getSeninMana() <= 0.0f) {
@@ -125,6 +129,13 @@ public class RasenshurikenJutsuAbility extends Ability implements Ability.Channe
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
         if (!(player.level() instanceof ServerLevel level)) {
+            return;
+        }
+        // Same guard as handleCost: a stale channel must not release with a full main hand.
+        if (!player.getMainHandItem().isEmpty()) {
+            player.displayClientMessage(Component.translatable("jutsu.fail.item_in_main_hand",
+                    Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.RED), true);
             return;
         }
         // A tap that never charged: there is nothing to throw, and nothing to pay for.

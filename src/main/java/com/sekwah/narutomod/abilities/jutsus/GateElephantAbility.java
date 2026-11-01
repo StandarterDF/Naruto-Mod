@@ -3,6 +3,8 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
+import com.sekwah.narutomod.abilities.NarutoAbilities;
 import com.sekwah.narutomod.friends.Friends;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -21,14 +23,15 @@ import java.util.List;
  * The Evening Elephant: the last thing the gates can be asked for without dying.
  *
  * <p>Six gates open, and the arm can move so fast that the air ahead of it is compressed into a
- * single step of a stair. The fist lands and the shockwave follows it outward for eight paces,
- * lifting everything it touches off the ground and throwing it back. It is not aimed: a body inside
- * the ring is a body inside the ring.</p>
+ * single step of a stair. The fist lands on the ground and the shockwave follows it outward for
+ * eight paces in every direction at once, one great wave that lifts everything it touches off the
+ * ground and throws it back. It is not aimed and it is not a strike: a body anywhere inside the ring
+ * is a body inside the ring.</p>
  *
- * <p>The price is the caster's own body. The technique is paid for out of the flesh that made it -
- * the caster is left standing on two points of health whatever they walked in with - because a
- * technique that spends everything short of the eighth gate has to spend something real. It breaks
- * no blocks: the shockwave is aimed at bodies, and the ground is only where they were standing.</p>
+ * <p>The price is the caster's own body: the caster loses 20% to 8% of their max health (reduced by
+ * mastery), never below 1 HP, because a technique that spends everything short of the eighth gate has
+ * to spend something real. It breaks no blocks: the shockwave is aimed at bodies, and the ground is
+ * only where they were standing.</p>
  */
 public class GateElephantAbility extends Ability implements Ability.Cooldown {
 
@@ -52,11 +55,11 @@ public class GateElephantAbility extends Ability implements Ability.Cooldown {
     private static final int STAMINA_REGEN_DELAY = 20;
     private static final int COOLDOWN = 500;
 
-    /** What the shockwave does: the damage, the throw up and back, and the health the caster keeps. */
-    private static final float DAMAGE = 18.0f;
-    private static final double LIFT = 0.6d;
-    private static final double PUSH = 1.5d;
-    private static final float HEALTH_LEFT = 2.0f;
+    /** What the shockwave does: the damage, the throw up and back. Health cost is a fraction of max
+     *  health, reduced by mastery, and never kills the caster. */
+    private static final float DAMAGE = 40.0f;
+    private static final double LIFT = 0.8d;
+    private static final double PUSH = 2.0d;
 
     @Override
     public ActivationType activationType() {
@@ -98,6 +101,7 @@ public class GateElephantAbility extends Ability implements Ability.Cooldown {
         }
         Vec3 centre = player.position().add(0.0d, player.getBbHeight() * 0.5d, 0.0d);
 
+        float scale = EightGatesAbility.techniqueScale(ninjaData);
         List<LivingEntity> caught = level.getEntitiesOfClass(LivingEntity.class,
                 player.getBoundingBox().inflate(RADIUS), target -> canStrike(player, target));
         for (LivingEntity target : caught) {
@@ -105,9 +109,18 @@ public class GateElephantAbility extends Ability implements Ability.Cooldown {
                     .distanceToSqr(centre) > RADIUS * RADIUS) {
                 continue;
             }
-            shockwave(level, player, target);
+            shockwave(level, player, target, scale);
         }
 
+        // The wave itself: a ring of cloud pushed out to the full reach of the shockwave, so the
+        // player can read how far it goes rather than guess from the damage.
+        for (int point = 0; point < 36; point++) {
+            double angle = Math.PI * 2.0d * point / 36.0d;
+            double x = player.getX() + Math.cos(angle) * RADIUS;
+            double z = player.getZ() + Math.sin(angle) * RADIUS;
+            level.sendParticles(ParticleTypes.CLOUD, x, player.getY() + 0.2d, z,
+                    1, 0.1d, 0.1d, 0.1d, 0.02d);
+        }
         // Drawn rather than detonated, for the same reason as the Daytime Tiger: the ground stays
         // where it is, and the numbers stay exactly the ones written above.
         level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, centre.x, centre.y, centre.z,
@@ -118,13 +131,23 @@ public class GateElephantAbility extends Ability implements Ability.Cooldown {
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.4f, 0.7f);
 
         // The body is spent by the technique, not wounded by anything the target did: nothing may
-        // soak this up, which is why it goes straight onto the health bar.
-        player.setHealth(HEALTH_LEFT);
+        // soak this up, which is why it goes straight onto the health bar. Cost scales with mastery.
+        float mastery = Mastery.level(ninjaData, NarutoAbilities.EIGHT_GATES.getId());
+        float costRatio = 0.20f - 0.12f * mastery;
+        if (costRatio < 0.0f) {
+            costRatio = 0.0f;
+        }
+        float healthCost = player.getMaxHealth() * costRatio;
+        float newHealth = player.getHealth() - healthCost;
+        if (newHealth < 1.0f) {
+            newHealth = 1.0f;
+        }
+        player.setHealth(newHealth);
     }
 
     /** One body in the shockwave: struck, thrown up and back. */
-    private static void shockwave(ServerLevel level, Player caster, LivingEntity target) {
-        target.hurt(caster.damageSources().playerAttack(caster), DAMAGE);
+    private static void shockwave(ServerLevel level, Player caster, LivingEntity target, float scale) {
+        target.hurt(caster.damageSources().playerAttack(caster), DAMAGE * scale);
         target.knockback(PUSH, target.getX() - caster.getX(), target.getZ() - caster.getZ());
         // The lift is set after the knockback so the body leaves the ground whatever the shove did
         // to its height; a shockwave that only rolled bodies along the floor would not be one.

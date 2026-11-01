@@ -40,6 +40,15 @@ public class MomoshikiAbsorptionAbility extends Ability implements Ability.Chann
 
     private static final int CHAKRA_REGEN_DELAY = 10;
 
+    /** How far the open palm reaches: a technique that lands inside this is eaten. */
+    public static final double ABSORB_RADIUS = 10.0d;
+
+    /** How often the edge of that reach is shown while the palm is held open. */
+    private static final int RING_INTERVAL = 10;
+
+    /** Motes in one ring. */
+    private static final int RING_POINTS = 48;
+
     /** A palm holding chakra shines a little; nothing here disturbs the world. */
     @Override
     public int noiseRadius() {
@@ -97,6 +106,7 @@ public class MomoshikiAbsorptionAbility extends Ability implements Ability.Chann
     public void handleChannelling(Player player, INinjaData ninjaData, int ticksChanneled) {
         this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
         this.aura(player);
+        this.ring(player);
     }
 
     /**
@@ -126,6 +136,23 @@ public class MomoshikiAbsorptionAbility extends Ability implements Ability.Chann
                 .add(0.0d, -0.35d, 0.0d);
         level.sendParticles(ParticleTypes.ENCHANT,
                 hand.x, hand.y, hand.z, 1, 0.12d, 0.12d, 0.12d, 0.01d);
+    }
+
+    /**
+     * The edge of what the palm covers, redrawn while it is held open, so the caster can see which
+     * techniques are already inside the reach and which are about to be.
+     */
+    private void ring(Player player) {
+        if (!(player.level() instanceof ServerLevel level) || player.tickCount % RING_INTERVAL != 0) {
+            return;
+        }
+        for (int i = 0; i < RING_POINTS; i++) {
+            double angle = (Math.PI * 2.0d / RING_POINTS) * i;
+            double x = player.getX() + Math.cos(angle) * ABSORB_RADIUS;
+            double z = player.getZ() + Math.sin(angle) * ABSORB_RADIUS;
+            level.sendParticles(ParticleTypes.END_ROD, x, player.getY() + 1.0d, z,
+                    1, 0.0d, 0.0d, 0.0d, 0.0d);
+        }
     }
 
     /** @return whether this caster is holding the palm open right now. */

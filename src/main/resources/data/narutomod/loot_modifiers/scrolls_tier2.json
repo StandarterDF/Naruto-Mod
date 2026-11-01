@@ -18,8 +18,18 @@
   ],
   "entries": [
     { "item": "narutomod:scroll_eight_gates", "weight": 3 },
-    { "item": "narutomod:scroll_sage_mode", "weight": 2 },
-    { "item": "narutomod:scroll_earth_wall", "weight": 3 }
+    { "item": "narutomod:scroll_rasenshuriken", "weight": 1 },
+    { "item": "narutomod:scroll_sharingan", "weight": 3 },
+    { "item": "narutomod:scroll_byakugan", "weight": 3 },
+    { "item": "narutomod:scroll_senrigan", "weight": 3 },
+    { "item": "narutomod:scroll_senrigan_sight", "weight": 2 },
+    { "item": "narutomod:scroll_senrigan_flight", "weight": 2 },
+    { "item": "narutomod:scroll_senrigan_evasion", "weight": 2 },
+    { "item": "narutomod:scroll_senrigan_guidance", "weight": 2 },
+    { "item": "narutomod:scroll_kotoamatsukami", "weight": 2 },
+    { "item": "narutomod:scroll_multi_shadow_clone", "weight": 2 },
+    { "item": "narutomod:scroll_gate_peacock", "weight": 2 },
+    { "item": "narutomod:scroll_gate_tiger", "weight": 1 }
   ],
   "chance": 0.18,
   "luck_bonus": 0.06,

@@ -3,6 +3,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.events.AmaterasuEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -102,6 +103,8 @@ public class OrochimaruBodyAbility extends Ability implements Ability.Cooldown {
         // Everything the old body was carrying is left behind with it.
         player.clearFire();
         player.setRemainingFireTicks(0);
+        // Shedding the skin also casts off the black flame.
+        AmaterasuEvents.extinguish(player);
         player.removeEffect(MobEffects.POISON);
         player.removeEffect(MobEffects.WITHER);
         player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);

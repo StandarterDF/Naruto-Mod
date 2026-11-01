@@ -40,6 +40,35 @@ public class NarutoArmorEvents {
     private static final UUID HEALTH_MODIFIER_ID = UUID.fromString("6c1f4d2a-7b3e-4a51-9d2f-0f5b8c1a7e42");
     private static final String HEALTH_MODIFIER_NAME = "narutomod.armor.health";
 
+    // Cached enchantment lookups: registry access every tick is expensive.
+    private static Enchantment CACHED_CHAKRA_BOOST;
+    private static Enchantment CACHED_STAMINA_BOOST;
+    private static Enchantment CACHED_CHAKRA_REGEN;
+    private static Enchantment CACHED_STAMINA_REGEN;
+    private static Enchantment CACHED_SENIN_BOOST;
+    private static Enchantment CACHED_SENIN_REGEN;
+    private static boolean enchantmentsResolved = false;
+    private static net.minecraft.core.RegistryAccess cachedRegistryAccess;
+
+    private static void resolveEnchantments(net.minecraft.world.level.Level level) {
+        // Re-resolve when the registry access changes (new world / reloaded datapacks).
+        if (enchantmentsResolved && level.registryAccess() == cachedRegistryAccess) {
+            return;
+        }
+        var reg = level.registryAccess().registry(Registries.ENCHANTMENT).orElse(null);
+        if (reg == null) {
+            return;
+        }
+        CACHED_CHAKRA_BOOST = reg.get(new ResourceLocation("narutomod", "chakra_boost"));
+        CACHED_STAMINA_BOOST = reg.get(new ResourceLocation("narutomod", "stamina_boost"));
+        CACHED_CHAKRA_REGEN = reg.get(new ResourceLocation("narutomod", "chakra_regen"));
+        CACHED_STAMINA_REGEN = reg.get(new ResourceLocation("narutomod", "stamina_regen"));
+        CACHED_SENIN_BOOST = reg.get(new ResourceLocation("narutomod", "senin_chakra"));
+        CACHED_SENIN_REGEN = reg.get(new ResourceLocation("narutomod", "senin_regen"));
+        cachedRegistryAccess = level.registryAccess();
+        enchantmentsResolved = true;
+    }
+
     @SubscribeEvent
     public static void onLivingTick(LivingEvent.LivingTickEvent event) {
         if (!(event.getEntity() instanceof Player player) || player.level().isClientSide) {
@@ -66,21 +95,13 @@ public class NarutoArmorEvents {
                     chakraRegen += bonus.chakraRegenPerSecond();
                 }
                 // Enchantment bonuses.
-                var reg = player.level().registryAccess().registry(Registries.ENCHANTMENT).orElse(null);
-                if (reg != null) {
-                    Enchantment chakraBoost = reg.get(new ResourceLocation("narutomod", "chakra_boost"));
-                    Enchantment staminaBoost = reg.get(new ResourceLocation("narutomod", "stamina_boost"));
-                    Enchantment chakraRegenEnch = reg.get(new ResourceLocation("narutomod", "chakra_regen"));
-                    Enchantment staminaRegenEnch = reg.get(new ResourceLocation("narutomod", "stamina_regen"));
-                    Enchantment seninBoost = reg.get(new ResourceLocation("narutomod", "senin_chakra"));
-                    Enchantment seninRegenEnch = reg.get(new ResourceLocation("narutomod", "senin_regen"));
-                    if (chakraBoost != null) enchantChakra += 10.0f * EnchantmentHelper.getItemEnchantmentLevel(chakraBoost, piece);
-                    if (staminaBoost != null) enchantStamina += 10.0f * EnchantmentHelper.getItemEnchantmentLevel(staminaBoost, piece);
-                    if (chakraRegenEnch != null) enchantChakraRegen += EnchantmentHelper.getItemEnchantmentLevel(chakraRegenEnch, piece);
-                    if (staminaRegenEnch != null) enchantStaminaRegen += EnchantmentHelper.getItemEnchantmentLevel(staminaRegenEnch, piece);
-                    if (seninBoost != null) enchantSenin += 10.0f * EnchantmentHelper.getItemEnchantmentLevel(seninBoost, piece);
-                    if (seninRegenEnch != null) enchantSeninRegen += EnchantmentHelper.getItemEnchantmentLevel(seninRegenEnch, piece);
-                }
+                resolveEnchantments(player.level());
+                if (CACHED_CHAKRA_BOOST != null) enchantChakra += 10.0f * EnchantmentHelper.getItemEnchantmentLevel(CACHED_CHAKRA_BOOST, piece);
+                if (CACHED_STAMINA_BOOST != null) enchantStamina += 10.0f * EnchantmentHelper.getItemEnchantmentLevel(CACHED_STAMINA_BOOST, piece);
+                if (CACHED_CHAKRA_REGEN != null) enchantChakraRegen += EnchantmentHelper.getItemEnchantmentLevel(CACHED_CHAKRA_REGEN, piece);
+                if (CACHED_STAMINA_REGEN != null) enchantStaminaRegen += EnchantmentHelper.getItemEnchantmentLevel(CACHED_STAMINA_REGEN, piece);
+                if (CACHED_SENIN_BOOST != null) enchantSenin += 10.0f * EnchantmentHelper.getItemEnchantmentLevel(CACHED_SENIN_BOOST, piece);
+                if (CACHED_SENIN_REGEN != null) enchantSeninRegen += EnchantmentHelper.getItemEnchantmentLevel(CACHED_SENIN_REGEN, piece);
             }
 
             ninjaData.setArmorChakraBonus(chakraCapacity);

@@ -94,13 +94,23 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "narutomod:scroll_sage_mode",
-          "weight": 3
+          "name": "narutomod:scroll_rasenshuriken",
+          "weight": 2
         },
         {
           "type": "minecraft:item",
-          "name": "narutomod:scroll_rasenshuriken",
-          "weight": 2
+          "name": "narutomod:scroll_sharingan",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "narutomod:scroll_byakugan",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "narutomod:scroll_jougan",
+          "weight": 1
         },
         {
           "type": "minecraft:item",
@@ -114,12 +124,37 @@
         },
         {
           "type": "minecraft:item",
-          "name": "narutomod:scroll_rinnegan",
+          "name": "narutomod:scroll_chibaku_tensei",
           "weight": 1
         },
         {
           "type": "minecraft:item",
-          "name": "narutomod:scroll_chibaku_tensei",
+          "name": "narutomod:scroll_perfect_cloak",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "narutomod:scroll_tailed_cloak",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "narutomod:scroll_tailed_ball",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "narutomod:scroll_divided_cloak",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "narutomod:scroll_seal_vessel",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "narutomod:scroll_seal_break",
           "weight": 1
         }
       ],

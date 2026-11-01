@@ -292,11 +292,11 @@ public class ComboSwordItem extends SwordItem {
                 Component.literal(String.valueOf(this.maxCombo)).withStyle(ChatFormatting.YELLOW))
                 .withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable("item.narutomod.combo_sword.growth",
-                Component.literal(String.valueOf(this.damagePerStep)).withStyle(ChatFormatting.YELLOW))
+                Component.literal(String.valueOf(Math.round(this.damagePerStep * 100.0f) / 100.0f)).withStyle(ChatFormatting.YELLOW))
                 .withStyle(ChatFormatting.GRAY));
         if (this.chakraPerHit > 0.0f) {
             tooltip.add(Component.translatable("item.narutomod.combo_sword.drain",
-                    Component.literal(String.valueOf(this.chakraPerHit)).withStyle(ChatFormatting.AQUA))
+                    Component.literal(String.valueOf(Math.round(this.chakraPerHit * 100.0f) / 100.0f)).withStyle(ChatFormatting.AQUA))
                     .withStyle(ChatFormatting.GRAY));
         }
 

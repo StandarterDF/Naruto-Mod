@@ -1,6 +1,8 @@
 \.gradle/
 eclipse/
 forge/
+# ...but the mod's own data pack folder is content, not the Gradle cache above.
+!/src/main/resources/data/forge/
 out/
 src/generated
 *.iml
@@ -35,8 +37,17 @@ yarn-error.log*
 /tmp/
 *.log
 
+# project-local MCP installs (Blockbench adapter): a local npm tree, not mod content
+/.opencode/mcp/
+
 # playwright MCP scratch
 .playwright-mcp/
+
+# local agent config and npm init leftovers (machine paths, not mod content)
+/opencode.json
+/package.json
+/package-lock.json
+/node_modules/
 
 # python tooling caches
 __pycache__/

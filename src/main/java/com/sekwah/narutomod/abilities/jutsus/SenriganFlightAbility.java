@@ -92,7 +92,13 @@ public class SenriganFlightAbility extends Ability implements Ability.Toggled, A
         }
         // Mastery is earned by holding the body up, not by flicking the stance on.
         this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
-        grantFlight(player);
+        // The eye lends wings like creative: mayfly is kept on, and the client toggles flying on a
+        // double jump on its own. Sneaking lands again.
+        if (player.isShiftKeyDown()) {
+            release(player);
+        } else {
+            grantFlight(player);
+        }
         if (player.level() instanceof ServerLevel level && player.tickCount % 5 == 0) {
             level.sendParticles(ParticleTypes.END_ROD, player.getX(),
                     player.getY() + 0.1d, player.getZ(),
@@ -134,10 +140,9 @@ public class SenriganFlightAbility extends Ability implements Ability.Toggled, A
             saved.putBoolean(FLYING_TAG, player.getAbilities().flying);
             tag.put(FLIGHT_TAG, saved);
         }
+        // Only the wings are lent, never the flying flag: the client toggles that itself on a double
+        // jump, the same way creative flight works.
         player.getAbilities().mayfly = true;
-        // Only actually fly while airborne: keeping the flying flag on while standing on the
-        // ground makes the client wobble the field of view back and forth.
-        player.getAbilities().flying = !player.onGround();
         player.onUpdateAbilities();
     }
 

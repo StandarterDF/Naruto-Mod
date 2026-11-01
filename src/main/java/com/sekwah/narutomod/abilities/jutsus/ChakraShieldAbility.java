@@ -2,6 +2,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -31,6 +32,10 @@ import java.util.UUID;
  * thrown up many times turns a full bar into a full second health bar. The technique is still paid
  * for in full every time - the whole bar goes into it - so early on it is a costly, modest trick
  * rather than the panic button it becomes later.</p>
+ *
+ * <p>Mastery is earned the way the shield is actually lived in: shaping one pays a fifth of an
+ * ordinary cast, and almost all of the progress comes from having it broken. Standing behind a
+ * shield that is eating hits is the practice; flicking it on and off is not.</p>
  */
 public class ChakraShieldAbility extends Ability {
     /**
@@ -70,6 +75,21 @@ public class ChakraShieldAbility extends Ability {
      * instead of piling up modifiers.
      */
     private static final UUID SHIELD_MODIFIER_ID = UUID.fromString("9d1d5f11-2e3b-4d0a-9c5e-6f4c7b8a2d31");
+
+    /**
+     * Cast-equivalents a shield is worth for being shaped at all. An ordinary cast pays one, so this
+     * is a fifth of one: the technique is learned by having the shield spent, not by raising it, and
+     * a caster who keeps flicking it on and off learns almost nothing.
+     */
+    public static final float ACTIVATION_MASTERY_CREDIT = 0.2f;
+
+    /**
+     * Cast-equivalents paid out when the shield is broken, worth thirty seconds of holding it up.
+     * This is where the technique is really practised: every hit the shield eats before it shatters
+     * is a blow the caster saw come in and turned aside, so a shield spent in a fight teaches as
+     * much as ten others raised and put away untouched.
+     */
+    public static final float BREAK_MASTERY_CREDIT = 30.0f * 20.0f * MASTERY_CREDIT_PER_TICK;
 
     @Override
     public ActivationType activationType() {
@@ -120,10 +140,33 @@ public class ChakraShieldAbility extends Ability {
         ninjaData.setShieldPoints(points);
         applyShield(player, points);
 
+        // A fifth of a cast: the shield earns the rest of its mastery by being broken, see
+        // recordBreakMastery below.
+        this.recordMasteryCredit(player, ninjaData, ACTIVATION_MASTERY_CREDIT);
+
         level.sendParticles(ParticleTypes.ENCHANT, player.getX(),
                 player.getY() + player.getBbHeight() / 2.0d, player.getZ(),
                 40, 0.5d, 0.7d, 0.5d, 0.05d);
         level.playSound(null, player, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.7f, 0.6f);
+    }
+
+    /**
+     * The shield is mastered by what it does, so the act of shaping one pays
+     * {@link #ACTIVATION_MASTERY_CREDIT} from {@link #performServer} and this records nothing by
+     * itself. The bulk of the progress comes from {@link #recordBreakMastery(Player, INinjaData)}.
+     */
+    @Override
+    public void recordMastery(Player player, INinjaData ninjaData) {
+    }
+
+    /**
+     * Pays for a shield that has just been shattered, which is where this technique is practised.
+     *
+     * <p>Called once per shield by the damage handler: the pool is already at zero when it runs, so
+     * the same break cannot be paid for twice no matter how many blows land on the same tick.</p>
+     */
+    public static void recordBreakMastery(Player player, INinjaData ninjaData) {
+        Mastery.recordCredit(player, ninjaData, ID, BREAK_MASTERY_CREDIT);
     }
 
     /**

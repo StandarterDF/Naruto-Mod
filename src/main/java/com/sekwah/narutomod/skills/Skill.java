@@ -77,7 +77,6 @@ public final class Skill {
             "ability:kamui",
             "ability:kamui_phasing",
             "ability:sage_mode",
-            "ability:earth_wall",
             "ability:rinnegan",
             "ability:chibaku_tensei",
             "ability:sharingan",
@@ -94,7 +93,19 @@ public final class Skill {
             "ability:seal_break",
             "ability:gate_peacock",
             "ability:gate_tiger",
-            "ability:gate_elephant");
+            "ability:gate_elephant",
+            "ability:amaterasu",
+            "ability:kagutsuchi",
+            "ability:susanoo",
+            "ability:tsukuyomi",
+            "ability:izanagi",
+            "ability:izanami",
+            "ability:senrigan",
+            "ability:senrigan_sight",
+            "ability:senrigan_flight",
+            "ability:senrigan_evasion",
+            "ability:senrigan_guidance",
+            "ability:kotoamatsukami");
 
     static {
 
@@ -518,8 +529,8 @@ public final class Skill {
                 SkillEffect.COST_REDUCTION, 0.02f, "mind_genjutsu");
         unlock("mind_shadow_grab", SkillBranch.MIND, -1, 2, 40,
                 "ability:shadow_grab", "mind_shadow_art");
-        unlock("mind_kai", SkillBranch.MIND, 1, 1, 22,
-                "ability:kai", "mind_eyes");
+        unlock("mind_kai", SkillBranch.MIND, -2, 2, 22,
+                "ability:kai", "mind_shadow_art");
         unlock("mind_transfer", SkillBranch.MIND, 0, 1, 46,
                 "ability:mind_transfer", "mind_focus");
         unlock("mind_player_genjutsu", SkillBranch.MIND, -2, -1, 36,
@@ -786,6 +797,8 @@ public final class Skill {
                 "ability:momoshiki_absorption", "eye_palm");
         unlock("eye_limbo", SkillBranch.RINNEGAN, 3, 2, 70,
                 "ability:limbo", "eye_palm");
+        unlock("rinnegan_prison", SkillBranch.RINNEGAN, 4, 2, 64,
+                "ability:rinnegan_prison", "eye_palm");
 
         // SIX PATHS - the sage's own branch: the mode and everything that hangs off it.
         node("six_paths_base", SkillBranch.SIX_PATHS, 0, 0, 40,
@@ -946,17 +959,14 @@ public final class Skill {
     /**
      * The technique a scroll for this node teaches, as a registry id, or null when no scroll is
      * needed. The scroll is keyed by the technique itself, so {@code ability:rasengan} asks for a
-     * scroll that knows {@code narutomod:rasengan}.
+     * scroll that knows {@code narutomod:rasengan} and {@code ability:kamui_phasing} asks for
+     * {@code narutomod:kamui_phasing}, never for the base art it grows out of.
      */
     public ResourceLocation scrollKnowledge() {
         if (!this.requiresScroll()) {
             return null;
         }
-        // Kamui's phasing body is taught by the same scroll as the eye itself.
         String knowledge = this.unlock.substring("ability:".length());
-        if ("kamui_phasing".equals(knowledge)) {
-            knowledge = "kamui";
-        }
         return new ResourceLocation(NarutoMod.MOD_ID, knowledge);
     }
 

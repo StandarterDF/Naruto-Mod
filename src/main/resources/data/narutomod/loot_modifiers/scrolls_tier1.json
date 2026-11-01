@@ -19,7 +19,8 @@
     }
   ],
   "entries": [
-    { "item": "narutomod:scroll_rasengan", "weight": 1 }
+    { "item": "narutomod:scroll_rasengan", "weight": 3 },
+    { "item": "narutomod:scroll_sharingan", "weight": 2 }
   ],
   "chance": 0.1,
   "luck_bonus": 0.05,

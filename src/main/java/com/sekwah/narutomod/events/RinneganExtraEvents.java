@@ -12,6 +12,7 @@ import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import com.sekwah.narutomod.friends.Friends;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -53,8 +54,11 @@ public final class RinneganExtraEvents {
     /** How often the court draws its ring, so it is visible without flooding the client. */
     private static final long RING_INTERVAL = 10L;
 
-    /** How long a chain's slowdown is granted for on each renewal. */
+    /** How long a chain's slowdown and blindness are granted for on each renewal. */
     private static final int CHAIN_EFFECT_DURATION = 10;
+
+    /** How long a prisoner's killer is punished for: three minutes of weakness and slowness. */
+    private static final int PRISON_KILLER_DEBUFF_DURATION = 3600;
 
     private RinneganExtraEvents() {
     }
@@ -128,13 +132,24 @@ public final class RinneganExtraEvents {
             return;
         }
         CompoundTag data = entity.getPersistentData();
+        // Cheap early-out: ordinary mobs carry none of these marks, so there is nothing to upkeep.
+        if (!data.getBoolean(AnimalPathAbility.SUMMON_TAG)
+                && !data.getBoolean(RinboHengokuAbility.ECHO_TAG)
+                && !data.contains(OuterPathChainsAbility.UNTIL_TAG)
+                && !data.contains(OuterPathArmorAbility.UNTIL_TAG)
+                && !data.getBoolean(RinneganPrisonAbility.PRISON_TAG)) {
+            return;
+        }
         long now = entity.level().getGameTime();
 
         upkeepWolf(entity, data, now);
         upkeepEcho(entity, data, now);
         upkeepChains(entity, data, now);
         upkeepShell(entity, data, now);
-        upkeepPrison(entity, data, now);
+        // Prison upkeep only matters for summoned prisoners; guard it explicitly.
+        if (data.getBoolean(RinneganPrisonAbility.PRISON_TAG)) {
+            upkeepPrison(entity, data, now);
+        }
     }
 
     /** A summoned wolf is pulled back to its owner when it strays, and taken home when time is up. */
@@ -175,8 +190,8 @@ public final class RinneganExtraEvents {
     }
 
     /**
-     * Chains refresh their own slowdown for as long as the mark says they are held. The mark is
-     * short, so letting go of the channel lets go of the bodies within a few ticks.
+     * Chains refresh their own slowdown and blindness for as long as the mark says they are held.
+     * The mark is short, so letting go of the channel lets go of the bodies within a few ticks.
      */
     private static void upkeepChains(LivingEntity entity, CompoundTag data, long now) {
         if (!data.contains(OuterPathChainsAbility.UNTIL_TAG)) {
@@ -188,6 +203,8 @@ public final class RinneganExtraEvents {
         }
         entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, CHAIN_EFFECT_DURATION,
                 OuterPathChainsAbility.SLOW_AMPLIFIER, false, true));
+        // Blindness is part of the pin, not only of the throw: it lasts exactly as long as the hold.
+        entity.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, CHAIN_EFFECT_DURATION, 0, false, true));
     }
 
     /**
@@ -195,7 +212,7 @@ public final class RinneganExtraEvents {
      * does this on the same tick the stance ends; this is the belt to that pair of braces, for a
      * body that lost its capability or left before the stance could be closed properly.
      */
-    /** A prison summon is taken back when its time is up. */
+    /** A prison summon is taken back when its time is up; while alive it serves its jailer. Released prisoners are under genjutsu and never target each other. */
     private static void upkeepPrison(LivingEntity entity, CompoundTag data, long now) {
         if (!data.getBoolean(RinneganPrisonAbility.PRISON_TAG)) {
             return;
@@ -205,21 +222,40 @@ public final class RinneganExtraEvents {
             return;
         }
         if (!(entity instanceof Mob mob)) return;
-        if (mob.getTarget() != null && mob.getTarget().isAlive()) return;
         UUID ownerId = data.hasUUID(RinneganPrisonAbility.OWNER_TAG) ? data.getUUID(RinneganPrisonAbility.OWNER_TAG) : null;
-        Player owner = ownerId == null ? null : entity.level().getPlayerByUUID(ownerId);
-        if (owner == null) return;
-        List<LivingEntity> enemies = entity.level().getEntitiesOfClass(LivingEntity.class,
-                entity.getBoundingBox().inflate(16.0d),
-                e -> e.isAlive() && e != owner && e != entity && !(e instanceof Player p && p.isCreative())
-                        && !Friends.areFriends(owner, e));
-        LivingEntity nearest = null;
-        double best = Double.MAX_VALUE;
-        for (LivingEntity e : enemies) {
-            double d = e.distanceToSqr(entity);
-            if (d < best) { best = d; nearest = e; }
+        if (ownerId == null) return;
+        Player owner = entity.level().getPlayerByUUID(ownerId);
+        if (owner == null || !owner.isAlive() || owner.level() != entity.level()) return;
+
+        // Never hold the caster (or any ally/friend of his) as a target.
+        LivingEntity target = mob.getTarget();
+        if (target != null && (!target.isAlive() || target == owner || Friends.isOwnSide(owner, target))) {
+            mob.setTarget(null);
         }
-        if (nearest != null) mob.setTarget(nearest);
+
+        // Once every twenty ticks pick the caster's nearest enemy and set it as the target.
+        if (now % 20L == 0L) {
+            List<LivingEntity> enemies = entity.level().getEntitiesOfClass(LivingEntity.class,
+                    mob.getBoundingBox().inflate(16.0d),
+                    e -> e.isAlive() && e != owner && e != mob
+                            && !(e instanceof Player p && (p.isCreative() || p.isSpectator()))
+                            && !Friends.isOwnSide(owner, e)
+                            && !e.getPersistentData().getBoolean(RinneganPrisonAbility.PRISON_TAG));
+            LivingEntity nearest = null;
+            double best = Double.MAX_VALUE;
+            for (LivingEntity e : enemies) {
+                double d = e.distanceToSqr(mob);
+                if (d < best) { best = d; nearest = e; }
+            }
+            if (nearest != null) {
+                mob.setTarget(nearest);
+            }
+        }
+
+        // Follow the jailer when he walks away.
+        if (mob.distanceTo(owner) > 10.0d) {
+            mob.getNavigation().moveTo(owner, 1.0d);
+        }
     }
 
     private static void upkeepShell(LivingEntity entity, CompoundTag data, long now) {
@@ -235,8 +271,19 @@ public final class RinneganExtraEvents {
     @SubscribeEvent
     public static void onLivingHurt(LivingHurtEvent event) {
         LivingEntity victim = event.getEntity();
-        if (victim.level().isClientSide || event.getAmount() <= 0.0f) {
+        if (victim.level().isClientSide || event.getAmount() <= 0.0f || event.isCanceled()) {
             return;
+        }
+        // A prison summon never harms its jailer.
+        Entity direct = event.getSource().getDirectEntity();
+        if (direct instanceof Mob prisonMob) {
+            CompoundTag prisonData = prisonMob.getPersistentData();
+            if (prisonData.getBoolean(RinneganPrisonAbility.PRISON_TAG)
+                    && prisonData.hasUUID(RinneganPrisonAbility.OWNER_TAG)
+                    && prisonData.getUUID(RinneganPrisonAbility.OWNER_TAG).equals(victim.getUUID())) {
+                event.setCanceled(true);
+                return;
+            }
         }
         long now = victim.level().getGameTime();
         if (victim.getPersistentData().getLong(OuterPathArmorAbility.UNTIL_TAG) > now) {
@@ -335,30 +382,48 @@ public final class RinneganExtraEvents {
                 pdata.getFloat(RinneganPrisonAbility.ABSORPTION_AMOUNT_TAG) + hearts);
         Entity killer = event.getSource().getEntity();
         if (killer != null && killer != owner && killer instanceof LivingEntity livingKiller) {
-            livingKiller.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 300, 1, false, true));
-            livingKiller.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 300, 1, false, true));
+            livingKiller.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,
+                    PRISON_KILLER_DEBUFF_DURATION, 1, false, true));
+            livingKiller.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,
+                    PRISON_KILLER_DEBUFF_DURATION, 1, false, true));
         }
     }
 
+    /**
+     * Per-player bookkeeping for the Rinnegan's prison: passive chakra while prisoners are held,
+     * and the absorption timer running out. Runs on the server only.
+     */
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || event.player.level().isClientSide) return;
         Player player = event.player;
         CompoundTag pdata = player.getPersistentData();
-        // Passive chakra while prisoners are held.
-        net.minecraft.nbt.ListTag prisoners = pdata.getList(RinneganPrisonAbility.PRISON_LIST_TAG, 8);
-        if (!prisoners.isEmpty()) {
-            if (player.tickCount % 20 == 0) {
-                float totalHp = 0.0f;
-                for (int i = 0; i < prisoners.size(); i++) {
-                    String[] parts = prisoners.getString(i).split("\\|");
-                    if (parts.length >= 2) {
-                        try { totalHp += Float.parseFloat(parts[1]); } catch (NumberFormatException ignored) {}
+        // Passive chakra while prisoners are still held in the cell (captured but not yet released):
+        // a flat trickle for every body recorded in the list, whatever the body was worth.
+        ListTag prisoners = pdata.getList(RinneganPrisonAbility.PRISON_LIST_TAG, 8);
+        if (!prisoners.isEmpty() && player.tickCount % 20 == 0) {
+            final float gain = prisoners.size() * RinneganPrisonAbility.CHAKRA_PER_PRISONER;
+            player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(nd ->
+                    nd.addChakra(gain));
+        }
+        // Passive chakra while released prisoners are still alive: each living summoned body feeds
+        // its jailer. Counted by UUID from the released list, so it does not depend on a radius.
+        if (player.tickCount % 20 == 0 && player.level() instanceof ServerLevel level) {
+            ListTag released = pdata.getList(RinneganPrisonAbility.RELEASED_LIST_TAG, 8);
+            int alive = 0;
+            for (int i = 0; i < released.size(); i++) {
+                try {
+                    Entity e = level.getEntity(java.util.UUID.fromString(released.getString(i)));
+                    if (e instanceof Mob mob && mob.isAlive()
+                            && mob.getPersistentData().getBoolean(RinneganPrisonAbility.PRISON_TAG)) {
+                        alive++;
                     }
+                } catch (IllegalArgumentException ignored) {
                 }
-                final float gain = Math.max(1.0f, totalHp * 0.05f);
-                player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(nd ->
-                        nd.addChakra(gain));
+            }
+            if (alive > 0) {
+                final float gain = alive * RinneganPrisonAbility.CHAKRA_PER_PRISONER;
+                player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(nd -> nd.addChakra(gain));
             }
         }
         // Absorption timer.

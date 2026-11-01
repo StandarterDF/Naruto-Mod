@@ -29,6 +29,13 @@ public final class NarutoEffects {
     public static final RegistryObject<MobEffect> CHAKRA_EXHAUSTION = EFFECTS.register("chakra_exhaustion",
             () -> new ExhaustionEffect(MobEffectCategory.HARMFUL, 0x5A3B8C));
 
+    /** Critical exhaustion: the aftermath of the red Akimichi pill. */
+    private static final UUID CRITICAL_EXHAUSTION_SPEED_ID = UUID.fromString("8c1e3f5b-4a5f-4b2f-a01f-4a4f6c9d0e21");
+    private static final UUID CRITICAL_EXHAUSTION_ATTACK_ID = UUID.fromString("9d2f4a6c-5b6a-4c3a-b12a-5b5a7d0e1f32");
+
+    public static final RegistryObject<MobEffect> CRITICAL_EXHAUSTION = EFFECTS.register("critical_exhaustion",
+            () -> new CriticalExhaustionEffect(MobEffectCategory.HARMFUL, 0x8B0000));
+
     /**
      * The afterglow of a full charge: while it lasts the passive trickle of chakra runs several
      * times faster, so topping the bar up is worth doing before a fight rather than a chore. The
@@ -53,6 +60,17 @@ public final class NarutoEffects {
     private static final class PlainEffect extends MobEffect {
         private PlainEffect(MobEffectCategory category, int colour) {
             super(category, colour);
+        }
+    }
+
+    /** Critical exhaustion: slowness + weakness, and regeneration is blocked in {@code PlayerEvents}. */
+    private static final class CriticalExhaustionEffect extends MobEffect {
+        private CriticalExhaustionEffect(MobEffectCategory category, int colour) {
+            super(category, colour);
+            this.addAttributeModifier(Attributes.MOVEMENT_SPEED, CRITICAL_EXHAUSTION_SPEED_ID.toString(),
+                    -0.35d, AttributeModifier.Operation.MULTIPLY_TOTAL);
+            this.addAttributeModifier(Attributes.ATTACK_DAMAGE, CRITICAL_EXHAUSTION_ATTACK_ID.toString(),
+                    -0.5d, AttributeModifier.Operation.MULTIPLY_TOTAL);
         }
     }
 

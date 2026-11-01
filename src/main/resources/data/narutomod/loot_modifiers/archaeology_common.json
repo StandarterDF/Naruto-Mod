@@ -13,7 +13,6 @@
     }
   ],
   "entries": [
-    { "item": "narutomod:scroll_earth_wall", "weight": 3 },
     { "item": "narutomod:scroll_byakugan", "weight": 2 },
     { "item": "narutomod:chakra_crystal", "weight": 5 },
     { "item": "narutomod:military_pills", "weight": 6 }

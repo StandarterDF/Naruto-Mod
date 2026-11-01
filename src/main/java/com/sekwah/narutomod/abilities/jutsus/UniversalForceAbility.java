@@ -3,6 +3,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.friends.Friends;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.util.Targeting;
@@ -23,11 +24,11 @@ import java.util.List;
 /**
  * The Rinnegan's plainest power: one hand pulls, the other pushes.
  *
- * <p>Tapped and held, it takes hold of whatever the caster is looking at and drags it off its feet
- * towards them every tick the key is down, which is the opening half of the usual trick of following
- * it up with a rising blow. Held with sneak, the same hand sweeps outward once instead and throws
- * everything standing around the caster away from them, which is the answer to being surrounded.
- * Both are the same power read in opposite directions, so they share one key.</p>
+ * <p>Tapped and held, it sweeps everything standing around the caster away from them, which is
+ * the answer to being surrounded. Held with sneak, the same hand takes hold of whatever the caster
+ * is looking at and drags it off its feet towards them every tick the key is down, the opening
+ * half of the usual trick of following it up with a rising blow. Both are the same power read in
+ * opposite directions, so they share one key.</p>
  *
  * <p>It is not a technique of its own: the eye has to be open, see {@link RinneganAbility}. The
  * shackle is deliberate - a caster who cannot pay for the eye has lost the powers that come with
@@ -46,10 +47,10 @@ public class UniversalForceAbility extends Ability implements Ability.Channeled 
     /** B V B V - short, and not a prefix of the Rinnegan stance or of Chibaku Tensei. */
     public static final long COMBO = 3232L;
 
-    /** How far the pull can reach, measured along the ray the caster is looking down. */
+    /** Base reach of the pull, measured along the ray the caster is looking down; mastery scales it. */
     private static final double PULL_RANGE = 28.0d;
 
-    /** How far around the caster the push sweeps. */
+    /** Base radius of the push around the caster; mastery scales it as well. */
     private static final double PUSH_RADIUS = 12.0d;
 
     /** What opening the pull and the push cost, and what the held pull burns each further tick. */
@@ -107,17 +108,18 @@ public class UniversalForceAbility extends Ability implements Ability.Channeled 
             return false;
         }
 
-        boolean pushing = player.isShiftKeyDown();
+        boolean pulling = player.isShiftKeyDown();
         boolean opening = chargeAmount <= 0;
-        if (!pushing && opening
-                && !(Targeting.lookedAtEntity(player, PULL_RANGE) instanceof LivingEntity)) {
+        if (pulling && opening
+                && !(Targeting.lookedAtEntity(player, PULL_RANGE * reach(ninjaData, this))
+                instanceof LivingEntity)) {
             player.displayClientMessage(Component.translatable("jutsu.fail.force.notarget",
                     Component.translatable(this.getTranslationKey(ninjaData)).withStyle(ChatFormatting.YELLOW))
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }
 
-        float base = opening ? (pushing ? PUSH_COST : PULL_COST) : PULL_UPKEEP;
+        float base = opening ? (pulling ? PULL_COST : PUSH_COST) : PULL_UPKEEP;
         float cost = this.masteryCost(ninjaData, base);
         if (ninjaData.getChakra() < cost) {
             if (opening) {
@@ -130,22 +132,22 @@ public class UniversalForceAbility extends Ability implements Ability.Channeled 
         return true;
     }
 
-    /** A tap pulls once; a hold is handled tick by tick. */
+    /** A tap pushes once; a hold with sneak is handled tick by tick. */
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
         if (ticksActive >= 0 || !(player.level() instanceof ServerLevel level)) {
             return;
         }
         if (player.isShiftKeyDown()) {
-            repel(level, player);
+            pull(level, player, 0, PULL_RANGE * reach(ninjaData, this));
         } else {
-            pull(level, player, 0);
+            repel(level, player, PUSH_RADIUS * reach(ninjaData, this));
         }
     }
 
     /**
-     * The pull is a hold, not a tap: while the key is down the looked-at body is dragged towards the
-     * caster every tick, and the push is spent once at the start of a sneaking hold.
+     * The pull is a hold, not a tap: while the key and sneak are down the looked-at body is dragged
+     * towards the caster every tick, and the push is spent once at the start of any other hold.
      */
     @Override
     public void handleChannelling(Player player, INinjaData ninjaData, int ticksChanneled) {
@@ -153,11 +155,9 @@ public class UniversalForceAbility extends Ability implements Ability.Channeled 
             return;
         }
         if (player.isShiftKeyDown()) {
-            if (ticksChanneled == 0) {
-                repel(level, player);
-            }
-        } else {
-            pull(level, player, ticksChanneled);
+            pull(level, player, ticksChanneled, PULL_RANGE * reach(ninjaData, this));
+        } else if (ticksChanneled == 0) {
+            repel(level, player, PUSH_RADIUS * reach(ninjaData, this));
         }
         this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
     }
@@ -168,8 +168,8 @@ public class UniversalForceAbility extends Ability implements Ability.Channeled 
     }
 
     /** Drags the looked-at creature to the caster, holding it up a little on the way. */
-    private void pull(ServerLevel level, Player player, int ticksChanneled) {
-        Entity lookedAt = Targeting.lookedAtEntity(player, PULL_RANGE);
+    private void pull(ServerLevel level, Player player, int ticksChanneled, double range) {
+        Entity lookedAt = Targeting.lookedAtEntity(player, range);
         if (!(lookedAt instanceof LivingEntity target) || !canAffect(player, target)) {
             return;
         }
@@ -198,11 +198,11 @@ public class UniversalForceAbility extends Ability implements Ability.Channeled 
     }
 
     /** Throws everything standing around the caster outwards, friend and foe alike excluded by side. */
-    private void repel(ServerLevel level, Player player) {
+    private void repel(ServerLevel level, Player player, double radius) {
         List<LivingEntity> nearby = level.getEntitiesOfClass(LivingEntity.class,
-                player.getBoundingBox().inflate(PUSH_RADIUS), entity -> canAffect(player, entity));
+                player.getBoundingBox().inflate(radius), entity -> canAffect(player, entity));
         for (LivingEntity target : nearby) {
-            if (target.distanceToSqr(player) > PUSH_RADIUS * PUSH_RADIUS) {
+            if (target.distanceToSqr(player) > radius * radius) {
                 continue;
             }
             Vec3 away = target.position().subtract(player.position());
@@ -223,7 +223,16 @@ public class UniversalForceAbility extends Ability implements Ability.Channeled 
                 SoundEvents.ENDER_DRAGON_FLAP, SoundSource.PLAYERS, 1.2f, 0.7f);
         level.sendParticles(ParticleTypes.SWEEP_ATTACK, player.getX(),
                 player.getY() + player.getBbHeight() * 0.5d, player.getZ(),
-                8, PUSH_RADIUS * 0.35d, 0.4d, PUSH_RADIUS * 0.35d, 0.0d);
+                8, radius * 0.35d, 0.4d, radius * 0.35d, 0.0d);
+    }
+
+    /**
+     * How far the technique reaches at this mastery: a little over half of the base reach on the
+     * first cast, a good deal more once it is fully learned. Used for both the ray and the sweep,
+     * so the two directions grow together.
+     */
+    private static double reach(INinjaData ninjaData, Ability ability) {
+        return 0.6d + 0.8d * Mastery.level(ninjaData, ability);
     }
 
     /** Anything but the caster, their allies, and the untouchable. */

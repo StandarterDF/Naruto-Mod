@@ -74,7 +74,11 @@ public final class GateCounterOverlay {
         if (gates <= 0) {
             return;
         }
-        Component line = Component.translatable(LABEL_KEY, ROMAN[gates], EightGatesAbility.MAX_GATES);
+        // The label is "Gate <name> (<current>/<max>)": three arguments, not two. The gate's lore
+        // name comes from narutomod:gate.N, the current count is the Roman numeral.
+        Component gateName = Component.translatable("narutomod:gate." + gates);
+        Component line = Component.translatable(LABEL_KEY, gateName, ROMAN[gates],
+                EightGatesAbility.MAX_GATES);
         int colour = gates >= EightGatesAbility.MAX_GATES ? FINAL_GATE_COLOUR : LABEL_COLOUR;
         event.getGuiGraphics().drawString(minecraft.font, line, X, Y, colour, true);
     }
@@ -115,7 +119,7 @@ public final class GateCounterOverlay {
         for (int gates = 1; gates <= EightGatesAbility.MAX_GATES; gates++) {
             if (speed.getAmplifier() == gates - 1
                     && strength.getAmplifier() == (gates - 1) / 2
-                    && resistance.getAmplifier() == (gates - 1) / 3
+                    && resistance.getAmplifier() == Math.min(3, gates - 1)
                     && jump.getAmplifier() == Math.min(gates - 1, 3)) {
                 return gates;
             }

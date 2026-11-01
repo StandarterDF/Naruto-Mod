@@ -37,6 +37,13 @@ public final class Mastery {
     private static final float MAX_REDUCTION = 0.9f;
 
     /**
+     * How far chakra meditation reaches before any mastery at all. It is a usable handful of steps
+     * from the very first cast, because a technique that does nothing until it is half learned is
+     * a technique nobody keeps casting.
+     */
+    private static final double MEDITATION_BASE_RADIUS = 64.0d;
+
+    /**
      * How fast mastery is earned, as a multiplier on every gain. One is the real pace; the
      * {@code /naruto debug masteryspeed} command turns it up or down so a tester can feel how a
      * technique plays at its early and late values without grinding through the curve twice. It
@@ -182,12 +189,15 @@ public final class Mastery {
     }
 
     /**
-     * How far the chakra meditation reaches at this mastery: a plain eight blocks at the start,
-     * growing hard towards the end so a finished ninja can sit anywhere while their clones work.
+     * How far the chakra meditation reaches at this mastery: a few steps from the very first cast,
+     * then a steady, fast-growing spread that ends in many chunks at full mastery. The curve is a
+     * power of 1.5 rather than a cube, so the early gains actually show: half mastery already
+     * reaches a couple of hundred blocks instead of a rounding error on the starting radius.
      */
     public static float meditationRadius(INinjaData ninjaData, Ability ability) {
         float level = level(ninjaData, ability);
-        double max = Math.max(32.0d, NarutoConfig.meditationRadiusMax);
-        return (float) (32.0d + (max - 32.0d) * level * level * level);
+        double max = Math.max(MEDITATION_BASE_RADIUS, NarutoConfig.meditationRadiusMax);
+        return (float) (MEDITATION_BASE_RADIUS
+                + (max - MEDITATION_BASE_RADIUS) * Math.pow(level, 1.5d));
     }
 }

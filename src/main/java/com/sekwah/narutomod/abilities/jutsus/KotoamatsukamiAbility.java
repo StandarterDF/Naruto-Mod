@@ -3,6 +3,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.capabilities.INinjaData;
+import com.sekwah.narutomod.events.GenjutsuEvents;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.friends.Friends;
 import com.sekwah.narutomod.util.Targeting;
@@ -25,10 +26,10 @@ import net.minecraft.world.entity.player.Player;
  *
  * <p>It does not stun, blind or hurt. It simply tells a creature that the person in front of it is
  * on its own side, and a mind told that once does not go looking for a reason to disagree: the
- * creature drops whatever it was fighting and - for six seconds - refuses to take the caster for an
+ * creature drops whatever it was fighting and - for ten minutes - refuses to take the caster for an
  * enemy again. The illusion is broken the moment the caster strikes it, which is the whole shape of
  * the technique: it buys a way past a guard rather than a way through one, and the first blow has
- * to be worth the six seconds it ends.</p>
+ * to be worth the ten minutes it ends.</p>
  *
  * <p>An exceptionally strong mind cannot be told something it does not already believe, so creatures
  * with a hundred health or more are refused outright. The mark itself is a timestamp and the
@@ -63,10 +64,10 @@ public class KotoamatsukamiAbility extends Ability implements Ability.Cooldown {
 
     /** What it costs and how long before the eye can plant another belief. */
     private static final float COST = 120.0f;
-    private static final int COOLDOWN = 400;
+    private static final int COOLDOWN = 20 * 60 * 10;
 
-    /** Six seconds of misplaced trust: enough to walk past a guard, not enough to fight beside one. */
-    private static final int DURATION = 120;
+    /** Ten minutes of misplaced trust: enough to walk past a guard, not enough to fight beside one. */
+    private static final int DURATION = 20 * 60 * 10;
 
     @Override
     public ActivationType activationType() {
@@ -78,9 +79,23 @@ public class KotoamatsukamiAbility extends Ability implements Ability.Cooldown {
         return COMBO;
     }
 
+    /**
+     * Ten minutes (12000 ticks). Mastery discount is not applied, so the cooldown stays at
+     * exactly ten minutes regardless of mastery level.
+     */
     @Override
     public int getCooldown() {
         return COOLDOWN;
+    }
+
+    @Override
+    public void registerCooldown(Player player, INinjaData ninjaData, String translationKey) {
+        int cooldown = getCooldown();
+        if (cooldown <= 0) {
+            return;
+        }
+        ninjaData.getCooldownEvents().put(translationKey,
+                new com.sekwah.narutomod.capabilities.CooldownTickEvent(cooldown));
     }
 
     @Override
@@ -143,6 +158,10 @@ public class KotoamatsukamiAbility extends Ability implements Ability.Cooldown {
         // worth doing it to. Clearing the target is what makes that visible at once; the mark is
         // what keeps it true when the next thing tries to become a target.
         target.setTarget(null);
+
+        // Delegate to the shared genjutsu machinery: it clears the piglin brain, points the mob at
+        // the caster's enemies, and draws the WITCH particles that mark a mind being worked on.
+        GenjutsuEvents.apply(player, target, DURATION);
 
         // Enchantment glyphs are the vanilla language for a mind being worked on, and the chime is
         // the one sound in the mod's register that reads as a thought arriving rather than a blow.

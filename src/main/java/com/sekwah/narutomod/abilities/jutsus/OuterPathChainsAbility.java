@@ -16,6 +16,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -28,9 +29,9 @@ import java.util.UUID;
  *
  * <p>Chains are a good answer to a group because they do not take the group out of the fight - a
  * chained body can still swing, still cast and still block. What it cannot do is close the gap or
- * run away, which is exactly the moment the caster's other paths want. The cone is deliberately
- * narrow: this is an aimed technique, not a blast, and three bodies is all the caster's hands can
- * hold at once.</p>
+ * run away, which is exactly the moment the caster's other paths want. The chains catch every body
+ * that stands inside the cone of the caster's gaze at once: this is an aimed technique, but one
+ * that does not stop short at a handful of targets.</p>
  *
  * <p>The chains are paid for as they are held - a large opening price and a trickle for every tick
  * afterwards - so a caster cannot leave a group pinned for free while they do something else.</p>
@@ -52,14 +53,11 @@ public class OuterPathChainsAbility extends Ability implements Ability.Channeled
     private static final float BASE_COST = 50.0f;
     private static final float COST_PER_TICK = 1.5f;
 
-    /** How far the cone reaches. */
-    private static final double RANGE = 12.0d;
+    /** How far the cone reaches. Raised to 16 so a caster can pin a whole squad at once. */
+    private static final double RANGE = 16.0d;
 
-    /** The narrowest cone that still lets a caster sweep across a group without aiming at each body. */
-    private static final double CONE_DOT = 0.75d;
-
-    /** How many bodies may be held at once. */
-    private static final int MAX_TARGETS = 3;
+    /** Cosine of half the cone: ~60 degrees total, wide enough to sweep a group in one cast. */
+    private static final double CONE_DOT = 0.5d;
 
     /** How long one hold may run before the caster has to throw the chains again. */
     private static final int MAX_TICKS = 120;
@@ -132,7 +130,7 @@ public class OuterPathChainsAbility extends Ability implements Ability.Channeled
                         .withStyle(ChatFormatting.RED), true);
                 return false;
             }
-            this.holds.put(player.getUUID(), caught.stream().map(LivingEntity::getUUID).toList());
+            this.holds.put(player.getUUID(), new ArrayList<>(caught.stream().map(LivingEntity::getUUID).toList()));
         } else if (!this.holds.containsKey(player.getUUID())) {
             return false;
         }
@@ -159,6 +157,15 @@ public class OuterPathChainsAbility extends Ability implements Ability.Channeled
         List<UUID> caught = this.holds.get(player.getUUID());
         if (caught == null) {
             return;
+        }
+        // Keep sweeping the whole radius while the chains are held: a body that walks into reach
+        // after the initial throw is caught too, instead of only the victims present at cast time.
+        if (ticksChanneled % 10 == 0) {
+            for (LivingEntity late : targets(player)) {
+                if (!caught.contains(late.getUUID())) {
+                    caught.add(late.getUUID());
+                }
+            }
         }
         long now = level.getGameTime();
         for (int i = 0; i < caught.size(); i++) {
@@ -215,7 +222,9 @@ public class OuterPathChainsAbility extends Ability implements Ability.Channeled
         if (Friends.isOwnSide(caster, target)) {
             return false;
         }
-        return target.distanceTo(caster) <= RANGE;
+        // All bodies in reach are caught, not only those in a narrow forward cone: the chains are
+        // thrown around the caster and everything nearby is pinned.
+        return target.distanceToSqr(caster) <= RANGE * RANGE;
     }
 
     /** One chain from one of the caster's hands to a caught body. */

@@ -1,0 +1,24 @@
+newmtl m_0.004
+Ka 1 1 1
+Kd 1 1 1
+map_Kd #m_0.004
+Ks 0 0 0
+d 1
+illum 2
+
+newmtl m_1.004
+Ka 1 1 1
+Kd 1 1 1
+map_Kd #m_1.004
+Ks 0 0 0
+d 1
+illum 2
+
+newmtl m_2.003
+Ka 1 1 1
+Kd 1 1 1
+map_Kd #m_2.003
+Ks 0 0 0
+d 1
+illum 2
+

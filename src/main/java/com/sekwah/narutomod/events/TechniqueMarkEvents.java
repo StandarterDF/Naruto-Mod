@@ -378,7 +378,7 @@ public final class TechniqueMarkEvents {
             return;
         }
         long now = level.getGameTime();
-        if (now % 10L != 0L) {
+        if (now % 20L != 0L) {
             return;
         }
         for (Entity entity : level.getEntities().getAll()) {

@@ -85,6 +85,25 @@ public class SupplyChestScreen extends AbstractContainerScreen<SupplyChestMenu> 
         // The item sprites are drawn deep inside super.render, so the amount badges have to go in
         // afterwards to land in front of them instead of under the item icon.
         this.renderAmountBadges(graphics);
+        int hoveredIndex = this.hoveredSlot == null ? -1 : this.menu.slots.indexOf(this.hoveredSlot);
+        if (this.hoveredSlot != null && this.hoveredSlot.hasItem()) {
+            if (hoveredIndex >= 0 && hoveredIndex < this.menu.getWindowSize()) {
+                int amount = this.menu.getDisplayAmount(hoveredIndex);
+                java.util.List<Component> lines = new java.util.ArrayList<>();
+                lines.add(this.hoveredSlot.getItem().getHoverName());
+                lines.add(Component.translatable("narutomod:supply_chest.amount", amount));
+                lines.addAll(this.getTooltipFromContainerItem(this.hoveredSlot.getItem()));
+                graphics.renderTooltip(this.font, lines, java.util.Optional.empty(), mouseX, mouseY);
+            } else {
+                // The caster's own inventory: draw the ordinary vanilla item tooltip.
+                graphics.renderTooltip(this.font, this.hoveredSlot.getItem(), mouseX, mouseY);
+            }
+        }
+    }
+
+    @Override
+    protected void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
+        // Tooltips are drawn by hand in render(), so the vanilla pass must not draw a second one.
     }
 
     private void renderAmountBadges(GuiGraphics graphics) {

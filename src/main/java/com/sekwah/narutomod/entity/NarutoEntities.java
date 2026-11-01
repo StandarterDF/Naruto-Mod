@@ -11,6 +11,7 @@ import com.sekwah.narutomod.entity.jutsuprojectile.TravellingArcEntity;
 import com.sekwah.narutomod.entity.jutsuprojectile.WaterBulletJutsuEntity;
 import com.sekwah.narutomod.entity.projectile.ExplosiveKunaiEntity;
 import com.sekwah.narutomod.entity.projectile.KunaiEntity;
+import com.sekwah.narutomod.entity.projectile.MinatoKunaiEntity;
 import com.sekwah.narutomod.entity.projectile.SenbonEntity;
 import com.sekwah.narutomod.entity.projectile.ShurikenEntity;
 import com.sekwah.narutomod.entity.projectile.SmokeBombEntity;
@@ -40,6 +41,9 @@ public class NarutoEntities {
 
     public static final RegistryObject<EntityType<ExplosiveKunaiEntity>> EXPLOSIVE_KUNAI = register("explosive_kunai",
             EntityType.Builder.<ExplosiveKunaiEntity>of(ExplosiveKunaiEntity::new, MobCategory.MISC).sized(0.5F, 0.5F).setTrackingRange(8));
+
+    public static final RegistryObject<EntityType<MinatoKunaiEntity>> MINATO_KUNAI = register("minato_kunai",
+            EntityType.Builder.<MinatoKunaiEntity>of(MinatoKunaiEntity::new, MobCategory.MISC).sized(0.5F, 0.5F).setTrackingRange(8));
 
     public static final RegistryObject<EntityType<ShurikenEntity>> SHURIKEN = register("shuriken",
             EntityType.Builder.<ShurikenEntity>of(ShurikenEntity::new, MobCategory.MISC).sized(0.5F, 0.5F).setTrackingRange(8));

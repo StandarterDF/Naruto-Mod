@@ -7,6 +7,8 @@ import com.sekwah.narutomod.skills.SkillBranch;
 import com.sekwah.narutomod.skills.SkillTree;
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -38,7 +40,68 @@ public final class AbilityUnlocks {
             "kirin",
             "six_paths_mode");
 
+    private static final Map<String, String> BASE_REQUIREMENTS = new HashMap<>();
+
+    static {
+        // Jougan techniques all grow out of the eye itself.
+        String[] jougan = {
+                "ability:dimension_step", "ability:jougan_stasis", "ability:jougan_unweave",
+                "ability:seal_portal", "ability:sewing_pocket", "ability:sewing_lock",
+                "ability:chakra_shear", "ability:structure_cut", "ability:jougan_phase",
+                "ability:chakra_sever"
+        };
+        for (String k : jougan) BASE_REQUIREMENTS.put(k, "ability:jougan");
+
+        // Senrigan techniques all grow out of the eye itself.
+        String[] senrigan = {
+                "ability:senrigan_sight", "ability:senrigan_flight",
+                "ability:senrigan_evasion", "ability:senrigan_guidance"
+        };
+        for (String k : senrigan) BASE_REQUIREMENTS.put(k, "ability:senrigan");
+
+        // Sharingan techniques that are Mangekyo-level still need the eye itself.
+        String[] sharingan = {
+                "ability:amaterasu", "ability:kagutsuchi", "ability:susanoo",
+                "ability:tsukuyomi", "ability:izanagi", "ability:izanami",
+                "ability:kamui", "ability:kamui_phasing", "ability:kotoamatsukami"
+        };
+        for (String k : sharingan) BASE_REQUIREMENTS.put(k, "ability:sharingan");
+
+        // Rinnegan techniques need the Rinnegan itself.
+        String[] rinnegan = {
+                "ability:universal_force", "ability:chibaku_tensei", "ability:chakra_transfer",
+                "ability:naraka_path", "ability:asura_missiles", "ability:outer_chains",
+                "ability:outer_armor", "ability:momoshiki_absorption", "ability:limbo",
+                "ability:rinnegan_prison", "ability:item_attraction", "ability:black_rod"
+        };
+        for (String k : rinnegan) BASE_REQUIREMENTS.put(k, "ability:rinnegan");
+
+        // Byakugan techniques need the Byakugan itself.
+        String[] byakugan = {
+                "ability:rotation", "ability:tenketsu_needles", "ability:tenketsu_blind",
+                "ability:chakra_grip", "ability:node_rupture", "ability:byakugan_farsight",
+                "ability:byakugan_mist_sight", "ability:void_cast", "ability:mechanism_sight",
+                "ability:hidden_seal", "ability:doctor_sight", "ability:sixty_four_palms",
+                "ability:byakugan_mark", "ability:air_palm", "ability:circular_block",
+                "ability:soshiken", "ability:palm_lance", "ability:eight_trigrams_collapse"
+        };
+        for (String k : byakugan) BASE_REQUIREMENTS.put(k, "ability:byakugan");
+
+        // Mode techniques need their base mode/technique.
+        BASE_REQUIREMENTS.put("ability:curse_seal_two", "ability:curse_seal_one");
+        BASE_REQUIREMENTS.put("ability:tailed_cloak", "ability:chakra_cloak");
+        BASE_REQUIREMENTS.put("ability:perfect_cloak", "ability:tailed_cloak");
+        BASE_REQUIREMENTS.put("ability:divided_cloak", "ability:tailed_cloak");
+        BASE_REQUIREMENTS.put("ability:seal_vessel", "ability:perfect_cloak");
+        BASE_REQUIREMENTS.put("ability:tailed_ball", "ability:perfect_cloak");
+    }
+
     private AbilityUnlocks() {
+    }
+
+    /** The base eye/mode an unlock key depends on, or null when none. */
+    public static String baseRequirement(String unlockKey) {
+        return unlockKey == null ? null : BASE_REQUIREMENTS.get(unlockKey);
     }
 
     /** The skill-tree key a technique is gated behind. */

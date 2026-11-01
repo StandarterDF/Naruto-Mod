@@ -1,6 +1,18 @@
 {
-  "parent": "item/handheld",
-  "textures": {
-    "layer0": "narutomod:items/kubikiribocho"
+  "parent": "forge:item/default",
+  "loader": "forge:separate_transforms",
+  "base": {
+    "parent": "narutomod:item/kubikiribocho_model"
+  },
+  "perspectives": {
+    "gui": {
+      "parent": "narutomod:item/kubikiribocho_flat"
+    },
+    "ground": {
+      "parent": "narutomod:item/kubikiribocho_flat"
+    },
+    "fixed": {
+      "parent": "narutomod:item/kubikiribocho_flat"
+    }
   }
 }

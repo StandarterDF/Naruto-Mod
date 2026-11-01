@@ -23,9 +23,10 @@ import java.util.HashMap;
  * them, they get their chakra back far quicker than they would on their own and any jutsu still on
  * cooldown comes down twice as fast, which is what the technique is really for.</p>
  *
- * <p>That range is not fixed: it grows hard with mastery, from a few steps up to many chunks, so a
- * seasoned ninja can leave their clones behind and still draw on them. Past the passive threshold,
- * every meditating clone keeps feeding a little capacity even when it is out of range entirely.</p>
+ * <p>That range is not fixed: it is already a usable handful of steps on the first cast and grows
+ * steeply with mastery, up to many chunks, so a seasoned ninja can leave their clones behind and
+ * still draw on them. Past the passive threshold, every meditating clone keeps feeding a little
+ * capacity even when it is out of range entirely.</p>
  *
  * <p>Nothing here scans the world for the clones - at a full radius that would be thousands of
  * chunks per tick. Each clone lists itself with its caster as it ticks, see {@link MeditationData}.</p>
@@ -46,6 +47,14 @@ public class ChakraMeditationJutsuAbility extends ShadowCloneJutsuAbility {
 
     /** Chakra pushed into the caster every tick, per meditating clone in range. */
     private static final float CHAKRA_PER_CLONE = 0.2f;
+
+    /**
+     * How much mastery one unit of restored chakra is worth, as a multiplier on
+     * {@code restored / max}. A tick only puts a fraction of a bar back, so counting that fraction
+     * straight would leave the curve crawling; this keeps meditation a real way to learn the
+     * technique without inventing a different formula for it.
+     */
+    private static final float MEDITATION_MASTERY_SCALE = 2.5f;
 
     /**
      * Chakra capacity each meditating clone opens up while it is linked to its caster, on top of
@@ -116,19 +125,21 @@ public class ChakraMeditationJutsuAbility extends ShadowCloneJutsuAbility {
             // instead - otherwise meditating in sage mode would refill the wrong bar entirely.
             float refill = CHAKRA_PER_CLONE * linked;
             // Mastery is earned by the chakra (or nature energy) the clones actually put back into
-            // the bar, so a meditation that keeps feeding counts for more than a single cast.
+            // the bar, so a meditation that keeps feeding counts for more than a single cast. The
+            // restored fraction is only part of a bar per tick, so it is weighted up to keep the
+            // curve moving at a pace a player can actually feel.
             if (ninjaData.isSageMode()) {
                 float before = ninjaData.getSeninMana();
                 ninjaData.addSeninMana(refill);
                 float restored = ninjaData.getSeninMana() - before;
                 ((ChakraMeditationJutsuAbility) meditation).recordMasteryCredit(player, ninjaData,
-                        restored / Math.max(1f, ninjaData.getMaxSeninMana()));
+                        MEDITATION_MASTERY_SCALE * restored / Math.max(1f, ninjaData.getMaxSeninMana()));
             } else {
                 float before = ninjaData.getChakra();
                 ninjaData.addChakra(refill);
                 float restored = ninjaData.getChakra() - before;
                 ((ChakraMeditationJutsuAbility) meditation).recordMasteryCredit(player, ninjaData,
-                        restored / Math.max(1f, ninjaData.getMaxChakra()));
+                        MEDITATION_MASTERY_SCALE * restored / Math.max(1f, ninjaData.getMaxChakra()));
             }
             fastForwardCooldowns(ninjaData);
         });

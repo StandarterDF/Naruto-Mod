@@ -1,0 +1,117 @@
+{
+    "credit": "Model from Mathioks Naruto Mod (ported)",
+    "loader": "forge:obj",
+    "model": "narutomod:models/weapon/nuibari.obj",
+    "flip-v": true,
+    "automatic_culling": false,
+    "shade_quads": true,
+    "emissive_ambient": false,
+    "textures": {
+        "m_1": "narutomod:items/weapons/model/nuibari_0",
+        "particle": "narutomod:items/weapons/model/nuibari_0"
+    },
+    "display": {
+        "thirdperson_righthand": {
+            "rotation": [
+                0,
+                -90,
+                0
+            ],
+            "translation": [
+                0.0,
+                -2.5,
+                2.001
+            ],
+            "scale": [
+                0.625,
+                0.625,
+                0.625
+            ]
+        },
+        "thirdperson_lefthand": {
+            "rotation": [
+                0,
+                90,
+                0
+            ],
+            "translation": [
+                0.0,
+                -2.5,
+                2.001
+            ],
+            "scale": [
+                0.625,
+                0.625,
+                0.625
+            ]
+        },
+        "firstperson_righthand": {
+            "rotation": [
+                0,
+                -90,
+                25
+            ],
+            "translation": [
+                1.13,
+                1.6,
+                1.13
+            ],
+            "scale": [
+                0.68,
+                0.68,
+                0.68
+            ]
+        },
+        "firstperson_lefthand": {
+            "rotation": [
+                0,
+                90,
+                -25
+            ],
+            "translation": [
+                1.13,
+                1.6,
+                1.13
+            ],
+            "scale": [
+                0.68,
+                0.68,
+                0.68
+            ]
+        },
+        "ground": {
+            "rotation": [
+                0,
+                0,
+                0
+            ],
+            "translation": [
+                0,
+                2,
+                0
+            ],
+            "scale": [
+                0.5,
+                0.5,
+                0.5
+            ]
+        },
+        "fixed": {
+            "rotation": [
+                0,
+                180,
+                0
+            ],
+            "translation": [
+                0,
+                0,
+                0
+            ],
+            "scale": [
+                1,
+                1,
+                1
+            ]
+        }
+    }
+}

@@ -23,14 +23,14 @@ import net.minecraft.world.phys.Vec3;
  * <p>Cast through an open Sharingan, it fixes on the creature the caster is looking at and sets it
  * burning with a fire that is not fire. The flame does not care about water, rain or a fire
  * resistance potion, because it is not burning the body - it is a chakra fire that gnaws at it for
- * ten seconds and then goes out on its own. See {@link AmaterasuEvents} for the burn itself.</p>
+ * ten minutes and then goes out on its own. See {@link AmaterasuEvents} for the burn itself.</p>
  *
  * <p>The price is deliberately steep and the cooldown long: one cast is meant to be a decision, not
  * a rotation. The black flame is not a thrown fire but a bonfire's worth of chakra forced onto a
- * body, so it burns a large part of the bar at once. It also heats the ground around the victim:
- * furnaces nearby are stoked to ten times their normal speed for thirty seconds, the same kind of
- * heat the fire breath pours into a furnace. Like every power built on an eye it refuses to cast
- * without the eye open.</p>
+ * body, so it burns a large part of the bar at once. While channelling it heats only the furnace
+ * the caster is looking at: that single furnace is stoked to ten times its normal speed for thirty
+ * seconds, the same kind of heat the fire breath pours into a furnace. Like every power built on
+ * an eye it refuses to cast without the eye open.</p>
  */
 public class AmaterasuAbility extends Ability implements Ability.Cooldown, Ability.Channeled {
 
@@ -113,14 +113,17 @@ public class AmaterasuAbility extends Ability implements Ability.Cooldown, Abili
             level.playSound(null, player, net.minecraft.sounds.SoundEvents.BLAZE_SHOOT,
                     net.minecraft.sounds.SoundSource.PLAYERS, 1.0f, 0.8f);
         }
-        // Visual black-flame spray.
+        // Visual black-flame beam: solid stream from the eye out to 24 blocks.
         Vec3 eye = player.getEyePosition();
         Vec3 look = player.getViewVector(1.0f);
-        for (int step = 1; step <= 6; step++) {
-            double dist = 24.0d * step / 6.0d;
+        for (double dist = 0.5d; dist <= 24.0d; dist += 0.5d) {
+            double progress = dist / 24.0d;
+            double spread = 0.05d + 0.25d * progress;
             Vec3 point = eye.add(look.scale(dist));
             level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, point.x, point.y, point.z,
-                    2, 0.2d, 0.2d, 0.2d, 0.01d);
+                    2, spread, spread, spread, 0.01d);
+            level.sendParticles(ParticleTypes.LARGE_SMOKE, point.x, point.y, point.z,
+                    1, spread, spread, spread, 0.01d);
         }
         if (ticksChanneled % 10 == 0) {
             for (LivingEntity target : BreathCone.entities(level, player, 24.0d, 0.7d)) {
@@ -135,7 +138,13 @@ public class AmaterasuAbility extends Ability implements Ability.Cooldown, Abili
                 }
                 AmaterasuEvents.ignite(level, target, player);
             }
-            AmaterasuEvents.heatFurnaces(level, player.position(), 8.0d);
+            net.minecraft.world.phys.BlockHitResult hit1 = Targeting.lookedAtBlock(player, 8.0d);
+            if (hit1 != null) {
+                net.minecraft.core.BlockPos pos = hit1.getBlockPos();
+                if (level.getBlockEntity(pos) instanceof net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity) {
+                    AmaterasuEvents.heatFurnace(level, pos);
+                }
+            }
         }
         this.recordMasteryCredit(player, ninjaData, MASTERY_CREDIT_PER_TICK);
     }
@@ -147,6 +156,16 @@ public class AmaterasuAbility extends Ability implements Ability.Cooldown, Abili
         }
         if (!(player.level() instanceof ServerLevel level)) {
             return;
+        }
+        // The black flame is a furnace's worth of heat: only the furnace under the caster's crosshair
+        // is driven at ten times its speed for half a minute, the way the fire breath stokes a furnace.
+        // This is done before the entity check so a tap aimed at a furnace works without a victim.
+        net.minecraft.world.phys.BlockHitResult hit2 = Targeting.lookedAtBlock(player, 8.0d);
+        if (hit2 != null) {
+            net.minecraft.core.BlockPos pos = hit2.getBlockPos();
+            if (level.getBlockEntity(pos) instanceof net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity) {
+                AmaterasuEvents.heatFurnace(level, pos);
+            }
         }
         if (!(Targeting.lookedAtEntity(player, RANGE) instanceof LivingEntity target)) {
             return;
@@ -163,8 +182,5 @@ public class AmaterasuAbility extends Ability implements Ability.Cooldown, Abili
             return;
         }
         AmaterasuEvents.ignite(level, target, player);
-        // The black flame is a furnace's worth of heat: everything that cooks around the victim is
-        // driven at ten times its speed for half a minute, the way the fire breath stokes a furnace.
-        AmaterasuEvents.heatFurnaces(level, target.position(), 8.0d);
     }
 }

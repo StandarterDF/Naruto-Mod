@@ -76,8 +76,11 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
      */
     @Sync(minTicks = 1)
     private float armorChakraBonus;
+    @Sync(minTicks = 1)
     private float enchantChakraBonus;
+    @Sync(minTicks = 1)
     private float enchantStaminaBonus;
+    @Sync(minTicks = 1)
     private float enchantSeninBonus;
     @Sync(minTicks = 1)
     private boolean gudodamaForm;
@@ -121,9 +124,11 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
     private boolean secondBreathArmed;
 
     /**
-     * How many of the eight inner gates are open. Server side only, the client sees the resulting
-     * effects instead.
+     * How many of the eight inner gates are open. Synced to the client so the gate counter and the
+     * chat messages can name the open gate; the body effects alone are no longer enough, since the
+     * gates stopped handing out the resistance effect.
      */
+    @Sync(minTicks = 1)
     private int gateCount;
 
     /**
@@ -1124,9 +1129,10 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
             this.staminaCostMultiplier *= 0.5f;
         }
         if (this.staminaRegenInfo.canRegen()) {
-            // Open gates burn stamina faster than it can be made back: while any gate is open the
-            // bar only goes down, which is the price of the stance.
-            if (this.getGateCount() <= 0) {
+            // Open gates burn stamina faster than it can be made back: while more than three gates are
+            // open the bar only goes down. The first three gates are gentle enough that the body can
+            // still recover stamina, which keeps low-gate play viable.
+            if (this.getGateCount() <= 3) {
                 float staminaRegen = NarutoConfig.staminaRegen
                         + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.STAMINA_REGEN) / 20.0f
                         + this.trainingWeightsRegenBonus / 20.0f
@@ -1156,9 +1162,10 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
                 && player.getPersistentData().getLong("narutomod:node_rupture_until")
                 <= player.level().getGameTime()
                 && !GenjutsuEvents.isUnderGenjutsu(player)) {
-            // Open gates burn chakra faster than it can be made back: while any gate is open the
-            // pool only goes down, which is the price of the stance.
-            if (this.getGateCount() <= 0) {
+            // Open gates burn chakra faster than it can be made back: while more than three gates are
+            // open the pool only goes down. The first three gates are gentle enough that chakra may
+            // still trickle back, which keeps low-gate play viable.
+            if (this.getGateCount() <= 3) {
                 float regen = NarutoConfig.chakraRegen
                         + SkillTree.bonus(this.skillData.getUnlocked(), SkillEffect.CHAKRA_REGEN) / 20.0f
                         + this.chakraRegenBonus / 20.0f;
@@ -1200,7 +1207,11 @@ public class NinjaData implements INinjaData, ICapabilityProvider {
                         int finalTicksChanneled = this.ticksChanneled - 1;
                         ability.performServer(player, this, finalTicksChanneled);
                     }
-                    this.setCurrentlyChanneledAbility(player, null);
+                    // Clear the channel without the "technique stopped" line: the ability already told
+                    // the caster why the cast could not start (an occupied hand, no chakra), and that
+                    // message would otherwise be overwritten in the action bar by a generic one.
+                    this.currentlyChanneled = null;
+                    this.ticksChanneled = 0;
                 }
             } else {
                 LOGGER.error("Somehow non channeled ability has been set to ninja data {}", this.currentlyChanneled);

@@ -1,0 +1,20 @@
+{
+  "type": "narutomod:add_loot",
+  "conditions": [
+    {
+      "condition": "minecraft:any_of",
+      "terms": [
+        { "condition": "forge:loot_table_id", "loot_table_id": "minecraft:entities/ender_dragon" }
+      ]
+    }
+  ],
+  "entries": [
+    { "item": "narutomod:scroll_rinnegan", "weight": 2 },
+    { "item": "narutomod:scroll_six_paths_mode", "weight": 1 },
+    { "item": "narutomod:scroll_sage_mode", "weight": 1 }
+  ],
+  "chance": 1.0,
+  "luck_bonus": 0.05,
+  "min": 1,
+  "max": 1
+}

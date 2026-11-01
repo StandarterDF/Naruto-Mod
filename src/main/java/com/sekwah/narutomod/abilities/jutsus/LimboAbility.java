@@ -8,11 +8,14 @@ import com.sekwah.narutomod.entity.NarutoEntities;
 import com.sekwah.narutomod.entity.ShadowCloneEntity;
 import com.sekwah.narutomod.util.Targeting;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
@@ -25,9 +28,10 @@ import net.minecraft.world.phys.Vec3;
  *
  * <p>The shadow is not an illusion and not a clone in the ordinary sense: it is the caster's own
  * body displaced half a step out of the world, which is why nothing ordinary can see it. It is put
- * down where the caster is looking, holds its ground for eight seconds and strikes whatever stands
- * next to it every second. Only someone looking through a dojutsu can pick it out of the air, and
- * even then only for as long as they keep their eye open (see {@code SixPathsEsotericEvents}).</p>
+ * down where the caster is looking, lives for three minutes, is immortal, and moves and fights like
+ * an ordinary clone while remaining invisible. Only someone looking through a dojutsu can pick it
+ * out of the air, and even then only for as long as they keep their eye open (see
+ * {@code SixPathsEsotericEvents}).</p>
  *
  * <p>The body is a {@link ShadowCloneEntity} built without a caster, so it copies no gear, carries
  * no seal and pops to a single touch. Its persistence, its hits and its expiry are all run from the
@@ -62,8 +66,8 @@ public class LimboAbility extends Ability implements Ability.Cooldown {
     /** The caster the shadow belongs to; it is discarded when that player is gone. */
     public static final String OWNER_TAG = "narutomod:limbo_owner";
 
-    /** How long the shadow stands, in ticks. */
-    public static final int DURATION = 160;
+    /** How long the shadow stands, in ticks (3 minutes). */
+    public static final int DURATION = 20 * 60 * 3;
 
     /** Ticks between two blows of the shadow. */
     public static final int STRIKE_INTERVAL = 20;
@@ -161,9 +165,8 @@ public class LimboAbility extends Ability implements Ability.Cooldown {
      * constructor copies the caster's gear, arrows and paper bomb, and a limbo shadow carries none
      * of them - it is a body, not a second caster.
      *
-     * <p>It is left with no AI and no gravity so it stands exactly where it was put instead of
-     * strolling off or sinking through a wall, and it is silenced so the clone's own appearance and
-     * death sounds never give it away.</p>
+     * <p>It keeps its AI and gravity so it moves and fights like an ordinary clone, only invisible
+     * and silent, and it is made immortal by {@code SixPathsEsotericEvents}.</p>
      */
     private ShadowCloneEntity spawnShadow(ServerLevel level, Player player, Vec3 at) {
         ShadowCloneEntity shadow = new ShadowCloneEntity(NarutoEntities.SHADOW_CLONE.get(), level);
@@ -171,22 +174,52 @@ public class LimboAbility extends Ability implements Ability.Cooldown {
         shadow.setHealth(1.0f);
         shadow.setInvisible(true);
         shadow.setSilent(true);
-        shadow.setNoAi(true);
-        shadow.setNoGravity(true);
         shadow.setTarget(null);
+        // Outlive the clone's own timer: removal is driven by UNTIL_TAG in SixPathsEsotericEvents.
+        shadow.setLifetime(DURATION + 100);
 
         CompoundTag data = shadow.getPersistentData();
         data.putBoolean(LIMBO_TAG, true);
         data.putLong(UNTIL_TAG, level.getGameTime() + DURATION);
         data.putUUID(OWNER_TAG, player.getUUID());
 
+        Vec3 spawn = groundPosition(level, at);
         for (int lift = 0; lift <= SPAWN_LIFT; lift++) {
-            shadow.moveTo(at.x, at.y + lift, at.z, player.getYRot(), 0.0f);
+            shadow.moveTo(spawn.x, spawn.y + lift, spawn.z, player.getYRot(), 0.0f);
             if (level.noCollision(shadow, shadow.getBoundingBox())) {
                 break;
             }
         }
         return shadow;
+    }
+
+    /**
+     * Finds a free spot standing on solid ground under (or, failing that, above) the aimed point, so
+     * the shadow is never left hanging in the air.
+     */
+    private static Vec3 groundPosition(ServerLevel level, Vec3 at) {
+        int x = Mth.floor(at.x);
+        int z = Mth.floor(at.z);
+        int startY = Mth.floor(at.y);
+        for (int y = startY; y >= startY - 16 && y >= level.getMinBuildHeight(); y--) {
+            BlockPos blockPos = new BlockPos(x, y, z);
+            BlockPos above = blockPos.above();
+            if (level.getBlockState(blockPos).isFaceSturdy(level, blockPos, Direction.UP)
+                    && level.getBlockState(above).isAir()
+                    && level.getBlockState(above.above()).isAir()) {
+                return new Vec3(x + 0.5d, y + 1.0d, z + 0.5d);
+            }
+        }
+        for (int y = startY; y <= startY + 16 && y < level.getMaxBuildHeight(); y++) {
+            BlockPos blockPos = new BlockPos(x, y, z);
+            BlockPos above = blockPos.above();
+            if (level.getBlockState(blockPos).isFaceSturdy(level, blockPos, Direction.UP)
+                    && level.getBlockState(above).isAir()
+                    && level.getBlockState(above.above()).isAir()) {
+                return new Vec3(x + 0.5d, y + 1.0d, z + 0.5d);
+            }
+        }
+        return at;
     }
 
     /** @return whether this entity was put down by this technique. */

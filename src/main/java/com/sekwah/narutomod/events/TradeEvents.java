@@ -25,7 +25,6 @@ public final class TradeEvents {
     public static void onVillagerTrades(VillagerTradesEvent event) {
         if (event.getType() == VillagerProfession.LIBRARIAN) {
             event.getTrades().get(2).add(sell(NarutoItems.SCROLL_RASENGAN.get(), 32, 1, 2, 15));
-            event.getTrades().get(2).add(sell(NarutoItems.SCROLL_EARTH_WALL.get(), 28, 1, 2, 12));
             event.getTrades().get(3).add(sell(NarutoItems.CHAKRA_COMPASS.get(), 18, 1, 3, 10));
             event.getTrades().get(3).add(sell(NarutoItems.SCROLL_SAGE_MODE.get(), 40, 1, 1, 20));
             event.getTrades().get(4).add(sell(NarutoItems.SCROLL_EIGHT_GATES.get(), 48, 1, 1, 20));

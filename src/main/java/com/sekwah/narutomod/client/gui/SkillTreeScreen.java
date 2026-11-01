@@ -10,6 +10,7 @@ import com.sekwah.narutomod.skills.Skill;
 import com.sekwah.narutomod.skills.SkillBranch;
 import com.sekwah.narutomod.skills.SkillPoints;
 import com.sekwah.narutomod.skills.SkillSection;
+import com.sekwah.narutomod.abilities.AbilityUnlocks;
 import com.sekwah.narutomod.skills.SkillTree;
 import com.sekwah.narutomod.util.ExperienceUtils;
 import com.sekwah.narutomod.util.GuiUtils;
@@ -468,10 +469,17 @@ public class SkillTreeScreen extends Screen {
             }
             return;
         }
-        if (!this.hasSharingan(skill)) {
+        Component gate = this.eyeGate(skill);
+        if (gate != null) {
             if (this.minecraft != null && this.minecraft.player != null) {
-                this.minecraft.player.displayClientMessage(
-                        Component.translatable("naruto.skill.fail.sharingan").withStyle(ChatFormatting.RED), true);
+                this.minecraft.player.displayClientMessage(gate.copy().withStyle(ChatFormatting.RED), true);
+            }
+            return;
+        }
+        Component baseGate = this.baseGate(skill);
+        if (baseGate != null) {
+            if (this.minecraft != null && this.minecraft.player != null) {
+                this.minecraft.player.displayClientMessage(baseGate.copy().withStyle(ChatFormatting.RED), true);
             }
             return;
         }
@@ -676,7 +684,8 @@ public class SkillTreeScreen extends Screen {
         boolean learned = this.unlocked.contains(skill.id());
         boolean ready = SkillTree.prerequisitesMet(skill, this.unlocked)
                 && this.hasScroll(skill)
-                && this.hasSharingan(skill);
+                && this.eyeGate(skill) == null
+                && this.baseGate(skill) == null;
         boolean affordable = this.skillPoints >= skill.cost();
 
         int border;
@@ -709,15 +718,71 @@ public class SkillTreeScreen extends Screen {
         return !skill.requiresScroll() || this.scrolls.contains(skill.scrollKnowledge());
     }
 
-    /** Kamui is a Sharingan technique: buying its node also needs the Sharingan itself. */
-    private boolean requiresSharingan(Skill skill) {
-        return skill.isUnlock() && ("ability:kamui".equals(skill.unlock())
-                || "ability:kamui_phasing".equals(skill.unlock()));
+    /**
+     * The Mangekyo techniques that let the Sharingan mature into the Rinnegan. Mirrors the check in
+     * {@code AbilityUnlocks#isUnlocked} and {@code ServerUnlockSkillPacket}, so the client never
+     * offers a node the server would refuse.
+     */
+    private static final String[] MANGEKYO = {
+            "ability:tsukuyomi", "ability:susanoo", "ability:izanagi", "ability:izanami" };
+
+    private static boolean hasMangekyo(Set<ResourceLocation> unlocked) {
+        for (String key : MANGEKYO) {
+            if (SkillTree.hasUnlock(unlocked, key)) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    private boolean hasSharingan(Skill skill) {
-        return !this.requiresSharingan(skill)
-                || SkillTree.hasUnlock(this.unlocked, "ability:sharingan");
+    /**
+     * The reason this node is held back by an eye the caster does not have, or {@code null} when
+     * every such gate is met. The keys are the ones the server checks, so both sides agree.
+     */
+    private Component baseGate(Skill skill) {
+        if (!skill.isUnlock()) {
+            return null;
+        }
+        String base = AbilityUnlocks.baseRequirement(skill.unlock());
+        if (base == null) {
+            return null;
+        }
+        if (SkillTree.hasUnlock(this.unlocked, base)) {
+            return null;
+        }
+        Skill baseSkill = SkillTree.byUnlock(base);
+        Component baseName = baseSkill != null
+                ? Component.translatable(baseSkill.nameKey())
+                : Component.literal(base);
+        return Component.translatable("naruto.skill.fail.base_required", baseName);
+    }
+
+    private Component eyeGate(Skill skill) {
+        if (!skill.isUnlock()) {
+            return null;
+        }
+        String unlock = skill.unlock();
+        if ("ability:rinnegan".equals(unlock)) {
+            if (!SkillTree.hasUnlock(this.unlocked, "ability:sharingan")) {
+                return Component.translatable("skill.unlock.reason.sharingan_required");
+            }
+            if (!hasMangekyo(this.unlocked)) {
+                return Component.translatable("skill.unlock.reason.mangekyo_required");
+            }
+        }
+        // Kamui is a Sharingan technique: buying its node also needs the Sharingan itself.
+        if ("ability:kamui".equals(unlock) || "ability:kamui_phasing".equals(unlock)) {
+            if (!SkillTree.hasUnlock(this.unlocked, "ability:sharingan")) {
+                return Component.translatable("naruto.skill.fail.sharingan");
+            }
+        }
+        // Six Paths mode is the sage's own power: buying its node also needs the Rinnegan.
+        if ("ability:six_paths_mode".equals(unlock)) {
+            if (!SkillTree.hasUnlock(this.unlocked, "ability:rinnegan")) {
+                return Component.translatable("skill.unlock.reason.rinnegan_required");
+            }
+        }
+        return null;
     }
 
     private List<Component> tooltipFor(Skill skill) {
@@ -732,9 +797,13 @@ public class SkillTreeScreen extends Screen {
                 lines.add(Component.translatable("naruto.gui.skill.locked", prerequisiteNames(skill))
                         .withStyle(ChatFormatting.RED));
             }
-            if (this.requiresSharingan(skill)
-                    && !SkillTree.hasUnlock(this.unlocked, "ability:sharingan")) {
-                lines.add(Component.translatable("naruto.gui.skill.sharingan").withStyle(ChatFormatting.RED));
+            Component gate = this.eyeGate(skill);
+            if (gate != null) {
+                lines.add(gate.copy().withStyle(ChatFormatting.RED));
+            }
+            Component baseGate = this.baseGate(skill);
+            if (baseGate != null) {
+                lines.add(baseGate.copy().withStyle(ChatFormatting.RED));
             }
             if (!this.hasScroll(skill)) {
                 lines.add(Component.translatable("naruto.gui.skill.scroll").withStyle(ChatFormatting.RED));

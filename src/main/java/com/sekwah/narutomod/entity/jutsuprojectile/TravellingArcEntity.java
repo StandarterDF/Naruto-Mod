@@ -45,6 +45,9 @@ public class TravellingArcEntity extends Entity {
     /** The crescent thrown off a sword's edge. */
     public static final int KIND_VACUUM = 1;
 
+    /** A purely visual wave: drawn and discarded, never cuts anything. */
+    public static final int KIND_VISUAL = 2;
+
     /** How fast the front advances, in blocks a tick: a smooth visible flight, not a snap. */
     private static final double SPEED = 0.5d;
 
@@ -122,7 +125,9 @@ public class TravellingArcEntity extends Entity {
             this.discard();
             return;
         }
-        this.cutSlice(Math.min(traveled, range));
+        if (this.entityData.get(DATA_KIND) != KIND_VISUAL) {
+            this.cutSlice(Math.min(traveled, range));
+        }
         this.drawFront(Math.min(traveled, range));
     }
 
@@ -177,6 +182,12 @@ public class TravellingArcEntity extends Entity {
     /** One body under the front: the edge for this kind, and the wound it leaves. */
     private void cutBody(ServerLevel level, LivingEntity caster, LivingEntity target) {
         float damage = this.entityData.get(DATA_DAMAGE);
+        if (caster instanceof Player player) {
+            // Vanilla hands the kill to whoever last hurt the body, so the experience of a cut kill
+            // goes to the ninja who drew the wave instead of to nobody. Set before the hit, the
+            // same order the shuriken uses.
+            target.setLastHurtByMob(player);
+        }
         if (this.entityData.get(DATA_KIND) == KIND_VACUUM) {
             float physical = damage * (1.0f - this.entityData.get(DATA_MAGIC));
             float magic = damage * this.entityData.get(DATA_MAGIC);

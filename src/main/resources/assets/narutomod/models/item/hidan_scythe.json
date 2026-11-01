@@ -1,6 +1,18 @@
 {
-  "parent": "item/handheld",
-  "textures": {
-    "layer0": "narutomod:items/hidan_scythe"
+  "parent": "forge:item/default",
+  "loader": "forge:separate_transforms",
+  "base": {
+    "parent": "narutomod:item/hidan_scythe_model"
+  },
+  "perspectives": {
+    "gui": {
+      "parent": "narutomod:item/hidan_scythe_flat"
+    },
+    "ground": {
+      "parent": "narutomod:item/hidan_scythe_flat"
+    },
+    "fixed": {
+      "parent": "narutomod:item/hidan_scythe_flat"
+    }
   }
 }

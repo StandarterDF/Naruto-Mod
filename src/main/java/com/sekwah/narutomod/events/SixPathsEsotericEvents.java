@@ -18,7 +18,9 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -30,8 +32,9 @@ import java.util.UUID;
  * has to give everybody back.
  *
  * <p>Both powers are deliberately run from the tick rather than from the cast: a limbo shadow lives
- * on its own for eight seconds and keeps striking while the caster fights elsewhere, and a body
- * dropped into the void has to come back even if the caster has died, logged out or walked away.
+ * on its own for three minutes, is immortal, and moves and fights like an ordinary clone while the
+ * caster fights elsewhere, and a body dropped into the void has to come back even if the caster has
+ * died, logged out or walked away.
  * Nothing here scans the whole world - a shadow is found because it ticks, and a body is found
  * because it ticks.</p>
  *
@@ -79,6 +82,32 @@ public class SixPathsEsotericEvents {
         }
         if (!(entity instanceof Player) && AmenominakaAbility.isDue(entity)) {
             AmenominakaAbility.returnHome(entity);
+        }
+    }
+
+    /**
+     * A limbo shadow is immortal: no blow, fall or effect may take it down before its three minutes
+     * are up. The hurt and the death are both cancelled, and its health is restored.
+     */
+    @SubscribeEvent
+    public static void onLimboHurt(LivingHurtEvent event) {
+        if (event.getEntity().level().isClientSide) {
+            return;
+        }
+        if (event.getEntity() instanceof ShadowCloneEntity clone && LimboAbility.isLimboShadow(clone)) {
+            event.setCanceled(true);
+            clone.setHealth(clone.getMaxHealth());
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLimboDeath(LivingDeathEvent event) {
+        if (event.getEntity().level().isClientSide) {
+            return;
+        }
+        if (event.getEntity() instanceof ShadowCloneEntity clone && LimboAbility.isLimboShadow(clone)) {
+            event.setCanceled(true);
+            clone.setHealth(clone.getMaxHealth());
         }
     }
 

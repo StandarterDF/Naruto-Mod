@@ -1,0 +1,6 @@
+{
+  "parent": "narutomod:item/kunai_flat",
+  "textures": {
+    "layer0": "narutomod:items/weapons/shuriken"
+  }
+}

@@ -2,6 +2,7 @@ package com.sekwah.narutomod.abilities.jutsus;
 
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
+import com.sekwah.narutomod.abilities.mastery.Mastery;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.friends.Friends;
@@ -111,14 +112,16 @@ public class BlackRodAbility extends Ability implements Ability.Cooldown {
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
-        // A rod driven into a body marks it for 30s-60s: weakness and a slow drain of its chakra.
+        // A rod driven into a body marks it: weakness and a slow drain of its chakra, for half a
+        // minute at the first cast and a full minute once the technique is mastered.
         Entity looked = Targeting.lookedAtEntity(player, RANGE);
         if (looked instanceof LivingEntity target && target != player && target.isAlive()
                 && !Friends.areFriends(player, target)) {
+            int ticks = (int) (20 * (30 + 30 * Mastery.level(ninjaData, this)));
             target.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                    net.minecraft.world.effect.MobEffects.WEAKNESS, 20 * 60, 1, false, true));
+                    net.minecraft.world.effect.MobEffects.WEAKNESS, ticks, 1, false, true));
             CompoundTag data = target.getPersistentData();
-            data.putLong("narutomod:black_rod_drain_until", level.getGameTime() + 20 * 60);
+            data.putLong("narutomod:black_rod_drain_until", level.getGameTime() + ticks);
             data.putUUID("narutomod:black_rod_drain_caster", player.getUUID());
             level.sendParticles(ParticleTypes.SQUID_INK, target.getX(),
                     target.getY() + target.getBbHeight() * 0.5d, target.getZ(),

@@ -3,10 +3,10 @@ package com.sekwah.narutomod.events;
 import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.abilities.Ability;
 import com.sekwah.narutomod.abilities.jutsus.GudodamaFormAbility;
-import com.sekwah.narutomod.abilities.jutsus.GudodamaFormAbility;
 import com.sekwah.narutomod.abilities.jutsus.SixPathsModeAbility;
 import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
+import com.sekwah.narutomod.friends.Friends;
 import com.sekwah.narutomod.registries.NarutoRegistries;
 import com.sekwah.narutomod.util.ElementalStates;
 import net.minecraft.nbt.CompoundTag;
@@ -15,21 +15,23 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;import net.minecraft.world.entity.Entity;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.MobEffectEvent;
 import net.minecraftforge.eventbus.api.Event;
@@ -137,6 +139,11 @@ public final class SixPathsEvents {
             if (player.tickCount % 20 == 0) {
                 ninjaData.addStamina(4.0f);
             }
+            // The body no longer needs to breathe, but the air bar is what the game watches: refill it
+            // every second so drowning damage never starts, not just gets cancelled.
+            if (player.tickCount % 20 == 0) {
+                player.setAirSupply(player.getMaxAirSupply());
+            }
         }
         // The mode no longer expires on its own; it only ends when the chakra runs out or the stance
         // is dropped. Orbs regenerate back to the maximum over time.
@@ -243,7 +250,8 @@ public final class SixPathsEvents {
         player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(nd -> {
             nd.addChakra(20.0f);
             SixPathsModeAbility.setOrbs(player, orbs - 1);
-            player.getPersistentData().putLong("narutomod:orb_totem_until", player.level().getGameTime() + 20 * 60);
+            // Thirty seconds: long enough that one death does not hand the orbs straight back.
+            player.getPersistentData().putLong("narutomod:orb_totem_until", player.level().getGameTime() + 20 * 30);
         });
         if (player.level() instanceof ServerLevel level) {
             level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1.0d, player.getZ(),
@@ -351,7 +359,8 @@ public final class SixPathsEvents {
         if (SixPathsModeAbility.isActive(player)) {
             if (event.getSource().is(net.minecraft.world.damagesource.DamageTypes.LAVA)
                     || event.getSource().is(net.minecraft.world.damagesource.DamageTypes.IN_WALL)
-                    || event.getSource().is(net.minecraft.world.damagesource.DamageTypes.DROWN)) {
+                    || event.getSource().is(net.minecraft.world.damagesource.DamageTypes.DROWN)
+                    || event.getSource().is(net.minecraft.world.damagesource.DamageTypes.FALL)) {
                 event.setCanceled(true);
                 return;
             }
@@ -375,6 +384,55 @@ public final class SixPathsEvents {
         }
         if (amount != event.getAmount()) {
             event.setAmount(amount);
+        }
+    }
+
+    /**
+     * The shaped hand does not only shrug blows off - it throws one back. A body struck by a caster
+     * wearing the Truth-Seeking form takes the melee hit and then a small burst on top of it, loud
+     * enough to be read as a detonation but small enough not to be a second weapon.
+     *
+     * <p>LOW priority so the burst lands on the amount the other hooks have already settled. The
+     * burst damages its neighbours through the same event, so the victim is flagged for the duration
+     * and a blow that arrives while the flag is up is ignored - otherwise two bodies standing close
+     * together would trade bursts until one of them ran out of health.</p>
+     */
+    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOW)
+    public static void onGudodamaHit(LivingHurtEvent event) {
+        LivingEntity victim = event.getEntity();
+        if (victim instanceof Player) {
+            return;
+        }
+        Entity attacker = event.getSource().getEntity();
+        if (!(attacker instanceof Player player)) {
+            return;
+        }
+        if (victim.level().isClientSide || !(victim.level() instanceof ServerLevel level)) {
+            return;
+        }
+        INinjaData nd = player.getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
+        if (nd == null || !GudodamaFormAbility.isActive(nd)) {
+            return;
+        }
+        if (victim.getPersistentData().getBoolean("narutomod:gudodama_burst")) {
+            return;
+        }
+        victim.getPersistentData().putBoolean("narutomod:gudodama_burst", true);
+        try {
+            Vec3 at = victim.position().add(0.0d, victim.getBbHeight() * 0.5d, 0.0d);
+            level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, at.x, at.y, at.z, 1, 0.0d, 0.0d, 0.0d, 0.0d);
+            level.playSound(null, at.x, at.y, at.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.6f, 1.4f);
+            for (LivingEntity nearby : level.getEntitiesOfClass(LivingEntity.class, victim.getBoundingBox().inflate(2.0d))) {
+                if (nearby == player || nearby == victim || !nearby.isAlive() || nearby.isSpectator()) {
+                    continue;
+                }
+                if (Friends.isOwnSide(player, nearby)) {
+                    continue;
+                }
+                nearby.hurt(player.damageSources().playerAttack(player), 4.0f);
+            }
+        } finally {
+            victim.getPersistentData().remove("narutomod:gudodama_burst");
         }
     }
 

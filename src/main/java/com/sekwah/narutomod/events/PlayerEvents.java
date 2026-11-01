@@ -12,7 +12,9 @@ import com.sekwah.narutomod.abilities.jutsus.EightGatesAbility;
 import com.sekwah.narutomod.abilities.jutsus.HengeJutsuAbility;
 import com.sekwah.narutomod.abilities.jutsus.KamuiPhaseAbility;
 import com.sekwah.narutomod.abilities.jutsus.SageModeAbility;
+import com.sekwah.narutomod.capabilities.INinjaData;
 import com.sekwah.narutomod.capabilities.NinjaCapabilityHandler;
+import com.sekwah.narutomod.effect.NarutoEffects;
 import com.sekwah.narutomod.config.NarutoConfig;
 import com.sekwah.narutomod.ranks.NinjaRanks;
 import com.sekwah.narutomod.skills.SkillEffect;
@@ -37,6 +39,7 @@ import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -69,6 +72,7 @@ public class PlayerEvents {
         // Training weights slow down whoever wears them, then teach the body to carry them, see
         // TrainingWeightsItem.
         com.sekwah.narutomod.item.TrainingWeightsItem.tick(player);
+        com.sekwah.narutomod.item.weapons.KibaItem.tick(player);
         // Stat scrolls: re-apply permanent attribute bonuses so they survive a respawn.
         player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(nd ->
                 com.sekwah.narutomod.item.StatScrollItem.applyBonuses(player, nd));
@@ -84,7 +88,13 @@ public class PlayerEvents {
             // Nature energy trickles back on its own, very slowly - but only for a caster who has
             // learned to gather it at all, see AbilityUnlocks#hasSenjutsu.
             if (ninjaData.isNinjaModeEnabled() && AbilityUnlocks.hasSenjutsu(ninjaData)) {
-                ninjaData.addSeninMana(0.01f);
+                // Toneri's scarf triples the passive trickle of nature energy. It does not touch the
+                // active Senjutsu Charging technique, only this free per-tick regen.
+                float passiveSenin = 0.01f;
+                if (com.sekwah.narutomod.item.ToneriScarfItem.hasScarf(player)) {
+                    passiveSenin *= 3.0f;
+                }
+                ninjaData.addSeninMana(passiveSenin);
             }
             // A disguise is on a plain countdown, see HengeJutsuAbility.
             HengeJutsuAbility.maintain(player, ninjaData);
@@ -255,11 +265,46 @@ public class PlayerEvents {
         if (!(event.getEntity() instanceof Player player) || player.level().isClientSide) {
             return;
         }
+        // Critical exhaustion (red Akimichi pill aftermath) forbids all regeneration.
+        if (player.hasEffect(NarutoEffects.CRITICAL_EXHAUSTION.get())) {
+            event.setAmount(0.0f);
+            return;
+        }
         player.getCapability(NinjaCapabilityHandler.NINJA_DATA).ifPresent(ninjaData -> {
-            if (ninjaData.getGateCount() > 0) {
-                event.setAmount(0.0f);
+            int gates = ninjaData.getGateCount();
+            if (gates <= 0) {
+                return;
             }
+            if (gates <= 5) {
+                // Gates 1-5 leave the body's own recovery intact.
+                return;
+            }
+            // Gates 6-8: the body cannot mend itself at all.
+            event.setAmount(0.0f);
         });
+    }
+
+    /**
+     * A landing from a real height with five or more gates open drives a shockwave into the ground.
+     *
+     * <p>Runs at the highest priority so it reads the fall before {@link #livingFall(LivingFallEvent)}
+     * turns a cushioned landing into a distance of zero, which would otherwise hide it.</p>
+     */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onGatesLanding(net.minecraftforge.event.entity.living.LivingFallEvent event) {
+        if (!(event.getEntity() instanceof Player player) || player.level().isClientSide) {
+            return;
+        }
+        if (event.getDistance() < 4.0f) {
+            return;
+        }
+        int gates = player.getCapability(NinjaCapabilityHandler.NINJA_DATA)
+                .resolve().map(com.sekwah.narutomod.capabilities.INinjaData::getGateCount).orElse(0);
+        if (gates < 5) {
+            return;
+        }
+        event.setCanceled(true);
+        EightGatesAbility.landingShockwave(player, gates);
     }
 
     // Handle if they have some agility perk or leaps.
@@ -355,6 +400,16 @@ public class PlayerEvents {
                     player.getY() + 0.1d, player.getZ(),
                     20, 0.35d, 0.05d, 0.35d, 0.02d);
         }
+    }
+
+    @SubscribeEvent
+    public static void onGatesHurt(LivingHurtEvent event) {
+        if (!(event.getEntity() instanceof Player player) || player.level().isClientSide) return;
+        if (event.isCanceled() || event.getAmount() <= 0.0f) return;
+        if (event.getSource().getEntity() == player) return; // self-inflicted
+        INinjaData ninjaData = player.getCapability(NinjaCapabilityHandler.NINJA_DATA).resolve().orElse(null);
+        if (ninjaData == null || ninjaData.getGateCount() <= 0) return;
+        event.setAmount(event.getAmount() * EightGatesAbility.extraDamageFactor(ninjaData.getGateCount()));
     }
 
 }

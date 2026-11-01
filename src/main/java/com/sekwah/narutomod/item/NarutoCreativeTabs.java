@@ -4,7 +4,12 @@ import com.sekwah.narutomod.NarutoMod;
 import com.sekwah.narutomod.block.NarutoBlocks;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.EnchantedBookItem;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -23,8 +28,10 @@ public class NarutoCreativeTabs {
             .icon(() -> NarutoItems.KUNAI.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
                 output.accept(NarutoItems.KUNAI.get());
+                output.accept(NarutoItems.MINATO_KUNAI.get());
                 output.accept(NarutoItems.SENBON.get());
                 output.accept(NarutoItems.EXPLOSIVE_KUNAI.get());
+                output.accept(NarutoItems.ASURA_MISSILE.get());
                 output.accept(NarutoItems.SHURIKEN.get());
                 output.accept(NarutoBlocks.ITEM_PAPER_BOMB.get());
                 output.accept(NarutoItems.SMOKE_BOMB.get());
@@ -37,8 +44,11 @@ public class NarutoCreativeTabs {
                 output.accept(NarutoItems.KUBIKIRIBOCHO.get());
                 output.accept(NarutoItems.HIDAN_SCYTHE.get());
                 output.accept(NarutoItems.BONE_BLADE.get());
+                output.accept(NarutoItems.NUIBARI.get());
                 output.accept(NarutoItems.HIRAMEKAREI.get());
                 output.accept(NarutoItems.SHIBUKI.get());
+                output.accept(NarutoItems.KIBA.get());
+                output.accept(NarutoItems.KABUTOWARI.get());
                 output.accept(NarutoItems.SAKE.get());
             }).title(Component.translatable("narutomod_weapons"))::build);
     public static RegistryObject<CreativeModeTab> NINJA_ARMOR = CREATIVE_MODE_TABS.register("narutomod_armor", CreativeModeTab.builder()
@@ -53,6 +63,24 @@ public class NarutoCreativeTabs {
                 output.accept(NarutoItems.FLAK_JACKET.get());
                 output.accept(NarutoItems.ANBU_ARMOR.get());
                 output.accept(NarutoItems.AKATSUKI_CLOAK.get());
+                output.accept(NarutoItems.TONERI_SCARF.get());
+                // Enchanted books for the six armour enchantments, levels 1..max.
+                String[] armorEnchantments = new String[]{
+                        "chakra_boost", "chakra_regen",
+                        "stamina_boost", "stamina_regen",
+                        "senin_chakra", "senin_regen"
+                };
+                for (String name : armorEnchantments) {
+                    Enchantment enchantment = BuiltInRegistries.ENCHANTMENT.get(
+                            new ResourceLocation(MOD_ID, name));
+                    if (enchantment == null) {
+                        continue;
+                    }
+                    for (int level = 1; level <= enchantment.getMaxLevel(); level++) {
+                        output.accept(EnchantedBookItem.createForEnchantment(
+                                new EnchantmentInstance(enchantment, level)));
+                    }
+                }
             }).title(Component.translatable("narutomod_armor"))::build);
     public static RegistryObject<CreativeModeTab> HEADBANDS = CREATIVE_MODE_TABS.register("narutomod_headbands", CreativeModeTab.builder()
             .icon(() -> NarutoItems.HEADBAND_BLUE.get().getDefaultInstance())
@@ -95,6 +123,9 @@ public class NarutoCreativeTabs {
                 output.accept(NarutoItems.ARMOR_PLATE.get());
                 output.accept(NarutoItems.ARMOR_PLATE_GREEN.get());
                 output.accept(NarutoItems.MILITARY_PILLS.get());
+output.accept(NarutoItems.SPINACH_PILL.get());
+output.accept(NarutoItems.CURRY_PILL.get());
+output.accept(NarutoItems.CHILI_PILL.get());
                 output.accept(NarutoItems.RAMEN.get());
                 output.accept(NarutoItems.RAMEN_MISO.get());
                 output.accept(NarutoItems.RAMEN_PORK.get());
@@ -114,12 +145,36 @@ public class NarutoCreativeTabs {
                 output.accept(NarutoItems.SCROLL_KAMUI.get());
                 output.accept(NarutoItems.SCROLL_SAGE_MODE.get());
                 output.accept(NarutoItems.SCROLL_KIRIN.get());
-                output.accept(NarutoItems.SCROLL_EARTH_WALL.get());
                 output.accept(NarutoItems.SCROLL_RINNEGAN.get());
                 output.accept(NarutoItems.SCROLL_CHIBAKU_TENSEI.get());
                 output.accept(NarutoItems.SCROLL_SHARINGAN.get());
                 output.accept(NarutoItems.SCROLL_BYAKUGAN.get());
                 output.accept(NarutoItems.SCROLL_JOUGAN.get());
+                output.accept(NarutoItems.SCROLL_SENRIGAN.get());
+                output.accept(NarutoItems.SCROLL_SENRIGAN_SIGHT.get());
+                output.accept(NarutoItems.SCROLL_SENRIGAN_FLIGHT.get());
+                output.accept(NarutoItems.SCROLL_SENRIGAN_EVASION.get());
+                output.accept(NarutoItems.SCROLL_SENRIGAN_GUIDANCE.get());
+                output.accept(NarutoItems.SCROLL_KOTOAMATSUKAMI.get());
+                output.accept(NarutoItems.SCROLL_SIX_PATHS_MODE.get());
+                output.accept(NarutoItems.SCROLL_KAMUI_PHASING.get());
+                output.accept(NarutoItems.SCROLL_AMATERASU.get());
+                output.accept(NarutoItems.SCROLL_KAGUTSUCHI.get());
+                output.accept(NarutoItems.SCROLL_SUSANOO.get());
+                output.accept(NarutoItems.SCROLL_TSUKUYOMI.get());
+                output.accept(NarutoItems.SCROLL_IZANAGI.get());
+                output.accept(NarutoItems.SCROLL_IZANAMI.get());
+                output.accept(NarutoItems.SCROLL_MULTI_SHADOW_CLONE.get());
+                output.accept(NarutoItems.SCROLL_CURSE_SEAL_TWO.get());
+                output.accept(NarutoItems.SCROLL_SEAL_VESSEL.get());
+                output.accept(NarutoItems.SCROLL_SEAL_BREAK.get());
+                output.accept(NarutoItems.SCROLL_PERFECT_CLOAK.get());
+                output.accept(NarutoItems.SCROLL_TAILED_CLOAK.get());
+                output.accept(NarutoItems.SCROLL_TAILED_BALL.get());
+                output.accept(NarutoItems.SCROLL_DIVIDED_CLOAK.get());
+                output.accept(NarutoItems.SCROLL_GATE_PEACOCK.get());
+                output.accept(NarutoItems.SCROLL_GATE_TIGER.get());
+                output.accept(NarutoItems.SCROLL_GATE_ELEPHANT.get());
                 output.accept(NarutoItems.TREASURE_MAP.get());
             }).title(Component.translatable("narutomod_materials"))::build);
 

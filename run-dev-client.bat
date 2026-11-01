@@ -86,7 +86,35 @@ echo Using JDK: %JDK17%
 echo Starting the dev client from "%CD%" ...
 echo.
 
-call gradlew.bat runClient %OFFLINE% %*
+rem --- preflight: a hung Gradle daemon keeps the cache lock ------------------
+rem A Gradle daemon can hang inside a Windows file-lock wait and survive as a
+rem process that neither Stop-Process nor an elevated taskkill can remove. It
+rem keeps %USERPROFILE%\.gradle\caches\journal-1\journal-1.lock open, and every
+rem later build then sits at "0% INITIALIZING" for a minute and dies with
+rem "Timeout waiting to lock journal cache". Catch that here instead of letting
+rem the launch appear to hang. Only a reboot releases such a lock.
+call :cacheLocked
+if errorlevel 1 goto :lockok
+echo.
+echo [ERROR] The Gradle cache is locked by a hung process.
+echo.
+echo   Lock file: %GRADLE_LOCK%
+if defined JAVA_PIDS echo   Java PIDs: %JAVA_PIDS%
+echo.
+echo   Such a holder cannot be killed - taskkill /F fails even elevated.
+echo   Reboot Windows, then run this script again.
+echo.
+pause
+exit /b 2
+:lockok
+rem --- persistent Gradle daemon -----------------------------------------------
+rem gradle.properties sets org.gradle.daemon=false, so every launch forks a
+rem single-use daemon and stops it when the game exits. That fork/stop churn is
+rem what leaves a zombie daemon behind on this machine (an unkillable Java
+rem process holding %USERPROFILE%\.gradle\caches\journal-1\journal-1.lock, which
+rem then makes every later launch sit at "0% INITIALIZING" and die). One daemon
+rem started after boot and reused for every run has no such teardown step.
+call gradlew.bat --daemon runClient %OFFLINE% %*
 set "CODE=%ERRORLEVEL%"
 
 if not "%CODE%"=="0" (
@@ -111,3 +139,16 @@ rem quote would unbalance the quoting and swallow the redirection.
 if not exist "%~1\bin\java.exe" exit /b 1
 findstr /r /c:"JAVA_VERSION=.17\." "%~1\release" >nul 2>&1
 exit /b %ERRORLEVEL%
+
+:cacheLocked
+rem Returns 0 when another Gradle process holds the journal cache lock, 1 when
+rem it is free (or when the check itself could not run - never block a launch on
+rem a broken helper). A healthy idle Gradle does not hold the lock, and the
+rem check reads nothing: it only tries an exclusive open for an instant.
+set "GRADLE_LOCK=%USERPROFILE%\.gradle\caches\journal-1\journal-1.lock"
+set "JAVA_PIDS="
+if not exist "%GRADLE_LOCK%" exit /b 1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $s=[IO.File]::Open($env:GRADLE_LOCK,'Open','ReadWrite','None'); $s.Close(); exit 1 } catch { exit 0 }"
+if errorlevel 1 exit /b 1
+for /f "usebackq delims=" %%P in (`powershell -NoProfile -Command "((Get-Process -Name java -ErrorAction SilentlyContinue).Id) -join ', '"`) do set "JAVA_PIDS=%%P"
+exit /b 0

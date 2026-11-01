@@ -68,20 +68,20 @@ public enum SkillBranch {
     GATES(SkillSection.SPECIAL, "naruto.gui.skill.branch.gates", 0xFFD32F2F),
 
     // -----------------------------------------------------------------------------------------
-    // 4. DOJUTSU - the eye bloodlines, reserved for later
+    // 4. DOJUTSU - the eye bloodlines, in progression order
     // -----------------------------------------------------------------------------------------
 
     /** The Sharingan: the copy wheel, its perception and Amaterasu. */
     SHARINGAN(SkillSection.DOJUTSU, "naruto.gui.skill.branch.sharingan", 0xFFE53935),
+
+    /** The Rinnegan. */
+    RINNEGAN(SkillSection.DOJUTSU, "naruto.gui.skill.branch.rinnegan", 0xFFB39DDB),
 
     /** The Byakugan: the circular vision and the Revolving Heaven. */
     BYAKUGAN(SkillSection.DOJUTSU, "naruto.gui.skill.branch.byakugan", 0xFFD7E3FF),
 
     /** The Jougan: the pure eye, its capacity, the dimensional step and the chakra sever. */
     JOUGAN(SkillSection.DOJUTSU, "naruto.gui.skill.branch.jougan", 0xFF64B5F6),
-
-    /** The Rinnegan. */
-    RINNEGAN(SkillSection.DOJUTSU, "naruto.gui.skill.branch.rinnegan", 0xFFB39DDB),
 
     /** The Senrigan: the far eye that borrows the sight of the caster's own clones. */
     SENRIGAN(SkillSection.DOJUTSU, "naruto.gui.skill.branch.senrigan", 0xFFE0C080),

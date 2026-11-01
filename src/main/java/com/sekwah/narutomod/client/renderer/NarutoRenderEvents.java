@@ -38,6 +38,7 @@ public class NarutoRenderEvents {
     public static void entityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(NarutoEntities.KUNAI.get(), KunaiRenderer::new);
         event.registerEntityRenderer(NarutoEntities.EXPLOSIVE_KUNAI.get(), ExplosiveKunaiRenderer::new);
+        event.registerEntityRenderer(NarutoEntities.MINATO_KUNAI.get(), MinatoKunaiRenderer::new);
         event.registerEntityRenderer(NarutoEntities.SENBON.get(), SenbonRenderer::new);
         event.registerEntityRenderer(NarutoEntities.SHURIKEN.get(), ShurikenRenderer::new);
         event.registerEntityRenderer(NarutoEntities.PAPER_BOMB.get(), PaperBombRenderer::new);

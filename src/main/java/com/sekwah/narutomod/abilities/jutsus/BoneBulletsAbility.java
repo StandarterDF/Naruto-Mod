@@ -14,9 +14,13 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.Comparator;
+import java.util.Optional;
 
 /**
  * Ten Finger Drilling Bullets: a stream of bone shards flicked out of the fingertips.
@@ -29,8 +33,13 @@ import java.util.Comparator;
  * gets a short burst, a master with a deep reserve can keep the line open.</p>
  *
  * <p>The shards are not entities: they travel less than a bowshot and would be dodged if they could
- * be seen coming, so each shot is resolved the moment it is fired. The trail is drawn afterwards,
- * from the same hand, so what the target sees is where the bone went.</p>
+ * be seen coming, so each shot is resolved the moment it is fired. Each shard flies strictly along
+ * the caster's line of sight until it meets the first block or body, so aiming is precise. The trail
+ * is drawn afterwards, from the same hand, so what the target sees is where the bone went.</p>
+ *
+ * <p>The stream fires faster than before: the first shard leaves after half a second and the rhythm
+ * bottoms out at one shard every three ticks. Damage grows with mastery, from 3.0 at no mastery up
+ * to 10.0 at full mastery.</p>
  */
 public class BoneBulletsAbility extends Ability implements Ability.Channeled {
 
@@ -45,12 +54,14 @@ public class BoneBulletsAbility extends Ability implements Ability.Channeled {
 
     public static final ResourceLocation ID = new ResourceLocation(NarutoMod.MOD_ID, "bone_bullets");
 
-    /** How far each shard carries, and how wide its wedge opens. */
+    /** How far each shard carries along the line of sight. */
     private static final double RANGE = 24.0d;
-    private static final double CONE_DEGREES = 9.0d;
 
     /** One shard does not kill, but the stream adds up. */
     private static final float DAMAGE = 3.0f;
+
+    /** A shard grows harder with the caster's command of the technique (3.0 at zero, 10.0 at max). */
+    private static final float MASTERY_DAMAGE_BONUS = 7.0f;
 
     /** Chakra paid for every shard, before mastery. */
     private static final float SHOT_COST = 7.0f;
@@ -58,11 +69,11 @@ public class BoneBulletsAbility extends Ability implements Ability.Channeled {
     private static final int CHAKRA_REGEN_DELAY = 20;
 
     /** Ticks between the first shots, and the fastest the hand ever gets. */
-    private static final int START_INTERVAL = 20;
-    private static final int MIN_INTERVAL = 4;
+    private static final int START_INTERVAL = 10;
+    private static final int MIN_INTERVAL = 3;
 
     /** How many ticks it takes to reach the fastest rhythm. */
-    private static final int ACCELERATION_TICKS = 120;
+    private static final int ACCELERATION_TICKS = 60;
 
     /** Where the next shot of the current stream is due. */
     private static final String NEXT_SHOT_TAG = "narutomod:bone_bullets_next";
@@ -108,7 +119,6 @@ public class BoneBulletsAbility extends Ability implements Ability.Channeled {
         }
         if (ticksChanneled == 0) {
             player.getPersistentData().putInt(NEXT_SHOT_TAG, 0);
-            this.recordMastery(player, ninjaData);
         }
         int next = player.getPersistentData().getInt(NEXT_SHOT_TAG);
         if (ticksChanneled < next) {
@@ -119,18 +129,23 @@ public class BoneBulletsAbility extends Ability implements Ability.Channeled {
             return;
         }
         ninjaData.useChakra(cost, CHAKRA_REGEN_DELAY);
-        fireShard(player, level);
+        fireShard(player, ninjaData, level, this.damageFor(ninjaData));
         player.getPersistentData().putInt(NEXT_SHOT_TAG, ticksChanneled + intervalAt(ticksChanneled));
     }
 
-    /** The rhythm: one shard a second at first, down to one every four ticks once the hand is warm. */
+    /** The rhythm: one shard every half second at first, down to one every three ticks once the hand is warm. */
     private static int intervalAt(int ticksChanneled) {
         float progress = Math.min(1.0f, ticksChanneled / (float) ACCELERATION_TICKS);
         return Math.round(START_INTERVAL - (START_INTERVAL - MIN_INTERVAL) * progress);
     }
 
-    /** Fires one shard at the nearest body in the narrow wedge, or draws it into the air. */
-    private static void fireShard(Player player, ServerLevel level) {
+    /** A shard grows harder with the caster's command of the technique. */
+    private float damageFor(INinjaData ninjaData) {
+        return DAMAGE + MASTERY_DAMAGE_BONUS * this.masteryLevel(ninjaData);
+    }
+
+    /** Fires one shard at the first body on the line of sight, or draws it into the air. */
+    private void fireShard(Player player, INinjaData ninjaData, ServerLevel level, float damage) {
         LivingEntity target = struck(player, level);
         Vec3 hand = JutsuEffects.handPosition(player);
         Vec3 look = player.getLookAngle();
@@ -139,7 +154,8 @@ public class BoneBulletsAbility extends Ability implements Ability.Channeled {
 
         if (target != null) {
             // Magic: a shard that grew inside the body is not armour's business, and it breaks no block.
-            target.hurt(player.damageSources().magic(), DAMAGE);
+            target.hurt(player.damageSources().magic(), damage);
+            this.recordMasteryCredit(player, ninjaData, 1.0f);
             Vec3 impact = centreOf(target);
             level.sendParticles(ParticleTypes.CRIT, impact.x, impact.y, impact.z,
                     IMPACT_PARTICLES, 0.15d, 0.15d, 0.15d, 0.02d);
@@ -148,28 +164,32 @@ public class BoneBulletsAbility extends Ability implements Ability.Channeled {
                 SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 0.5f, 1.6f);
     }
 
-    /** The closest body inside the wedge, in sight, and not the caster's own side. */
+    /** The first body on the line of sight, or null when the shard flies into the open air. */
     private static LivingEntity struck(Player caster, ServerLevel level) {
         Vec3 eye = caster.getEyePosition();
         Vec3 look = caster.getViewVector(1.0f).normalize();
-        double minDot = Math.cos(Math.toRadians(CONE_DEGREES));
-
-        return level.getEntitiesOfClass(LivingEntity.class, caster.getBoundingBox().inflate(RANGE),
-                        target -> canStrike(caster, target)
-                                && inWedge(eye, look, target, minDot))
-                .stream()
-                .min(Comparator.comparingDouble(caster::distanceToSqr))
-                .orElse(null);
-    }
-
-    /** @return whether the target's body sits inside the wedge in front of the caster. */
-    private static boolean inWedge(Vec3 eye, Vec3 look, LivingEntity target, double minDot) {
-        Vec3 to = centreOf(target).subtract(eye);
-        double length = to.length();
-        if (length < 0.001d) {
-            return true;
+        Vec3 end = eye.add(look.scale(RANGE));
+        BlockHitResult blockHit = level.clip(new ClipContext(eye, end,
+                ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, caster));
+        if (blockHit.getType() != HitResult.Type.MISS) {
+            end = blockHit.getLocation();
         }
-        return to.scale(1.0d / length).dot(look) >= minDot;
+        LivingEntity best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
+                caster.getBoundingBox().inflate(RANGE), t -> canStrike(caster, t))) {
+            AABB box = target.getBoundingBox().inflate(0.25d);
+            Optional<Vec3> hit = box.clip(eye, end);
+            if (hit.isEmpty()) {
+                continue;
+            }
+            double distance = eye.distanceToSqr(hit.get());
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                best = target;
+            }
+        }
+        return best;
     }
 
     /** Anything alive but the caster, their allies, and the untouchable, and only through open air. */
@@ -199,7 +219,7 @@ public class BoneBulletsAbility extends Ability implements Ability.Channeled {
     @Override
     public void performServer(Player player, INinjaData ninjaData, int ticksActive) {
         if (ticksActive < 0 && player.level() instanceof ServerLevel level) {
-            fireShard(player, level);
+            fireShard(player, ninjaData, level, this.damageFor(ninjaData));
         }
     }
 

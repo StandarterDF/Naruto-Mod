@@ -137,18 +137,8 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "narutomod:scroll_earth_wall",
-          "weight": 3
-        },
-        {
-          "type": "minecraft:item",
           "name": "narutomod:scroll_rasengan",
           "weight": 2
-        },
-        {
-          "type": "minecraft:item",
-          "name": "narutomod:scroll_kirin",
-          "weight": 1
         }
       ],
       "conditions": [

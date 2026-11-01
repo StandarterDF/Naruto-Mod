@@ -91,8 +91,28 @@ public class SupplyChestContainer implements Container {
      * really exists on both ends rather than reading past the end of the grid.
      */
     public void ensureSize(int size) {
-        if (size > this.size) {
-            this.resize(roundUp(size));
+        int target = roundUp(size);
+        if (target != this.size) {
+            this.resize(target);
+        }
+    }
+
+    /**
+     * Compacts and sorts the chest: sorts the contents (most numerous first, then by name), then
+     * shrinks the grid down to the smallest number of rows that still holds everything, never below
+     * {@link #MIN_SIZE}. Empty trailing rows are dropped so the grid hugs its contents.
+     */
+    public void compactAndSort() {
+        this.sort();
+        int lastNonEmpty = -1;
+        for (int slot = 0; slot < this.size; slot++) {
+            if (this.amounts[slot] > 0 && !this.items.get(slot).isEmpty()) {
+                lastNonEmpty = slot;
+            }
+        }
+        int needed = Math.max(MIN_SIZE, roundUp(lastNonEmpty + 1));
+        if (needed < this.size) {
+            this.resize(needed);
         }
     }
 
@@ -261,7 +281,27 @@ public class SupplyChestContainer implements Container {
      * Auto-sorts the chest: most numerous stacks first, then by item name when the counts match.
      * Empty slots are pushed to the end.
      */
+    private void mergeSameKind() {
+        for (int from = 0; from < this.size; from++) {
+            if (this.amounts[from] <= 0 || this.items.get(from).isEmpty()) continue;
+            for (int to = 0; to < this.size && this.amounts[from] > 0; to++) {
+                if (to == from || this.amounts[to] <= 0 || this.items.get(to).isEmpty()) continue;
+                if (!sameKind(this.items.get(from), this.items.get(to))) continue;
+                int space = MAX_AMOUNT - this.amounts[to];
+                if (space <= 0) continue;
+                int moved = Math.min(space, this.amounts[from]);
+                this.amounts[to] += moved;
+                this.amounts[from] -= moved;
+                if (this.amounts[from] <= 0) {
+                    this.items.set(from, ItemStack.EMPTY);
+                    this.amounts[from] = 0;
+                }
+            }
+        }
+    }
+
     public void sort() {
+        this.mergeSameKind();
         List<Map.Entry<ItemStack, Integer>> entries = new ArrayList<>();
         for (int slot = 0; slot < this.size; slot++) {
             if (this.amounts[slot] > 0 && !this.items.get(slot).isEmpty()) {

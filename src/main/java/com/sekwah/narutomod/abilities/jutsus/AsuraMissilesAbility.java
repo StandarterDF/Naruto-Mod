@@ -162,7 +162,13 @@ public class AsuraMissilesAbility extends Ability implements Ability.Cooldown {
             return;
         }
         drawTrail(level, caster, target);
-        target.hurt(level.damageSources().indirectMagic(caster, caster), DAMAGE);
+        // Damage scales from 10 at no mastery to 30 at full mastery.
+        float mastery = caster.getCapability(com.sekwah.narutomod.capabilities.NinjaCapabilityHandler.NINJA_DATA)
+                .map(data -> com.sekwah.narutomod.abilities.mastery.Mastery.level(data,
+                        com.sekwah.narutomod.abilities.NarutoAbilities.ASURA_MISSILES.get()))
+                .orElse(0.0f);
+        float damage = 10.0f + 20.0f * mastery;
+        target.hurt(level.damageSources().indirectMagic(caster, caster), damage);
         level.sendParticles(ParticleTypes.END_ROD, target.getX(),
                 target.getY() + target.getBbHeight() * 0.5d, target.getZ(),
                 12, 0.25d, 0.25d, 0.25d, 0.02d);
