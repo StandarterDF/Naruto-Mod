@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.12.0](https://github.com/StandarterDF/Naruto-Mod/compare/v1.11.0...v1.12.0) (2026-11-02)
+
+### Features
+
+* **Seven Swordsmen:** Nuibari, Kiba and Kabutowari join the set, while Hiramekarei (chakra storage, light hammer, 90% block) and Shibuki (explosions on every hit, ground slam) were reworked.
+* **Minato's kunai:** throw it and teleport to the last one with shift + right click; it is never spent.
+* **Akimichi pills:** spinach, curry and chili, each buying strength for a price paid in health.
+* **Toneri's scarf:** a chest-slot keepsake that cuts incoming damage and triples passive nature-energy gathering.
+* **3D weapons:** every sword, kunai, shuriken and the Hidan scythe now use the OBJ models ported from the old Mathioks jar, held through the middle of the grip.
+* **Stat scrolls:** permanent passive bonuses found in dungeons, boss loot and fishing.
+* **Scrolls:** Senrigan and Kotoamatsukami scrolls, plus a hard rule that eye and mode techniques need their base eye or mode.
+* **Trading and loot:** wandering traders sell food and scrolls, high-tier technique scrolls appear in the End, and bosses (dragon, guardian, warden, wither) drop their own scroll pools.
+* **Clone gatherer:** holding the supply chest key summons a one-minute clone that picks items up for its owner.
+
+### Bug Fixes
+
+* Clone totems now actually store the clone they were bound to.
+* A great sword's Kenjutsu penalty no longer crashes the player tick.
+* The scroll workbench crafts again and its menu no longer closes on use.
+* Dropping training weights no longer damages the owner.
+* The bone blade can block like every other sword.
+* A Kirin scroll alone no longer unlocks the technique.
+* Genjutsu now affects piglins and evoker vexes.
+* Vacuum Blade has a real cooldown (reduced by mastery) again.
+* The Eight Gates HUD prints its gate counter instead of raw placeholders.
+* Armour enchantments are registered in code and reachable through loot again.
+* Weapon textures no longer render purple after the model move, and scroll icons load (BOM removed).
+
+**Full Changelog**: https://github.com/StandarterDF/Naruto-Mod/compare/v1.11.0...v1.12.0
+
 ## [1.11.0](https://github.com/StandarterDF/Naruto-Mod/compare/v1.10.0...v1.11.0) (2026-10-28)
 
 ### Features
